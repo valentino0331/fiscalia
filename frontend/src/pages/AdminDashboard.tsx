@@ -20,46 +20,9 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
 
-  // ── Mock fallback – visible inmediatamente mientras el backend responde ──
-  const mockStats: AdminStats = {
-    overview: { totalUsers: 127, activeSubscriptions: 34, totalConversations: 892, connectedNow: 8 },
-    registrations: [
-      { day: '2026-08-26', total: 14 }, { day: '2026-08-27', total: 22 },
-      { day: '2026-08-28', total: 19 }, { day: '2026-08-29', total: 31 },
-      { day: '2026-08-30', total: 27 }, { day: '2026-08-31', total: 14 },
-    ],
-    agentPerformance: [
-      { agentId: 'valentina', conversations: 210, messages: 1540 },
-      { agentId: 'sebastian', conversations: 145, messages: 1020 },
-      { agentId: 'diego', conversations: 118, messages: 870 },
-      { agentId: 'adriana', conversations: 97, messages: 650 },
-      { agentId: 'rodrigo', conversations: 72, messages: 510 },
-      { agentId: 'camila', conversations: 134, messages: 980 },
-      { agentId: 'fernanda', conversations: 89, messages: 630 },
-      { agentId: 'miguel', conversations: 66, messages: 445 },
-    ],
-    systemHealth: { status: 'operational', dbLatencyMs: 22, uptimeSeconds: 3600 * 24 * 7, memoryUsageMB: 118, nodeVersion: 'v20.11' },
-    aiMetrics: {
-      totalCalls: 4280, successfulCalls: 4280, failedCalls: 0, successRate: 100,
-      avgDurationMs: 1320, geminiCount: 3940, anthropicCount: 340,
-      trialUsers: 93, paidUsers: 34, freeLimit: 3,
-      geminiModel: 'gemini-2.0-flash', anthropicModel: 'claude-3-5-sonnet',
-      hasGeminiKey: true, hasAnthropicKey: false, hasElevenLabsKey: false,
-    },
-    scorecard: {
-      financial: { mrr: 5066, arr: 60792, conversionRate: 26.8, targetMrr: 15000, targetConversion: 12, costPerCaseSol: 0.018, estimatedMargin: 94.5 },
-      customer: { csatScore: 97.4, activeUsers: 8, retentionRate: 89.2, avgResolutionTimeMs: 1320, targetResolutionTimeMs: 2500, npsScore: 78 },
-      processes: { totalCasesResolved: 892, legalAccuracyRate: 99.8, uptimePercent: 99.98, documentsGeneratedCount: 401, directResolutionRate: 94.2 },
-      learning: { aiSuccessRate: 100, modelTier: 'Gemini 2.0 Flash', dbLatencyMs: 22, targetLatencyMs: 45, voiceHdAdoption: 42.0 },
-    },
-    recentErrors: [],
-    recentAiCalls: [],
-  }
-
-  const [stats, setStats] = useState<AdminStats>(mockStats)
-  const [loading, setLoading] = useState(false)
+  const [stats, setStats] = useState<AdminStats | null>(null)
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [liveData, setLiveData] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState<DashboardTab>('scorecard')
   const [copiedReport, setCopiedReport] = useState(false)
@@ -69,12 +32,9 @@ export default function AdminDashboard() {
       setRefreshing(true)
       const res = await api.admin.stats()
       setStats(res)
-      setLiveData(true)
       setError('')
     } catch (err: unknown) {
-      // Si el backend no responde, mantenemos el mock – nunca pantalla en blanco
-      setError('Backend offline — mostrando datos de demostración')
-      setLiveData(false)
+      setError(err instanceof Error ? err.message : 'No se pudo conectar al backend administrativo')
     } finally {
       setLoading(false)
       setRefreshing(false)
@@ -279,23 +239,25 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
           </div>
         </div>
 
-        {/* Banner de estado de conexión – no bloquea el contenido */}
-        {error && (
-          <div
-            className="px-4 py-2 rounded-xl text-[11px] mb-4 flex items-center justify-between"
-            style={{
-              background: 'rgba(201,168,76,0.07)',
-              border: '1px solid rgba(201,168,76,0.20)',
-              color: 'rgba(201,168,76,0.80)',
-            }}
-          >
-            <span>⚠️ {error}</span>
-            <button onClick={fetchStats} className="underline font-medium ml-4 flex-shrink-0">Conectar backend</button>
+        {loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-36 rounded-xl bg-white/[0.03] animate-pulse border border-white/5" />
+            ))}
           </div>
         )}
 
-        {/* Always-visible content – real data when backend is up, mock when not */}
-        {(
+        {error && (
+          <div
+            className="p-4 rounded-xl text-[12px] mb-6 flex items-center justify-between"
+            style={{ background: 'rgba(255,100,100,0.08)', border: '1px solid rgba(255,100,100,0.15)', color: '#ff6464' }}
+          >
+            <span>⚠️ {error}</span>
+            <button onClick={fetchStats} className="underline font-medium ml-4">Reintentar</button>
+          </div>
+        )}
+
+        {stats && !loading && (
           <AnimatePresence mode="wait">
             {activeTab === 'scorecard' && (
               <motion.div
@@ -332,13 +294,6 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                       <div className="text-left md:text-right border-l md:border-l-0 md:border-r border-white/10 pl-3 md:pl-0 md:pr-4">
                         <p className="text-[9px] uppercase tracking-wider text-white/40">Plataforma</p>
                         <p className="text-[13px] font-medium text-white">HARDMAN Legal Pro</p>
-                      </div>
-                      <div className="text-left md:text-right">
-                        <p className="text-[9px] uppercase tracking-wider text-white/40">Datos</p>
-                        <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${liveData ? 'text-emerald-400' : 'text-[#c9a84c]'}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${liveData ? 'bg-emerald-400 animate-pulse' : 'bg-[#c9a84c]'}`} />
-                          {liveData ? 'En Vivo · Backend OK' : 'Demo · Backend Offline'}
-                        </span>
                       </div>
                       <div className="text-left md:text-right">
                         <p className="text-[9px] uppercase tracking-wider text-white/40">Estatus Normativo</p>
