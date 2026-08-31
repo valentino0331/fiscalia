@@ -18,14 +18,14 @@ import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 
 const CATEGORIES = [
   { id: 'all', label: 'Todos' },
-  { id: 'LABORAL', label: 'Derecho Laboral' },
-  { id: 'PENAL', label: 'Derecho Penal' },
-  { id: 'CIVIL', label: 'Derecho Civil' },
-  { id: 'CORPORATIVO', label: 'Derecho Corporativo' },
-  { id: 'MINERO', label: 'Derecho Minero' },
-  { id: 'FAMILIA', label: 'Derecho de Familia' },
-  { id: 'TRIBUTARIO', label: 'Derecho Tributario' },
-  { id: 'ADMINISTRATIVO', label: 'Derecho Administrativo' },
+  { id: 'LABORAL', label: 'Laboral' },
+  { id: 'PENAL', label: 'Penal' },
+  { id: 'CIVIL', label: 'Civil' },
+  { id: 'CORPORATIVO', label: 'Corporativo' },
+  { id: 'MINERO', label: 'Minero' },
+  { id: 'FAMILIA', label: 'Familia' },
+  { id: 'TRIBUTARIO', label: 'Tributario' },
+  { id: 'ADMINISTRATIVO', label: 'Administrativo' },
 ]
 
 const SIDEBAR_MAIN = [
@@ -373,7 +373,7 @@ export default function Dashboard() {
         </aside>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 pb-24 md:pb-6" style={{ overscrollBehavior: 'contain' }}>
+        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 pb-32 md:pb-8" style={{ overscrollBehavior: 'contain' }}>
           <AnimatePresence mode="wait">
             {activeSideItem === 'specialists' && (
               <motion.div
@@ -385,7 +385,7 @@ export default function Dashboard() {
               >
                 {/* Citizen Hero & Problem Navigator */}
                 <div className="mb-8 space-y-4">
-                  <div className="p-6 rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(20,20,20,0.95) 70%)', border: '1px solid rgba(201,168,76,0.25)' }}>
+                  <div className="p-5 sm:p-6 rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(20,20,20,0.95) 70%)', border: '1px solid rgba(201,168,76,0.25)' }}>
                     <div className="max-w-2xl">
                       <span className="text-[9px] uppercase font-bold text-[#c9a84c] tracking-widest block mb-2">
                         DEFENSA LEGAL CIUDADANA EN EL PERÚ
@@ -393,39 +393,39 @@ export default function Dashboard() {
                       <h1 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
                         Hola {user?.name ? user.name.split(' ')[0] : ''}, ¿en qué problema legal necesitas ayuda hoy?
                       </h1>
-                      <p className="text-[12px] text-white/60 font-light leading-relaxed mb-5">
+                      <p className="text-[12px] text-white/60 font-light leading-relaxed mb-4">
                         Respuestas directas, documentos oficiales listos para imprimir y cálculos exactos en Soles sin palabras difíciles.
                       </p>
 
-                      {/* Quick Citizen Action Buttons */}
-                      <div className="flex flex-wrap items-center gap-2">
+                      {/* Quick Citizen Action Buttons Grid */}
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button
+                          onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                        >
+                          <FileText size={15} className="text-[#c9a84c] flex-shrink-0" />
+                          <span className="truncate">Generar Documentos</span>
+                        </button>
                         <button
                           onClick={() => setScannerOpen(true)}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
-                          <Sparkles size={14} className="text-[#c9a84c]" />
-                          <span>Traducir Notificación / Carta</span>
+                          <Sparkles size={15} className="text-[#c9a84c] flex-shrink-0" />
+                          <span className="truncate">Escanear Cédula/PDF</span>
                         </button>
                         <button
                           onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
-                          <Calculator size={14} className="text-[#34d17a]" />
-                          <span>Calculadoras en Soles</span>
-                        </button>
-                        <button
-                          onClick={() => setDocGenModal({ isOpen: true, docType: 'alimentos' })}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
-                        >
-                          <FileText size={14} className="text-[#60a5fa]" />
-                          <span>Generar Documentos</span>
+                          <Calculator size={15} className="text-[#34d17a] flex-shrink-0" />
+                          <span className="truncate">Calculadoras S/</span>
                         </button>
                         <button
                           onClick={() => setWhereToGoOpen(true)}
-                          className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
-                          <MapPin size={14} className="text-[#f59e0b]" />
-                          <span>A Dónde Ir y Qué Llevar</span>
+                          <MapPin size={15} className="text-[#f59e0b] flex-shrink-0" />
+                          <span className="truncate">A Dónde Acudir</span>
                         </button>
                       </div>
                     </div>
@@ -568,12 +568,12 @@ export default function Dashboard() {
                           setSelectedCategory(cat.id)
                           handleRipple(e)
                         }}
-                        className="relative overflow-hidden whitespace-nowrap px-4 py-2 rounded-full text-[11px] font-medium transition-all duration-200"
+                        className="flex-shrink-0 whitespace-nowrap min-w-max px-4 py-2 rounded-full text-[12px] font-medium transition-all duration-200"
                         style={{
-                          background: isActive ? 'rgba(201,168,76,0.10)' : '#222222',
+                          background: isActive ? 'rgba(201,168,76,0.15)' : '#222222',
                           border: `1px solid ${isActive ? '#c9a84c' : '#333333'}`,
-                          color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.50)',
-                          boxShadow: isActive ? '0 0 12px rgba(201,168,76,0.08)' : 'none',
+                          color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.60)',
+                          boxShadow: isActive ? '0 0 14px rgba(201,168,76,0.15)' : 'none',
                         }}
                         onMouseEnter={(e) => {
                           if (!isActive) e.currentTarget.style.transform = 'translateY(-1px)'
@@ -923,48 +923,103 @@ export default function Dashboard() {
         </main>
       </div>
 
-      {/* ── Mobile bottom navigation ── */}
+      {/* ── Single Unified Mobile bottom navigation ── */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-50 flex border-t"
+        className="md:hidden fixed bottom-0 inset-x-0 z-40 h-16 border-t flex items-center justify-around px-2 backdrop-blur-xl"
         style={{
-          background: '#161616',
-          borderColor: '#2a2a2a',
+          background: 'rgba(18, 18, 18, 0.95)',
+          borderColor: '#282828',
           paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          boxShadow: '0 -8px 24px rgba(0,0,0,0.60)',
         }}
       >
-        {SIDEBAR_MAIN.filter((item) => item.id !== 'documents').map((item) => {
-          const isActive = activeSideItem === item.id
-          const Icon = item.icon
-          return (
-            <button
-              key={item.id}
-              onClick={() => {
-                setActiveSideItem(item.id)
-                if (item.id === 'specialists') setSelectedCategory('all')
-              }}
-              className="flex-1 flex flex-col items-center gap-[3px] py-3 transition-colors relative"
-              style={{ color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.38)' }}
+        <button
+          onClick={() => {
+            setActiveSideItem('specialists')
+            setSelectedCategory('all')
+          }}
+          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
+          style={{
+            color: activeSideItem === 'specialists' ? '#c9a84c' : 'rgba(255,255,255,0.40)',
+          }}
+        >
+          <Search size={18} strokeWidth={activeSideItem === 'specialists' ? 2.2 : 1.5} />
+          <span className="text-[9px] font-medium">Inicio</span>
+        </button>
+
+        <button
+          onClick={() => setActiveSideItem('consultations')}
+          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors relative"
+          style={{
+            color: activeSideItem === 'consultations' ? '#c9a84c' : 'rgba(255,255,255,0.40)',
+          }}
+        >
+          <MessageSquare size={18} strokeWidth={activeSideItem === 'consultations' ? 2.2 : 1.5} />
+          <span className="text-[9px] font-medium">Consultas</span>
+          {convCount > 0 && (
+            <span
+              className="absolute top-0 right-3 w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center shadow"
+              style={{ background: '#c9a84c', color: '#111' }}
             >
-              {isActive && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-[2px] rounded-b" style={{ background: '#c9a84c' }} />
-              )}
-              <Icon size={18} strokeWidth={isActive ? 2 : 1.5} />
-              <span className="text-[9px] leading-none" style={{ fontWeight: isActive ? 500 : 300, letterSpacing: '0.3px' }}>
-                {item.label === 'Especialistas' ? 'Inicio'
-                  : item.label === 'Habilidades' ? 'Guardados'
-                  : item.label}
-              </span>
-            </button>
-          )
-        })}
-        {user?.isAdmin && (
+              {convCount}
+            </span>
+          )}
+        </button>
+
+        {/* Central Prominent Action Button: Generar Documentos */}
+        <button
+          onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
+          className="flex flex-col items-center justify-center gap-1 flex-1 -mt-4 transition-transform active:scale-95"
+        >
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg border transition-all"
+            style={{
+              background: 'linear-gradient(135deg, #e2be64 0%, #c9a84c 100%)',
+              color: '#111',
+              borderColor: '#f5d98a',
+              boxShadow: '0 4px 20px rgba(201,168,76,0.45)',
+            }}
+          >
+            <FileText size={20} strokeWidth={2.2} />
+          </div>
+          <span className="text-[9px] font-bold text-[#c9a84c]">Documentos</span>
+        </button>
+
+        <button
+          onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
+          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
+          style={{ color: 'rgba(255,255,255,0.40)' }}
+        >
+          <Calculator size={18} strokeWidth={1.5} />
+          <span className="text-[9px] font-medium">Cálculos</span>
+        </button>
+
+        {user?.isAdmin ? (
           <button
             onClick={() => navigate('/portal-interno')}
-            className="flex-1 flex flex-col items-center gap-[3px] py-3"
-            style={{ color: 'rgba(201,168,76,0.65)' }}
+            className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
+            style={{ color: 'rgba(201,168,76,0.70)' }}
           >
             <Shield size={18} strokeWidth={1.5} />
-            <span className="text-[9px] leading-none font-light">Admin</span>
+            <span className="text-[9px] font-medium">Admin</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/account')}
+            className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
+            style={{ color: 'rgba(255,255,255,0.40)' }}
+          >
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold"
+              style={{
+                background: 'rgba(201,168,76,0.15)',
+                border: '1px solid rgba(201,168,76,0.35)',
+                color: '#c9a84c',
+              }}
+            >
+              {initials}
+            </div>
+            <span className="text-[9px] font-medium">Cuenta</span>
           </button>
         )}
       </nav>
@@ -991,94 +1046,6 @@ export default function Dashboard() {
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
       />
-
-      {/* Mobile Bottom Navigation Bar (md:hidden) */}
-      <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-30 h-16 border-t flex items-center justify-around px-2 backdrop-blur-lg"
-        style={{
-          background: 'rgba(18, 18, 18, 0.95)',
-          borderColor: '#282828',
-          boxShadow: '0 -4px 20px rgba(0,0,0,0.50)',
-        }}
-      >
-        <button
-          onClick={() => {
-            setActiveSideItem('specialists')
-            setSelectedCategory('all')
-          }}
-          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
-          style={{
-            color: activeSideItem === 'specialists' ? '#c9a84c' : 'rgba(255,255,255,0.45)',
-          }}
-        >
-          <Search size={18} />
-          <span className="text-[9px] font-medium">Asesores</span>
-        </button>
-
-        <button
-          onClick={() => setActiveSideItem('consultations')}
-          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors relative"
-          style={{
-            color: activeSideItem === 'consultations' ? '#c9a84c' : 'rgba(255,255,255,0.45)',
-          }}
-        >
-          <MessageSquare size={18} />
-          <span className="text-[9px] font-medium">Consultas</span>
-          {convCount > 0 && (
-            <span
-              className="absolute top-0.5 right-4 w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center"
-              style={{ background: '#c9a84c', color: '#111' }}
-            >
-              {convCount}
-            </span>
-          )}
-        </button>
-
-        <button
-          onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
-          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
-          style={{ color: '#c9a84c' }}
-        >
-          <div
-            className="w-9 h-9 -mt-4 rounded-full flex items-center justify-center shadow-lg border"
-            style={{
-              background: '#c9a84c',
-              color: '#111',
-              borderColor: '#e2be64',
-            }}
-          >
-            <FileText size={18} />
-          </div>
-          <span className="text-[9px] font-bold text-[#c9a84c]">Documentos</span>
-        </button>
-
-        <button
-          onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
-          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
-          style={{ color: 'rgba(255,255,255,0.45)' }}
-        >
-          <Calculator size={18} />
-          <span className="text-[9px] font-medium">Cálculos</span>
-        </button>
-
-        <button
-          onClick={() => navigate('/account')}
-          className="flex flex-col items-center justify-center gap-1 flex-1 py-1 transition-colors"
-          style={{ color: 'rgba(255,255,255,0.45)' }}
-        >
-          <div
-            className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-bold"
-            style={{
-              background: 'rgba(201,168,76,0.15)',
-              border: '1px solid rgba(201,168,76,0.35)',
-              color: '#c9a84c',
-            }}
-          >
-            {initials}
-          </div>
-          <span className="text-[9px] font-medium">Cuenta</span>
-        </button>
-      </nav>
     </div>
   )
 }
@@ -1179,26 +1146,27 @@ function AgentCard({ agent, index }: { agent: Agent; index: number }) {
       </div>
 
       {/* Info area */}
-      <div className="p-4 flex-1 flex flex-col">
-        <div className="flex items-start justify-between mb-1">
-          <div>
-            <h3 className="text-[16px] font-light text-white leading-tight">{agent.name}</h3>
-            <p className="text-[8px] font-bold uppercase mt-0.5" style={{ letterSpacing: '2px', color: badgeColor.text }}>
-              {agent.role}
-            </p>
+      <div className="p-4 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="flex items-start justify-between mb-1">
+            <div>
+              <h3 className="text-[17px] font-normal text-white leading-tight">{agent.name}</h3>
+              <p className="text-[10px] font-semibold tracking-wider uppercase mt-1" style={{ color: badgeColor.text }}>
+                {agent.role}
+              </p>
+            </div>
           </div>
+          <p className="text-[11px] font-light leading-relaxed mt-2 line-clamp-2 text-white/60">
+            {agent.description}
+          </p>
         </div>
-        <p className="text-[11px] font-light leading-relaxed mt-2 line-clamp-2" style={{ color: 'rgba(255,255,255,0.55)' }}>
-          {agent.description}
-        </p>
 
         {/* Specialty pills */}
-        <div className="mt-3 flex flex-wrap gap-1">
+        <div className="mt-3.5 flex flex-wrap gap-1.5">
           {(agent.specialty || '').split(',').slice(0, 3).map((s, i) => (
             <span
               key={i}
-              className="text-[8px] px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)', border: '1px solid rgba(255,255,255,0.08)' }}
+              className="text-[9px] px-2 py-0.5 rounded-md bg-white/[0.04] text-white/50 border border-white/10"
             >
               {s.trim()}
             </span>
