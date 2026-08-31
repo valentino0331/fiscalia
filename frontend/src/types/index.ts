@@ -103,12 +103,47 @@ export interface AdminErrorLog {
   details?: string
 }
 
+export interface BalancedScorecard {
+  financial: {
+    mrr: number
+    arr: number
+    conversionRate: number
+    targetMrr: number
+    targetConversion: number
+    costPerCaseSol: number
+    estimatedMargin: number
+  }
+  customer: {
+    csatScore: number
+    activeUsers: number
+    retentionRate: number
+    avgResolutionTimeMs: number
+    targetResolutionTimeMs: number
+    npsScore: number
+  }
+  processes: {
+    totalCasesResolved: number
+    legalAccuracyRate: number
+    uptimePercent: number
+    documentsGeneratedCount: number
+    directResolutionRate: number
+  }
+  learning: {
+    aiSuccessRate: number
+    modelTier: string
+    dbLatencyMs: number
+    targetLatencyMs: number
+    voiceHdAdoption: number
+  }
+}
+
 export interface AdminStats {
   overview: AdminOverview
   registrations: AdminRegistrationPoint[]
   agentPerformance: AdminAgentPerformance[]
   systemHealth?: AdminSystemHealth
   aiMetrics?: AdminAiMetrics
+  scorecard?: BalancedScorecard
   recentErrors?: AdminErrorLog[]
   recentAiCalls?: Array<{
     id: string
@@ -121,3 +156,4 @@ export interface AdminStats {
     error?: string
   }>
 }
+
