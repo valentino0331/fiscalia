@@ -1563,48 +1563,73 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
           </div>
         </div>
 
-        {/* FOOTER ACCIONES (TOUCH-FRIENDLY & MOBILE-OPTIMIZED) */}
-        <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-t flex-shrink-0 bg-[#141414] gap-2" style={{ borderColor: '#262626' }}>
+        {/* FOOTER ACCIONES — MOBILE: botones grandes táctiles; DESKTOP: fila compacta */}
+
+        {/* MOBILE FOOTER (< lg): 2 filas de botones grandes */}
+        <div className="lg:hidden flex-shrink-0 border-t bg-[#141414]" style={{ borderColor: '#262626', paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
+          {/* Fila 1: Imprimir/PDF — el más importante */}
+          <motion.button
+            onClick={handlePrint}
+            whileTap={{ scale: 0.97 }}
+            className="w-full flex items-center justify-center gap-2.5 py-4 text-[14px] font-bold transition-all"
+            style={{ background: '#c9a84c', color: '#111111' }}
+          >
+            <Printer size={18} />
+            Imprimir / Guardar PDF Oficial
+          </motion.button>
+
+          {/* Fila 2: acciones secundarias */}
+          <div className="grid grid-cols-2 gap-0 border-t" style={{ borderColor: '#262626' }}>
+            <button
+              onClick={handleDownloadWord}
+              className="flex items-center justify-center gap-2 py-3.5 text-[12px] font-semibold border-r transition-all active:bg-white/5"
+              style={{ borderColor: '#262626', color: '#60a5fa', background: 'rgba(96,165,250,0.06)' }}
+            >
+              {downloadedWord ? (
+                <><Check size={15} className="text-blue-400" /><span>¡Descargado!</span></>
+              ) : (
+                <><FileDown size={15} /><span>Word (.doc)</span></>
+              )}
+            </button>
+            <button
+              onClick={handleCopy}
+              className="flex items-center justify-center gap-2 py-3.5 text-[12px] font-semibold transition-all active:bg-white/5"
+              style={{ color: 'rgba(255,255,255,0.70)', background: 'transparent' }}
+            >
+              {copied ? (
+                <><Check size={15} className="text-green-400" /><span>¡Copiado!</span></>
+              ) : (
+                <><Copy size={15} /><span>Copiar Texto</span></>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* DESKTOP FOOTER (≥ lg): fila compacta */}
+        <div className="hidden lg:flex items-center justify-between px-6 py-3 border-t flex-shrink-0 bg-[#141414] gap-2" style={{ borderColor: '#262626' }}>
           <div className="flex items-center gap-2">
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] sm:text-[12px] font-medium border transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border transition-all"
               style={{ borderColor: '#333333', color: 'rgba(255,255,255,0.70)', background: '#1c1c1c' }}
             >
               {copied ? (
-                <>
-                  <Check size={14} className="text-green-400" />
-                  <span>¡Copiado!</span>
-                </>
+                <><Check size={14} className="text-green-400" /><span>¡Copiado!</span></>
               ) : (
-                <>
-                  <Copy size={14} />
-                  <span className="hidden sm:inline">Copiar Texto</span>
-                  <span className="sm:hidden">Copiar</span>
-                </>
+                <><Copy size={14} /><span>Copiar Texto</span></>
               )}
             </button>
 
             <button
               onClick={handleDownloadWord}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] sm:text-[12px] font-medium border transition-all"
-              style={{
-                borderColor: 'rgba(96,165,250,0.30)',
-                color: '#60a5fa',
-                background: 'rgba(96,165,250,0.08)',
-              }}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border transition-all"
+              style={{ borderColor: 'rgba(96,165,250,0.30)', color: '#60a5fa', background: 'rgba(96,165,250,0.08)' }}
               title="Descargar archivo editable para Microsoft Word o Google Docs"
             >
               {downloadedWord ? (
-                <>
-                  <Check size={14} className="text-blue-400" />
-                  <span>¡Descargado!</span>
-                </>
+                <><Check size={14} className="text-blue-400" /><span>¡Descargado!</span></>
               ) : (
-                <>
-                  <FileDown size={14} />
-                  <span>Word (.doc)</span>
-                </>
+                <><FileDown size={14} /><span>Word (.doc)</span></>
               )}
             </button>
           </div>
@@ -1614,7 +1639,7 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
               onClick={handlePrint}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-[12px] sm:text-[13px] font-semibold transition-all shadow-lg"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all shadow-lg"
               style={{ background: '#c9a84c', color: '#111111' }}
             >
               <Printer size={15} />
