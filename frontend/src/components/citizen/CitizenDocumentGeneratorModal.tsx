@@ -206,7 +206,20 @@ function FieldTextarea({
 }
 
 // ─── Generador de HTML para Impresión Oficial con Márgenes Notariales ────────
-function buildPrintHTML(title: string, content: string): string {
+function buildPrintHTML(
+  title: string,
+  content: string,
+  font: 'times' | 'arial' | 'georgia' = 'times',
+  fontSize: number = 12,
+  lineSpacing: number = 1.5
+): string {
+  const fontFamilyCss =
+    font === 'times'
+      ? "'Times New Roman', Times, Georgia, serif"
+      : font === 'arial'
+      ? 'Arial, Helvetica, sans-serif'
+      : "'Georgia', serif"
+
   const safeContent = content
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -220,7 +233,7 @@ function buildPrintHTML(title: string, content: string): string {
 <style>
   @page {
     size: A4 portrait;
-    margin: 3.5cm 2.5cm 2.5cm 3.5cm; /* Estándar notarial: margen izquierdo amplio para encuadernación */
+    margin: 3.5cm 2.5cm 2.5cm 3.5cm; /* Estándar notarial: margen izquierdo 3.5cm para encuadernación y protocolo */
   }
   * {
     box-sizing: border-box;
@@ -228,9 +241,9 @@ function buildPrintHTML(title: string, content: string): string {
     padding: 0;
   }
   body {
-    font-family: 'Times New Roman', Times, Georgia, serif;
-    font-size: 12pt;
-    line-height: 1.6;
+    font-family: ${fontFamilyCss};
+    font-size: ${fontSize}pt;
+    line-height: ${lineSpacing};
     color: #111111;
     background: #ffffff;
     padding: 3.5cm 2.5cm 2.5cm 3.5cm;
@@ -257,9 +270,9 @@ function buildPrintHTML(title: string, content: string): string {
   pre {
     white-space: pre-wrap;
     word-wrap: break-word;
-    font-family: 'Times New Roman', Times, Georgia, serif;
-    font-size: 11.5pt;
-    line-height: 1.65;
+    font-family: ${fontFamilyCss};
+    font-size: ${fontSize}pt;
+    line-height: ${lineSpacing};
     text-align: justify;
     color: #111111;
   }
@@ -320,7 +333,21 @@ function buildPrintHTML(title: string, content: string): string {
 }
 
 // ─── Generador de archivo Word (.doc) nativo ────────────────────────────────
-function downloadWordDoc(filename: string, content: string, title: string) {
+function downloadWordDoc(
+  filename: string,
+  content: string,
+  title: string,
+  font: 'times' | 'arial' | 'georgia' = 'times',
+  fontSize: number = 12,
+  lineSpacing: number = 1.5
+) {
+  const fontFamilyCss =
+    font === 'times'
+      ? "'Times New Roman', serif"
+      : font === 'arial'
+      ? 'Arial, sans-serif'
+      : "'Georgia', serif"
+
   const safeContent = content
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -344,23 +371,23 @@ function downloadWordDoc(filename: string, content: string, title: string) {
 <style>
   @page Section1 {
     size: 595.3pt 841.9pt; /* A4 */
-    margin: 99.2pt 70.8pt 70.8pt 99.2pt; /* Margen superior e izquierdo amplio */
+    margin: 99.2pt 70.8pt 70.8pt 99.2pt; /* Margen superior 3.5cm e izquierdo 3.5cm amplio */
     mso-header-margin: 35.4pt;
     mso-footer-margin: 35.4pt;
     mso-paper-source: 0;
   }
   div.Section1 { page: Section1; }
   body {
-    font-family: 'Times New Roman', serif;
-    font-size: 12pt;
-    line-height: 1.5;
+    font-family: ${fontFamilyCss};
+    font-size: ${fontSize}pt;
+    line-height: ${lineSpacing};
     color: #000000;
   }
   p {
     margin: 0 0 10pt 0;
     text-align: justify;
     text-indent: 28.35pt; /* 1 cm de sangría de ley */
-    line-height: 1.5;
+    line-height: ${lineSpacing};
   }
   h1, h2, h3 {
     font-family: Arial, sans-serif;
@@ -407,6 +434,9 @@ export default function CitizenDocumentGeneratorModal({
   const [showMobilePreview, setShowMobilePreview] = useState(false)
   const [viewMode, setViewMode] = useState<'sheet' | 'text'>('sheet')
   const [zoomLevel, setZoomLevel] = useState<number>(100)
+  const [selectedFont, setSelectedFont] = useState<'times' | 'arial' | 'georgia'>('times')
+  const [fontSizePt, setFontSizePt] = useState<number>(12)
+  const [lineSpacing, setLineSpacing] = useState<number>(1.5)
 
   // ── Carta Notarial ───────────────────────────────────────────
   const [cartaCiudad, setCartaCiudad] = useState('Lima')
@@ -878,7 +908,7 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
 
   const handlePrint = () => {
     if (!validate()) return
-    const html = buildPrintHTML(docData.title, docData.content)
+    const html = buildPrintHTML(docData.title, docData.content, selectedFont, fontSizePt, lineSpacing)
     const win = window.open('', '_blank', 'width=950,height=750')
     if (win) {
       win.document.write(html)
@@ -888,7 +918,7 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
 
   const handleDownloadWord = () => {
     if (!validate()) return
-    downloadWordDoc(docData.title, docData.content, docData.title)
+    downloadWordDoc(docData.title, docData.content, docData.title, selectedFont, fontSizePt, lineSpacing)
     setDownloadedWord(true)
     setTimeout(() => setDownloadedWord(false), 2500)
   }
@@ -1392,48 +1422,74 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
             </div>
           </div>
 
-          {/* COLUMNA DERECHA: VISTA PREVIA HOJA A4 */}
+          {/* COLUMNA DERECHA: VISTA PREVIA HOJA A4 OFICIAL (PERÚ) */}
           <div
-            className={`lg:w-[54%] border-l flex flex-col overflow-hidden bg-[#0d0d0d] ${
+            className={`lg:w-[56%] border-l flex flex-col overflow-hidden bg-[#181b20] ${
               showMobilePreview ? 'block w-full' : 'hidden lg:flex'
             }`}
             style={{ borderColor: '#262626' }}
           >
-            {/* BARRA DE HERRAMIENTAS DE VISTA PREVIA */}
-            <div className="px-4 py-2.5 border-b flex items-center justify-between flex-shrink-0 bg-[#141414]" style={{ borderColor: '#262626' }}>
+            {/* BARRA DE HERRAMIENTAS DE FORMATO LEGAL EN TIEMPO REAL */}
+            <div className="px-3 sm:px-4 py-2 border-b flex items-center justify-between flex-wrap gap-2 flex-shrink-0 bg-[#14161a]" style={{ borderColor: '#262626' }}>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c] flex items-center gap-1.5">
                   <Eye size={12} />
-                  Hoja Legal A4
-                </span>
-                <span className="text-[10px] hidden sm:inline" style={{ color: 'rgba(255,255,255,0.30)' }}>
-                  (Márgenes e interlineado 1.5 de ley)
+                  Hoja Legal A4 (Perú)
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              {/* Controles de Formato Legal en Tiempo Real */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Selector de Fuente */}
+                <select
+                  value={selectedFont}
+                  onChange={(e) => setSelectedFont(e.target.value as 'times' | 'arial' | 'georgia')}
+                  className="px-2 py-1 rounded-md text-[10px] bg-[#22252c] text-white/90 border border-white/10 outline-none cursor-pointer"
+                  title="Tipografía reglamentaria"
+                >
+                  <option value="times">Times New Roman (PJ / Notarial)</option>
+                  <option value="arial">Arial (Minutas / Notarías)</option>
+                  <option value="georgia">Georgia (Formal)</option>
+                </select>
+
+                {/* Selector de Tamaño */}
+                <select
+                  value={fontSizePt}
+                  onChange={(e) => setFontSizePt(Number(e.target.value))}
+                  className="px-2 py-1 rounded-md text-[10px] bg-[#22252c] text-white/90 border border-white/10 outline-none cursor-pointer"
+                  title="Tamaño de letra legal"
+                >
+                  <option value={11}>11 pt</option>
+                  <option value={12}>12 pt (Norma de Ley)</option>
+                  <option value={13}>13 pt</option>
+                </select>
+
+                {/* Selector de Interlineado */}
+                <select
+                  value={lineSpacing}
+                  onChange={(e) => setLineSpacing(Number(e.target.value))}
+                  className="px-2 py-1 rounded-md text-[10px] bg-[#22252c] text-white/90 border border-white/10 outline-none cursor-pointer"
+                  title="Interlineado"
+                >
+                  <option value={1.15}>1.15 líneas</option>
+                  <option value={1.5}>1.5 de ley (CPC)</option>
+                  <option value={1.8}>1.8 amplio</option>
+                </select>
+
+                {/* Alternar Vista Texto / Hoja */}
                 <button
                   onClick={() => setViewMode((m) => (m === 'sheet' ? 'text' : 'sheet'))}
-                  className="px-2 py-1 rounded-md text-[10px] font-medium border transition-colors"
-                  style={{
-                    borderColor: 'rgba(255,255,255,0.15)',
-                    background: 'rgba(255,255,255,0.05)',
-                    color: 'rgba(255,255,255,0.70)',
-                  }}
+                  className="px-2 py-1 rounded-md text-[10px] font-medium border transition-colors border-white/10 bg-white/5 text-white/70 hover:text-white"
                   title="Cambiar entre vista de hoja A4 y texto plano"
                 >
                   {viewMode === 'sheet' ? 'Vista Texto' : 'Vista Papel A4'}
                 </button>
 
+                {/* Zoom */}
                 {viewMode === 'sheet' && (
                   <button
                     onClick={() => setZoomLevel((z) => (z === 100 ? 85 : z === 85 ? 115 : 100))}
-                    className="px-2 py-1 rounded-md text-[10px] font-medium border transition-colors"
-                    style={{
-                      borderColor: 'rgba(255,255,255,0.15)',
-                      background: 'rgba(255,255,255,0.05)',
-                      color: 'rgba(255,255,255,0.70)',
-                    }}
+                    className="px-2 py-1 rounded-md text-[10px] font-medium border transition-colors border-[#c9a84c]/30 bg-[#c9a84c]/10 text-[#c9a84c]"
                     title="Ajustar zoom de visualización"
                   >
                     {zoomLevel}%
@@ -1442,24 +1498,27 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
               </div>
             </div>
 
-            {/* ÁREA DEL DOCUMENTO (RENDERIZADO EN PAPEL BOND A4) */}
-            <div className="flex-1 overflow-y-auto overflow-x-auto p-3 sm:p-6 flex justify-center bg-[#0a0a0a]">
+            {/* ÁREA DEL DOCUMENTO (VISUALIZADOR ACROBAT CON FONDO GRIS Y PAPEL BOND BLANCO PURO) */}
+            <div className="flex-1 overflow-y-auto overflow-x-auto p-4 sm:p-8 flex justify-center bg-[#252830]">
               {viewMode === 'sheet' ? (
                 <div
-                  className="bg-white text-neutral-900 shadow-2xl rounded-sm transition-transform duration-200"
+                  className="bg-white text-[#111111] shadow-[0_12px_45px_rgba(0,0,0,0.60)] rounded-sm transition-all duration-200"
                   style={{
                     width: '100%',
-                    maxWidth: '680px',
-                    minHeight: '850px',
-                    /* Simulación visual de márgenes notariales: 3.5cm izquierdo, 3cm superior, 2.5cm derecho */
-                    padding: '3.2cm 2.2cm 2.5cm 3.2cm',
-                    fontFamily: "'Times New Roman', Times, Georgia, serif",
-                    fontSize: '11.5pt',
-                    lineHeight: '1.75',
-                    color: '#1a1a1a',
-                    border: '1px solid #e0e0e0',
-                    transform: `scale(${zoomLevel / 100})`,
-                    transformOrigin: 'top center',
+                    maxWidth: zoomLevel === 85 ? '600px' : zoomLevel === 115 ? '780px' : '680px',
+                    minHeight: '940px',
+                    /* Margen reglamentario notarial y procesal peruano: 3.5cm izq, 3.5cm sup, 2.5cm der, 2.5cm inf */
+                    padding: '3.5cm 2.5cm 2.5cm 3.5cm',
+                    fontFamily:
+                      selectedFont === 'times'
+                        ? "'Times New Roman', Times, Georgia, serif"
+                        : selectedFont === 'arial'
+                        ? 'Arial, Helvetica, sans-serif'
+                        : "'Georgia', serif",
+                    fontSize: `${fontSizePt}pt`,
+                    lineHeight: `${lineSpacing}`,
+                    color: '#111111',
+                    border: '1px solid #d0d0d0',
                   }}
                 >
                   {/* Membrete notarial superior sutil */}
@@ -1467,17 +1526,17 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
                     className="flex items-center justify-between border-b pb-2 mb-6 text-[8pt] text-neutral-500 font-sans uppercase tracking-widest"
                     style={{ borderColor: '#c9a84c' }}
                   >
-                    <span className="font-semibold text-neutral-700">HARDMAN · Asesoría Jurídica</span>
-                    <span>Documento Oficial Preparado</span>
+                    <span className="font-semibold text-neutral-800">HARDMAN · ASESORÍA JURÍDICA</span>
+                    <span>DOCUMENTO OFICIAL PREPARADO</span>
                   </div>
 
                   {/* Cuerpo del documento con sangría e interlineado legal */}
                   <div
-                    className="text-justify leading-relaxed whitespace-pre-wrap selection:bg-amber-200 selection:text-neutral-900"
+                    className="text-justify whitespace-pre-wrap selection:bg-amber-100 selection:text-neutral-900"
                     style={{
                       wordBreak: 'break-word',
                       hyphens: 'auto',
-                      fontFamily: "'Times New Roman', Times, Georgia, serif",
+                      color: '#111111',
                     }}
                   >
                     {docData.content}
@@ -1485,7 +1544,7 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
 
                   {/* Pie notarial */}
                   <div className="mt-12 pt-3 border-t border-neutral-300 text-center font-sans text-[7.5pt] text-neutral-400 uppercase tracking-wider">
-                    Documento redactado con arreglo a la normativa legal peruana vigente · www.hardman.pe
+                    Documento redactado con arreglo a la normativa legal peruana vigente · HARDMAN Legal Perú
                   </div>
                 </div>
               ) : (
