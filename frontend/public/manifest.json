@@ -1,0 +1,20 @@
+{
+  "name": "HARDMAN — Inteligencia Jurídica",
+  "short_name": "HARDMAN",
+  "description": "8 especialistas en derecho peruano con inteligencia artificial",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#c9a84c",
+  "orientation": "portrait-primary",
+  "lang": "es",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/hardman-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
