@@ -363,11 +363,8 @@ export default function Dashboard() {
           )}
 
           <div className="mt-auto px-4 py-4 border-t" style={{ borderColor: '#2a2a2a' }}>
-            <p className="text-[8px] uppercase leading-relaxed" style={{ color: 'rgba(255,255,255,0.30)', letterSpacing: '2px' }}>
+            <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', letterSpacing: '1px' }}>
               Hardman · Perú
-            </p>
-            <p className="text-[7px]" style={{ color: 'rgba(255,255,255,0.20)', letterSpacing: '1px' }}>
-              Inteligencia Jurídica
             </p>
           </div>
         </aside>

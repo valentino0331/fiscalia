@@ -23,15 +23,15 @@ export default function JurisClaudeLogo({
       <span
         style={{
           fontFamily: "'Montserrat', sans-serif",
-          fontWeight: 200,
+          fontWeight: 400,
           fontSize: fontSize[size],
-          letterSpacing: '7px',
+          letterSpacing: '2px',
           color: '#c8c0b0',
-          textTransform: 'uppercase',
+          textTransform: 'none',
           lineHeight: 1.3,
         }}
       >
-        HARDMAN
+        Hardman
       </span>
       <div
         style={{

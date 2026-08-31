@@ -10,7 +10,9 @@ import {
   Download, Paperclip, Image as ImageIcon,
   X, AlertTriangle, FileText, Loader2,
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2,
-  Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase
+  Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
+  Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
+  Scale, Shield, Gavel, Building2, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -24,7 +26,6 @@ import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
-import { Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag, type LucideIcon } from 'lucide-react'
 
 interface PromptModeItem {
   id: string
@@ -75,38 +76,216 @@ interface DocumentTemplateItem {
   prompt: string
 }
 
-const DOCUMENT_TEMPLATES: DocumentTemplateItem[] = [
-  {
-    label: 'Demanda de Alimentos (Formato PJ)',
-    icon: Baby,
-    badgeColor: '#34d17a',
-    prompt: 'Ayúdame a redactar el Formato Único de Demanda de Alimentos para presentar ante el Juzgado de Paz Letrado sin abogado: [indica nombres, edades de los hijos, gastos aproximados e ingresos del obligado]',
-  },
-  {
-    label: 'Carta Notarial de Requerimiento / Cobro',
-    icon: MailCheck,
-    badgeColor: '#c9a84c',
-    prompt: 'Redacta una carta notarial con estructura oficial conforme a la Ley del Notariado (D. Leg. 1049) exigiendo el pago de mi liquidación de beneficios sociales dentro del plazo de 48 horas bajo apercibimiento de denuncia ante SUNAFIL: [empresa, sueldo, fechas de trabajo]',
-  },
-  {
-    label: 'Contrato de Alquiler con Desalojo Rápido',
-    icon: Home,
-    badgeColor: '#c9a84c',
-    prompt: 'Redacta un contrato de arrendamiento de vivienda con Cláusula de Allanamiento Futuro (Ley 30201 y Ley 30933) para desalojo express con intervención notarial: [arrendador, arrendatario, dirección del inmueble, monto de renta mensual]',
-  },
-  {
-    label: 'Reclamo Formal en INDECOPI',
-    icon: ShoppingBag,
-    badgeColor: '#60a5fa',
-    prompt: 'Redacta un reclamo formal para el Libro de Reclamaciones e INDECOPI por cobro indebido / estafa / producto defectuoso: [empresa, producto comprado, monto pagado, solución exigida]',
-  },
-  {
-    label: 'Descargo ante Citación Policial / Fiscal',
-    icon: ShieldAlert,
-    badgeColor: '#f59e0b',
-    prompt: 'Oriéntame cómo preparar mi manifestación y qué pruebas presentar ante esta citación policial / fiscal: [motivo de la citación, hechos]',
-  },
-]
+const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
+  valentina: [
+    {
+      label: 'Carta Notarial - Pago de Beneficios Sociales (Plazo 48h)',
+      icon: MailCheck,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta una carta notarial formal conforme a la Ley del Notariado (D. Leg. 1049) y D. Leg. 728, requiriendo a mi empleador el pago inmediato de mi liquidación de beneficios sociales dentro del plazo improrrogable de 48 horas: [empresa, cargo, fecha de ingreso, fecha de cese, sueldo mensual]',
+    },
+    {
+      label: 'Carta de Renuncia con Exoneración de Preaviso de 30 Días',
+      icon: Briefcase,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta una carta formal de renuncia voluntaria con solicitud de exoneración del plazo de 30 días de preaviso conforme al Art. 18 del D.S. 003-97-TR: [empresa, cargo, último día efectivo de labores]',
+    },
+    {
+      label: 'Denuncia por Despido Arbitrario e Inspección ante SUNAFIL',
+      icon: ShieldAlert,
+      badgeColor: '#f59e0b',
+      prompt: 'Redacta una solicitud de inspección laboral y denuncia ante SUNAFIL por despido arbitrario incausado e incumplimiento de obligaciones laborales: [razón social, RUC, centro de labores, hechos]',
+    },
+    {
+      label: 'Contrato de Trabajo a Plazo Fijo Sujeto a Modalidad',
+      icon: FileText,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta un contrato individual de trabajo sujeto a modalidad (D.S. 003-97-TR) con causa objetiva determinante, periodo de prueba y cláusula de confidencialidad: [empleador, trabajador, puesto, remuneración, plazo]',
+    },
+  ],
+  sebastian: [
+    {
+      label: 'Recurso de Oposición a Prisión Preventiva (DL 1585 / NCPP)',
+      icon: Shield,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta un escrito de oposición al requerimiento de prisión preventiva conforme a los Arts. 268 y siguientes del NCPP y los criterios del D. Leg. 1585, acreditando arraigo y solicitando comparecencia con restricciones: [delito imputado, imputado, carpeta fiscal, elementos de convicción cuestionados]',
+    },
+    {
+      label: 'Solicitud de Audiencia de Tutela de Derechos (Art. 71 NCPP)',
+      icon: Gavel,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta una solicitud de audiencia de tutela de derechos dirigida al Juez de Investigación Preparatoria conforme al Art. 71 numeral 4 del Código Procesal Penal por vulneración del derecho de defensa: [fiscalía a cargo, carpeta fiscal, actos lesivos]',
+    },
+    {
+      label: 'Denuncia Penal de Parte ante Fiscalía Provincial Penal',
+      icon: FileText,
+      badgeColor: '#f59e0b',
+      prompt: 'Redacta una denuncia penal de parte formal dirigida al Fiscal Provincial Penal de Turno por delito contra el patrimonio / estafa / lesiones, con fundamentación fáctica, tipicidad y ofrecimiento de pruebas: [denunciante, denunciado, relato de hechos, elementos probatorios]',
+    },
+    {
+      label: 'Solicitud de Control de Plazos de Diligencias Preliminares (Art. 343 NCPP)',
+      icon: Scale,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta una solicitud de control de plazos conforme al Art. 343 del NCPP ante el Juez de Investigación Preparatoria por vencimiento excesivo del plazo de diligencias preliminares sin pronunciamiento fiscal: [carpeta fiscal, fecha de disposición de inicio, plazo vencido]',
+    },
+  ],
+  diego: [
+    {
+      label: 'Contrato de Alquiler con Desalojo Notarial Express (Ley 30933)',
+      icon: Home,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta un contrato de arrendamiento de inmueble con Cláusula de Allanamiento Futuro (Ley 30201) y sometimiento al Desalojo Notarial Express (Ley 30933), con cláusulas de resolución por falta de pago y garantía: [arrendador, arrendatario, dirección del predio, renta mensual en S/, cuenta bancaria]',
+    },
+    {
+      label: 'Carta Notarial de Desalojo por Vencimiento / Falta de Pago',
+      icon: MailCheck,
+      badgeColor: '#c9a84c',
+      prompt: 'Redacta una carta notarial de requerimiento de restitución de inmueble y desalojo por vencimiento de plazo / falta de pago de rentas conforme al Art. 1428 del Código Civil y Ley 30933, bajo apercibimiento de lanzamiento: [arrendador, arrendatario, dirección, meses adeudados]',
+    },
+    {
+      label: 'Contrato de Mutuo Dinerario con Mérito Ejecutivo',
+      icon: FileText,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta un contrato privado de mutuo dinerario con legalización notarial de firmas (Arts. 1648 y ss. del Código Civil), con pacto de intereses y cláusula de mérito ejecutivo: [prestamista, prestatario, monto en Soles, cronograma de pago]',
+    },
+    {
+      label: 'Minuta de Compraventa de Inmueble con Reserva de Propiedad',
+      icon: FileText,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta una minuta de compraventa de bien inmueble con pacto de reserva de propiedad (Art. 1583 Código Civil), saneamiento por evicción y forma de pago bancarizada: [vendedor, comprador, partida registral SUNARP, precio pactado]',
+    },
+  ],
+  adriana: [
+    {
+      label: 'Pacto de Socios / Accionistas (Cláusulas Drag & Tag Along)',
+      icon: Building2,
+      badgeColor: '#8B5CF6',
+      prompt: 'Redacta un acuerdo de accionistas conforme a la Ley General de Sociedades (Ley 26887), incorporando cláusulas de derecho de adquisición preferente, acompañamiento (Tag Along) y arrastre (Drag Along): [sociedad, accionistas, porcentaje accionario]',
+    },
+    {
+      label: 'Acuerdo de Confidencialidad y No Divulgación (NDA Empresarial)',
+      icon: Shield,
+      badgeColor: '#8B5CF6',
+      prompt: 'Redacta un acuerdo de confidencialidad y no divulgación (NDA) bilateral para negociación comercial y M&A, con penalidad por incumplimiento y plazo de vigencia: [parte reveladora, parte receptora, finalidad]',
+    },
+    {
+      label: 'Acta de Junta General de Accionistas de Aumento de Capital',
+      icon: FileText,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta un acta de Junta General de Accionistas de S.A.C. que aprueba el aumento de capital social por nuevos aportes y la consecuente modificación estatutaria: [razón social, RUC, capital actual, nuevo capital]',
+    },
+    {
+      label: 'Contrato de Prestación de Servicios B2B con Propiedad Intelectual',
+      icon: FileText,
+      badgeColor: '#8B5CF6',
+      prompt: 'Redacta un contrato de locación de servicios profesionales e independientes para empresas (B2B), con estipulación de entregables, propiedad intelectual y no sujeción laboral (Art. 1764 Código Civil): [cliente, proveedor, servicios, retribución]',
+    },
+  ],
+  rodrigo: [
+    {
+      label: 'Solicitud de Petitorio Minero ante INGEMMET (TUPA 2026)',
+      icon: FileText,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta una solicitud de petitorio minero conforme al TUO de la Ley General de Minería y el TUPA del INGEMMET, con coordenadas UTM WGS84 y cuadícula: [titular, nombre del petitorio, extensión en hectáreas, ubicación, coordenadas]',
+    },
+    {
+      label: 'Escrito de Descargo en PAS ante OEFA',
+      icon: ShieldAlert,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un escrito de descargos frente a imputación de cargos en Procedimiento Administrativo Sancionador (PAS) de OEFA, sustentando causales eximentes y subsanación voluntaria: [empresa, resolución de imputación, hechos imputados]',
+    },
+    {
+      label: 'Contrato de Cesión y Explotación Minera',
+      icon: FileText,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta un contrato de cesión minera conforme a la Ley General de Minería con regalías, cumplimiento de IGA y plan de cierre: [cedente, cesionario, código de concesión, plazo]',
+    },
+    {
+      label: 'Solicitud de Levantamiento de Suspensión en REINFO',
+      icon: Scale,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta una solicitud dirigida a la DGFM del MINEM solicitando el levantamiento de suspensión de inscripción en REINFO con acreditación de IGAFOM: [minero formalizado, código REINFO, concesión]',
+    },
+  ],
+  camila: [
+    {
+      label: 'Formato Único de Demanda de Alimentos con Asignación Anticipada',
+      icon: Baby,
+      badgeColor: '#EC4899',
+      prompt: 'Redacta una demanda de pensión de alimentos con solicitud de medida cautelar de Asignación Anticipada ante el Juzgado de Paz Letrado conforme a la Ley 28439: [demandante, demandado, nombres y edades de los hijos, gastos e ingresos aproximados]',
+    },
+    {
+      label: 'Demanda de Tenencia Compartida y Régimen de Visitas (Ley 31590)',
+      icon: Scale,
+      badgeColor: '#EC4899',
+      prompt: 'Redacta una demanda de tenencia compartida obligatoria al amparo de la Ley 31590, fundamentando el principio de corresponsabilidad parental y el interés superior del niño: [demandante, demandado, hijos, propuesta de régimen]',
+    },
+    {
+      label: 'Solicitud de Divorcio por Mutuo Acuerdo (Vía Notarial / Municipal)',
+      icon: FileText,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta una solicitud de divorcio ulterior por mutuo acuerdo al amparo de la Ley 29227 (Divorcio Rápido) para presentar ante Notaría o Municipalidad: [cónyuges, fecha y lugar de matrimonio]',
+    },
+    {
+      label: 'Demanda de Aumento / Reducción de Pensión de Alimentos',
+      icon: Baby,
+      badgeColor: '#EC4899',
+      prompt: 'Redacta una demanda de aumento / reducción de pensión de alimentos conforme al Art. 482 del Código Civil por variación de las necesidades o posibilidades económicas: [partes, sentencia o acta anterior, nuevo monto solicitado]',
+    },
+  ],
+  fernanda: [
+    {
+      label: 'Recurso de Reclamación contra Determinación / Multa SUNAT',
+      icon: FileText,
+      badgeColor: '#10B981',
+      prompt: 'Redacta un recurso de reclamación tributaria al amparo del Art. 137 del Código Tributario contra Resolución de Determinación / Multa emitida por SUNAT, sustentando la nulidad o improcedencia del reparo: [contribuyente, RUC, valor impugnado, fundamentos]',
+    },
+    {
+      label: 'Recurso de Apelación ante el Tribunal Fiscal',
+      icon: Scale,
+      badgeColor: '#10B981',
+      prompt: 'Redacta un recurso de apelación ante el Tribunal Fiscal conforme al Art. 146 del Código Tributario con solicitud de suspensión de cobranza coactiva (Art. 119 C.T.): [recurrente, RUC, resolución apelada, agravios]',
+    },
+    {
+      label: 'Solicitud de Prescripción de Deuda Tributaria (Art. 43 Código Tributario)',
+      icon: FileText,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta una solicitud formal ante SUNAT requiriendo la declaración de prescripción de la deuda tributaria y multas conforme a los Arts. 43 a 48 del Código Tributario: [contribuyente, RUC, tributos y periodos]',
+    },
+    {
+      label: 'Escrito de Levantamiento de Embargo Coactivo de SUNAT',
+      icon: ShieldAlert,
+      badgeColor: '#10B981',
+      prompt: 'Redacta un escrito ante el Ejecutor Coactivo de SUNAT solicitando el levantamiento inmediato de embargo en cuenta bancaria por vulneración del procedimiento de cobranza coactiva: [contribuyente, expediente coactivo, banco]',
+    },
+  ],
+  marco: [
+    {
+      label: 'Recurso de Apelación en Licitación Pública ante OECE (Ley 32069)',
+      icon: Gavel,
+      badgeColor: '#0D9488',
+      prompt: 'Redacta un recurso de apelación contra el otorgamiento de la buena pro / descalificación de oferta bajo la Ley 32069 dirigido al Tribunal de Contrataciones del Estado (OECE): [postor, entidad convocante, proceso, fundamentos]',
+    },
+    {
+      label: 'Escrito de Descargo en Procedimiento Sancionador (LPAG Ley 27444)',
+      icon: ShieldAlert,
+      badgeColor: '#0D9488',
+      prompt: 'Redacta un escrito de descargos contra la imputación de cargos en Procedimiento Administrativo Sancionador (PAS) conforme a la Ley 27444, invocando presunción de licitud y tipicidad: [administrado, entidad, acto de imputación, descargos]',
+    },
+    {
+      label: 'Recurso de Reconsideración contra Acto Administrativo',
+      icon: FileText,
+      badgeColor: '#34d17a',
+      prompt: 'Redacta un recurso de reconsideración al amparo del Art. 219 de la Ley 27444 contra resolución administrativa desfavorable, adjuntando nueva prueba instrumental: [administrado, resolución, autoridad emisora, nueva prueba]',
+    },
+    {
+      label: 'Solicitud de Aplicación de Silencio Administrativo Positivo',
+      icon: Scale,
+      badgeColor: '#0D9488',
+      prompt: 'Redacta una declaración jurada y solicitud de aplicación de Silencio Administrativo Positivo conforme a la Ley 27444 por vencimiento del plazo legal de 30 días hábiles sin pronunciamiento: [administrado, expediente, trámite]',
+    },
+  ],
+}
 
 function requestPushPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
@@ -1456,164 +1635,67 @@ export default function Chat() {
                       <span className="hidden sm:inline">IMAGEN</span>
                     </button>
 
-                    {/* Document templates — Desktop */}
-                    <div ref={templatesRef} className="hidden sm:block relative">
+                    {/* Specialist Document Templates (Desktop & Mobile) */}
+                    <div ref={templatesRef} className="relative">
                       <button
                         onClick={() => setTemplatesOpen((o) => !o)}
-                        className="flex items-center gap-1.5 text-[10px] font-light transition-colors"
-                        style={{ color: templatesOpen ? '#c9a84c' : 'rgba(255,255,255,0.25)' }}
+                        className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-2 py-1 rounded-md"
+                        style={{
+                          color: templatesOpen ? '#c9a84c' : 'rgba(255,255,255,0.40)',
+                          background: templatesOpen ? 'rgba(201,168,76,0.10)' : 'transparent',
+                        }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                        onMouseLeave={(e) => { if (!templatesOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
-                        title="Plantillas de documentos"
+                        onMouseLeave={(e) => { if (!templatesOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.40)' }}
+                        title={`Plantillas legales de ${agent.name} (${agent.badge})`}
                       >
                         <BookOpen size={12} />
                         <span>PLANTILLAS</span>
                       </button>
                       {templatesOpen && (
                         <div
-                          className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-50"
-                          style={{ background: '#1a1a1a', border: '1px solid #333333', minWidth: '220px', boxShadow: '0 8px 30px rgba(0,0,0,0.60)' }}
+                          className="absolute bottom-full left-0 mb-2 rounded-xl overflow-hidden z-50 w-72 sm:w-84"
+                          style={{ background: '#1c1c1c', border: '1px solid #333333', boxShadow: '0 12px 40px rgba(0,0,0,0.80)' }}
                         >
-                          <div className="px-3 py-2" style={{ borderBottom: '1px solid #2a2a2a' }}>
-                            <p className="text-[8px] font-bold uppercase" style={{ letterSpacing: '2px', color: 'rgba(255,255,255,0.30)' }}>
-                              PLANTILLAS LEGALES
-                            </p>
+                          <div className="px-3.5 py-2.5 border-b flex items-center justify-between" style={{ borderColor: '#2a2a2a', background: '#181818' }}>
+                            <div>
+                              <p className="text-[8px] font-bold uppercase tracking-wider" style={{ color: '#c9a84c' }}>
+                                PLANTILLAS · {agent.role.toUpperCase()}
+                              </p>
+                              <p className="text-[9px] text-white/40">Modelos de {agent.name}</p>
+                            </div>
+                            <span className="text-[8px] px-1.5 py-0.5 rounded uppercase font-bold" style={{ background: 'rgba(201,168,76,0.12)', color: '#c9a84c', border: '1px solid rgba(201,168,76,0.25)' }}>
+                              {agent.badge}
+                            </span>
                           </div>
-                          {DOCUMENT_TEMPLATES.map((tpl) => {
-                            const TplIcon = tpl.icon
-                            return (
-                              <button
-                                key={tpl.label}
-                                onClick={() => {
-                                  setInput(tpl.prompt)
-                                  setTemplatesOpen(false)
-                                  textareaRef.current?.focus()
-                                  setTimeout(autoResize, 50)
-                                }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[10px] font-light text-left transition-colors"
-                                style={{ color: 'rgba(255,255,255,0.65)' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.10)'; e.currentTarget.style.color = '#c9a84c' }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
-                              >
-                                <TplIcon size={13} style={{ color: tpl.badgeColor }} />
-                                <span>{tpl.label}</span>
-                              </button>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* ── Desktop-only tools ──────────────────────────────── */}
-                    {/* Escanear / Traducir Carta */}
-                    <button
-                      onClick={() => setScannerOpen(true)}
-                      className="hidden sm:flex items-center gap-1.5 text-[10px] font-light transition-colors"
-                      style={{ color: 'rgba(255,255,255,0.25)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
-                      title="Traducir documento legal a lenguaje sencillo"
-                    >
-                      <Sparkles size={12} />
-                      <span>TRADUCIR</span>
-                    </button>
-
-                    {/* Calculadoras */}
-                    <button
-                      onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
-                      className="hidden sm:flex items-center gap-1.5 text-[10px] font-light transition-colors"
-                      style={{ color: 'rgba(255,255,255,0.25)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#34d17a' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
-                      title="Calculadoras en Soles (Liquidación, Alimentos, Prescripción)"
-                    >
-                      <Calculator size={12} />
-                      <span>CALCULADORA</span>
-                    </button>
-
-                    {/* Dónde Ir */}
-                    <button
-                      onClick={() => setWhereToGoOpen(true)}
-                      className="hidden sm:flex items-center gap-1.5 text-[10px] font-light transition-colors"
-                      style={{ color: 'rgba(255,255,255,0.25)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#f59e0b' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
-                      title="Guía de trámites: A dónde ir y qué llevar"
-                    >
-                      <MapPin size={12} />
-                      <span>DÓNDE IR</span>
-                    </button>
-
-                    {/* Calcular Plazo */}
-                    <button
-                      onClick={() => setDeadlineModal({ isOpen: true })}
-                      className="hidden sm:flex items-center gap-1.5 text-[10px] font-light transition-colors"
-                      style={{ color: 'rgba(255,255,255,0.25)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
-                      title="Calcular días hábiles y plazos judiciales peruanos"
-                    >
-                      <Calendar size={12} />
-                      <span>PLAZOS</span>
-                    </button>
-
-                    {/* ── Mobile: unified "Más" menu ────────────────────── */}
-                    <div className="sm:hidden relative">
-                      <button
-                        onClick={() => setTemplatesOpen((o) => !o)}
-                        className="flex items-center gap-1 text-[9px] font-medium transition-all px-2 py-1 rounded-md"
-                        style={{
-                          color: templatesOpen ? '#c9a84c' : 'rgba(255,255,255,0.40)',
-                          background: templatesOpen ? 'rgba(201,168,76,0.10)' : 'rgba(255,255,255,0.04)',
-                          border: `1px solid ${templatesOpen ? 'rgba(201,168,76,0.25)' : 'rgba(255,255,255,0.08)'}`,
-                        }}
-                      >
-                        <Sparkles size={11} />
-                        Más
-                      </button>
-                      {templatesOpen && (
-                        <div
-                          className="absolute bottom-full left-0 mb-2 rounded-2xl overflow-hidden z-50 w-56"
-                          style={{ background: '#1c1c1c', border: '1px solid #333333', boxShadow: '0 16px 50px rgba(0,0,0,0.75)' }}
-                        >
-                          <div className="px-3 py-2.5 border-b" style={{ borderColor: '#2a2a2a' }}>
-                            <p className="text-[8px] font-bold uppercase" style={{ letterSpacing: '2px', color: 'rgba(255,255,255,0.25)' }}>HERRAMIENTAS JURÍDICAS</p>
+                          <div className="max-h-72 overflow-y-auto divide-y divide-white/5">
+                            {(SPECIALIST_TEMPLATES[agentId || ''] || SPECIALIST_TEMPLATES.valentina).map((tpl) => {
+                              const TplIcon = tpl.icon
+                              return (
+                                <button
+                                  key={tpl.label}
+                                  onClick={() => {
+                                    setInput(tpl.prompt)
+                                    setTemplatesOpen(false)
+                                    textareaRef.current?.focus()
+                                    setTimeout(autoResize, 50)
+                                  }}
+                                  className="w-full flex items-start gap-2.5 px-3.5 py-2.5 text-left transition-colors group hover:bg-white/[0.04]"
+                                >
+                                  <div className="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mt-0.5" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                                    <TplIcon size={13} style={{ color: tpl.badgeColor }} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-[11px] font-medium text-white/80 group-hover:text-[#c9a84c] transition-colors leading-snug">
+                                      {tpl.label}
+                                    </p>
+                                    <p className="text-[9px] text-white/30 truncate mt-0.5">
+                                      {tpl.prompt.slice(0, 50)}...
+                                    </p>
+                                  </div>
+                                </button>
+                              )
+                            })}
                           </div>
-                          {[
-                            { label: 'Traducir Notificación', icon: <Sparkles size={14} style={{ color: '#c9a84c' }} />, action: () => { setScannerOpen(true); setTemplatesOpen(false) } },
-                            { label: 'Calculadoras en S/', icon: <Calculator size={14} style={{ color: '#34d17a' }} />, action: () => { setCalcModal({ isOpen: true, tab: 'liquidacion' }); setTemplatesOpen(false) } },
-                            { label: 'A Dónde Ir y Qué Llevar', icon: <MapPin size={14} style={{ color: '#f59e0b' }} />, action: () => { setWhereToGoOpen(true); setTemplatesOpen(false) } },
-                            { label: 'Calcular Plazos', icon: <Calendar size={14} style={{ color: '#c9a84c' }} />, action: () => { setDeadlineModal({ isOpen: true }); setTemplatesOpen(false) } },
-                          ].map((item) => (
-                            <button key={item.label} onClick={item.action}
-                              className="w-full flex items-center gap-3 px-3 py-3 text-[12px] font-light text-left transition-colors"
-                              style={{ color: 'rgba(255,255,255,0.75)' }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
-                            >
-                              {item.icon} {item.label}
-                            </button>
-                          ))}
-                          <div style={{ height: '1px', background: '#2a2a2a', margin: '2px 12px' }} />
-                          <div className="px-3 py-1.5">
-                            <p className="text-[8px] font-bold uppercase" style={{ letterSpacing: '1.5px', color: 'rgba(255,255,255,0.20)' }}>PLANTILLAS</p>
-                          </div>
-                          {DOCUMENT_TEMPLATES.slice(0, 4).map((tpl) => {
-                            const TplIcon = tpl.icon
-                            return (
-                              <button
-                                key={tpl.label}
-                                onClick={() => { setInput(tpl.prompt); setTemplatesOpen(false); textareaRef.current?.focus(); setTimeout(autoResize, 50) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-[11px] font-light text-left transition-colors"
-                                style={{ color: 'rgba(255,255,255,0.65)' }}
-                                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.07)'; e.currentTarget.style.color = '#c9a84c' }}
-                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
-                              >
-                                <TplIcon size={14} style={{ color: tpl.badgeColor }} />
-                                <span>{tpl.label}</span>
-                              </button>
-                            )
-                          })}
                         </div>
                       )}
                     </div>
@@ -1953,41 +2035,33 @@ function MessageBubble({
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>HARDMAN — Respuesta Legal — ${agent.name}</title>
+<title>Dictamen Legal — ${agent.name}</title>
 <style>
-  @page { size: A4; margin: 2.5cm 3cm; }
+  @page { size: A4 portrait; margin: 3cm 2.5cm 2.5cm 3cm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Times New Roman', Times, serif; font-size: 11.5pt; line-height: 1.75; color: #1a1a1a; background: #fff; }
-  .brand-bar { border-top: 3pt solid #c9a84c; padding-top: 12pt; margin-bottom: 20pt; }
-  .brand { font-family: Arial, sans-serif; font-size: 7pt; font-weight: 700; letter-spacing: 4pt; text-transform: uppercase; color: #c9a84c; }
-  h1 { font-size: 20pt; font-weight: 300; color: #111; border-bottom: 1.5pt solid #c9a84c; padding-bottom: 6pt; margin: 16pt 0 10pt; }
-  h2 { font-size: 13pt; font-weight: 600; color: #111; margin: 14pt 0 6pt; }
-  h3 { font-size: 11pt; font-weight: 600; color: #333; margin: 10pt 0 4pt; }
-  p { margin-bottom: 8pt; }
+  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #111111; background: #fff; padding: 3cm 2.5cm 2.5cm 3cm; }
+  h1 { font-size: 18pt; font-weight: bold; color: #111; border-bottom: 1.5pt solid #111; padding-bottom: 6pt; margin: 0 0 12pt; text-align: center; }
+  h2 { font-size: 13pt; font-weight: bold; color: #111; margin: 14pt 0 6pt; }
+  h3 { font-size: 11pt; font-weight: bold; color: #333; margin: 10pt 0 4pt; }
+  p { margin-bottom: 10pt; text-align: justify; }
   ul { margin: 8pt 0 8pt 20pt; }
-  li { margin-bottom: 3pt; }
-  blockquote { border-left: 3pt solid #c9a84c; padding: 6pt 10pt; color: #555; font-style: italic; margin: 10pt 0; background: #faf8f4; }
-  code { font-family: Consolas, monospace; font-size: 9pt; background: #f5f5f5; padding: 1pt 4pt; border-radius: 2pt; }
+  li { margin-bottom: 4pt; }
+  blockquote { border-left: 2pt solid #666; padding: 6pt 10pt; color: #333; font-style: italic; margin: 10pt 0; }
+  code { font-family: Consolas, monospace; font-size: 9.5pt; background: #f5f5f5; padding: 1pt 4pt; border-radius: 2pt; }
   strong { font-weight: 700; color: #111; }
-  .meta { font-family: Arial, sans-serif; font-size: 8.5pt; color: #888; margin-bottom: 18pt; }
-  .disclaimer { margin-top: 30pt; border-top: 0.5pt solid #ddd; padding-top: 8pt; font-family: Arial, sans-serif; font-size: 7pt; color: #aaa; }
-  .btn-print { display: block; margin: 16px auto; padding: 12px 32px; background: #c9a84c; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: Arial, sans-serif; font-weight: 600; }
-  @media print { .btn-print { display: none !important; } }
+  .meta { font-family: Arial, sans-serif; font-size: 9pt; color: #666; margin-bottom: 18pt; text-align: center; }
+  .btn-print { display: block; margin: 16px auto; padding: 12px 32px; background: #c9a84c; color: #111; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: Arial, sans-serif; font-weight: 700; }
+  @media print {
+    body { padding: 0 !important; margin: 0 !important; }
+    .btn-print { display: none !important; }
+  }
 </style>
 </head>
 <body>
 <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
-<div class="brand-bar">
-  <p class="brand">HARDMAN · Inteligencia Jurídica · Perú</p>
-</div>
-<h1>Respuesta Legal — ${agent.name}</h1>
+<h1>Respuesta Legal Especializada</h1>
 <p class="meta">${agent.name} &nbsp;·&nbsp; ${agent.role} &nbsp;·&nbsp; ${fecha}</p>
-<p>${toHtmlContent(message.content)}</p>
-<div class="disclaimer">
-  HARDMAN · Inteligencia Jurídica · Perú &nbsp;|&nbsp; ${fecha} &nbsp;|&nbsp; 
-  Documento de asesoría informativa. No constituye dictamen legal formal. Se recomienda la revisión de un abogado colegiado para actos con consecuencias jurídicas definitivas.
-</div>
-<button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+<div>${toHtmlContent(message.content)}</div>
 </body>
 </html>`
       const win = window.open('', '_blank', 'width=900,height=700')
@@ -2000,7 +2074,7 @@ function MessageBubble({
         return
       }
     } catch (err) {
-      console.error('[HARDMAN] Export error:', err)
+      console.error('Export error:', err)
       setDownloaded(false)
     }
     setTimeout(() => setDownloaded(false), 2500)
@@ -2017,25 +2091,22 @@ function MessageBubble({
       .replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')
     const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8">
 <style>
-body{font-family:Calibri,sans-serif;font-size:11pt;line-height:1.7;margin:2.5cm;color:#1a1a1a}
-h1{font-size:20pt;font-weight:300;color:#111;border-bottom:1.5pt solid #c9a84c;padding-bottom:6pt;margin-bottom:12pt}
-h2{font-size:13pt;font-weight:600;color:#111;margin-top:14pt}h3{font-size:11pt;font-weight:600;color:#333;margin-top:10pt}
-p{margin-bottom:8pt}ul{margin-left:18pt;margin-bottom:8pt}li{margin-bottom:3pt}
-blockquote{border-left:3pt solid #c9a84c;padding-left:10pt;color:#555;font-style:italic;margin:10pt 0}
-code{font-family:Consolas,monospace;font-size:9pt;background:#f5f5f5;padding:1pt 4pt}
-.brand{font-size:7pt;font-weight:700;letter-spacing:4pt;text-transform:uppercase;color:#c9a84c}
-.footer{border-top:0.5pt solid #ddd;padding-top:6pt;font-size:7pt;color:#bbb;text-align:center;margin-top:30pt}
+@page Section1 { size: 595.3pt 841.9pt; margin: 99.2pt 70.8pt 70.8pt 99.2pt; mso-header-margin: 0pt; mso-footer-margin: 0pt; }
+div.Section1 { page: Section1; }
+body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; color: #000000; }
+h1 { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; }
+p { margin-bottom: 8pt; text-align: justify; }
 </style></head><body>
-<p class="brand">HARDMAN · Inteligencia Jurídica · Perú</p>
-<h1 style="border-bottom:2pt solid #c9a84c;font-size:22pt;padding-bottom:8pt">Dictamen Legal</h1>
-<p style="font-size:8pt;color:#888;margin-bottom:20pt">${agent.name} · ${agent.role} · ${fecha}</p>
+<div class="Section1">
+<h1>Respuesta Legal — ${agent.name} (${agent.role})</h1>
+<p style="text-align:center; font-size:9pt; color:#666; margin-bottom:16pt;">${fecha}</p>
 <p>${toHtml(message.content)}</p>
-<div class="footer">HARDMAN · Inteligencia Jurídica · Perú | ${fecha} | Documento Confidencial</div>
+</div>
 </body></html>`
     const blob = new Blob([wordHtml], { type: 'application/msword' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = `Hardman_${agent.name}_${new Date().toISOString().slice(0, 10)}.doc`
+    a.href = url; a.download = `Respuesta_${agent.name}_${new Date().toISOString().slice(0, 10)}.doc`
     a.click(); URL.revokeObjectURL(url)
     setDownloaded(true)
     setTimeout(() => setDownloaded(false), 2500)

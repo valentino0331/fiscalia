@@ -308,23 +308,6 @@ function buildPrintHTML(
     max-width: 21cm;
     margin: 0 auto;
   }
-  .print-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1pt solid #c9a84c;
-    padding-bottom: 8pt;
-    margin-bottom: 24pt;
-    font-family: Arial, sans-serif;
-    font-size: 8pt;
-    color: #666666;
-    text-transform: uppercase;
-    letter-spacing: 1.5pt;
-  }
-  .print-header strong {
-    color: #c9a84c;
-    font-weight: 700;
-  }
   pre {
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -336,15 +319,6 @@ function buildPrintHTML(
     line-height: ${fmt.lineHeight};
     text-align: justify;
     color: #111111;
-  }
-  .print-footer {
-    margin-top: 36pt;
-    border-top: 0.5pt solid #cccccc;
-    padding-top: 8pt;
-    font-family: Arial, sans-serif;
-    font-size: 7.5pt;
-    color: #888888;
-    text-align: center;
   }
   .no-print {
     margin: 16px auto 24px auto;
@@ -367,12 +341,15 @@ function buildPrintHTML(
   }
   @media print {
     body {
-      padding: 0;
-      margin: 0;
-      max-width: 100%;
+      padding: 0 !important;
+      margin: 0 !important;
+      max-width: 100% !important;
     }
     .no-print {
       display: none !important;
+    }
+    pre {
+      page-break-inside: auto;
     }
   }
 </style>
@@ -381,14 +358,7 @@ function buildPrintHTML(
 <div class="no-print">
   <button class="btn-print" onclick="window.print()">🖨️ Imprimir Documento / Guardar como PDF</button>
 </div>
-<div class="print-header">
-  <span><strong>HARDMAN</strong> · Asesoría Jurídica Inteligente Perú</span>
-  <span>Documento Oficial Preparado el ${new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-</div>
 <pre>${safeContent}</pre>
-<div class="print-footer">
-  HARDMAN · Inteligencia Jurídica · Conforme a la legislación nacional peruana vigente. Se recomienda firma y sello de Notario Público cuando la ley lo requiera.
-</div>
 </body>
 </html>`
 }
@@ -427,8 +397,8 @@ function downloadWordDoc(
   @page Section1 {
     size: 595.3pt 841.9pt; /* A4 */
     margin: ${marginPt(fmt.marginTopCm)} ${marginPt(fmt.marginRightCm)} ${marginPt(fmt.marginBottomCm)} ${marginPt(fmt.marginLeftCm)};
-    mso-header-margin: 35.4pt;
-    mso-footer-margin: 35.4pt;
+    mso-header-margin: 0pt;
+    mso-footer-margin: 0pt;
     mso-paper-source: 0;
   }
   div.Section1 { page: Section1; }
@@ -449,17 +419,10 @@ function downloadWordDoc(
     text-align: center;
     margin-bottom: 12pt;
   }
-  .header-meta {
-    text-align: right;
-    font-size: 9pt;
-    color: #666666;
-    margin-bottom: 18pt;
-  }
 </style>
 </head>
 <body>
 <div class="Section1">
-  <div class="header-meta">HARDMAN · Inteligencia Jurídica · Perú | ${new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
   <p>${safeContent}</p>
 </div>
 </body>
@@ -1541,16 +1504,7 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
                     minHeight: '800px',
                   }}
                 >
-                  {/* Membrete notarial */}
-                  <div
-                    className="flex items-center justify-between border-b pb-2 mb-5 uppercase tracking-widest"
-                    style={{ borderColor: '#c9a84c', fontSize: '7pt', color: '#666', fontFamily: 'Arial, sans-serif' }}
-                  >
-                    <span style={{ fontWeight: 700, color: '#444' }}>HARDMAN · ASESORÍA JURÍDICA</span>
-                    <span>DOCUMENTO OFICIAL · PERÚ 2026</span>
-                  </div>
-
-                  {/* Texto del documento — sin partición de palabras, justificado */}
+                  {/* Texto del documento — sin membrete publicitario, justificado y con tipografía oficial */}
                   <div
                     style={{
                       whiteSpace: 'pre-wrap',
@@ -1563,14 +1517,6 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
                     }}
                   >
                     {docData.content}
-                  </div>
-
-                  {/* Pie */}
-                  <div
-                    className="mt-10 pt-2 text-center uppercase tracking-wider"
-                    style={{ borderTop: '0.5px solid #ccc', fontSize: '7pt', color: '#aaa', fontFamily: 'Arial, sans-serif' }}
-                  >
-                    Conforme a la legislación peruana vigente · HARDMAN Legal Perú
                   </div>
                 </div>
               ) : (
