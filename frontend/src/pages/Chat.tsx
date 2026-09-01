@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
-import { downloadWordDoc, printDocument } from '@/lib/exportDoc'
+import { downloadWordDoc, printDocument, extractDocumentFromMessage } from '@/lib/exportDoc'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
@@ -2024,10 +2024,15 @@ function MessageBubble({
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
   const [saved, setSaved] = useState(false)
   const [savingMsg, setSavingMsg] = useState(false)
+  const [previewOpen, setPreviewOpen] = useState(false)
   const isSpeaking = speakingMessageId === message.timestamp
   const isLoadingAudio = audioLoadingId === message.timestamp
   const exportRef = useRef<HTMLDivElement>(null)
   const deadlines = !isUser ? detectDeadlines(message.content) : []
+
+  const { conversationalText, document: extractedDoc } = !isUser
+    ? extractDocumentFromMessage(message.content)
+    : { conversationalText: message.content, document: null }
 
   useEffect(() => {
     if (!exportOpen) return
@@ -2252,32 +2257,149 @@ p { margin-bottom: 8pt; text-align: justify; }
           {isUser ? (
             <p className="whitespace-pre-wrap">{displayContent}</p>
           ) : (
-            <div className="prose-chat">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={{
-                  a: ({ href, children }) => {
-                    if (href?.startsWith('/chat/')) {
-                      return (
-                        <button
-                          onClick={() => navigate(href)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium mt-1"
+            <div className="space-y-3">
+              {conversationalText && (
+                <div className="prose-chat">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      a: ({ href, children }) => {
+                        if (href?.startsWith('/chat/')) {
+                          return (
+                            <button
+                              onClick={() => navigate(href)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium mt-1"
+                              style={{
+                                background: 'rgba(201,168,76,0.12)',
+                                color: '#c9a84c',
+                                border: '1px solid rgba(201,168,76,0.30)',
+                              }}
+                            >
+                              {children} <ArrowRight size={13} />
+                            </button>
+                          )
+                        }
+                        return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                      },
+                    }}
+                  >
+                    {conversationalText}
+                  </ReactMarkdown>
+                </div>
+              )}
+
+              {/* 🗎 ADJUNTO DE DOCUMENTO LEGAL OFICIAL GENERADO POR LA IA */}
+              {extractedDoc && (
+                <div
+                  className="rounded-xl overflow-hidden border transition-all mt-3"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(26,32,44,0.98) 0%, rgba(17,24,39,0.98) 100%)',
+                    borderColor: 'rgba(96,165,250,0.35)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {/* File Header */}
+                  <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        style={{
+                          background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
+                          border: '1px solid rgba(147,197,253,0.3)',
+                          boxShadow: '0 4px 12px rgba(30,58,138,0.4)',
+                        }}
+                      >
+                        <FileText size={20} className="text-blue-200" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span
+                            className="text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider"
+                            style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.3)' }}
+                          >
+                            {extractedDoc.type || 'DOCUMENTO OFICIAL'}
+                          </span>
+                          <span className="text-[10px] text-white/40 hidden sm:inline">Formato Oficial A4</span>
+                        </div>
+                        <h4 className="text-[13px] font-semibold text-white truncate max-w-xs sm:max-w-md" title={extractedDoc.title}>
+                          {extractedDoc.title}.doc
+                        </h4>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons in Header */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                      <button
+                        onClick={() => {
+                          downloadWordDoc(extractedDoc.title, extractedDoc.content, extractedDoc.title)
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+                        style={{
+                          background: '#2563eb',
+                          color: '#ffffff',
+                          boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
+                        }}
+                        title="Descargar archivo editable Microsoft Word (.doc)"
+                      >
+                        <FileDown size={13} />
+                        <span className="hidden sm:inline">Descargar Word</span>
+                        <span className="sm:hidden">Word</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          printDocument(extractedDoc.title, extractedDoc.content)
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+                        style={{
+                          background: 'rgba(201,168,76,0.15)',
+                          border: '1px solid rgba(201,168,76,0.35)',
+                          color: '#c9a84c',
+                        }}
+                        title="Abrir o Imprimir como PDF oficial"
+                      >
+                        <Printer size={13} />
+                        <span className="hidden sm:inline">PDF</span>
+                      </button>
+
+                      <button
+                        onClick={() => setPreviewOpen(!previewOpen)}
+                        className="p-1.5 rounded-lg text-[11px] transition-all"
+                        style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.6)' }}
+                        title={previewOpen ? 'Ocultar vista previa' : 'Ver documento completo'}
+                      >
+                        {previewOpen ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expandable Document Preview with Legal Sheet Styling */}
+                  <AnimatePresence>
+                    {previewOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        className="p-4 sm:p-6 overflow-hidden"
+                        style={{ background: '#0a0d14' }}
+                      >
+                        <div
+                          className="p-5 sm:p-8 rounded-lg shadow-2xl border text-black font-serif text-xs leading-relaxed max-w-2xl mx-auto select-text"
                           style={{
-                            background: 'rgba(201,168,76,0.12)',
-                            color: '#c9a84c',
-                            border: '1px solid rgba(201,168,76,0.30)',
+                            background: '#ffffff',
+                            borderColor: '#e5e7eb',
+                            fontFamily: '"Times New Roman", Times, serif',
                           }}
                         >
-                          {children} <ArrowRight size={13} />
-                        </button>
-                      )
-                    }
-                    return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                  },
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
+                          <pre className="whitespace-pre-wrap font-serif text-[11px] sm:text-[12px] leading-relaxed text-gray-900 text-justify">
+                            {extractedDoc.content}
+                          </pre>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           )}
         </div>

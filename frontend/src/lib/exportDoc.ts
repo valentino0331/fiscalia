@@ -187,3 +187,87 @@ export function printDocument(title: string, content: string, options?: DocForma
     win.document.close()
   }
 }
+
+export interface ExtractedDocument {
+  title: string
+  type: string
+  content: string
+}
+
+export function extractDocumentFromMessage(rawContent: string): {
+  conversationalText: string
+  document: ExtractedDocument | null
+} {
+  if (!rawContent || typeof rawContent !== 'string') {
+    return { conversationalText: rawContent || '', document: null }
+  }
+
+  // 1. Check for explicit ```document ... ``` or ```doc ... ``` block
+  const docBlockRegex = /```(?:document|doc|escrito|contrato|demanda)\s*\n([\s\S]*?)```/i
+  const match = rawContent.match(docBlockRegex)
+
+  if (match) {
+    const blockContent = match[1].trim()
+    let title = 'Documento_Legal'
+    let docType = 'DOCUMENTO OFICIAL'
+    let docBody = blockContent
+
+    const titleMatch = blockContent.match(/^TITULO:\s*(.+)$/im)
+    const typeMatch = blockContent.match(/^TIPO:\s*(.+)$/im)
+
+    if (titleMatch) title = titleMatch[1].trim()
+    if (typeMatch) docType = typeMatch[1].trim().toUpperCase()
+
+    // Remove TITULO:, TIPO: and separator line from doc body
+    docBody = blockContent
+      .replace(/^TITULO:\s*.*$/im, '')
+      .replace(/^TIPO:\s*.*$/im, '')
+      .replace(/^---+$/m, '')
+      .trim()
+
+    const conversationalText = rawContent.replace(docBlockRegex, '').trim()
+
+    return {
+      conversationalText,
+      document: {
+        title,
+        type: docType,
+        content: docBody || blockContent,
+      },
+    }
+  }
+
+  // 2. Fallback: check if the message contains a large formal document block
+  const legalMarkers = [
+    /(?:^|\n)(CARTA NOTARIAL[\s\S]{100,})/i,
+    /(?:^|\n)(SEÑOR JUEZ[\s\S]{100,})/i,
+    /(?:^|\n)(SEÑOR FISCAL[\s\S]{100,})/i,
+    /(?:^|\n)(CONTRATO DE[\s\S]{100,})/i,
+    /(?:^|\n)(SOLICITO:\s*[\s\S]{100,})/i,
+    /(?:^|\n)(EXPEDIENTE\s*:\s*[\s\S]{100,})/i,
+    /(?:^|\n)(RECURSO DE APELACI[ÓO]N[\s\S]{100,})/i,
+    /(?:^|\n)(DENUNCIA PENAL[\s\S]{100,})/i,
+  ]
+
+  for (const marker of legalMarkers) {
+    const m = rawContent.match(marker)
+    if (m && m[1]) {
+      const docBody = m[1].trim()
+      const firstLine = docBody.split('\n')[0].replace(/[*#_]/g, '').trim()
+      const title = firstLine.length > 5 && firstLine.length < 70 ? firstLine : 'Documento_Legal'
+      const conversationalText = rawContent.replace(m[1], '').trim()
+
+      return {
+        conversationalText,
+        document: {
+          title,
+          type: 'DOCUMENTO OFICIAL',
+          content: docBody,
+        },
+      }
+    }
+  }
+
+  return { conversationalText: rawContent, document: null }
+}
+
