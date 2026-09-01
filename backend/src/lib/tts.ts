@@ -1,15 +1,18 @@
+const DEFAULT_FEMALE_VOICE = process.env.ELEVENLABS_VOICE_FEMALE || 'p18tR9wFA5Ng9WhfWI0o';
+const DEFAULT_MALE_VOICE = process.env.ELEVENLABS_VOICE_MALE || '6HCwgZXWcrhF6ZoTZJkf';
+
 const AGENT_VOICE_IDS: Record<string, string> = {
   // Mujeres
-  valentina: process.env.ELEVENLABS_VOICE_VALENTINA || 'EXAVITQu4vr4xnSDxMaL', // Sarah
-  camila: process.env.ELEVENLABS_VOICE_CAMILA || 'ThT5KcBeYPX3keUQqHPh',       // Serena
-  fernanda: process.env.ELEVENLABS_VOICE_FERNANDA || '21m00Tcm4TlvDq8ikWAM',   // Rachel
-  adriana: process.env.ELEVENLABS_VOICE_ADRIANA || 'oWAxZDx7wkiCglhlqReH',     // Jessica
+  valentina: process.env.ELEVENLABS_VOICE_VALENTINA || DEFAULT_FEMALE_VOICE,
+  camila: process.env.ELEVENLABS_VOICE_CAMILA || DEFAULT_FEMALE_VOICE,
+  fernanda: process.env.ELEVENLABS_VOICE_FERNANDA || DEFAULT_FEMALE_VOICE,
+  adriana: process.env.ELEVENLABS_VOICE_ADRIANA || DEFAULT_FEMALE_VOICE,
 
   // Hombres
-  sebastian: process.env.ELEVENLABS_VOICE_SEBASTIAN || 'pNInz6obpgDQGcFmaJgB', // Adam
-  diego: process.env.ELEVENLABS_VOICE_DIEGO || 'ErXwobaYiN019PkySvjV',         // Antoni
-  rodrigo: process.env.ELEVENLABS_VOICE_RODRIGO || 'JBFqnCBsd6RMkjVDRZzb',     // George
-  marco: process.env.ELEVENLABS_VOICE_MARCO || 'N2lVS1w4EtoT3dr4eOWO',         // Callum
+  sebastian: process.env.ELEVENLABS_VOICE_SEBASTIAN || DEFAULT_MALE_VOICE,
+  diego: process.env.ELEVENLABS_VOICE_DIEGO || DEFAULT_MALE_VOICE,
+  rodrigo: process.env.ELEVENLABS_VOICE_RODRIGO || DEFAULT_MALE_VOICE,
+  marco: process.env.ELEVENLABS_VOICE_MARCO || DEFAULT_MALE_VOICE,
 };
 
 export async function generateElevenLabsSpeech(text: string, agentId: string): Promise<Buffer> {

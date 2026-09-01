@@ -865,7 +865,8 @@ export default function Chat() {
         fallbackBrowserSpeech(clean, messageId)
       }
       await audio.play()
-    } catch {
+    } catch (err) {
+      console.warn('ElevenLabs TTS error:', err)
       // 2. Fallback smoothly to browser SpeechSynthesis
       setAudioLoadingId(null)
       fallbackBrowserSpeech(clean, messageId)
