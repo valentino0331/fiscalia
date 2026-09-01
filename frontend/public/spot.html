@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardman IA — Spot Publicitario Oficial 10/10</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body {
+    background: #08090c;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+
+  /* Video Stage 16:9 Cinema Container */
+  #video-container {
+    position: relative;
+    width: 1080px;
+    height: 608px;
+    background: radial-gradient(circle at 50% 30%, #151824 0%, #08090c 75%);
+    border-radius: 20px;
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(201, 168, 76, 0.15);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Particle background canvas */
+  #fx-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Scene Overlay Containers */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 2;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .scene.active {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+
+  /* Glow Effects */
+  .gold-glow {
+    color: #c9a84c;
+    text-shadow: 0 0 25px rgba(201, 168, 76, 0.6);
+  }
+
+  .badge-gold {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: rgba(201, 168, 76, 0.12);
+    border: 1px solid rgba(201, 168, 76, 0.4);
+    color: #c9a84c;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(201, 168, 76, 0.4); }
+    50% { box-shadow: 0 0 0 12px rgba(201, 168, 76, 0); }
+  }
+
+  /* Typography */
+  h1.hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 52px;
+    font-weight: 800;
+    line-height: 1.15;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #ffffff 30%, #c9a84c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  p.hero-sub {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.7);
+    max-width: 720px;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* Motion Avatars Grid */
+  .agents-grid {
+    display: flex;
+    gap: 18px;
+    margin-top: 28px;
+  }
+
+  .agent-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 110px;
+    backdrop-filter: blur(12px);
+    transition: transform 0.4s ease;
+  }
+
+  .agent-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 2px solid #c9a84c;
+    margin-bottom: 10px;
+  }
+
+  .agent-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  /* Soundwave Visualizer in Voice Scene */
+  .voice-orb {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #c9a84c 0%, #1e1e1e 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 50px rgba(201, 168, 76, 0.6);
+    margin-bottom: 24px;
+    animation: orbPulse 1.8s ease-in-out infinite;
+  }
+
+  @keyframes orbPulse {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 35px rgba(201, 168, 76, 0.5); }
+    50% { transform: scale(1.08); box-shadow: 0 0 65px rgba(201, 168, 76, 0.85); }
+  }
+
+  /* Document Card Motion */
+  .doc-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    border-radius: 18px;
+    padding: 22px 30px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    margin-top: 25px;
+  }
+
+  /* Control Panel */
+  #controls {
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+  }
+
+  button.btn-primary {
+    background: linear-gradient(135deg, #c9a84c 0%, #a28333 100%);
+    color: #111111;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 6px 20px rgba(201, 168, 76, 0.35);
+    transition: all 0.2s ease;
+  }
+
+  button.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(201, 168, 76, 0.5);
+  }
+
+  button.btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  button.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Timeline progress bar */
+  #timeline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 4px;
+    background: #c9a84c;
+    width: 0%;
+    z-index: 20;
+    transition: width 0.1s linear;
+  }
+</style>
+</head>
+<body>
+
+<div id="video-container">
+  <canvas id="fx-canvas"></canvas>
+  <div id="timeline"></div>
+
+  <!-- ESCENA 1: HOOK / DOLOR LEGAL -->
+  <div class="scene active" id="scene-1">
+    <div class="badge-gold">🇵🇪 DEFENSA LEGAL EN EL PERÚ</div>
+    <h1 class="hero-title">¿Tienes un problema legal urgente y no sabes qué hacer?</h1>
+    <p class="hero-sub">Una consulta tradicional puede costarte cientos de soles y semanas de espera. Hoy todo cambió.</p>
+  </div>
+
+  <!-- ESCENA 2: PRESENTACIÓN DE HARDMAN IA -->
+  <div class="scene" id="scene-2">
+    <div class="badge-gold">✨ INTELIGENCIA ARTIFICIAL JURÍDICA</div>
+    <h1 class="hero-title">Hardman IA</h1>
+    <p class="hero-sub">El primer bufete de abogados con Inteligencia Artificial del Perú. 8 especialistas las 24 horas.</p>
+    <div class="agents-grid">
+      <div class="agent-card">
+        <div class="agent-avatar"><img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" alt="Valentina"></div>
+        <span style="font-size:12px; font-weight:700;">Valentina</span>
+        <span style="font-size:10px; color:#c9a84c;">Laboral</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-avatar"><img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80" alt="Sebastián"></div>
+        <span style="font-size:12px; font-weight:700;">Sebastián</span>
+        <span style="font-size:10px; color:#c9a84c;">Penal</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-avatar"><img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80" alt="Camila"></div>
+        <span style="font-size:12px; font-weight:700;">Camila</span>
+        <span style="font-size:10px; color:#c9a84c;">Familia</span>
+      </div>
+      <div class="agent-card">
+        <div class="agent-avatar"><img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Adriana"></div>
+        <span style="font-size:12px; font-weight:700;">Adriana</span>
+        <span style="font-size:10px; color:#c9a84c;">Corporativo</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESCENA 3: LLAMADA DE VOZ EN VIVO -->
+  <div class="scene" id="scene-3">
+    <div class="badge-gold">🎙️ CONSULTA CONVERSACIONAL EN VIVO</div>
+    <div class="voice-orb">
+      <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80" style="width:115px; height:115px; border-radius:50%; object-fit:cover; object-position:top;" alt="Valentina">
+    </div>
+    <h1 class="hero-title" style="font-size:42px;">Habla en tiempo real con tu abogada</h1>
+    <p class="hero-sub">Voz neuronal fluida, sin esperas y con respuestas jurídicas basadas en la legislación peruana 2026.</p>
+  </div>
+
+  <!-- ESCENA 4: DOCUMENTOS OFICIALES WORD Y PDF -->
+  <div class="scene" id="scene-4">
+    <div class="badge-gold">📄 GENERACIÓN DE ESCRITOS JURÍDICOS</div>
+    <h1 class="hero-title" style="font-size:44px;">Demandas y Cartas Notariales Listas</h1>
+    <p class="hero-sub">Genera documentos completos y formales listos para descargar en Microsoft Word editable o imprimir en PDF.</p>
+    <div class="doc-card">
+      <div style="background:#2563eb; width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:24px;">📄</div>
+      <div style="text-align:left;">
+        <h4 style="font-size:16px; font-weight:700; color:#ffffff;">Carta_Notarial_Requerimiento.doc</h4>
+        <span style="font-size:12px; color:#93c5fd;">Formato Oficial A4 · Listo para Notaría</span>
+      </div>
+      <div style="display:flex; gap:8px; margin-left:20px;">
+        <span style="background:#2563eb; color:#fff; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700;">Descargar Word</span>
+        <span style="background:rgba(201,168,76,0.2); color:#c9a84c; border:1px solid #c9a84c; padding:6px 14px; border-radius:8px; font-size:12px; font-weight:700;">PDF</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESCENA 5: CIERRE Y LLAMADO A LA ACCIÓN (CTA) -->
+  <div class="scene" id="scene-5">
+    <div class="badge-gold">🚀 COMIENZA HOY MISMO</div>
+    <h1 class="hero-title" style="font-size:56px;">Tu primera consulta es 100% GRATIS</h1>
+    <p class="hero-sub" style="margin-bottom:28px;">Únete a miles de peruanos que ya defienden sus derechos con Inteligencia Artificial.</p>
+    <div style="display:inline-flex; align-items:center; gap:12px; background:#c9a84c; color:#111; padding:16px 40px; border-radius:14px; font-size:20px; font-weight:800; box-shadow:0 8px 30px rgba(201,168,76,0.5);">
+      hardman.pe
+    </div>
+  </div>
+</div>
+
+<!-- Audio Player (Voiceover + Music) -->
+<audio id="voiceover-audio" src="/locucion_comercial_hardman.mp3" preload="auto"></audio>
+
+<!-- Control Buttons -->
+<div id="controls">
+  <button class="btn-primary" id="btn-play">
+    <span id="play-icon">▶️</span> <span id="play-text">Reproducir Spot con Audio IA</span>
+  </button>
+</div>
+
+<script>
+  const scenes = [
+    { id: 'scene-1', start: 0, end: 5.5 },
+    { id: 'scene-2', start: 5.5, end: 12.5 },
+    { id: 'scene-3', start: 12.5, end: 20.0 },
+    { id: 'scene-4', start: 20.0, end: 28.0 },
+    { id: 'scene-5', start: 28.0, end: 40.0 },
+  ];
+
+  const audio = document.getElementById('voiceover-audio');
+  const btnPlay = document.getElementById('btn-play');
+  const playText = document.getElementById('play-text');
+  const playIcon = document.getElementById('play-icon');
+  const timeline = document.getElementById('timeline');
+
+  let isPlaying = false;
+
+  btnPlay.addEventListener('click', () => {
+    if (isPlaying) {
+      audio.pause();
+      isPlaying = false;
+      playText.textContent = 'Reanudar Spot';
+      playIcon.textContent = '▶️';
+    } else {
+      audio.play();
+      isPlaying = true;
+      playText.textContent = 'Pausar Spot';
+      playIcon.textContent = '⏸️';
+    }
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    const t = audio.currentTime;
+    const dur = audio.duration || 38;
+    timeline.style.width = `${(t / dur) * 100}%`;
+
+    scenes.forEach(sc => {
+      const el = document.getElementById(sc.id);
+      if (t >= sc.start && t < sc.end) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    });
+  });
+
+  audio.addEventListener('ended', () => {
+    isPlaying = false;
+    playText.textContent = 'Repetir Spot con Audio';
+    playIcon.textContent = '🔄';
+    audio.currentTime = 0;
+    timeline.style.width = '0%';
+  });
+
+  // Particle background animation
+  const canvas = document.getElementById('fx-canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 1080;
+  canvas.height = 608;
+
+  const particles = Array.from({ length: 45 }, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 2 + 1,
+    dx: (Math.random() - 0.5) * 0.6,
+    dy: (Math.random() - 0.5) * 0.6,
+    alpha: Math.random() * 0.6 + 0.2
+  }));
+
+  function drawFX() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.dx;
+      p.y += p.dy;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(201, 168, 76, ${p.alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(drawFX);
+  }
+  drawFX();
+</script>
+</body>
+</html>
