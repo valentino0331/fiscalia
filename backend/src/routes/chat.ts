@@ -10,11 +10,11 @@ import { requireSubscription } from '../middleware/subscription';
 import { SYSTEM_PROMPTS } from '../prompts/agents';
 import { suggestAgentTransfer } from './agentRouter';
 import { metrics } from '../lib/metrics';
-import { generateElevenLabsSpeech } from '../lib/tts';
+import { generateSpeech } from '../lib/tts';
 
 export const chatRouter = Router();
 
-// Endpoint para síntesis de voz con ElevenLabs
+// Endpoint para síntesis de voz (Microsoft Edge Neural TTS / ElevenLabs)
 chatRouter.post('/tts', requireAuth, async (req: any, res) => {
   try {
     const { text, agentId } = req.body;
@@ -22,16 +22,16 @@ chatRouter.post('/tts', requireAuth, async (req: any, res) => {
       return res.status(400).json({ error: 'Texto requerido para síntesis de voz' });
     }
 
-    const audioBuffer = await generateElevenLabsSpeech(text, agentId || 'sebastian');
+    const audioBuffer = await generateSpeech(text, agentId || 'sebastian');
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': audioBuffer.length,
     });
     res.send(audioBuffer);
   } catch (error: any) {
-    console.warn('TTS generation notice:', error?.message || error);
-    res.status(503).json({
-      error: error?.message || 'Servicio de voz ElevenLabs no disponible. Usando voz local.',
+    console.error('TTS generation error:', error?.message || error);
+    res.status(500).json({
+      error: error?.message || 'Error en síntesis de voz.',
     });
   }
 });
