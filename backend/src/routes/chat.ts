@@ -36,6 +36,23 @@ chatRouter.post('/tts', requireAuth, async (req: any, res) => {
   }
 });
 
+function sanitizeAiErrorMessage(err: any): string {
+  const msg = (err?.message || String(err || '')).toLowerCase();
+  if (
+    msg.includes('quota') ||
+    msg.includes('429') ||
+    msg.includes('resourceexhausted') ||
+    msg.includes('rate limit') ||
+    msg.includes('too many requests')
+  ) {
+    return 'Este especialista legal está experimentando una alta demanda temporalmente. Por favor, reintenta tu consulta en unos momentos o consulta con otro especialista del bufete.';
+  }
+  if (msg.includes('api key') || msg.includes('unauthorized') || msg.includes('401') || msg.includes('403')) {
+    return 'El servicio de IA se encuentra en mantenimiento temporal. Por favor, reintenta en unos instantes.';
+  }
+  return 'Ocurrió una interrupción temporal al procesar tu consulta legal. Por favor, reintenta en unos instantes.';
+}
+
 chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => {
   const startTime = Date.now();
   try {
