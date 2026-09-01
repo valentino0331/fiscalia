@@ -40,6 +40,8 @@ export async function generateElevenLabsSpeech(text: string, agentId: string): P
   const modelId = process.env.ELEVENLABS_MODEL || 'eleven_multilingual_v2';
   const url = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}?output_format=mp3_44100_128`;
 
+  console.log(`[TTS] Generating speech with ElevenLabs: voiceId=${voiceId}, agentId=${agentId}, model=${modelId}, textLength=${cleanText.length}`);
+
   const response = await fetch(url, {
     method: 'POST',
     headers: {
@@ -53,14 +55,13 @@ export async function generateElevenLabsSpeech(text: string, agentId: string): P
       voice_settings: {
         stability: 0.5,
         similarity_boost: 0.75,
-        style: 0.2,
-        use_speaker_boost: true,
       },
     }),
   });
 
   if (!response.ok) {
     const errorBody = await response.text();
+    console.error(`[TTS Error] ElevenLabs failed (HTTP ${response.status}):`, errorBody);
     throw new Error(`ElevenLabs API error (${response.status}): ${errorBody}`);
   }
 
