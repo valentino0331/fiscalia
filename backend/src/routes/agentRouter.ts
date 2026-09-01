@@ -7,59 +7,74 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   valentina: {
     label: 'Laboral',
     keywords: [
-      'despido', 'liquidacion', 'cts', 'gratificacion', 'vacaciones', 'planilla', 'sunafil',
-      'renuncia', 'beneficios sociales', 'hostigamiento laboral', 'contrato de trabajo',
-      'sueldo', 'salario', 'trabajo', 'trabajador', 'empleador', 'jornada laboral',
+      'despido', 'despido arbitrario', 'despido nulo', 'liquidacion', 'cts', 'gratificacion',
+      'vacaciones truncas', 'planilla', 'sunafil', 'renuncia', 'beneficios sociales',
+      'hostigamiento laboral', 'contrato de trabajo', 'sueldo', 'salario', 'trabajador',
+      'empleador', 'jornada laboral', 'nlpt', 'ley 29497', 'dl 728',
     ],
   },
   sebastian: {
     label: 'Penal',
     keywords: [
-      'denuncia penal', 'fiscalia', 'detenido', 'prision preventiva', 'delito', 'hurto', 'robo',
-      'lesiones', 'estafa', 'ncpp', 'proceso penal', 'crimen', 'imputado', 'querella',
+      'denuncia penal', 'fiscalia', 'fiscal', 'detenido', 'detencion', 'prision preventiva',
+      'delito', 'hurto', 'robo', 'lesiones', 'estafa', 'ncpp', 'cpp', 'codigo penal',
+      'codigo procesal penal', 'proceso penal', 'crimen', 'imputado', 'querella',
+      'investigacion preparatoria', 'diligencias preliminares', 'juicio oral', 'etapa intermedia',
+      'acusacion fiscal', 'sobreseimiento', 'tutela de derechos', 'control de plazos',
+      'plazos penales', 'plazo penal', 'habeas corpus', 'cesacion', 'comparecencia',
+      'prescripcion penal', 'inculpado', 'agraviado', 'ministerio publico', 'dl 1585',
     ],
   },
   diego: {
     label: 'Civil',
     keywords: [
-      'desalojo', 'arrendamiento', 'contrato civil', 'incumplimiento', 'obligacion', 'indemnizacion',
-      'responsabilidad civil', 'carta notarial', 'resolucion contractual', 'deuda', 'prestamo',
+      'desalojo', 'arrendamiento', 'contrato civil', 'incumplimiento contractual',
+      'indemnizacion', 'responsabilidad civil', 'carta notarial', 'resolucion contractual',
+      'deuda', 'prestamo', 'garantia hipotecaria', 'derechos reales', 'propiedad',
+      'codigo civil', 'ley 30933', 'allanamiento futuro',
     ],
   },
   adriana: {
     label: 'Corporativo',
     keywords: [
-      'empresa', 'sociedad', 'sac', 'srl', 'accionistas', 'fusiones', 'adquisicion',
-      'compliance', 'due diligence', 'junta de accionistas', 'negocio', 'socio',
+      'sociedad anonima', 'sac', 'srl', 'accionistas', 'fusiones y adquisiciones', 'm&a',
+      'compliance', 'due diligence', 'junta general de accionistas', 'pacto de socios',
+      'drag along', 'tag along', 'ley general de sociedades', 'ley 30424', 'reorganizacion societaria',
     ],
   },
   rodrigo: {
     label: 'Minero',
     keywords: [
-      'mina', 'minero', 'concesion', 'ingemmet', 'oefa', 'reinfo', 'eia', 'formalizacion minera',
-      'petitorio minero', 'extraccion', 'mineral',
+      'concesion minera', 'ingemmet', 'oefa', 'reinfo', 'formalizacion minera',
+      'petitorio minero', 'cierre de mina', 'estudio de impacto ambiental', 'eia minero',
+      'pas ambiental', 'canon minero', 'derecho minero',
     ],
   },
   camila: {
     label: 'Familia',
     keywords: [
-      'divorcio', 'alimentos', 'tenencia', 'visitas', 'violencia familiar', 'pension alimenticia',
-      'patria potestad', 'filiacion', 'separacion', 'custodia', 'matrimonio', 'conyuge',
-      'hijo', 'hijos', 'pareja', 'conviviente', 'pension', 'adopcion',
+      'divorcio', 'pension de alimentos', 'demanda de alimentos', 'aumento de alimentos',
+      'tenencia compartida', 'tenencia exclusiva', 'regimen de visitas', 'violencia familiar',
+      'patria potestad', 'filiacion', 'sociedad de gananciales', 'separacion de patrimonios',
+      'ley 31590', 'ley 30364', 'codigo de los ninos y adolescentes',
     ],
   },
   fernanda: {
     label: 'Tributario',
     keywords: [
-      'sunat', 'tributo', 'igv', 'renta', 'fiscalizacion tributaria', 'reclamacion tributaria',
-      'factura', 'impuesto', 'declaracion jurada', 'regimen tributario',
+      'sunat', 'fiscalizacion sunat', 'reclamacion tributaria', 'tribunal fiscal',
+      'apelacion tf', 'impuesto a la renta', 'igv', 'orden de pago', 'resolucion de determinacion',
+      'resolucion de multa', 'cobranza coactiva', 'gradualidad de multas', 'codigo tributario',
+      'prescripcion tributaria', 'nrus', 'rer', 'rmt', 'regimen general',
     ],
   },
   marco: {
     label: 'Administrativo',
     keywords: [
-      'licitacion', 'contrataciones del estado', 'acto administrativo', 'procedimiento sancionador',
-      'pas', 'recurso administrativo', 'tupa', 'municipalidad', 'gobierno', 'estado',
+      'licitacion publica', 'contrataciones del estado', 'oece', 'osce', 'ley 32069',
+      'tribunal de contrataciones publicas', 'tcp', 'procedimiento administrativo sancionador',
+      'pas administrativo', 'recurso de reconsideracion', 'recurso de apelacion administrativa',
+      'tupa', 'silencio administrativo', 'proceso contencioso administrativo', 'ley 27444',
     ],
   },
 };
@@ -90,10 +105,15 @@ function scoreTopic(input: string, keywords: string[]): { score: number; hits: s
   for (const keyword of keywords) {
     const normalizedKeyword = normalize(keyword);
     if (!normalizedKeyword) continue;
-    if (input.includes(normalizedKeyword)) hits.push(keyword);
+    // Word boundary or substring matching for compound phrases
+    if (input.includes(normalizedKeyword)) {
+      // Reward multi-word specific legal terms higher
+      const weight = normalizedKeyword.includes(' ') ? 2 : 1;
+      for (let i = 0; i < weight; i++) hits.push(keyword);
+    }
   }
 
-  return { score: hits.length, hits };
+  return { score: hits.length, hits: Array.from(new Set(hits)) };
 }
 
 export type AgentTransferSuggestion = {
@@ -108,7 +128,15 @@ export function suggestAgentTransfer(
   userText: string
 ): AgentTransferSuggestion | null {
   const normalizedInput = normalize(userText);
-  if (!normalizedInput) return null;
+  if (!normalizedInput || normalizedInput.length < 10) return null;
+
+  const currentRule = AGENT_ROUTING_RULES[currentAgentId];
+  const currentCheck = currentRule ? scoreTopic(normalizedInput, currentRule.keywords) : { score: 0, hits: [] };
+
+  // Si la consulta contiene conceptos clave del agente actual, no transferir
+  if (currentCheck.score >= 1) {
+    return null;
+  }
 
   const ranking = Object.entries(AGENT_ROUTING_RULES)
     .map(([agentId, rule]) => {
@@ -123,14 +151,8 @@ export function suggestAgentTransfer(
     .sort((a, b) => b.score - a.score);
 
   const best = ranking[0];
-  // Allow transfer with score >= 1 (was 2) to be more responsive
-  if (!best || best.score < 1 || best.agentId === currentAgentId) return null;
-
-  const current = ranking.find((item) => item.agentId === currentAgentId);
-  const currentScore = current?.score ?? 0;
-
-  // Evita derivaciones ambiguas cuando el agente actual también es relevante.
-  if (currentScore >= best.score) return null;
+  // Requiere coincidencia sólida (mínimo 2 puntos) y que sea diferente al agente actual
+  if (!best || best.score < 2 || best.agentId === currentAgentId) return null;
 
   return {
     agentId: best.agentId,

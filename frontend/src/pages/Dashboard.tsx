@@ -385,44 +385,44 @@ export default function Dashboard() {
                   <div className="p-5 sm:p-6 rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(20,20,20,0.95) 70%)', border: '1px solid rgba(201,168,76,0.25)' }}>
                     <div className="max-w-2xl">
                       <span className="text-[9px] uppercase font-bold text-[#c9a84c] tracking-widest block mb-2">
-                        DEFENSA LEGAL CIUDADANA EN EL PERÚ
+                        PLATAFORMA LEGAL INTELIGENTE · PERÚ 2026
                       </span>
                       <h1 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
-                        Hola {user?.name ? user.name.split(' ')[0] : ''}, ¿en qué problema legal necesitas ayuda hoy?
+                        Hola {user?.name ? user.name.split(' ')[0] : ''}, ¿en qué consulta legal necesitas asistencia?
                       </h1>
-                      <p className="text-[12px] text-white/60 font-light leading-relaxed mb-4">
-                        Respuestas directas, documentos oficiales listos para imprimir y cálculos exactos en Soles sin palabras difíciles.
+                      <p className="text-[12px] text-white/70 font-light leading-relaxed mb-4">
+                        Especialistas en 8 ramas del derecho, análisis normativo actualizado y documentos oficiales listos para usar.
                       </p>
 
-                      {/* Quick Citizen Action Buttons Grid */}
+                      {/* Quick Action Buttons Grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <button
                           onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <FileText size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="truncate">Generar Documentos</span>
+                          <span className="truncate sm:overflow-visible">Generar Documentos</span>
                         </button>
                         <button
                           onClick={() => setScannerOpen(true)}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <Sparkles size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="truncate">Escanear Cédula/PDF</span>
+                          <span className="truncate sm:overflow-visible">Escanear Cédula/PDF</span>
                         </button>
                         <button
                           onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <Calculator size={15} className="text-[#34d17a] flex-shrink-0" />
-                          <span className="truncate">Calculadoras S/</span>
+                          <span className="truncate sm:overflow-visible">Calculadoras S/</span>
                         </button>
                         <button
                           onClick={() => setWhereToGoOpen(true)}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <MapPin size={15} className="text-[#f59e0b] flex-shrink-0" />
-                          <span className="truncate">A Dónde Acudir</span>
+                          <span className="truncate sm:overflow-visible">A Dónde Acudir</span>
                         </button>
                       </div>
                     </div>

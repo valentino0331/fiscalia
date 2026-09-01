@@ -8,7 +8,7 @@ import {
   Copy, Check, ChevronDown, ChevronUp,
   ThumbsUp, ThumbsDown, CornerDownLeft, RefreshCw,
   Download, Paperclip, Image as ImageIcon,
-  X, AlertTriangle, FileText, Loader2,
+  X, AlertTriangle, FileText, Loader2, FileDown, Printer,
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
@@ -20,12 +20,56 @@ import { useAuth } from '@/context/AuthContext'
 import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
+import { downloadWordDoc, printDocument } from '@/lib/exportDoc'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
+
+const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
+  sebastian: [
+    'Analizando tipo penal, elementos de convicción y presupuestos (DL 1585)',
+    'Revisando Código Penal, NCPP, Acuerdos Plenarios y Casaciones penales',
+    'Estructurando estrategia de defensa técnica y plazos procesales',
+  ],
+  valentina: [
+    'Verificando modalidad contractual y cómputo de plazos (30 días hábiles)',
+    'Revisando LPCL (DL 728), criterios SUNAFIL y competencias JPLL (Ley 32155)',
+    'Liquidando beneficios sociales y fundamentando petitorio laboral',
+  ],
+  diego: [
+    'Analizando relación contractual, cláusulas patrimoniales o derechos reales',
+    'Evaluando Código Civil, Ley 30933 de Desalojo Notarial y Plenos Casatorios',
+    'Estructurando requerimiento formal y vías de tutela ejecutiva',
+  ],
+  adriana: [
+    'Evaluando estructura societaria, pactos de socios y riesgos de contingencia',
+    'Revisando Ley General de Sociedades, modelo de prevención (Ley 30424) y M&A',
+    'Redactando cláusulas de protección patrimonial y gobierno corporativo',
+  ],
+  rodrigo: [
+    'Verificando estado de derechos mineros, TUPA INGEMMET 2026 y REINFO',
+    'Analizando fiscalización ambiental OEFA y planes de manejo',
+    'Estructurando petitorio minero y descargo técnico-sancionador',
+  ],
+  camila: [
+    'Evaluando pretensiones de alimentos, tenencia y régimen de visitas',
+    'Revisando Ley 31590 (Tenencia compartida obligatoria) y Código de los Niños',
+    'Estructurando demanda con asignación anticipada y medidas de protección',
+  ],
+  fernanda: [
+    'Verificando plazos perentorios de notificación y gradualidad de multas',
+    'Analizando Código Tributario, Ley 32430 y Resoluciones del Tribunal Fiscal (RTF)',
+    'Fundamentando recurso de reclamación / apelación y contingencia fiscal',
+  ],
+  marco: [
+    'Analizando tipicidad del acto administrativo y plazos fatales (15 días)',
+    'Revisando Ley 32069 (OECE/TCP) y TUO Ley 27444 (DS 006-2026-JUS)',
+    'Estructurando recurso de apelación / nulidad y agotamiento de vía administrativa',
+  ],
+}
 
 interface PromptModeItem {
   id: string
@@ -1337,10 +1381,10 @@ export default function Chat() {
                   <div
                     key={conv.id}
                     onClick={() => loadConversation(conv.id)}
-                    className="group flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all"
+                    className="group flex items-start justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all gap-2"
                     style={{
-                      background: isCurrent ? 'rgba(201,168,76,0.10)' : 'transparent',
-                      border: isCurrent ? '1px solid rgba(201,168,76,0.15)' : '1px solid transparent',
+                      background: isCurrent ? 'rgba(201,168,76,0.12)' : 'transparent',
+                      border: isCurrent ? '1px solid rgba(201,168,76,0.25)' : '1px solid transparent',
                     }}
                     onMouseEnter={(e) => {
                       if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'
@@ -1349,24 +1393,35 @@ export default function Chat() {
                       if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent'
                     }}
                   >
-                    <div className="flex-1 min-w-0 pr-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span
+                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                          style={{ background: isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.30)' }}
+                        />
+                        <span className="text-[8px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.50)' }}>
+                          {agent.badge}
+                        </span>
+                      </div>
                       <p
-                        className="text-[11px] truncate"
+                        className="text-[11px] leading-tight line-clamp-2"
                         style={{
                           fontWeight: isCurrent ? 500 : 300,
-                          color: isCurrent ? '#ffffff' : 'rgba(255,255,255,0.60)',
+                          color: isCurrent ? '#ffffff' : 'rgba(255,255,255,0.70)',
                         }}
+                        title={conv.title}
                       >
                         {conv.title}
                       </p>
-                      <p className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                      <p className="text-[9px] mt-1" style={{ color: 'rgba(255,255,255,0.30)' }}>
                         {formatDate(conv.updatedAt)}
                       </p>
                     </div>
                     <button
                       onClick={(e) => deleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-all flex-shrink-0 mt-1"
                       style={{ color: 'rgba(255,255,255,0.30)' }}
+                      title="Eliminar consulta"
                     >
                       <Trash2 size={11} />
                     </button>
@@ -1704,9 +1759,11 @@ export default function Chat() {
 
                   {/* Right actions */}
                   <div className="flex items-center gap-2">
-                    <span className="text-[9px] hidden lg:inline" style={{ color: 'rgba(255,255,255,0.20)' }}>
-                      Enter · Shift+Enter
-                    </span>
+                    {input.length > 0 && (
+                      <span className="text-[9px] hidden lg:inline" style={{ color: 'rgba(255,255,255,0.30)' }}>
+                        Enter · Shift+Enter
+                      </span>
+                    )}
 
                     {/* Mic button — solid red when recording, no frantic animation */}
                     {speechSupported && (
@@ -2268,53 +2325,55 @@ p { margin-bottom: 8pt; text-align: justify; }
               )}
             </button>
 
+            {/* Direct Word (.doc) download */}
+            <button
+              onClick={() => {
+                const title = `Escrito_${agent.name}_${new Date().toISOString().slice(0, 10)}`
+                downloadWordDoc(title, message.content, `Respuesta Legal — ${agent.name} (${agent.role})`)
+                setDownloaded(true)
+                setTimeout(() => setDownloaded(false), 2500)
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+              style={{
+                background: 'rgba(96,165,250,0.08)',
+                border: '1px solid rgba(96,165,250,0.25)',
+                color: '#60a5fa',
+              }}
+              title="Descargar documento editable para Microsoft Word"
+            >
+              <FileDown size={12} />
+              <span>Word (.doc)</span>
+            </button>
+
+            {/* Direct Print / PDF */}
+            <button
+              onClick={() => {
+                const title = `Respuesta Legal — ${agent.name} (${agent.role})`
+                printDocument(title, message.content)
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
+              style={{
+                background: 'rgba(201,168,76,0.08)',
+                border: '1px solid rgba(201,168,76,0.25)',
+                color: '#c9a84c',
+              }}
+              title="Imprimir o guardar como PDF oficial"
+            >
+              <Printer size={12} />
+              <span>Imprimir / PDF</span>
+            </button>
+
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-light transition-all"
-              style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: 'rgba(255,255,255,0.40)' }}
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-light transition-all"
+              style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: 'rgba(255,255,255,0.50)' }}
             >
               {copied ? <><Check size={11} style={{ color: '#34d17a' }} /> Copiado</> : <><Copy size={11} /> Copiar</>}
             </button>
 
-            <div ref={exportRef} className="relative">
-              <button
-                onClick={() => setExportOpen((o) => !o)}
-                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-light transition-all"
-                style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: downloaded ? '#34d17a' : 'rgba(255,255,255,0.40)' }}
-              >
-                {downloaded ? <><Check size={11} /> Listo</> : <><Download size={11} /> Exportar</>}
-              </button>
-              {exportOpen && (
-                <div
-                  className="absolute bottom-full left-0 mb-1.5 rounded-xl overflow-hidden z-50"
-                  style={{ background: '#1a1a1a', border: '1px solid #333333', minWidth: '168px', boxShadow: '0 8px 30px rgba(0,0,0,0.60)' }}
-                >
-                  <button
-                    onClick={handleExportPDF}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-[10px] font-light text-left transition-colors"
-                    style={{ color: 'rgba(255,255,255,0.65)' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.10)'; e.currentTarget.style.color = '#c9a84c' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
-                  >
-                    <FileText size={11} /> PDF — descarga directa
-                  </button>
-                  <div style={{ height: '1px', background: '#2a2a2a', margin: '0 10px' }} />
-                  <button
-                    onClick={handleExportWord}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 text-[10px] font-light text-left transition-colors"
-                    style={{ color: 'rgba(255,255,255,0.65)' }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,168,76,0.10)'; e.currentTarget.style.color = '#c9a84c' }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)' }}
-                  >
-                    <FileText size={11} /> Word (.doc)
-                  </button>
-                </div>
-              )}
-            </div>
-
             <button
               onClick={() => setFeedback(feedback === 'up' ? null : 'up')}
-              className="p-1 rounded-md transition-all"
+              className="p-1.5 rounded-lg transition-all"
               style={{
                 background: feedback === 'up' ? 'rgba(201,168,76,0.10)' : '#1a1a1a',
                 border: `1px solid ${feedback === 'up' ? 'rgba(201,168,76,0.25)' : '#2a2a2a'}`,
@@ -2326,7 +2385,7 @@ p { margin-bottom: 8pt; text-align: justify; }
 
             <button
               onClick={() => setFeedback(feedback === 'down' ? null : 'down')}
-              className="p-1 rounded-md transition-all"
+              className="p-1.5 rounded-lg transition-all"
               style={{
                 background: feedback === 'down' ? 'rgba(255,100,100,0.08)' : '#1a1a1a',
                 border: `1px solid ${feedback === 'down' ? 'rgba(255,100,100,0.20)' : '#2a2a2a'}`,
@@ -2340,7 +2399,7 @@ p { margin-bottom: 8pt; text-align: justify; }
             <button
               onClick={handleSave}
               disabled={savingMsg}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-light transition-all"
+              className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-light transition-all"
               style={{
                 background: saved ? 'rgba(201,168,76,0.10)' : '#1a1a1a',
                 border: `1px solid ${saved ? 'rgba(201,168,76,0.30)' : '#2a2a2a'}`,
@@ -2348,26 +2407,9 @@ p { margin-bottom: 8pt; text-align: justify; }
               }}
               title={saved ? 'Guardado en Habilidades' : 'Guardar en Habilidades'}
             >
-              <Star size={11} fill={saved ? '#c9a84c' : 'none'} />
-              <span className="hidden sm:inline">{saved ? 'Guardado' : 'Guardar'}</span>
+              <Star size={11} fill={saved ? 'currentColor' : 'none'} />
+              <span>{saved ? 'Guardado' : 'Guardar'}</span>
             </button>
-
-            {/* Calendar export — opens interactive modal */}
-            {deadlines.length > 0 && (
-              <button
-                onClick={() => onOpenDeadline(deadlines[0])}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium transition-all"
-                style={{
-                  background: 'rgba(201,168,76,0.08)',
-                  border: '1px solid rgba(201,168,76,0.25)',
-                  color: '#c9a84c',
-                }}
-                title={`Abrir gestor y cómputo de plazo: ${deadlines[0]}`}
-              >
-                <Calendar size={11} />
-                <span>Agregar plazo</span>
-              </button>
-            )}
           </div>
         )}
 
@@ -2389,10 +2431,10 @@ p { margin-bottom: 8pt; text-align: justify; }
 
       {isUser && (
         <div
-          className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-1 text-[10px] font-semibold"
+          className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-1"
           style={{
-            background: 'rgba(201,168,76,0.10)',
-            border: '1px solid rgba(201,168,76,0.25)',
+            background: 'rgba(201,168,76,0.15)',
+            border: '1px solid rgba(201,168,76,0.30)',
             color: '#c9a84c',
           }}
         >
@@ -2405,6 +2447,11 @@ p { margin-bottom: 8pt; text-align: justify; }
 
 function ThinkingIndicator({ agent }: { agent: NonNullable<ReturnType<typeof getAgent>> }) {
   const [expanded, setExpanded] = useState(true)
+  const steps = AGENT_THINKING_STEPS[agent.id] || [
+    'Identificando pretensiones y marco normativo peruano',
+    `Revisando jurisprudencia y casaciones aplicables (${agent.badge})`,
+    'Estructurando dictamen y fundamentación legal',
+  ]
 
   return (
     <motion.div
@@ -2445,19 +2492,19 @@ function ThinkingIndicator({ agent }: { agent: NonNullable<ReturnType<typeof get
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="p-4 space-y-2 text-[11px] font-light"
-              style={{ borderTop: '1px solid #2a2a2a', color: 'rgba(255,255,255,0.40)' }}
+              style={{ borderTop: '1px solid #2a2a2a', color: 'rgba(255,255,255,0.70)' }}
             >
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full dot-online" style={{ background: '#34d17a' }} />
-                <span>Identificando pretensiones y marco normativo peruano</span>
+                <span className="w-1.5 h-1.5 rounded-full dot-online flex-shrink-0" style={{ background: '#34d17a' }} />
+                <span>{steps[0]}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full dot-online" style={{ background: '#c9a84c' }} />
-                <span>Revisando jurisprudencia y casaciones aplicables ({agent.badge})</span>
+                <span className="w-1.5 h-1.5 rounded-full dot-online flex-shrink-0" style={{ background: '#c9a84c' }} />
+                <span>{steps[1]}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#333333' }} />
-                <span>Estructurando dictamen y fundamentación legal</span>
+                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#60a5fa' }} />
+                <span>{steps[2]}</span>
               </div>
             </motion.div>
           )}

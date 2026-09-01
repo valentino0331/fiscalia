@@ -165,15 +165,15 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
           error: geminiErr?.message || 'Error Gemini',
         });
         if (!anthropicKey) {
-          const msg = geminiErr?.message || 'Error en el servicio de Gemini';
+          const friendly = sanitizeAiErrorMessage(geminiErr);
           metrics.recordError({
             route: '/chat',
             method: 'POST',
             statusCode: 500,
-            message: `Error de IA (Gemini): ${msg}`,
+            message: friendly,
             agentId,
           });
-          return res.status(500).json({ error: `Error de IA (Gemini): ${msg}` });
+          return res.status(500).json({ error: friendly });
         }
       }
     }
@@ -206,28 +206,28 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
           durationMs: Date.now() - startTime,
           error: anthropicErr?.message || 'Error Anthropic',
         });
+        const friendly = sanitizeAiErrorMessage(anthropicErr);
         metrics.recordError({
           route: '/chat',
           method: 'POST',
           statusCode: 500,
-          message: `Error de IA (Anthropic): ${anthropicErr?.message || anthropicErr}`,
+          message: friendly,
           agentId,
         });
-        return res.status(500).json({ error: `Error de IA (Anthropic): ${anthropicErr?.message || anthropicErr}` });
+        return res.status(500).json({ error: friendly });
       }
     }
 
     if (!assistantMessage) {
+      const friendly = 'El servicio de asistencia legal no se encuentra disponible en este momento. Por favor, reintenta en unos instantes.';
       metrics.recordError({
         route: '/chat',
         method: 'POST',
         statusCode: 500,
-        message: 'No se ha configurado ninguna API Key de IA en el servidor (GEMINI_API_KEY o ANTHROPIC_API_KEY)',
+        message: 'No IA keys configured',
         agentId,
       });
-      return res.status(500).json({
-        error: 'No se ha configurado ninguna API Key de IA en el servidor (GEMINI_API_KEY o ANTHROPIC_API_KEY). Por favor agrega GEMINI_API_KEY en las variables de entorno de Render.',
-      });
+      return res.status(500).json({ error: friendly });
     }
 
     const assistantEntry = {
@@ -264,14 +264,14 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     }
   } catch (error: any) {
     console.error('Chat processing error:', error?.message || error);
-    const errorMessage = error?.message || 'Error al procesar la consulta jurídica';
+    const friendlyError = sanitizeAiErrorMessage(error);
     metrics.recordError({
       route: '/chat',
       method: 'POST',
       statusCode: 500,
-      message: errorMessage,
+      message: friendlyError,
       details: String(error),
     });
-    res.status(500).json({ error: errorMessage });
+    res.status(500).json({ error: friendlyError });
   }
 });
