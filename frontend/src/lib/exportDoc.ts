@@ -163,94 +163,136 @@ ${paragraphs}
 </html>`
 }
 
-export function downloadWordDoc(
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  PageNumber,
+  convertMillimetersToTwip,
+  convertInchesToTwip,
+  HeadingLevel,
+  UnderlineType,
+} from 'docx'
+
+export async function downloadWordDoc(
   filename: string,
   content: string,
   title?: string,
   options?: DocFormatOptions
 ) {
   const fmt = { ...DEFAULT_FORMAT, ...options }
-  const marginPt = (cm: number) => `${Math.round(cm * 28.35)}pt`
 
-  // Format content into clean legal Word paragraphs
-  const safeParagraphs = content
-    .split(/\n\s*\n/)
-    .map((p) => {
-      const trimmed = p.trim()
-      if (!trimmed) return ''
-      const safe = trimmed
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>')
+  // Clean lines and structure paragraphs
+  const rawParagraphs = content.split(/\n\s*\n/)
+  const docChildren: Paragraph[] = []
 
-      const isCenter = /^(CARTA NOTARIAL|DEMANDA|CONTRATO|DENUNCIA PENAL|SOLICITUD|RECURSO DE APELACI[ÓO]N)/i.test(trimmed)
-      const isHeader = /^([A-ZÁÉÍÓÚÑ\s]{4,}|SUMILLA:|EXPEDIENTE:|CUADERNO:|ESCRITO:|SEÑOR\s+[A-ZÁÉÍÓÚÑ]+)/.test(trimmed)
-      const isSignature = /^(__________|FIRMA|DNI\s*N°|ABOGADO|CAL\s*N°)/im.test(trimmed)
+  for (const rawP of rawParagraphs) {
+    const trimmed = rawP.trim()
+    if (!trimmed) continue
 
-      if (isCenter) {
-        return `<p style="text-align: center; font-weight: bold; font-size: 13pt; margin: 12pt 0 10pt 0; text-transform: uppercase;">${safe}</p>`
-      }
-      if (isHeader) {
-        return `<p style="font-weight: bold; margin: 6pt 0 4pt 0; line-height: 1.3;">${safe}</p>`
-      }
-      if (isSignature) {
-        return `<p style="text-align: center; margin-top: 36pt; line-height: 1.4;">${safe}</p>`
-      }
-      return `<p style="text-align: justify; text-justify: inter-word; margin: 0 0 8pt 0; line-height: ${fmt.lineHeight};">${safe}</p>`
-    })
-    .filter(Boolean)
-    .join('\n')
+    const lines = trimmed.split('\n').map((l) => l.trim()).filter(Boolean)
 
-  const wordHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-<meta charset="utf-8">
-<title>${title || filename}</title>
-<!--[if gte mso 9]>
-<xml>
-  <w:WordDocument>
-    <w:View>Print</w:View>
-    <w:Zoom>100</w:Zoom>
-    <w:DoNotOptimizeForBrowser/>
-  </w:WordDocument>
-</xml>
-<![endif]-->
-<style>
-  @page Section1 {
-    size: 595.3pt 841.9pt; /* A4 */
-    margin: ${marginPt(fmt.marginTopCm!)} ${marginPt(fmt.marginRightCm!)} ${marginPt(fmt.marginBottomCm!)} ${marginPt(fmt.marginLeftCm!)};
-    mso-header-margin: 0pt;
-    mso-footer-margin: 0pt;
-    mso-paper-source: 0;
+    const isCenter = /^(CARTA NOTARIAL|DEMANDA|CONTRATO|DENUNCIA PENAL|SOLICITUD|RECURSO DE APELACI[ÓO]N)/i.test(trimmed)
+    const isHeader = /^([A-ZÁÉÍÓÚÑ\s]{4,}|SUMILLA:|EXPEDIENTE:|CUADERNO:|ESCRITO:|SEÑOR\s+[A-ZÁÉÍÓÚÑ]+)/.test(trimmed)
+    const isSignature = /^(__________|FIRMA|DNI\s*N°|ABOGADO|CAL\s*N°)/im.test(trimmed)
+
+    if (isCenter) {
+      docChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 240, after: 200, line: 360 }, // 1.5 line spacing (360 twips)
+          children: [
+            new TextRun({
+              text: lines.join(' '),
+              font: 'Times New Roman',
+              size: 26, // 13pt
+              bold: true,
+              allCaps: true,
+            }),
+          ],
+        })
+      )
+    } else if (isSignature) {
+      docChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.CENTER,
+          spacing: { before: 720, after: 120, line: 360 },
+          children: lines.map(
+            (l, idx) =>
+              new TextRun({
+                text: l,
+                font: 'Times New Roman',
+                size: 24, // 12pt
+                bold: idx > 0,
+                break: idx > 0 ? 1 : 0,
+              })
+          ),
+        })
+      )
+    } else if (isHeader) {
+      docChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 160, after: 120, line: 360 },
+          children: lines.map(
+            (l, idx) =>
+              new TextRun({
+                text: l,
+                font: 'Times New Roman',
+                size: 24, // 12pt
+                bold: true,
+                break: idx > 0 ? 1 : 0,
+              })
+          ),
+        })
+      )
+    } else {
+      // Standard legal paragraph
+      docChildren.push(
+        new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { before: 80, after: 160, line: 360 }, // 1.5 line spacing (360)
+          children: lines.map(
+            (l, idx) =>
+              new TextRun({
+                text: l,
+                font: 'Times New Roman',
+                size: 24, // 12pt
+                break: idx > 0 ? 1 : 0,
+              })
+          ),
+        })
+      )
+    }
   }
-  div.Section1 { page: Section1; }
-  body {
-    font-family: ${fmt.fontFamilyCss};
-    font-size: ${fmt.fontSizePt}pt;
-    line-height: ${fmt.lineHeight};
-    color: #000000;
-  }
-  p {
-    margin: 0 0 8pt 0;
-    text-align: justify;
-    line-height: ${fmt.lineHeight};
-    mso-pagination: widow-orphan;
-  }
-</style>
-</head>
-<body>
-<div class="Section1">
-${safeParagraphs}
-</div>
-</body>
-</html>`
 
-  const blob = new Blob(['\ufeff' + wordHTML], { type: 'application/msword;charset=utf-8' })
+  // Create real native OpenXML Word Document (.docx)
+  const doc = new Document({
+    sections: [
+      {
+        properties: {
+          page: {
+            margin: {
+              top: convertMillimetersToTwip(30), // 3.0 cm
+              bottom: convertMillimetersToTwip(25), // 2.5 cm
+              left: convertMillimetersToTwip(30), // 3.0 cm
+              right: convertMillimetersToTwip(25), // 2.5 cm
+            },
+          },
+        },
+        children: docChildren,
+      },
+    ],
+  })
+
+  const blob = await Packer.toBlob(doc)
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   const cleanName = (filename || 'Documento_Legal').replace(/[^a-zA-Z0-9_\-]/g, '_')
   a.href = url
-  a.download = `${cleanName}.doc`
+  a.download = `${cleanName}.docx`
   document.body.appendChild(a)
   a.click()
   document.body.removeChild(a)

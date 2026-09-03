@@ -2321,7 +2321,7 @@ p { margin-bottom: 8pt; text-align: justify; }
                           <span className="text-[10px] text-white/40 hidden sm:inline">Formato Oficial A4</span>
                         </div>
                         <h4 className="text-[13px] font-semibold text-white truncate max-w-xs sm:max-w-md" title={extractedDoc.title}>
-                          {extractedDoc.title}.doc
+                          {extractedDoc.title}.docx
                         </h4>
                       </div>
                     </div>
@@ -2329,8 +2329,8 @@ p { margin-bottom: 8pt; text-align: justify; }
                     {/* Action Buttons in Header */}
                     <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                       <button
-                        onClick={() => {
-                          downloadWordDoc(extractedDoc.title, extractedDoc.content, extractedDoc.title)
+                        onClick={async () => {
+                          await downloadWordDoc(extractedDoc.title, extractedDoc.content, extractedDoc.title)
                         }}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all"
                         style={{
@@ -2338,10 +2338,10 @@ p { margin-bottom: 8pt; text-align: justify; }
                           color: '#ffffff',
                           boxShadow: '0 2px 8px rgba(37,99,235,0.35)',
                         }}
-                        title="Descargar archivo editable Microsoft Word (.doc)"
+                        title="Descargar archivo editable Microsoft Word (.docx)"
                       >
                         <FileDown size={13} />
-                        <span className="hidden sm:inline">Descargar Word</span>
+                        <span className="hidden sm:inline">Descargar Word (.docx)</span>
                         <span className="sm:hidden">Word</span>
                       </button>
 
@@ -2446,11 +2446,11 @@ p { margin-bottom: 8pt; text-align: justify; }
               )}
             </button>
 
-            {/* Direct Word (.doc) download */}
+            {/* Direct Word (.docx) download */}
             <button
-              onClick={() => {
+              onClick={async () => {
                 const title = `Escrito_${agent.name}_${new Date().toISOString().slice(0, 10)}`
-                downloadWordDoc(title, message.content, `Respuesta Legal — ${agent.name} (${agent.role})`)
+                await downloadWordDoc(title, message.content, `Respuesta Legal — ${agent.name} (${agent.role})`)
                 setDownloaded(true)
                 setTimeout(() => setDownloaded(false), 2500)
               }}
@@ -2460,10 +2460,10 @@ p { margin-bottom: 8pt; text-align: justify; }
                 border: '1px solid rgba(96,165,250,0.25)',
                 color: '#60a5fa',
               }}
-              title="Descargar documento editable para Microsoft Word"
+              title="Descargar documento editable oficial para Microsoft Word (.docx)"
             >
               <FileDown size={12} />
-              <span>Word (.doc)</span>
+              <span>Word (.docx)</span>
             </button>
 
             {/* Direct Print / PDF */}

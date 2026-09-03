@@ -1560,7 +1560,7 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
               {downloadedWord ? (
                 <><Check size={15} className="text-blue-400" /><span>¡Descargado!</span></>
               ) : (
-                <><FileDown size={15} /><span>Word (.doc)</span></>
+                <><FileDown size={15} /><span>Word (.docx)</span></>
               )}
             </button>
             <button
@@ -1596,12 +1596,12 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
               onClick={handleDownloadWord}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border transition-all"
               style={{ borderColor: 'rgba(96,165,250,0.30)', color: '#60a5fa', background: 'rgba(96,165,250,0.08)' }}
-              title="Descargar archivo editable para Microsoft Word o Google Docs"
+              title="Descargar archivo editable oficial para Microsoft Word o Google Docs (.docx)"
             >
               {downloadedWord ? (
                 <><Check size={14} className="text-blue-400" /><span>¡Descargado!</span></>
               ) : (
-                <><FileDown size={14} /><span>Word (.doc)</span></>
+                <><FileDown size={14} /><span>Word (.docx)</span></>
               )}
             </button>
           </div>
