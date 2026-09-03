@@ -13,7 +13,7 @@ export interface AiRequestMetric {
   id: string;
   timestamp: string;
   agentId: string;
-  provider: 'gemini' | 'anthropic';
+  provider: 'gemini' | 'anthropic' | 'openrouter' | 'groq';
   model: string;
   success: boolean;
   durationMs: number;
@@ -66,6 +66,8 @@ class MetricsManager {
 
     const geminiCount = this.aiMetrics.filter((m) => m.provider === 'gemini').length;
     const anthropicCount = this.aiMetrics.filter((m) => m.provider === 'anthropic').length;
+    const openrouterCount = this.aiMetrics.filter((m) => m.provider === 'openrouter').length;
+    const groqCount = this.aiMetrics.filter((m) => m.provider === 'groq').length;
 
     return {
       uptimeSeconds: Math.floor((Date.now() - this.startTime) / 1000),
@@ -79,6 +81,8 @@ class MetricsManager {
         avgDurationMs,
         geminiCount,
         anthropicCount,
+        openrouterCount,
+        groqCount,
       },
       recentErrors: this.errorLogs.slice(0, 20),
       recentAiCalls: this.aiMetrics.slice(0, 15),
