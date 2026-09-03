@@ -68,6 +68,8 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
 
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    const groqKey = process.env.GROQ_API_KEY;
 
     let assistantMessage = '';
     let transferTo: string | undefined;
@@ -112,11 +114,99 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       ].join(' ');
     }
 
-    // Use Gemini (@google/generative-ai SDK)
+    // 1. Use OpenRouter if configured
+    if (!assistantMessage && openrouterKey) {
+      try {
+        const openrouterModel = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
+        const formattedMessages = [
+          { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+          ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+        ];
+
+        const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openrouterKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://fiscalia-1.onrender.com',
+            'X-Title': 'Bufete Fiscalia IA',
+          },
+          body: JSON.stringify({
+            model: openrouterModel,
+            messages: formattedMessages,
+            temperature: 0.3,
+          }),
+        });
+
+        if (orRes.ok) {
+          const data: any = await orRes.json();
+          assistantMessage = data.choices?.[0]?.message?.content || '';
+          if (assistantMessage) {
+            metrics.recordAiCall({
+              agentId,
+              provider: 'openrouter',
+              model: openrouterModel,
+              success: true,
+              durationMs: Date.now() - startTime,
+            });
+          }
+        } else {
+          const errData = await orRes.json().catch(() => ({}));
+          console.warn('OpenRouter API error:', errData);
+        }
+      } catch (orErr: any) {
+        console.error('OpenRouter request error:', orErr?.message || orErr);
+      }
+    }
+
+    // 2. Use Groq if configured
+    if (!assistantMessage && groqKey) {
+      try {
+        const groqModel = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+        const formattedMessages = [
+          { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+          ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+        ];
+
+        const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${groqKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: groqModel,
+            messages: formattedMessages,
+            temperature: 0.3,
+          }),
+        });
+
+        if (groqRes.ok) {
+          const data: any = await groqRes.json();
+          assistantMessage = data.choices?.[0]?.message?.content || '';
+          if (assistantMessage) {
+            metrics.recordAiCall({
+              agentId,
+              provider: 'groq',
+              model: groqModel,
+              success: true,
+              durationMs: Date.now() - startTime,
+            });
+          }
+        } else {
+          const errData = await groqRes.json().catch(() => ({}));
+          console.warn('Groq API error:', errData);
+        }
+      } catch (groqErr: any) {
+        console.error('Groq request error:', groqErr?.message || groqErr);
+      }
+    }
+
+    // 3. Use Gemini (@google/generative-ai SDK)
     if (!assistantMessage && geminiKey) {
       try {
         const genAI = new GoogleGenerativeAI(geminiKey);
-        const geminiModelName = process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+        const geminiModelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
         
         // Sanitize history for Gemini SDK
         const rawHistory = messages.slice(0, -1);
@@ -176,25 +266,15 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         metrics.recordAiCall({
           agentId,
           provider: 'gemini',
-          model: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+          model: process.env.GEMINI_MODEL || 'gemini-1.5-flash',
           success: false,
           durationMs: Date.now() - startTime,
           error: geminiErr?.message || 'Error Gemini',
         });
-        if (!anthropicKey) {
-          const friendly = sanitizeAiErrorMessage(geminiErr);
-          metrics.recordError({
-            route: '/chat',
-            method: 'POST',
-            statusCode: 500,
-            message: friendly,
-            agentId,
-          });
-          return res.status(500).json({ error: friendly });
-        }
       }
     }
 
+    // 4. Use Anthropic
     if (!assistantMessage && anthropicKey) {
       try {
         const anthropic = new Anthropic({ apiKey: anthropicKey });
@@ -223,15 +303,6 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
           durationMs: Date.now() - startTime,
           error: anthropicErr?.message || 'Error Anthropic',
         });
-        const friendly = sanitizeAiErrorMessage(anthropicErr);
-        metrics.recordError({
-          route: '/chat',
-          method: 'POST',
-          statusCode: 500,
-          message: friendly,
-          agentId,
-        });
-        return res.status(500).json({ error: friendly });
       }
     }
 
@@ -241,7 +312,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         route: '/chat',
         method: 'POST',
         statusCode: 500,
-        message: 'No IA keys configured',
+        message: 'No IA provider returned a response',
         agentId,
       });
       return res.status(500).json({ error: friendly });
