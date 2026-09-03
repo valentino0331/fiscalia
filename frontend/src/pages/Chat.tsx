@@ -12,7 +12,7 @@ import {
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
-  Scale, Shield, Gavel, Building2, Phone, type LucideIcon
+  Scale, Shield, Gavel, Building2, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -27,7 +27,6 @@ import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
-import LiveVoiceCallModal from '@/components/voice/LiveVoiceCallModal'
 
 const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
   sebastian: [
@@ -718,6 +717,7 @@ FECHA FATAL DE VENCIMIENTO: ${calculation.formattedDueDate} (Hasta las 23:59 hrs
 export default function Chat() {
   const { agentId } = useParams<{ agentId: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useAuth()
   const agent = getAgent(agentId || '')
 
@@ -781,17 +781,25 @@ export default function Chat() {
     if (!agent) navigate('/dashboard')
   }, [agent, navigate])
 
+  // Reset conversation state when the agent changes, but preserve transferMessage if present
   useEffect(() => {
-    // Reset all conversation state when the agent changes
     setMessages([])
     setConversationId(undefined)
-    setInput('')
     setActiveMode(null)
     setIsVoiceMessage(false)
     stopSpeaking()
     loadConversations()
     setSidebarOpen(false)
-  }, [agentId])
+
+    const state = location.state as { transferMessage?: string } | null
+    if (state?.transferMessage) {
+      setInput(state.transferMessage)
+      setTimeout(autoResize, 80)
+      window.history.replaceState({}, document.title)
+    } else {
+      setInput('')
+    }
+  }, [agentId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     scrollToBottom()
@@ -801,22 +809,9 @@ export default function Chat() {
     api.account.usage().then(setUsage).catch(() => {})
   }, [])
 
-  // Load specific conversation if URL has ?conv=<id>
   useEffect(() => {
     const convId = searchParams.get('conv')
     if (convId) loadConversation(convId)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Pre-fill input when arriving via agent transfer
-  const location = useLocation()
-  useEffect(() => {
-    const state = location.state as { transferMessage?: string } | null
-    if (state?.transferMessage) {
-      setInput(state.transferMessage)
-      setTimeout(autoResize, 80)
-      // Clear route state so refresh doesn't re-fill
-      window.history.replaceState({}, document.title)
-    }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -1264,21 +1259,6 @@ export default function Chat() {
             </div>
           )}
 
-
-          {/* Live Voice Call Button */}
-          <button
-            onClick={() => setLiveCallOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all shadow-md"
-            style={{
-              background: 'linear-gradient(135deg, rgba(52,209,122,0.18) 0%, rgba(52,209,122,0.08) 100%)',
-              border: '1px solid rgba(52,209,122,0.40)',
-              color: '#34d17a',
-            }}
-            title={`Llamar en vivo a ${agent.name}`}
-          >
-            <Phone size={13} className="animate-pulse text-[#34d17a]" />
-            <span className="hidden sm:inline font-semibold">Llamar en vivo</span>
-          </button>
 
           {conversationId && (
             <button
@@ -1852,21 +1832,6 @@ export default function Chat() {
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
       />
-
-      <LiveVoiceCallModal
-        isOpen={liveCallOpen}
-        onClose={() => setLiveCallOpen(false)}
-        agent={agent}
-        conversationId={conversationId || null}
-        onSaveVoiceTurn={(userText, assistantText) => {
-          const now = new Date().toISOString()
-          setMessages((prev) => [
-            ...prev,
-            { role: 'user', content: userText, timestamp: now },
-            { role: 'assistant', content: assistantText, timestamp: now },
-          ])
-        }}
-      />
     </div>
   )
 }
@@ -1982,15 +1947,13 @@ function TransferCard({
   if (!destAgent) return null
 
   const handleTransfer = () => {
-    // Strip document content from context to keep it concise
+    // Strip document attachment markers if any, but preserve the full legal consultation text
     const clean = (userContext || '')
       .replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n/, '')
       .trim()
-    // Truncate if very long
-    const transferMessage = clean.length > 400 ? clean.slice(0, 397) + '...' : clean
 
     navigate(`/chat/${destAgent.id}`, {
-      state: transferMessage ? { transferMessage } : undefined,
+      state: clean ? { transferMessage: clean } : undefined,
     })
   }
 

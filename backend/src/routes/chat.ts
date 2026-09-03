@@ -105,12 +105,12 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         valentina: 'Valentina', sebastian: 'Sebastián', diego: 'Diego', adriana: 'Adriana',
         rodrigo: 'Rodrigo', camila: 'Camila', fernanda: 'Fernanda', marco: 'Marco',
       };
-      const currentName = currentAgentNames[agentId] || 'yo';
+      const currentName = currentAgentNames[agentId] || 'este despacho';
       const destName = transferSuggestion.agentName;
       assistantMessage = [
-        `Gracias por tu consulta. Siendo sincero contigo, lo que describes corresponde al área de **${transferSuggestion.agentLabel}**, y no es mi especialidad principal.`,
-        `Mi colega **${destName}**, especialista en ${transferSuggestion.agentLabel}, podrá ayudarte mucho mejor que ${currentName} en este caso.`,
-        `Te recomiendo continuar con ${destName}. Haz clic en el botón de abajo para ir directamente a su chat.`,
+        `Estimado usuario: Analizada su consulta fáctica, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
+        `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de nuestro bufete.`,
+        `Haga clic en el botón inferior para continuar; su consulta se cargará de manera automática en el despacho de ${destName}.`,
       ].join(' ');
     }
 
