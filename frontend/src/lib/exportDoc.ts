@@ -28,10 +28,37 @@ export function buildPrintHTML(
   options?: DocFormatOptions
 ): string {
   const fmt = { ...DEFAULT_FORMAT, ...options }
-  const safeContent = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+  
+  // Format content paragraphs cleanly
+  const paragraphs = content
+    .split(/\n\s*\n/)
+    .map((p) => {
+      const trimmed = p.trim()
+      if (!trimmed) return ''
+      const safe = trimmed
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+      
+      // Check if it looks like a header, sumilla or title
+      const isHeader = /^([A-ZÁÉÍÓÚÑ\s]{4,}|SUMILLA:|EXPEDIENTE:|CUADERNO:|ESCRITO:|SEÑOR\s+[A-ZÁÉÍÓÚÑ]+)/.test(trimmed)
+      const isCenter = /^(CARTA NOTARIAL|DEMANDA|CONTRATO|DENUNCIA PENAL|SOLICITUD|RECURSO DE APELACI[ÓO]N)/i.test(trimmed)
+      const isSignature = /^(__________|FIRMA|DNI\s*N°|ABOGADO|CAL\s*N°)/im.test(trimmed)
+
+      if (isCenter) {
+        return `<p class="doc-title">${safe}</p>`
+      }
+      if (isHeader) {
+        return `<p class="doc-header">${safe}</p>`
+      }
+      if (isSignature) {
+        return `<div class="doc-signature">${safe}</div>`
+      }
+      return `<p class="doc-paragraph">${safe}</p>`
+    })
+    .filter(Boolean)
+    .join('\n')
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -53,18 +80,43 @@ export function buildPrintHTML(
     padding: ${fmt.marginTopCm}cm ${fmt.marginRightCm}cm ${fmt.marginBottomCm}cm ${fmt.marginLeftCm}cm;
     max-width: 21cm;
     margin: 0 auto;
+    text-rendering: optimizeLegibility;
   }
-  pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: normal;
-    overflow-wrap: break-word;
-    hyphens: none;
-    font-family: ${fmt.fontFamilyCss};
-    font-size: ${fmt.fontSizePt}pt;
-    line-height: ${fmt.lineHeight};
+  .doc-container {
+    width: 100%;
+  }
+  .doc-title {
+    text-align: center;
+    font-weight: bold;
+    font-size: 13pt;
+    margin: 14pt 0 12pt 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .doc-header {
+    font-weight: bold;
+    margin: 8pt 0 6pt 0;
+    line-height: 1.4;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .doc-paragraph {
     text-align: justify;
-    color: #111111;
+    text-justify: inter-word;
+    margin: 0 0 9pt 0;
+    line-height: ${fmt.lineHeight};
+    page-break-inside: avoid;
+    break-inside: avoid;
+    orphans: 3;
+    widows: 3;
+  }
+  .doc-signature {
+    margin-top: 36pt;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .no-print {
     margin: 16px auto 24px auto;
@@ -94,7 +146,7 @@ export function buildPrintHTML(
     .no-print {
       display: none !important;
     }
-    pre {
+    .doc-paragraph {
       page-break-inside: auto;
     }
   }
@@ -102,9 +154,11 @@ export function buildPrintHTML(
 </head>
 <body>
 <div class="no-print">
-  <button class="btn-print" onclick="window.print()">🖨️ Imprimir Documento / Guardar como PDF</button>
+  <button class="btn-print" onclick="window.print()">🖨️ Imprimir Documento / Guardar como PDF Oficial</button>
 </div>
-<pre>${safeContent}</pre>
+<div class="doc-container">
+${paragraphs}
+</div>
 </body>
 </html>`
 }
@@ -118,12 +172,35 @@ export function downloadWordDoc(
   const fmt = { ...DEFAULT_FORMAT, ...options }
   const marginPt = (cm: number) => `${Math.round(cm * 28.35)}pt`
 
-  const safeContent = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n\n+/g, '</p><p>')
-    .replace(/\n/g, '<br>')
+  // Format content into clean legal Word paragraphs
+  const safeParagraphs = content
+    .split(/\n\s*\n/)
+    .map((p) => {
+      const trimmed = p.trim()
+      if (!trimmed) return ''
+      const safe = trimmed
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>')
+
+      const isCenter = /^(CARTA NOTARIAL|DEMANDA|CONTRATO|DENUNCIA PENAL|SOLICITUD|RECURSO DE APELACI[ÓO]N)/i.test(trimmed)
+      const isHeader = /^([A-ZÁÉÍÓÚÑ\s]{4,}|SUMILLA:|EXPEDIENTE:|CUADERNO:|ESCRITO:|SEÑOR\s+[A-ZÁÉÍÓÚÑ]+)/.test(trimmed)
+      const isSignature = /^(__________|FIRMA|DNI\s*N°|ABOGADO|CAL\s*N°)/im.test(trimmed)
+
+      if (isCenter) {
+        return `<p style="text-align: center; font-weight: bold; font-size: 13pt; margin: 12pt 0 10pt 0; text-transform: uppercase;">${safe}</p>`
+      }
+      if (isHeader) {
+        return `<p style="font-weight: bold; margin: 6pt 0 4pt 0; line-height: 1.3;">${safe}</p>`
+      }
+      if (isSignature) {
+        return `<p style="text-align: center; margin-top: 36pt; line-height: 1.4;">${safe}</p>`
+      }
+      return `<p style="text-align: justify; text-justify: inter-word; margin: 0 0 8pt 0; line-height: ${fmt.lineHeight};">${safe}</p>`
+    })
+    .filter(Boolean)
+    .join('\n')
 
   const wordHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
@@ -154,15 +231,16 @@ export function downloadWordDoc(
     color: #000000;
   }
   p {
-    margin: 0 0 10pt 0;
+    margin: 0 0 8pt 0;
     text-align: justify;
     line-height: ${fmt.lineHeight};
+    mso-pagination: widow-orphan;
   }
 </style>
 </head>
 <body>
 <div class="Section1">
-  <p>${safeContent}</p>
+${safeParagraphs}
 </div>
 </body>
 </html>`
