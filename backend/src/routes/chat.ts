@@ -116,46 +116,61 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
 
     // 1. Use OpenRouter if configured
     if (!assistantMessage && openrouterKey) {
-      try {
-        const openrouterModel = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3.3-70b-instruct:free';
-        const formattedMessages = [
-          { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-          ...messages.map((m: any) => ({ role: m.role, content: m.content })),
-        ];
+      const candidateModels = process.env.OPENROUTER_MODEL
+        ? [process.env.OPENROUTER_MODEL]
+        : [
+            'deepseek/deepseek-r1:free',
+            'deepseek/deepseek-chat:free',
+            'qwen/qwen-2.5-72b-instruct:free',
+            'meta-llama/llama-3.1-8b-instruct:free',
+            'mistralai/mistral-7b-instruct:free',
+            'google/gemini-2.0-flash-exp:free',
+          ];
 
-        const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openrouterKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://fiscalia-1.onrender.com',
-            'X-Title': 'Bufete Fiscalia IA',
-          },
-          body: JSON.stringify({
-            model: openrouterModel,
-            messages: formattedMessages,
-            temperature: 0.3,
-          }),
-        });
+      const formattedMessages = [
+        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+      ];
 
-        if (orRes.ok) {
-          const data: any = await orRes.json();
-          assistantMessage = data.choices?.[0]?.message?.content || '';
-          if (assistantMessage) {
-            metrics.recordAiCall({
-              agentId,
-              provider: 'openrouter',
+      for (const openrouterModel of candidateModels) {
+        if (assistantMessage) break;
+        try {
+          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://fiscalia-1.onrender.com',
+              'X-Title': 'Bufete Fiscalia IA',
+            },
+            body: JSON.stringify({
               model: openrouterModel,
-              success: true,
-              durationMs: Date.now() - startTime,
-            });
+              messages: formattedMessages,
+              temperature: 0.3,
+            }),
+          });
+
+          if (orRes.ok) {
+            const data: any = await orRes.json();
+            const textContent = data.choices?.[0]?.message?.content || '';
+            if (textContent) {
+              assistantMessage = textContent;
+              metrics.recordAiCall({
+                agentId,
+                provider: 'openrouter',
+                model: openrouterModel,
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              break;
+            }
+          } else {
+            const errData: any = await orRes.json().catch(() => ({}));
+            console.warn(`OpenRouter model ${openrouterModel} failed:`, errData?.error?.message || errData);
           }
-        } else {
-          const errData = await orRes.json().catch(() => ({}));
-          console.warn('OpenRouter API error:', errData);
+        } catch (orErr: any) {
+          console.error(`OpenRouter request error on ${openrouterModel}:`, orErr?.message || orErr);
         }
-      } catch (orErr: any) {
-        console.error('OpenRouter request error:', orErr?.message || orErr);
       }
     }
 
