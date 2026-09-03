@@ -216,7 +216,9 @@ export default function LiveVoiceCallModal({
   const playWelcomeGreeting = async () => {
     setStatus('speaking')
     const agentRoleClean = agent.role.replace(/^Especialista en\s+/i, '')
-    const welcome = `Hola, soy ${agent.name}, experta en ${agentRoleClean} del bufete Hardman. Te escucho con total atención, ¿qué consulta legal o caso deseas revisar hoy?`
+    const isMale = ['sebastian', 'diego', 'rodrigo', 'marco'].includes(agent.id)
+    const titlePrefix = isMale ? 'el abogado' : 'la abogada'
+    const welcome = `Estimado usuario, le saluda ${titlePrefix} ${agent.name}, especialista en ${agentRoleClean} del bufete Hardman. Le escucho atentamente, ¿cuál es su consulta o patrocinio legal a evaluar?`
     setLastAssistantText(welcome)
     conversationHistoryRef.current.push({ role: 'assistant', content: welcome })
 
@@ -250,7 +252,7 @@ export default function LiveVoiceCallModal({
         conversationId: conversationId || undefined,
       })
 
-      const assistantReply = typeof res.message === 'string' ? res.message : (res.message as any)?.content || 'Comprendo perfectamente lo que me comentas. Déjame detallarte las opciones legales que tenemos.'
+      const assistantReply = typeof res.message === 'string' ? res.message : (res.message as any)?.content || 'Comprendo la situación fáctica planteada. Permítame exponerle el análisis de fondo y la vía procesal correspondiente.'
       conversationHistoryRef.current.push({ role: 'assistant', content: assistantReply })
       setLastAssistantText(assistantReply)
 
@@ -261,7 +263,7 @@ export default function LiveVoiceCallModal({
       await playAssistantSpeech(assistantReply)
     } catch (err: any) {
       console.error('Call AI error:', err)
-      const fallbackReply = 'Entiendo lo que mencionas. Por favor repíteme ese detalle para darte el fundamento legal exacto.'
+      const fallbackReply = 'He tomado nota de los antecedentes expuestos. Por favor, reitéreme el punto medular para brindarle la precisión normativa exacta.'
       setLastAssistantText(fallbackReply)
       await playAssistantSpeech(fallbackReply)
     }
