@@ -56,24 +56,30 @@ filesRouter.post(
         const fileSizeMB = file.size / (1024 * 1024);
 
         if (geminiKey && fileSizeMB <= 20) {
-          // Use Gemini to understand PDF structure, tables, signatures
-          const genAI = new GoogleGenerativeAI(geminiKey);
-          const model = genAI.getGenerativeModel({ model: geminiModelName });
-          const base64 = file.buffer.toString('base64');
+          try {
+            // Use Gemini to understand PDF structure, tables, signatures
+            const genAI = new GoogleGenerativeAI(geminiKey);
+            const model = genAI.getGenerativeModel({ model: geminiModelName });
+            const base64 = file.buffer.toString('base64');
 
-          const result = await model.generateContent([
-            {
-              inlineData: {
-                mimeType: 'application/pdf',
-                data: base64,
+            const result = await model.generateContent([
+              {
+                inlineData: {
+                  mimeType: 'application/pdf',
+                  data: base64,
+                },
               },
-            },
-            'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.',
-          ]);
+              'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.',
+            ]);
 
-          extractedText = result.response.text() || '';
-        } else {
-          // pdf-parse fallback for large files or no Gemini key
+            extractedText = result.response.text() || '';
+          } catch (geminiPdfErr) {
+            console.warn('Gemini PDF extraction failed, falling back to local pdf-parse:', geminiPdfErr);
+          }
+        }
+
+        if (!extractedText) {
+          // pdf-parse fallback for large files or if Gemini fails/quota exceeded
           const pdfParseModule = await import('pdf-parse');
           const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
           const data = await pdfParse(file.buffer, { max: 0 });
