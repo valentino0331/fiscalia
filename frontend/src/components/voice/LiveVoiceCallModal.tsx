@@ -80,9 +80,7 @@ export default function LiveVoiceCallModal({
       rec.lang = 'es-PE'
 
       rec.onstart = () => {
-        if (status !== 'speaking' && status !== 'thinking') {
-          setStatus('listening')
-        }
+        setErrorMessage(null)
       }
 
       rec.onresult = (event: any) => {
@@ -108,34 +106,49 @@ export default function LiveVoiceCallModal({
             if (fullText.trim().length > 2) {
               handleUserSpoke(fullText)
             }
-          }, 1400)
+          }, 1100)
         }
       }
 
       rec.onerror = (e: any) => {
         console.warn('SpeechRecognition error:', e.error)
         if (e.error === 'not-allowed') {
-          setErrorMessage('Acceso al micrófono denegado. Permite el micrófono para hablar con el asesor.')
+          setErrorMessage('Acceso al micrófono denegado. Haz clic en el ícono de candado en tu navegador para permitir el micrófono.')
+        } else if (e.error === 'no-speech') {
+          // No speech detected, silently keep listening
         }
       }
 
       rec.onend = () => {
-        // Auto-restart if call is still active and we're in listening mode
-        if (isComponentMounted.current && isOpen && status === 'listening' && !isMuted) {
+        // Auto-restart if call is still active
+        if (isComponentMounted.current && isOpen && !isMuted) {
+          // Restart recognition if status is listening or connecting
           try {
             rec.start()
           } catch {
-            // ignore
+            // Already started or restarting
           }
         }
       }
 
       recognitionRef.current = rec
 
+      // Request browser audio permission if needed and start recognition
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+          .then((stream) => {
+            // Keep permission active and release stream
+            stream.getTracks().forEach(track => track.stop())
+          })
+          .catch(() => {
+            setErrorMessage('Por favor concede permiso de micrófono en tu navegador para hablar.')
+          })
+      }
+
       // Simulate connection tone and play greeting
       const connectTimer = setTimeout(() => {
         playWelcomeGreeting()
-      }, 1000)
+      }, 700)
 
       return () => {
         clearTimeout(connectTimer)
@@ -178,13 +191,15 @@ export default function LiveVoiceCallModal({
   }
 
   const startListening = () => {
-    if (isMuted || !recognitionRef.current) return
-    try {
-      setStatus('listening')
-      setUserLiveTranscript('')
-      recognitionRef.current.start()
-    } catch {
-      // Already running or not ready
+    if (isMuted) return
+    setStatus('listening')
+    setUserLiveTranscript('')
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.start()
+      } catch {
+        // Already running
+      }
     }
   }
 
@@ -200,7 +215,8 @@ export default function LiveVoiceCallModal({
   // Play Lawyer initial voice greeting when call starts
   const playWelcomeGreeting = async () => {
     setStatus('speaking')
-    const welcome = `Hola, soy ${agent.name}, especialista en ${agent.role}. Te escucho atentamente, ¿en qué consulta legal te puedo ayudar hoy?`
+    const agentRoleClean = agent.role.replace(/^Especialista en\s+/i, '')
+    const welcome = `Hola, soy ${agent.name}, experta en ${agentRoleClean} del bufete Hardman. Te escucho con total atención, ¿qué consulta legal o caso deseas revisar hoy?`
     setLastAssistantText(welcome)
     conversationHistoryRef.current.push({ role: 'assistant', content: welcome })
 
@@ -209,7 +225,7 @@ export default function LiveVoiceCallModal({
 
   // Process user speech and send to lawyer backend
   const handleUserSpoke = async (spokenText: string) => {
-    if (!spokenText.trim() || status === 'thinking' || status === 'speaking') return
+    if (!spokenText.trim() || status === 'thinking') return
 
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current)
     stopListening()
@@ -234,7 +250,7 @@ export default function LiveVoiceCallModal({
         conversationId: conversationId || undefined,
       })
 
-      const assistantReply = typeof res.message === 'string' ? res.message : (res.message as any)?.content || 'Comprendo tu consulta. Déjame orientarte al respecto.'
+      const assistantReply = typeof res.message === 'string' ? res.message : (res.message as any)?.content || 'Comprendo perfectamente lo que me comentas. Déjame detallarte las opciones legales que tenemos.'
       conversationHistoryRef.current.push({ role: 'assistant', content: assistantReply })
       setLastAssistantText(assistantReply)
 
@@ -245,7 +261,7 @@ export default function LiveVoiceCallModal({
       await playAssistantSpeech(assistantReply)
     } catch (err: any) {
       console.error('Call AI error:', err)
-      const fallbackReply = 'He tomado nota de tu consulta. Por favor, repíteme tu pregunta para darte la precisión legal exacta.'
+      const fallbackReply = 'Entiendo lo que mencionas. Por favor repíteme ese detalle para darte el fundamento legal exacto.'
       setLastAssistantText(fallbackReply)
       await playAssistantSpeech(fallbackReply)
     }

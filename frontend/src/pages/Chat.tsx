@@ -8,11 +8,11 @@ import {
   Copy, Check, ChevronDown, ChevronUp,
   ThumbsUp, ThumbsDown, CornerDownLeft, RefreshCw,
   Download, Paperclip, Image as ImageIcon,
-  X, AlertTriangle, FileText, Loader2, FileDown, Printer, Phone,
+  X, AlertTriangle, FileText, Loader2, FileDown, Printer,
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
-  Scale, Shield, Gavel, Building2, type LucideIcon
+  Scale, Shield, Gavel, Building2, Phone, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -759,7 +759,7 @@ export default function Chat() {
     tab: 'liquidacion',
   })
   const [whereToGoOpen, setWhereToGoOpen] = useState(false)
-  const [voiceCallOpen, setVoiceCallOpen] = useState(false)
+  const [liveCallOpen, setLiveCallOpen] = useState(false)
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
@@ -1264,21 +1264,20 @@ export default function Chat() {
             </div>
           )}
 
-          {/* Botón de Llamada de Voz en Vivo / Conversational AI */}
+
+          {/* Live Voice Call Button */}
           <button
-            onClick={() => setVoiceCallOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all shadow-sm hover:scale-105"
+            onClick={() => setLiveCallOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all shadow-md"
             style={{
-              background: 'linear-gradient(135deg, rgba(201,168,76,0.25) 0%, rgba(201,168,76,0.10) 100%)',
-              border: '1px solid rgba(201,168,76,0.45)',
-              color: '#c9a84c',
+              background: 'linear-gradient(135deg, rgba(52,209,122,0.18) 0%, rgba(52,209,122,0.08) 100%)',
+              border: '1px solid rgba(52,209,122,0.40)',
+              color: '#34d17a',
             }}
-            title={`Iniciar llamada de voz en vivo con ${agent.name}`}
+            title={`Llamar en vivo a ${agent.name}`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <Phone size={13} className="text-[#c9a84c]" />
-            <span className="hidden sm:inline">Llamar a {agent.name.split(' ')[0]}</span>
-            <span className="sm:hidden">Llamar</span>
+            <Phone size={13} className="animate-pulse text-[#34d17a]" />
+            <span className="hidden sm:inline font-semibold">Llamar en vivo</span>
           </button>
 
           {conversationId && (
@@ -1472,7 +1471,6 @@ export default function Chat() {
               <WelcomeScreen
                 agent={agent}
                 onSuggestion={insertSuggestion}
-                onStartVoiceCall={() => setVoiceCallOpen(true)}
               />
             ) : (
               <>
@@ -1856,8 +1854,8 @@ export default function Chat() {
       />
 
       <LiveVoiceCallModal
-        isOpen={voiceCallOpen}
-        onClose={() => setVoiceCallOpen(false)}
+        isOpen={liveCallOpen}
+        onClose={() => setLiveCallOpen(false)}
         agent={agent}
         conversationId={conversationId || null}
         onSaveVoiceTurn={(userText, assistantText) => {
@@ -1865,7 +1863,7 @@ export default function Chat() {
           setMessages((prev) => [
             ...prev,
             { role: 'user', content: userText, timestamp: now },
-            { role: 'assistant', content: assistantText, timestamp: new Date(Date.now() + 50).toISOString() },
+            { role: 'assistant', content: assistantText, timestamp: now },
           ])
         }}
       />
@@ -1876,11 +1874,9 @@ export default function Chat() {
 function WelcomeScreen({
   agent,
   onSuggestion,
-  onStartVoiceCall,
 }: {
   agent: NonNullable<ReturnType<typeof getAgent>>
   onSuggestion: (text: string) => void
-  onStartVoiceCall?: () => void
 }) {
   return (
     <motion.div
@@ -1914,26 +1910,6 @@ function WelcomeScreen({
       >
         {agent.role}
       </p>
-
-      {/* Voice Call CTA Banner */}
-      {onStartVoiceCall && (
-        <motion.button
-          onClick={onStartVoiceCall}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className="mb-6 px-5 py-2.5 rounded-full flex items-center gap-2.5 text-xs font-semibold transition-all shadow-lg cursor-pointer"
-          style={{
-            background: 'linear-gradient(135deg, rgba(201,168,76,0.25) 0%, rgba(201,168,76,0.10) 100%)',
-            border: '1px solid rgba(201,168,76,0.45)',
-            color: '#c9a84c',
-            boxShadow: '0 4px 20px rgba(201,168,76,0.15)',
-          }}
-        >
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <Phone size={14} className="text-[#c9a84c]" />
-          <span>Iniciar Consulta por Voz en Vivo con {agent.name.split(' ')[0]}</span>
-        </motion.button>
-      )}
 
       <div
         className="p-5 rounded-xl max-w-lg mb-8 text-left"
