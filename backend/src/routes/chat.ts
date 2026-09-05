@@ -132,7 +132,16 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
       if (geminiKey) {
         try {
           const genAI = new GoogleGenerativeAI(geminiKey);
-          const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-pro'];
+          const modelsToTry = [
+            process.env.GEMINI_MODEL,
+            'gemini-3.6-flash',
+            'gemini-3.5-flash-lite',
+            'gemini-2.5-flash',
+            'gemini-flash',
+            'gemini-pro',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+          ].filter(Boolean) as string[];
           
           for (const modelName of modelsToTry) {
             try {
@@ -423,11 +432,15 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // 3. Use Gemini (@google/generative-ai SDK)
     if (!assistantMessage && geminiKey) {
       const geminiModelCandidates = [
-        process.env.GEMINI_MODEL || 'gemini-2.0-flash',
-        'gemini-1.5-flash-8b',
+        process.env.GEMINI_MODEL,
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-2.5-flash',
+        'gemini-flash',
+        'gemini-pro',
+        'gemini-2.0-flash',
         'gemini-1.5-flash',
-        'gemini-1.5-pro',
-      ];
+      ].filter(Boolean) as string[];
       
       // Sanitize history for Gemini SDK
       const rawHistory = messages.slice(0, -1);
