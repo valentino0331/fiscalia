@@ -1143,17 +1143,14 @@ export default function Chat() {
         rec.interimResults = true
 
         rec.onresult = (event: any) => {
-          let interim = ''
-          let final = ''
+          let full = ''
           for (let i = 0; i < event.results.length; i++) {
             const transcript = event.results[i][0]?.transcript || ''
-            if (event.results[i].isFinal) {
-              final += transcript + ' '
-            } else {
-              interim += transcript
+            if (transcript) {
+              full += transcript + ' '
             }
           }
-          const full = (final + interim).trim()
+          full = full.trim()
           if (full) {
             setLiveTranscript(full)
             liveTranscriptRef.current = full
@@ -1161,13 +1158,13 @@ export default function Chat() {
         }
 
         rec.onerror = (e: any) => {
-          console.warn('Web Speech API interim event:', e.error)
+          console.warn('[STT] Web Speech API interim event:', e?.error)
         }
 
         recognitionRef.current = rec
         rec.start()
       } catch (speechErr) {
-        console.warn('Web Speech API start failed:', speechErr)
+        console.warn('[STT] Web Speech API start failed:', speechErr)
       }
     }
   }

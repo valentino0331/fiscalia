@@ -46,13 +46,17 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
 
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
       const groqKey = process.env.GROQ_API_KEY;
+      const openaiKey = process.env.OPENAI_API_KEY;
+      const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-      // 1. Intentar con Groq Whisper si está disponible (ultra rápido)
+      const cleanMime = (mimeType.split(';')[0] || 'audio/webm').trim();
+
+      // 1. Intentar con Groq Whisper (ultra rápido, latencia < 300ms)
       if (groqKey) {
         try {
           const formData = new FormData();
-          const audioBlob = new Blob([audioBuffer], { type: mimeType });
-          formData.append('file', audioBlob, 'audio.webm');
+          const file = new File([audioBuffer], 'audio.webm', { type: cleanMime });
+          formData.append('file', file);
           formData.append('model', 'whisper-large-v3-turbo');
           formData.append('language', 'es');
           formData.append('response_format', 'json');
@@ -70,48 +74,112 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
             if (data?.text && typeof data.text === 'string' && data.text.trim()) {
               return res.json({ text: data.text.trim() });
             }
+          } else {
+            console.warn('[STT] Groq response not OK:', await groqRes.text().catch(() => ''));
           }
         } catch (groqErr) {
-          console.warn('Groq STT fallback to Gemini:', groqErr);
+          console.warn('[STT] Groq STT fallback:', groqErr);
         }
       }
 
-      // 2. Transcripción con Google Gemini Multimodal Audio
+      // 2. Intentar con OpenAI Whisper si está configurado
+      if (openaiKey) {
+        try {
+          const formData = new FormData();
+          const file = new File([audioBuffer], 'audio.webm', { type: cleanMime });
+          formData.append('file', file);
+          formData.append('model', 'whisper-1');
+          formData.append('language', 'es');
+
+          const oaiRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openaiKey}`,
+            },
+            body: formData,
+          });
+
+          if (oaiRes.ok) {
+            const data = (await oaiRes.json()) as any;
+            if (data?.text && typeof data.text === 'string' && data.text.trim()) {
+              return res.json({ text: data.text.trim() });
+            }
+          }
+        } catch (oaiErr) {
+          console.warn('[STT] OpenAI STT fallback:', oaiErr);
+        }
+      }
+
+      // 3. Transcripción con Google Gemini Multimodal Audio
       if (geminiKey) {
         try {
           const genAI = new GoogleGenerativeAI(geminiKey);
-          const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+          const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite', 'gemini-1.5-pro'];
           
-          let transcriptText = '';
           for (const modelName of modelsToTry) {
-            if (transcriptText) break;
             try {
               const model = genAI.getGenerativeModel({ model: modelName });
               const result = await model.generateContent([
                 {
                   inlineData: {
                     data: audioBuffer.toString('base64'),
-                    mimeType: mimeType.split(';')[0] || 'audio/webm',
+                    mimeType: cleanMime,
                   },
                 },
                 {
-                  text: 'Transcribe el audio a texto exacto en español con correcta puntuación y ortografía. Si hay términos jurídicos o nombres legales peruanos, asegúrate de escribirlos correctamente. Devuelve ÚNICAMENTE el texto transcrito, sin explicaciones ni notas adicionales.',
+                  text: 'Transcribe el audio a texto exacto en español con correcta puntuación y ortografía. Devuelve ÚNICAMENTE el texto transcrito sin comentarios ni notas.',
                 },
               ]);
               const txt = result.response.text();
               if (txt && txt.trim()) {
-                transcriptText = txt.trim();
+                return res.json({ text: txt.trim() });
               }
-            } catch (gemErr) {
-              console.warn(`Gemini STT (${modelName}) error:`, gemErr);
+            } catch (gemErr: any) {
+              console.warn(`[STT] Gemini (${modelName}) error:`, gemErr?.message || gemErr);
             }
           }
-
-          if (transcriptText) {
-            return res.json({ text: transcriptText });
-          }
         } catch (geminiTotalErr: any) {
-          console.error('Gemini STT total error:', geminiTotalErr);
+          console.error('[STT] Gemini STT total error:', geminiTotalErr);
+        }
+      }
+
+      // 4. Intentar con OpenRouter si tiene modelo multimodal
+      if (openrouterKey) {
+        try {
+          const base64Audio = audioBuffer.toString('base64');
+          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://fiscalia-1.onrender.com',
+              'X-Title': 'Bufete Fiscalia IA STT',
+            },
+            body: JSON.stringify({
+              model: 'google/gemini-2.0-flash-exp:free',
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    { type: 'text', text: 'Transcribe exactamente lo dicho en este audio a texto en español.' },
+                    {
+                      type: 'image_url',
+                      image_url: { url: `data:${cleanMime};base64,${base64Audio}` },
+                    },
+                  ],
+                },
+              ],
+            }),
+          });
+          if (orRes.ok) {
+            const orData = (await orRes.json()) as any;
+            const content = orData?.choices?.[0]?.message?.content;
+            if (content && typeof content === 'string' && content.trim()) {
+              return res.json({ text: content.trim() });
+            }
+          }
+        } catch (orErr) {
+          console.warn('[STT] OpenRouter STT error:', orErr);
         }
       }
 
@@ -119,7 +187,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
         error: 'No se pudo transcribir el audio en este momento. Por favor escribe tu consulta o reintenta.',
       });
     } catch (error: any) {
-      console.error('STT endpoint error:', error);
+      console.error('[STT] STT endpoint fatal error:', error);
       res.status(500).json({ error: error?.message || 'Error en transcripción de audio' });
     }
   });
