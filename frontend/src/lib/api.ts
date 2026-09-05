@@ -89,7 +89,15 @@ export const api = {
     stt: async (audioBlob: Blob): Promise<{ text: string }> => {
       const token = getToken()
       const formData = new FormData()
-      formData.append('audio', audioBlob, 'audio.webm')
+      const type = (audioBlob.type || '').toLowerCase()
+      const filename = type.includes('mp4') || type.includes('m4a') || type.includes('aac')
+        ? 'audio.m4a'
+        : type.includes('wav')
+        ? 'audio.wav'
+        : type.includes('ogg')
+        ? 'audio.ogg'
+        : 'audio.webm'
+      formData.append('audio', audioBlob, filename)
 
       const headers: Record<string, string> = {}
       if (token) headers['Authorization'] = `Bearer ${token}`

@@ -20,6 +20,24 @@ const audioUpload = multer({
 
 export const chatRouter = Router();
 
+function getAudioFormat(mime: string, originalName?: string): { mimeType: string; filename: string } {
+  const m = (mime || '').toLowerCase();
+  const name = (originalName || '').toLowerCase();
+  if (m.includes('mp4') || m.includes('m4a') || m.includes('aac') || m.includes('caf') || name.endsWith('.m4a') || name.endsWith('.mp4')) {
+    return { mimeType: 'audio/mp4', filename: 'audio.m4a' };
+  }
+  if (m.includes('wav') || name.endsWith('.wav')) {
+    return { mimeType: 'audio/wav', filename: 'audio.wav' };
+  }
+  if (m.includes('ogg') || name.endsWith('.ogg')) {
+    return { mimeType: 'audio/ogg', filename: 'audio.ogg' };
+  }
+  if (m.includes('mp3') || m.includes('mpeg') || name.endsWith('.mp3')) {
+    return { mimeType: 'audio/mp3', filename: 'audio.mp3' };
+  }
+  return { mimeType: 'audio/webm', filename: 'audio.webm' };
+}
+
 // Endpoint para transcripción de audio a texto (Speech-to-Text con IA)
 chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
   audioUpload.single('audio')(req, res, async (err: any) => {
@@ -29,34 +47,34 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
     try {
       const file = req.file;
       let audioBuffer: Buffer | null = null;
-      let mimeType = 'audio/webm';
+      let rawMime = 'audio/webm';
 
       if (file && file.buffer) {
         audioBuffer = file.buffer;
-        mimeType = file.mimetype || 'audio/webm';
+        rawMime = file.mimetype || 'audio/webm';
       } else if (req.body?.audioBase64) {
         const base64Data = req.body.audioBase64.replace(/^data:audio\/[a-z0-9]+;base64,/, '');
         audioBuffer = Buffer.from(base64Data, 'base64');
-        if (req.body.mimeType) mimeType = req.body.mimeType;
+        if (req.body.mimeType) rawMime = req.body.mimeType;
       }
 
       if (!audioBuffer || audioBuffer.length === 0) {
         return res.status(400).json({ error: 'No se recibió ningún audio para transcribir' });
       }
 
+      const { mimeType: resolvedMime, filename: resolvedFilename } = getAudioFormat(rawMime, file?.originalname);
+
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
       const groqKey = process.env.GROQ_API_KEY;
       const openaiKey = process.env.OPENAI_API_KEY;
       const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-      const cleanMime = (mimeType.split(';')[0] || 'audio/webm').trim();
-
       // 1. Intentar con Groq Whisper (ultra rápido, latencia < 300ms)
       if (groqKey) {
         try {
           const formData = new FormData();
-          const file = new File([audioBuffer], 'audio.webm', { type: cleanMime });
-          formData.append('file', file);
+          const blob = new Blob([audioBuffer], { type: resolvedMime });
+          formData.append('file', blob, resolvedFilename);
           formData.append('model', 'whisper-large-v3-turbo');
           formData.append('language', 'es');
           formData.append('response_format', 'json');
@@ -86,8 +104,8 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
       if (openaiKey) {
         try {
           const formData = new FormData();
-          const file = new File([audioBuffer], 'audio.webm', { type: cleanMime });
-          formData.append('file', file);
+          const blob = new Blob([audioBuffer], { type: resolvedMime });
+          formData.append('file', blob, resolvedFilename);
           formData.append('model', 'whisper-1');
           formData.append('language', 'es');
 
@@ -123,7 +141,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
                 {
                   inlineData: {
                     data: audioBuffer.toString('base64'),
-                    mimeType: cleanMime,
+                    mimeType: resolvedMime,
                   },
                 },
                 {
@@ -143,7 +161,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
         }
       }
 
-      // 4. Intentar con OpenRouter si tiene modelo multimodal
+      // 4. Intentar con OpenRouter
       if (openrouterKey) {
         try {
           const base64Audio = audioBuffer.toString('base64');
@@ -164,7 +182,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
                     { type: 'text', text: 'Transcribe exactamente lo dicho en este audio a texto en español.' },
                     {
                       type: 'image_url',
-                      image_url: { url: `data:${cleanMime};base64,${base64Audio}` },
+                      image_url: { url: `data:${resolvedMime};base64,${base64Audio}` },
                     },
                   ],
                 },
