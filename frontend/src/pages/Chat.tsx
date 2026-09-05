@@ -713,6 +713,136 @@ FECHA FATAL DE VENCIMIENTO: ${calculation.formattedDueDate} (Hasta las 23:59 hrs
   )
 }
 
+interface VoiceRecordingModalProps {
+  isOpen: boolean
+  agentName: string
+  agentImage: string
+  recordingSeconds: number
+  liveTranscript: string
+  onStop: () => void
+  onCancel: () => void
+}
+
+function VoiceRecordingModal({
+  isOpen,
+  agentName,
+  agentImage,
+  recordingSeconds,
+  liveTranscript,
+  onStop,
+  onCancel,
+}: VoiceRecordingModalProps) {
+  if (!isOpen) return null
+
+  const minutes = Math.floor(recordingSeconds / 60)
+  const seconds = (recordingSeconds % 60).toString().padStart(2, '0')
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 15 }}
+        className="w-full max-w-md rounded-2xl p-6 relative overflow-hidden text-center"
+        style={{
+          background: '#161616',
+          border: '1px solid rgba(239,68,68,0.30)',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 30px rgba(239,68,68,0.15)',
+        }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+          <div className="flex items-center gap-2.5 text-left">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20">
+              <img src={agentImage} alt={agentName} className="w-full h-full object-cover object-top" />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-white">{agentName}</p>
+              <p className="text-[10px] text-white/40">Dictado por voz en tiempo real</p>
+            </div>
+          </div>
+          <button
+            onClick={onCancel}
+            className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+            title="Cancelar grabación"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Pulsing Mic Visualizer Orb */}
+        <div className="my-5 flex flex-col items-center justify-center">
+          <div className="relative flex items-center justify-center">
+            {/* Pulsing rings */}
+            <span className="absolute w-24 h-24 rounded-full bg-red-500/20 animate-ping" style={{ animationDuration: '2s' }} />
+            <span className="absolute w-20 h-20 rounded-full bg-red-500/30 animate-pulse" />
+            
+            {/* Core red mic button */}
+            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white shadow-lg shadow-red-500/40">
+              <Mic size={28} className="animate-pulse" />
+            </div>
+          </div>
+
+          {/* Timer and Waveform */}
+          <div className="mt-4 flex items-center gap-3">
+            <div className="flex items-center gap-1">
+              {[6, 14, 22, 12, 26, 18, 10, 24, 15, 8].map((h, i) => (
+                <span
+                  key={i}
+                  className="w-1 bg-red-400 rounded-full animate-bounce"
+                  style={{
+                    height: `${h}px`,
+                    animationDuration: `${0.6 + (i % 4) * 0.15}s`,
+                    animationDelay: `${i * 0.06}s`,
+                  }}
+                />
+              ))}
+            </div>
+            <span className="text-sm font-mono font-semibold text-red-400 tracking-wider">
+              {minutes}:{seconds}
+            </span>
+          </div>
+        </div>
+
+        {/* Live speech preview */}
+        <div
+          className="p-3.5 rounded-xl border text-left min-h-[64px] max-h-36 overflow-y-auto mb-5"
+          style={{
+            background: 'rgba(255,255,255,0.03)',
+            borderColor: 'rgba(255,255,255,0.08)',
+          }}
+        >
+          <p className="text-[10px] uppercase font-bold text-white/30 mb-1 tracking-wider">
+            Transcripción en vivo
+          </p>
+          <p className="text-xs text-white/90 italic leading-relaxed font-light">
+            {liveTranscript ? `"${liveTranscript}"` : 'Habla con claridad, te estamos escuchando...'}
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-medium border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-1.5"
+          >
+            <X size={14} />
+            <span>Cancelar</span>
+          </button>
+          <button
+            type="button"
+            onClick={onStop}
+            className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 transition-all shadow-lg shadow-red-600/30 flex items-center justify-center gap-1.5"
+          >
+            <Square size={13} fill="currentColor" />
+            <span>Detener y aplicar</span>
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
 
 export default function Chat() {
   const { agentId } = useParams<{ agentId: string }>()
@@ -1660,50 +1790,6 @@ export default function Chat() {
                 })}
               </div>
 
-              {/* Recording indicator — calm, no frantic animation */}
-              {isRecording && (
-                <div
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
-                  style={{ background: 'rgba(255,50,50,0.06)', border: '1px solid rgba(255,60,60,0.22)' }}
-                >
-                  {/* Slow pulsing dot */}
-                  <span
-                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                    style={{ background: '#ff4444', animation: 'recording-dot-glow 2s ease-out infinite' }}
-                  />
-                  {/* Waveform bars */}
-                  <div className="flex items-end gap-0.5 flex-shrink-0" style={{ height: '14px' }}>
-                    {[4, 9, 6, 10, 5, 9, 4].map((h, i) => (
-                      <span
-                        key={i}
-                        className="w-0.5 rounded-full"
-                        style={{
-                          background: 'rgba(255,100,100,0.55)',
-                          height: `${h}px`,
-                          transformOrigin: 'bottom',
-                          animation: `rec-wave ${0.55 + i * 0.08}s ease-in-out infinite`,
-                          animationDelay: `${i * 0.08}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-[11px] font-light flex-1" style={{ color: '#ff9999' }}>
-                    Grabando — habla con claridad
-                  </span>
-                  <span className="text-[10px] font-mono flex-shrink-0" style={{ color: 'rgba(255,150,150,0.65)' }}>
-                    {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, '0')}
-                  </span>
-                  <button
-                    onClick={toggleVoiceInput}
-                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
-                    style={{ background: '#ff4444', color: '#fff' }}
-                    title="Detener grabación"
-                  >
-                    <Square size={10} fill="#fff" />
-                  </button>
-                </div>
-              )}
-
               {/* Voice message indicator in input */}
               {isVoiceMessage && input.trim() && !isRecording && (
                 <div className="flex items-center gap-1.5 px-2 py-1 rounded-md" style={{ background: 'rgba(201,168,76,0.08)' }}>
@@ -1834,88 +1920,39 @@ export default function Chat() {
               <div
                 className="rounded-[14px] p-2.5 sm:p-3 transition-all duration-300"
                 style={{
-                  background: isRecording ? '#1f1616' : '#1a1a1a',
-                  border: isRecording ? '1px solid rgba(239,68,68,0.45)' : '1px solid #333333',
-                  boxShadow: isRecording ? '0 0 15px rgba(239,68,68,0.12)' : 'none',
+                  background: '#1a1a1a',
+                  border: '1px solid #333333',
                   opacity: limitReached ? 0.5 : 1,
                   pointerEvents: limitReached ? 'none' : 'auto',
                 }}
                 onFocus={(e) => {
-                  if (!isRecording) {
-                    const container = e.currentTarget
-                    container.style.borderColor = '#c9a84c'
-                    container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
-                  }
+                  const container = e.currentTarget
+                  container.style.borderColor = '#c9a84c'
+                  container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
                 }}
                 onBlur={(e) => {
-                  if (!isRecording && !e.currentTarget.contains(e.relatedTarget as Node)) {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                     const container = e.currentTarget
                     container.style.borderColor = '#333333'
                     container.style.boxShadow = 'none'
                   }
                 }}
               >
-                {/* Active Recording HUD */}
-                {isRecording ? (
-                  <div className="py-1 px-1">
-                    <div className="flex items-center justify-between pb-2 border-b border-red-500/20 mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
-                        <span className="text-red-400 font-medium text-[11px]">
-                          Grabando ({String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:{String(recordingSeconds % 60).padStart(2, '0')})
-                        </span>
-                        {/* Audio Wave animation bars */}
-                        <div className="flex items-center gap-0.5 ml-1">
-                          <span className="w-0.5 h-3 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                          <span className="w-0.5 h-4 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                          <span className="w-0.5 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                          <span className="w-0.5 h-4 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '75ms' }} />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={cancelVoiceInput}
-                          className="px-2 py-1 rounded-md text-[10px] text-white/50 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
-                          title="Cancelar grabación"
-                        >
-                          <X size={12} />
-                          <span>Cancelar</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={stopVoiceInput}
-                          className="px-2.5 py-1 rounded-md text-[10px] font-semibold text-white bg-red-500 hover:bg-red-600 transition-all flex items-center gap-1 shadow-sm"
-                          title="Terminar y aplicar texto"
-                        >
-                          <Check size={12} />
-                          <span>Listo</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-white/90 italic font-light min-h-[26px]">
-                      {liveTranscript ? `"${liveTranscript}"` : 'Habla ahora, te escuchamos atentamente...'}
-                    </p>
-                  </div>
-                ) : (
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => { setInput(e.target.value); autoResize(); if (isVoiceMessage) setIsVoiceMessage(false) }}
-                    onKeyDown={handleKeyDown}
-                    placeholder={`Escribe o usa el micrófono para ${agent.name}...`}
-                    rows={1}
-                    className="w-full bg-transparent outline-none resize-none text-[13px] font-light leading-relaxed px-1"
-                    style={{
-                      minHeight: '26px',
-                      maxHeight: '120px',
-                      caretColor: '#c9a84c',
-                      color: '#ffffff',
-                    }}
-                  />
-                )}
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => { setInput(e.target.value); autoResize(); if (isVoiceMessage) setIsVoiceMessage(false) }}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`Escribe o usa el micrófono para ${agent.name}...`}
+                  rows={1}
+                  className="w-full bg-transparent outline-none resize-none text-[13px] font-light leading-relaxed px-1"
+                  style={{
+                    minHeight: '26px',
+                    maxHeight: '120px',
+                    caretColor: '#c9a84c',
+                    color: '#ffffff',
+                  }}
+                />
 
                 <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {/* Left actions */}
@@ -2092,6 +2129,17 @@ export default function Chat() {
       <WhereToGoModal
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
+      />
+
+      {/* Single Clean Voice Recording Modal */}
+      <VoiceRecordingModal
+        isOpen={isRecording}
+        agentName={agent.name}
+        agentImage={agent.image}
+        recordingSeconds={recordingSeconds}
+        liveTranscript={liveTranscript}
+        onStop={stopVoiceInput}
+        onCancel={cancelVoiceInput}
       />
     </div>
   )
