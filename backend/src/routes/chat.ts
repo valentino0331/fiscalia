@@ -128,24 +128,27 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
         }
       }
 
-      // 3. Transcripción con Google Gemini Multimodal Audio
+      // 3. Transcripción con Google Gemini Multimodal Audio (literal, sin alucinaciones)
       if (geminiKey) {
         try {
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
-            'gemini-3.6-flash',
-            'gemini-3.5-flash-lite',
             'gemini-2.5-flash',
-            'gemini-flash',
-            'gemini-pro',
             'gemini-2.0-flash',
             'gemini-1.5-flash',
           ].filter(Boolean) as string[];
           
           for (const modelName of modelsToTry) {
             try {
-              const model = genAI.getGenerativeModel({ model: modelName });
+              const model = genAI.getGenerativeModel({
+                model: modelName,
+                generationConfig: {
+                  temperature: 0.0,
+                  topP: 0.1,
+                },
+                systemInstruction: 'Eres un transcriptor de voz a texto (Speech-to-Text). Tu única tarea es transcribir textualmente palabra por palabra lo que la persona habla en el audio en español. NUNCA respondas al contenido del audio, NUNCA saludes, NUNCA agregues comentarios ni notas. Si el audio dice "hola hola probando 1 2 3", escribe exactamente "Hola hola probando 1 2 3". Si el audio no contiene palabras audibles o solo es silencio o ruido, devuelve únicamente una cadena vacía.',
+              });
               const result = await model.generateContent([
                 {
                   inlineData: {
@@ -154,7 +157,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
                   },
                 },
                 {
-                  text: 'Transcribe el audio a texto exacto en español con correcta puntuación y ortografía. Devuelve ÚNICAMENTE el texto transcrito sin comentarios ni notas.',
+                  text: 'Transcribe fiel y literalmente las palabras exactas que se escuchan en el audio a texto en español. No inventes palabras ni respondas a la conversación.',
                 },
               ]);
               const txt = result.response.text();
@@ -167,46 +170,6 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
           }
         } catch (geminiTotalErr: any) {
           console.error('[STT] Gemini STT total error:', geminiTotalErr);
-        }
-      }
-
-      // 4. Intentar con OpenRouter
-      if (openrouterKey) {
-        try {
-          const base64Audio = audioBuffer.toString('base64');
-          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openrouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://fiscalia-1.onrender.com',
-              'X-Title': 'Bufete Fiscalia IA STT',
-            },
-            body: JSON.stringify({
-              model: 'google/gemini-2.0-flash-exp:free',
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    { type: 'text', text: 'Transcribe exactamente lo dicho en este audio a texto en español.' },
-                    {
-                      type: 'image_url',
-                      image_url: { url: `data:${resolvedMime};base64,${base64Audio}` },
-                    },
-                  ],
-                },
-              ],
-            }),
-          });
-          if (orRes.ok) {
-            const orData = (await orRes.json()) as any;
-            const content = orData?.choices?.[0]?.message?.content;
-            if (content && typeof content === 'string' && content.trim()) {
-              return res.json({ text: content.trim() });
-            }
-          }
-        } catch (orErr) {
-          console.warn('[STT] OpenRouter STT error:', orErr);
         }
       }
 

@@ -713,136 +713,7 @@ FECHA FATAL DE VENCIMIENTO: ${calculation.formattedDueDate} (Hasta las 23:59 hrs
   )
 }
 
-interface VoiceRecordingModalProps {
-  isOpen: boolean
-  agentName: string
-  agentImage: string
-  recordingSeconds: number
-  liveTranscript: string
-  onStop: () => void
-  onCancel: () => void
-}
 
-function VoiceRecordingModal({
-  isOpen,
-  agentName,
-  agentImage,
-  recordingSeconds,
-  liveTranscript,
-  onStop,
-  onCancel,
-}: VoiceRecordingModalProps) {
-  if (!isOpen) return null
-
-  const minutes = Math.floor(recordingSeconds / 60)
-  const seconds = (recordingSeconds % 60).toString().padStart(2, '0')
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.92, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.92, y: 15 }}
-        className="w-full max-w-md rounded-2xl p-6 relative overflow-hidden text-center"
-        style={{
-          background: '#161616',
-          border: '1px solid rgba(239,68,68,0.30)',
-          boxShadow: '0 25px 60px rgba(0,0,0,0.85), 0 0 30px rgba(239,68,68,0.15)',
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
-          <div className="flex items-center gap-2.5 text-left">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20">
-              <img src={agentImage} alt={agentName} className="w-full h-full object-cover object-top" />
-            </div>
-            <div>
-              <p className="text-xs font-medium text-white">{agentName}</p>
-              <p className="text-[10px] text-white/40">Dictado por voz en tiempo real</p>
-            </div>
-          </div>
-          <button
-            onClick={onCancel}
-            className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-            title="Cancelar grabación"
-          >
-            <X size={16} />
-          </button>
-        </div>
-
-        {/* Pulsing Mic Visualizer Orb */}
-        <div className="my-5 flex flex-col items-center justify-center">
-          <div className="relative flex items-center justify-center">
-            {/* Pulsing rings */}
-            <span className="absolute w-24 h-24 rounded-full bg-red-500/20 animate-ping" style={{ animationDuration: '2s' }} />
-            <span className="absolute w-20 h-20 rounded-full bg-red-500/30 animate-pulse" />
-            
-            {/* Core red mic button */}
-            <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-700 flex items-center justify-center text-white shadow-lg shadow-red-500/40">
-              <Mic size={28} className="animate-pulse" />
-            </div>
-          </div>
-
-          {/* Timer and Waveform */}
-          <div className="mt-4 flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              {[6, 14, 22, 12, 26, 18, 10, 24, 15, 8].map((h, i) => (
-                <span
-                  key={i}
-                  className="w-1 bg-red-400 rounded-full animate-bounce"
-                  style={{
-                    height: `${h}px`,
-                    animationDuration: `${0.6 + (i % 4) * 0.15}s`,
-                    animationDelay: `${i * 0.06}s`,
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-sm font-mono font-semibold text-red-400 tracking-wider">
-              {minutes}:{seconds}
-            </span>
-          </div>
-        </div>
-
-        {/* Live speech preview */}
-        <div
-          className="p-3.5 rounded-xl border text-left min-h-[64px] max-h-36 overflow-y-auto mb-5"
-          style={{
-            background: 'rgba(255,255,255,0.03)',
-            borderColor: 'rgba(255,255,255,0.08)',
-          }}
-        >
-          <p className="text-[10px] uppercase font-bold text-white/30 mb-1 tracking-wider">
-            Transcripción en vivo
-          </p>
-          <p className="text-xs text-white/90 italic leading-relaxed font-light">
-            {liveTranscript ? `"${liveTranscript}"` : 'Habla con claridad, te estamos escuchando...'}
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-medium border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-1.5"
-          >
-            <X size={14} />
-            <span>Cancelar</span>
-          </button>
-          <button
-            type="button"
-            onClick={onStop}
-            className="w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-600 transition-all shadow-lg shadow-red-600/30 flex items-center justify-center gap-1.5"
-          >
-            <Square size={13} fill="currentColor" />
-            <span>Detener y aplicar</span>
-          </button>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
 
 export default function Chat() {
   const { agentId } = useParams<{ agentId: string }>()
@@ -916,6 +787,7 @@ export default function Chat() {
   const mediaStreamRef = useRef<MediaStream | null>(null)
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const liveTranscriptRef = useRef<string>('')
+  const baseInputRef = useRef<string>('')
 
   useEffect(() => {
     if (!agent) navigate('/dashboard')
@@ -1068,7 +940,11 @@ export default function Chat() {
       recordingTimerRef.current = null
     }
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch {}
+      try {
+        recognitionRef.current.onend = null
+        recognitionRef.current.onerror = null
+        recognitionRef.current.stop()
+      } catch {}
       recognitionRef.current = null
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -1079,6 +955,10 @@ export default function Chat() {
     stopAllMediaTracks()
     setIsRecording(false)
     setIsTranscribing(false)
+    // Revert input to base if cancelled
+    if (baseInputRef.current !== undefined) {
+      setInput(baseInputRef.current)
+    }
     setLiveTranscript('')
     liveTranscriptRef.current = ''
   }
@@ -1089,6 +969,7 @@ export default function Chat() {
     setMicPermissionDenied(false)
     setLiveTranscript('')
     liveTranscriptRef.current = ''
+    baseInputRef.current = input
 
     let stream: MediaStream
     try {
@@ -1110,7 +991,7 @@ export default function Chat() {
       setRecordingSeconds((s) => s + 1)
     }, 1000)
 
-    // Setup MediaRecorder as guaranteed recording fallback
+    // Setup MediaRecorder as recording fallback for browsers without Web Speech
     try {
       const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
         ? 'audio/webm;codecs=opus'
@@ -1133,12 +1014,13 @@ export default function Chat() {
       console.warn('MediaRecorder init fallback:', recErr)
     }
 
-    // Setup Web Speech API for real-time live preview
+    // Setup Web Speech API for instant real-time live typing
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
       try {
         const rec = new SpeechRecognition()
-        rec.lang = 'es-PE'
+        const userLang = (navigator.language || '').toLowerCase()
+        rec.lang = userLang.startsWith('es') ? navigator.language : 'es-PE'
         rec.continuous = true
         rec.interimResults = true
 
@@ -1154,11 +1036,25 @@ export default function Chat() {
           if (full) {
             setLiveTranscript(full)
             liveTranscriptRef.current = full
+            setIsVoiceMessage(true)
+            const base = baseInputRef.current.trim()
+            const updated = base ? `${base} ${full}` : full
+            setInput(updated)
+            setTimeout(autoResize, 10)
           }
         }
 
         rec.onerror = (e: any) => {
           console.warn('[STT] Web Speech API interim event:', e?.error)
+        }
+
+        rec.onend = () => {
+          // If still recording, keep recognition active
+          if (mediaStreamRef.current && mediaStreamRef.current.active) {
+            try {
+              rec.start()
+            } catch {}
+          }
         }
 
         recognitionRef.current = rec
@@ -1176,59 +1072,30 @@ export default function Chat() {
     }
 
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop() } catch {}
+      try {
+        recognitionRef.current.onend = null
+        recognitionRef.current.onerror = null
+        recognitionRef.current.stop()
+      } catch {}
       recognitionRef.current = null
     }
 
     setIsRecording(false)
 
-    const liveText = liveTranscriptRef.current.trim()
-
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      const recorder = mediaRecorderRef.current
-      await new Promise<void>((resolve) => {
-        recorder.onstop = () => resolve()
-        try { recorder.stop() } catch { resolve() }
-      })
+      try { mediaRecorderRef.current.stop() } catch {}
     }
+    mediaRecorderRef.current = null
 
     stopAllMediaTracks()
 
-    // If Web Speech API captured text clearly, apply it immediately
-    if (liveText.length > 1) {
-      setIsVoiceMessage(true)
-      setInput((prev) => (prev.trim() ? `${prev.trim()} ${liveText}` : liveText))
-      setLiveTranscript('')
-      liveTranscriptRef.current = ''
-      setTimeout(autoResize, 50)
-      return
-    }
-
-    // Otherwise transcribe recorded audio chunks using AI Speech-to-Text backend
-    if (audioChunksRef.current.length > 0) {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-      if (audioBlob.size > 500) {
-        setIsTranscribing(true)
-        try {
-          const res = await api.chat.stt(audioBlob)
-          if (res.text && res.text.trim()) {
-            setIsVoiceMessage(true)
-            const transcribed = res.text.trim()
-            setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcribed}` : transcribed))
-            setTimeout(autoResize, 50)
-          }
-        } catch (sttErr: any) {
-          console.error('STT API error:', sttErr)
-          setVoiceError('No se pudo transcribir el audio. Por favor escribe tu consulta.')
-          setTimeout(() => setVoiceError(null), 5000)
-        } finally {
-          setIsTranscribing(false)
-        }
-      }
-    }
-
     setLiveTranscript('')
     liveTranscriptRef.current = ''
+    setIsVoiceMessage(true)
+    setTimeout(() => {
+      autoResize()
+      textareaRef.current?.focus()
+    }, 30)
   }
 
   const toggleVoiceInput = () => {
@@ -1897,18 +1764,32 @@ export default function Chat() {
                 )}
               </AnimatePresence>
 
-              {/* Transcribing AI indicator */}
+              {/* Live Dictation Active Indicator */}
               <AnimatePresence>
-                {isTranscribing && (
+                {isRecording && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="mb-2 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs overflow-hidden"
-                    style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.30)', color: '#c9a84c' }}
+                    className="mb-2 px-3 py-1.5 rounded-xl flex items-center justify-between gap-2 text-xs overflow-hidden"
+                    style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5' }}
                   >
-                    <Loader2 size={13} className="animate-spin flex-shrink-0" />
-                    <span className="text-[11px] font-medium">Transcribiendo audio con inteligencia artificial...</span>
+                    <div className="flex items-center gap-2">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
+                      <span className="text-[11px] font-medium text-white/90">
+                        Escuchando... habla y tu voz se escribirá directamente aquí en tiempo real
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={stopVoiceInput}
+                      className="px-2 py-0.5 rounded bg-red-500/20 hover:bg-red-500/30 text-white text-[10px] font-medium transition-colors"
+                    >
+                      Listo
+                    </button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -2126,17 +2007,6 @@ export default function Chat() {
       <WhereToGoModal
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
-      />
-
-      {/* Single Clean Voice Recording Modal */}
-      <VoiceRecordingModal
-        isOpen={isRecording}
-        agentName={agent.name}
-        agentImage={agent.image}
-        recordingSeconds={recordingSeconds}
-        liveTranscript={liveTranscript}
-        onStop={stopVoiceInput}
-        onCancel={cancelVoiceInput}
       />
     </div>
   )
