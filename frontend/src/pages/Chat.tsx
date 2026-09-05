@@ -947,15 +947,7 @@ export default function Chat() {
       } catch {}
       recognitionRef.current = null
     }
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try { mediaRecorderRef.current.stop() } catch {}
-    }
-    mediaRecorderRef.current = null
-    audioChunksRef.current = []
-    stopAllMediaTracks()
     setIsRecording(false)
-    setIsTranscribing(false)
-    // Revert input to base if cancelled
     if (baseInputRef.current !== undefined) {
       setInput(baseInputRef.current)
     }
@@ -963,7 +955,7 @@ export default function Chat() {
     liveTranscriptRef.current = ''
   }
 
-  const startVoiceInput = async () => {
+  const startVoiceInput = () => {
     cancelVoiceInput()
     setVoiceError(null)
     setMicPermissionDenied(false)
@@ -971,101 +963,82 @@ export default function Chat() {
     liveTranscriptRef.current = ''
     baseInputRef.current = input
 
-    let stream: MediaStream
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Navegador no soporta captura de audio')
-      }
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaStreamRef.current = stream
-    } catch (err: any) {
-      console.warn('Microphone permission or hardware error:', err)
-      setMicPermissionDenied(true)
-      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador para hablar.')
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (!SpeechRecognition) {
+      setVoiceError('Tu navegador no soporta reconocimiento de voz directo. Te recomendamos usar Google Chrome o Microsoft Edge.')
+      setTimeout(() => setVoiceError(null), 6000)
       return
     }
 
-    setIsRecording(true)
-    setRecordingSeconds(0)
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingSeconds((s) => s + 1)
-    }, 1000)
-
-    // Setup MediaRecorder as recording fallback for browsers without Web Speech
     try {
-      const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
-        ? 'audio/webm'
-        : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
-        ? 'audio/mp4'
-        : ''
-      const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
-      mediaRecorderRef.current = recorder
-      audioChunksRef.current = []
+      const rec = new SpeechRecognition()
+      // Usar es-ES / es-PE para máxima compatibilidad con el motor de voz
+      rec.lang = 'es-ES'
+      rec.continuous = true
+      rec.interimResults = true
+      rec.maxAlternatives = 1
 
-      recorder.ondataavailable = (e) => {
-        if (e.data && e.data.size > 0) {
-          audioChunksRef.current.push(e.data)
-        }
+      rec.onstart = () => {
+        setIsRecording(true)
+        setRecordingSeconds(0)
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+        recordingTimerRef.current = setInterval(() => {
+          setRecordingSeconds((s) => s + 1)
+        }, 1000)
       }
-      recorder.start(250)
-    } catch (recErr) {
-      console.warn('MediaRecorder init fallback:', recErr)
-    }
 
-    // Setup Web Speech API for instant real-time live typing
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (SpeechRecognition) {
-      try {
-        const rec = new SpeechRecognition()
-        const userLang = (navigator.language || '').toLowerCase()
-        rec.lang = userLang.startsWith('es') ? navigator.language : 'es-PE'
-        rec.continuous = true
-        rec.interimResults = true
-
-        rec.onresult = (event: any) => {
-          let full = ''
-          for (let i = 0; i < event.results.length; i++) {
-            const transcript = event.results[i][0]?.transcript || ''
-            if (transcript) {
-              full += transcript + ' '
+      rec.onresult = (event: any) => {
+        let final = ''
+        let interim = ''
+        for (let i = 0; i < event.results.length; i++) {
+          const res = event.results[i]
+          if (res && res[0]) {
+            if (res.isFinal) {
+              final += res[0].transcript + ' '
+            } else {
+              interim += res[0].transcript
             }
           }
-          full = full.trim()
-          if (full) {
-            setLiveTranscript(full)
-            liveTranscriptRef.current = full
-            setIsVoiceMessage(true)
-            const base = baseInputRef.current.trim()
-            const updated = base ? `${base} ${full}` : full
-            setInput(updated)
-            setTimeout(autoResize, 10)
-          }
         }
-
-        rec.onerror = (e: any) => {
-          console.warn('[STT] Web Speech API interim event:', e?.error)
+        const full = (final + interim).trim()
+        if (full) {
+          setIsVoiceMessage(true)
+          const base = baseInputRef.current.trim()
+          const combined = base ? `${base} ${full}` : full
+          setInput(combined)
+          setTimeout(autoResize, 10)
         }
-
-        rec.onend = () => {
-          // If still recording, keep recognition active
-          if (mediaStreamRef.current && mediaStreamRef.current.active) {
-            try {
-              rec.start()
-            } catch {}
-          }
-        }
-
-        recognitionRef.current = rec
-        rec.start()
-      } catch (speechErr) {
-        console.warn('[STT] Web Speech API start failed:', speechErr)
       }
+
+      rec.onerror = (e: any) => {
+        console.warn('[STT] SpeechRecognition event:', e?.error)
+        if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
+          setMicPermissionDenied(true)
+          setVoiceError('Permiso de micrófono denegado. Permite el acceso al micrófono en tu navegador.')
+          setIsRecording(false)
+        }
+      }
+
+      rec.onend = () => {
+        // Si el usuario no lo detuvo manualmente, reiniciar para mantener el micrófono abierto
+        if (recognitionRef.current === rec) {
+          try {
+            rec.start()
+          } catch {}
+        }
+      }
+
+      recognitionRef.current = rec
+      rec.start()
+      setIsRecording(true)
+    } catch (err: any) {
+      console.warn('SpeechRecognition start error:', err)
+      setVoiceError('No se pudo iniciar el micrófono. Por favor verifica los permisos.')
+      setIsRecording(false)
     }
   }
 
-  const stopVoiceInput = async () => {
+  const stopVoiceInput = () => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current)
       recordingTimerRef.current = null
@@ -1081,14 +1054,6 @@ export default function Chat() {
     }
 
     setIsRecording(false)
-
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try { mediaRecorderRef.current.stop() } catch {}
-    }
-    mediaRecorderRef.current = null
-
-    stopAllMediaTracks()
-
     setLiveTranscript('')
     liveTranscriptRef.current = ''
     setIsVoiceMessage(true)
