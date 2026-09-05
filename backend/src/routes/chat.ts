@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import multer, { MulterError } from 'multer';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db } from '../db';
@@ -12,7 +13,117 @@ import { suggestAgentTransfer } from './agentRouter';
 import { metrics } from '../lib/metrics';
 import { generateSpeech } from '../lib/tts';
 
+const audioUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB max audio
+});
+
 export const chatRouter = Router();
+
+// Endpoint para transcripción de audio a texto (Speech-to-Text con IA)
+chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
+  audioUpload.single('audio')(req, res, async (err: any) => {
+    if (err) {
+      return res.status(400).json({ error: 'Error al procesar archivo de audio: ' + (err.message || err) });
+    }
+    try {
+      const file = req.file;
+      let audioBuffer: Buffer | null = null;
+      let mimeType = 'audio/webm';
+
+      if (file && file.buffer) {
+        audioBuffer = file.buffer;
+        mimeType = file.mimetype || 'audio/webm';
+      } else if (req.body?.audioBase64) {
+        const base64Data = req.body.audioBase64.replace(/^data:audio\/[a-z0-9]+;base64,/, '');
+        audioBuffer = Buffer.from(base64Data, 'base64');
+        if (req.body.mimeType) mimeType = req.body.mimeType;
+      }
+
+      if (!audioBuffer || audioBuffer.length === 0) {
+        return res.status(400).json({ error: 'No se recibió ningún audio para transcribir' });
+      }
+
+      const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+      const groqKey = process.env.GROQ_API_KEY;
+
+      // 1. Intentar con Groq Whisper si está disponible (ultra rápido)
+      if (groqKey) {
+        try {
+          const formData = new FormData();
+          const audioBlob = new Blob([audioBuffer], { type: mimeType });
+          formData.append('file', audioBlob, 'audio.webm');
+          formData.append('model', 'whisper-large-v3-turbo');
+          formData.append('language', 'es');
+          formData.append('response_format', 'json');
+
+          const groqRes = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${groqKey}`,
+            },
+            body: formData,
+          });
+
+          if (groqRes.ok) {
+            const data = (await groqRes.json()) as any;
+            if (data?.text && typeof data.text === 'string' && data.text.trim()) {
+              return res.json({ text: data.text.trim() });
+            }
+          }
+        } catch (groqErr) {
+          console.warn('Groq STT fallback to Gemini:', groqErr);
+        }
+      }
+
+      // 2. Transcripción con Google Gemini Multimodal Audio
+      if (geminiKey) {
+        try {
+          const genAI = new GoogleGenerativeAI(geminiKey);
+          const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.0-flash-lite'];
+          
+          let transcriptText = '';
+          for (const modelName of modelsToTry) {
+            if (transcriptText) break;
+            try {
+              const model = genAI.getGenerativeModel({ model: modelName });
+              const result = await model.generateContent([
+                {
+                  inlineData: {
+                    data: audioBuffer.toString('base64'),
+                    mimeType: mimeType.split(';')[0] || 'audio/webm',
+                  },
+                },
+                {
+                  text: 'Transcribe el audio a texto exacto en español con correcta puntuación y ortografía. Si hay términos jurídicos o nombres legales peruanos, asegúrate de escribirlos correctamente. Devuelve ÚNICAMENTE el texto transcrito, sin explicaciones ni notas adicionales.',
+                },
+              ]);
+              const txt = result.response.text();
+              if (txt && txt.trim()) {
+                transcriptText = txt.trim();
+              }
+            } catch (gemErr) {
+              console.warn(`Gemini STT (${modelName}) error:`, gemErr);
+            }
+          }
+
+          if (transcriptText) {
+            return res.json({ text: transcriptText });
+          }
+        } catch (geminiTotalErr: any) {
+          console.error('Gemini STT total error:', geminiTotalErr);
+        }
+      }
+
+      return res.status(500).json({
+        error: 'No se pudo transcribir el audio en este momento. Por favor escribe tu consulta o reintenta.',
+      });
+    } catch (error: any) {
+      console.error('STT endpoint error:', error);
+      res.status(500).json({ error: error?.message || 'Error en transcripción de audio' });
+    }
+  });
+});
 
 // Endpoint para síntesis de voz (Microsoft Edge Neural TTS / ElevenLabs)
 chatRouter.post('/tts', requireAuth, async (req: any, res) => {

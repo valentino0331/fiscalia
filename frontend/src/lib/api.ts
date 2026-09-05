@@ -86,6 +86,25 @@ export const api = {
       }
       return res.blob()
     },
+    stt: async (audioBlob: Blob): Promise<{ text: string }> => {
+      const token = getToken()
+      const formData = new FormData()
+      formData.append('audio', audioBlob, 'audio.webm')
+
+      const headers: Record<string, string> = {}
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      const res = await fetch(`${API_URL}/chat/stt`, {
+        method: 'POST',
+        headers,
+        body: formData,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Error en transcripción de audio' }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+      return res.json()
+    },
   },
 
   conversations: {

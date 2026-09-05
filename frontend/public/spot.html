@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Hardman IA — Spot Publicitario Oficial 10/10</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Cinzel:wght@600;700;900&family=Playfair+Display:ital,wght@0,600;0,800;1,400&display=swap" rel="stylesheet">
+<title>Hardman IA — Spot Comercial Ultra Premium 10/10</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Cinzel:wght@700;900&family=Playfair+Display:ital,wght@0,700;0,900;1,600&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
-    background: #050608;
+    background: #040507;
     color: #ffffff;
     font-family: 'Outfit', sans-serif;
     display: flex;
@@ -19,22 +19,22 @@
     overflow: hidden;
   }
 
-  /* 16:9 Cinema Container */
+  /* 16:9 4K Cinema Stage */
   #video-stage {
     position: relative;
-    width: 1040px;
-    height: 585px;
-    background: radial-gradient(circle at 50% 30%, #11141e 0%, #050608 85%);
+    width: 1080px;
+    height: 608px;
+    background: radial-gradient(circle at 50% 20%, #0f131d 0%, #040507 80%);
     border-radius: 24px;
-    border: 1.5px solid rgba(201, 168, 76, 0.4);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.9), 0 0 50px rgba(201, 168, 76, 0.2);
+    border: 1.5px solid rgba(201, 168, 76, 0.45);
+    box-shadow: 0 35px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(201, 168, 76, 0.25);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  /* Particle Canvas */
+  /* Particle Background */
   #fx-canvas {
     position: absolute;
     inset: 0;
@@ -44,7 +44,7 @@
     z-index: 1;
   }
 
-  /* Scenes */
+  /* Scenes Container */
   .scene {
     position: absolute;
     inset: 0;
@@ -52,10 +52,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 30px 40px;
     opacity: 0;
-    transform: scale(0.92) translateY(10px);
-    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.92) translateY(20px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 2;
     pointer-events: none;
     text-align: center;
@@ -67,164 +67,123 @@
     pointer-events: auto;
   }
 
-  /* Gold Elements & Badges */
+  /* Badges & Titles */
   .gold-badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 18px;
+    padding: 6px 18px;
     border-radius: 999px;
-    background: rgba(201, 168, 76, 0.12);
-    border: 1px solid rgba(201, 168, 76, 0.45);
+    background: rgba(201, 168, 76, 0.14);
+    border: 1px solid rgba(201, 168, 76, 0.5);
     color: #c9a84c;
-    font-size: 12px;
-    font-weight: 700;
+    font-size: 11px;
+    font-weight: 800;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    margin-bottom: 18px;
-    box-shadow: 0 0 20px rgba(201, 168, 76, 0.2);
+    margin-bottom: 12px;
+    box-shadow: 0 0 25px rgba(201, 168, 76, 0.25);
   }
 
   h1.cinema-title {
     font-family: 'Cinzel', serif;
-    font-size: 46px;
-    font-weight: 800;
-    line-height: 1.18;
-    margin-bottom: 16px;
-    background: linear-gradient(135deg, #ffffff 40%, #e2c87b 80%, #c9a84c 100%);
+    font-size: 40px;
+    font-weight: 900;
+    line-height: 1.15;
+    margin-bottom: 10px;
+    background: linear-gradient(135deg, #ffffff 40%, #edd38c 80%, #c9a84c 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    max-width: 860px;
+    max-width: 900px;
   }
 
   p.cinema-sub {
-    font-size: 19px;
+    font-size: 16px;
     color: rgba(255, 255, 255, 0.75);
-    max-width: 680px;
+    max-width: 700px;
     font-weight: 300;
-    line-height: 1.5;
+    line-height: 1.45;
   }
 
-  /* Scene 2: Compare Card */
+  /* 3D App Mockup Frame (Apple / Silicon Valley Style) */
+  .mockup-3d-wrap {
+    perspective: 1400px;
+    margin-top: 14px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .mockup-3d-card {
+    position: relative;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 2px solid rgba(201, 168, 76, 0.5);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(201, 168, 76, 0.35);
+    transform: rotateX(8deg) rotateY(-4deg) scale(0.96);
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.6s ease;
+    background: #111;
+  }
+
+  .scene.active .mockup-3d-card {
+    transform: rotateX(0deg) rotateY(0deg) scale(1);
+    animation: floatMockup 4s ease-in-out infinite alternate;
+  }
+
+  @keyframes floatMockup {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-8px) rotate(0.5deg); }
+  }
+
+  .mockup-img {
+    display: block;
+    width: 680px;
+    height: 310px;
+    object-fit: cover;
+    object-position: top center;
+  }
+
+  /* Pulse Glow Overlay */
+  .glow-tag {
+    position: absolute;
+    bottom: 14px;
+    right: 18px;
+    background: rgba(10, 12, 18, 0.9);
+    border: 1px solid rgba(201, 168, 76, 0.6);
+    padding: 8px 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #c9a84c;
+    font-size: 12px;
+    font-weight: 700;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  }
+
+  /* Compare Scene */
   .compare-box {
     display: flex;
     align-items: center;
-    gap: 30px;
-    margin-top: 25px;
+    gap: 24px;
+    margin-top: 20px;
   }
   .compare-col {
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 18px;
-    padding: 20px 32px;
+    padding: 22px 34px;
     text-align: center;
     backdrop-filter: blur(10px);
   }
   .compare-col.bad {
-    border-color: rgba(239, 68, 68, 0.35);
-    background: rgba(239, 68, 68, 0.05);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.08);
   }
   .compare-col.good {
-    border-color: rgba(201, 168, 76, 0.5);
-    background: rgba(201, 168, 76, 0.1);
-    box-shadow: 0 10px 30px rgba(201,168,76,0.25);
-    transform: scale(1.05);
-  }
-
-  /* Scene 4: 8 Real Lawyers Grid */
-  .lawyers-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
-    margin-top: 20px;
-    max-width: 820px;
-  }
-  .lawyer-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    backdrop-filter: blur(10px);
-    transition: all 0.3s ease;
-  }
-  .lawyer-card:hover {
-    border-color: #c9a84c;
-    transform: translateY(-4px);
-    box-shadow: 0 8px 20px rgba(201, 168, 76, 0.25);
-  }
-  .lawyer-photo {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 1.5px solid #c9a84c;
-    flex-shrink: 0;
-  }
-  .lawyer-photo img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: top;
-  }
-
-  /* Scene 5: Live Voice Call UI */
-  .call-ui-card {
-    background: linear-gradient(180deg, rgba(26,29,38,0.95) 0%, rgba(13,15,20,0.98) 100%);
-    border: 1.5px solid rgba(201, 168, 76, 0.4);
-    border-radius: 22px;
-    padding: 24px 36px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-    margin-top: 15px;
-    min-width: 480px;
-  }
-  .orb-wrap {
-    position: relative;
-    width: 100px;
-    height: 100px;
-    margin-bottom: 14px;
-  }
-  .orb-ring {
-    position: absolute;
-    inset: -10px;
-    border-radius: 50%;
-    border: 2px solid rgba(201,168,76,0.6);
-    animation: ringGlow 1.8s infinite ease-out;
-  }
-  @keyframes ringGlow {
-    0% { transform: scale(0.9); opacity: 0.9; }
-    100% { transform: scale(1.35); opacity: 0; }
-  }
-  .orb-photo {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid #c9a84c;
-    box-shadow: 0 0 25px rgba(201,168,76,0.5);
-  }
-  .orb-photo img { width:100%; height:100%; object-fit:cover; object-position:top; }
-
-  /* Scene 6: Split Feature */
-  .feature-split {
-    display: flex;
-    gap: 22px;
-    margin-top: 22px;
-    max-width: 820px;
-  }
-  .feature-card {
-    flex: 1;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 18px;
-    padding: 20px;
-    text-align: left;
-    backdrop-filter: blur(12px);
+    border-color: rgba(201, 168, 76, 0.6);
+    background: rgba(201, 168, 76, 0.12);
+    box-shadow: 0 10px 35px rgba(201,168,76,0.3);
+    transform: scale(1.06);
   }
 
   /* Timeline */
@@ -232,16 +191,16 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #c9a84c, #ffd978);
+    height: 5px;
+    background: linear-gradient(90deg, #c9a84c, #ffd978, #ffffff);
     width: 0%;
     z-index: 20;
     transition: width 0.08s linear;
   }
 
-  /* Play Controller */
+  /* Controls */
   #controls {
-    margin-top: 22px;
+    margin-top: 20px;
     display: flex;
     align-items: center;
     gap: 16px;
@@ -249,22 +208,22 @@
 
   .btn-play-spot {
     background: linear-gradient(135deg, #c9a84c 0%, #a28333 100%);
-    color: #0b0c10;
+    color: #08090d;
     border: none;
-    padding: 15px 36px;
+    padding: 15px 38px;
     border-radius: 14px;
     font-size: 16px;
-    font-weight: 800;
+    font-weight: 900;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    box-shadow: 0 8px 25px rgba(201, 168, 76, 0.4);
+    box-shadow: 0 8px 28px rgba(201, 168, 76, 0.45);
     transition: all 0.2s ease;
   }
   .btn-play-spot:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 32px rgba(201, 168, 76, 0.6);
+    box-shadow: 0 12px 35px rgba(201, 168, 76, 0.65);
   }
 </style>
 </head>
@@ -278,149 +237,80 @@
   <div class="scene active" id="scene-1">
     <div class="gold-badge">🇵🇪 PERÚ · DEFENSA LEGAL INTELIGENTE</div>
     <h1 class="cinema-title">¿Tienes un problema legal urgente y no sabes por dónde empezar?</h1>
-    <p class="cinema-sub">Despidos, deudas, pensiones de alimentos o contratos complicados. Enfrentar la ley en el Perú suele ser abrumador.</p>
+    <p class="cinema-sub">Despidos arbitrarios, pensiones de alimentos, cobranzas o contratos complicados. Enfrentar la ley suele ser abrumador.</p>
   </div>
 
-  <!-- SCENE 2 (4.5s - 9.0s): COSTO Y TIEMPO TRADICIONAL -->
+  <!-- SCENE 2 (4.5s - 9.0s): COSTO TRADICIONAL VS IA -->
   <div class="scene" id="scene-2">
-    <div class="gold-badge" style="border-color:rgba(239,68,68,0.5); color:#ff6b6b; background:rgba(239,68,68,0.1);">⚖️ EL PROBLEMA TRADICIONAL</div>
+    <div class="gold-badge" style="border-color:rgba(239,68,68,0.5); color:#ff6b6b; background:rgba(239,68,68,0.1);">⚖️ EL SISTEMA TRADICIONAL</div>
     <h1 class="cinema-title">Consultas de cientos de soles y semanas de espera</h1>
     <div class="compare-box">
       <div class="compare-col bad">
-        <div style="font-size:32px; font-weight:800; color:#ef4444; text-decoration:line-through; margin-bottom:4px;">S/ 500.00</div>
+        <div style="font-size:34px; font-weight:900; color:#ef4444; text-decoration:line-through; margin-bottom:4px;">S/ 500.00</div>
         <p style="font-size:13px; color:rgba(255,255,255,0.6);">Consulta tradicional + Días de espera</p>
       </div>
-      <div style="font-size:28px; font-weight:800; color:#c9a84c;">➔</div>
+      <div style="font-size:30px; font-weight:900; color:#c9a84c;">➔</div>
       <div class="compare-col good">
-        <div style="font-size:32px; font-weight:800; color:#c9a84c; margin-bottom:4px;">100% GRATIS</div>
-        <p style="font-size:13px; color:#ffffff; font-weight:600;">Respuesta en segundos 24/7 con IA</p>
+        <div style="font-size:34px; font-weight:900; color:#c9a84c; margin-bottom:4px;">100% GRATIS</div>
+        <p style="font-size:13px; color:#ffffff; font-weight:700;">Respuesta en segundos 24/7 con IA</p>
       </div>
     </div>
   </div>
 
-  <!-- SCENE 3 (9.0s - 14.0s): PRESENTACIÓN HARDMAN IA -->
+  <!-- SCENE 3 (9.0s - 14.0s): INTRODUCIENDO HARDMAN IA CON CAPTURA REAL -->
   <div class="scene" id="scene-3">
     <div class="gold-badge">✨ HOY TODO CAMBIÓ</div>
-    <h1 class="cinema-title" style="font-size:54px; letter-spacing:1px;">HARDMAN IA</h1>
+    <h1 class="cinema-title" style="font-size:46px;">HARDMAN IA</h1>
     <p class="cinema-sub">El primer bufete de abogados con Inteligencia Artificial del Perú.</p>
-    <div style="margin-top:20px; display:inline-flex; align-items:center; gap:12px; background:rgba(201,168,76,0.12); border:1px solid rgba(201,168,76,0.3); padding:10px 24px; border-radius:12px;">
-      <span style="font-size:14px; font-weight:700; color:#c9a84c;">🏛️ Especialistas Legales Colegiados + Leyes Peruanas 2026</span>
+    <div class="mockup-3d-wrap">
+      <div class="mockup-3d-card">
+        <img class="mockup-img" src="/screen_dashboard.png" alt="Dashboard Real Hardman IA">
+        <div class="glow-tag">
+          <span style="width:8px; height:8px; border-radius:50%; background:#34d17a; display:inline-block;"></span>
+          8 Especialistas Legales en Línea 24/7
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- SCENE 4 (14.0s - 20.0s): 8 ESPECIALISTAS REALES -->
+  <!-- SCENE 4 (14.0s - 20.0s): LOS 8 ESPECIALISTAS REALES EN ACCIÓN -->
   <div class="scene" id="scene-4">
-    <div class="gold-badge">👥 8 ESPECIALISTAS DE ÉLITE 24/7</div>
-    <h1 class="cinema-title" style="font-size:38px;">Un especialista para cada rama del Derecho</h1>
-    <div class="lawyers-grid">
-      <!-- 1. Valentina -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/valentina.jpg" alt="Valentina"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Valentina</h4>
-          <span style="font-size:10px; font-weight:700; color:#6366F1;">LABORAL</span>
-        </div>
-      </div>
-      <!-- 2. Sebastián -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/sebastian.jpg" alt="Sebastián"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Sebastián</h4>
-          <span style="font-size:10px; font-weight:700; color:#EF4444;">PENAL</span>
-        </div>
-      </div>
-      <!-- 3. Camila -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/camila.jpg" alt="Camila"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Camila</h4>
-          <span style="font-size:10px; font-weight:700; color:#EC4899;">FAMILIA</span>
-        </div>
-      </div>
-      <!-- 4. Diego -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/diego.jpg" alt="Diego"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Diego</h4>
-          <span style="font-size:10px; font-weight:700; color:#06B6D4;">CIVIL</span>
-        </div>
-      </div>
-      <!-- 5. Adriana -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/adriana.jpg" alt="Adriana"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Adriana</h4>
-          <span style="font-size:10px; font-weight:700; color:#8B5CF6;">CORPORATIVO</span>
-        </div>
-      </div>
-      <!-- 6. Rodrigo -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/rodrigo.jpg" alt="Rodrigo"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Rodrigo</h4>
-          <span style="font-size:10px; font-weight:700; color:#F59E0B;">MINERO</span>
-        </div>
-      </div>
-      <!-- 7. Fernanda -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/fernanda.jpg" alt="Fernanda"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Fernanda</h4>
-          <span style="font-size:10px; font-weight:700; color:#10B981;">TRIBUTARIO</span>
-        </div>
-      </div>
-      <!-- 8. Marco -->
-      <div class="lawyer-card">
-        <div class="lawyer-photo"><img src="/agents/marco.jpg" alt="Marco"></div>
-        <div style="text-align:left;">
-          <h4 style="font-size:13px; font-weight:700;">Marco</h4>
-          <span style="font-size:10px; font-weight:700; color:#c9a84c;">ADMINISTRATIVO</span>
+    <div class="gold-badge">👥 8 ESPECIALIDADES JURÍDICAS</div>
+    <h1 class="cinema-title" style="font-size:36px;">Un abogado de élite para cada materia</h1>
+    <div class="mockup-3d-wrap">
+      <div class="mockup-3d-card" style="box-shadow: 0 20px 50px rgba(99,102,241,0.3); border-color:#6366F1;">
+        <img class="mockup-img" src="/screen_dashboard.png" alt="Especialistas Legales">
+        <div class="glow-tag" style="border-color:#6366F1; color:#a5b4fc;">
+          Laboral · Penal · Familia · Civil · Corporativo · Minero · Tributario · Administrativo
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCENE 5 (20.0s - 27.0s): LLAMADA DE VOZ EN VIVO -->
+  <!-- SCENE 5 (20.0s - 27.0s): LLAMADA DE VOZ EN VIVO (CAPTURA REAL) -->
   <div class="scene" id="scene-5">
-    <div class="gold-badge">🎙️ CONVERSACIÓN BIDIRECCIONAL EN TIEMPO REAL</div>
-    <h1 class="cinema-title" style="font-size:38px;">Habla por voz con tu especialista</h1>
-    <div class="call-ui-card">
-      <div class="orb-wrap">
-        <div class="orb-ring"></div>
-        <div class="orb-photo"><img src="/agents/valentina.jpg" alt="Valentina"></div>
+    <div class="gold-badge">🎙️ LLAMADA DE VOZ EN VIVO</div>
+    <h1 class="cinema-title" style="font-size:36px;">Habla en tiempo real con tu abogada</h1>
+    <div class="mockup-3d-wrap">
+      <div class="mockup-3d-card" style="box-shadow: 0 20px 60px rgba(52,209,122,0.35); border-color:#34d17a;">
+        <img class="mockup-img" src="/screen_voicecall.png" alt="Llamada de Voz en Vivo Real">
+        <div class="glow-tag" style="border-color:#34d17a; color:#34d17a;">
+          🟢 Conectado con Valentina · Voz Neuronal HD
+        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:8px; background:rgba(52,209,122,0.15); border:1px solid rgba(52,209,122,0.35); padding:6px 16px; border-radius:999px; color:#34d17a; font-size:12px; font-weight:700;">
-        <span style="width:8px; height:8px; border-radius:50%; background:#34d17a; display:inline-block;"></span>
-        Llamada activa con Valentina · Voz Neuronal HD
-      </div>
-      <p style="font-size:13px; color:rgba(255,255,255,0.7); margin-top:12px; font-style:italic;">
-        "Te escucho... cuéntame qué ocurrió con tu despido laboral para liquidar tus beneficios."
-      </p>
     </div>
   </div>
 
-  <!-- SCENE 6 (27.0s - 34.0s): DOCUMENTOS Y CALCULADORAS -->
+  <!-- SCENE 6 (27.0s - 34.0s): DEMANDAS EN WORD (.DOC), PDF Y CALCULADORAS REALES -->
   <div class="scene" id="scene-6">
-    <div class="gold-badge">📄 ESCRITOS OFICIALES & CALCULADORAS EN SOLES</div>
-    <h1 class="cinema-title" style="font-size:38px;">Descarga Demandas y Cartas en Word y PDF</h1>
-    <div class="feature-split">
-      <!-- Tarjeta 1: Documento Word -->
-      <div class="feature-card" style="border-color:rgba(96,165,250,0.4); background:linear-gradient(135deg, rgba(20,25,38,0.95), rgba(15,18,25,0.98));">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
-          <span style="font-size:10px; font-weight:800; background:#2563eb; color:#fff; padding:3px 8px; border-radius:4px;">CARTA NOTARIAL</span>
-          <span style="font-size:11px; color:#93c5fd;">Formato A4</span>
+    <div class="gold-badge">📄 DOCUMENTOS OFICIALES Y CÁLCULOS EN SOLES</div>
+    <h1 class="cinema-title" style="font-size:36px;">Descarga Demandas y Cartas en Word y PDF</h1>
+    <div class="mockup-3d-wrap">
+      <div class="mockup-3d-card" style="box-shadow: 0 20px 60px rgba(37,99,235,0.4); border-color:#2563eb;">
+        <img class="mockup-img" src="/screen_chat_doc.png" alt="Documentos Oficiales en Word y PDF">
+        <div class="glow-tag" style="border-color:#2563eb; color:#93c5fd;">
+          📥 Descarga Directa en Word (.doc) y PDF Oficial A4
         </div>
-        <h4 style="font-size:14px; font-weight:700; color:#fff; margin-bottom:12px;">Carta_Notarial_Desalojo.doc</h4>
-        <div style="display:flex; gap:8px;">
-          <span style="background:#2563eb; color:#fff; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700;">📥 Descargar Word</span>
-          <span style="background:rgba(201,168,76,0.2); color:#c9a84c; border:1px solid #c9a84c; padding:6px 12px; border-radius:6px; font-size:11px; font-weight:700;">🖨️ PDF</span>
-        </div>
-      </div>
-      <!-- Tarjeta 2: Calculadora -->
-      <div class="feature-card" style="border-color:rgba(52,209,122,0.4); background:linear-gradient(135deg, rgba(16,30,22,0.95), rgba(10,20,15,0.98));">
-        <span style="font-size:10px; font-weight:800; background:#10B981; color:#fff; padding:3px 8px; border-radius:4px; display:inline-block; margin-bottom:8px;">CÁLCULO D.L. 728</span>
-        <div style="font-size:24px; font-weight:800; color:#34d17a; margin-bottom:4px;">S/ 4,850.00</div>
-        <p style="font-size:11px; color:rgba(255,255,255,0.65);">Liquidación de CTS, Gratificación y Vacaciones</p>
       </div>
     </div>
   </div>
@@ -428,9 +318,9 @@
   <!-- SCENE 7 (34.0s - 43.0s): CTA FINAL -->
   <div class="scene" id="scene-7">
     <div class="gold-badge">🚀 COMIENZA AHORA MISMO</div>
-    <h1 class="cinema-title" style="font-size:52px;">Tu primera consulta es 100% GRATIS</h1>
+    <h1 class="cinema-title" style="font-size:48px;">Tu primera consulta es 100% GRATIS</h1>
     <p class="cinema-sub" style="margin-bottom:24px;">La justicia y el derecho, ahora al alcance de tus manos.</p>
-    <div style="display:inline-flex; align-items:center; gap:12px; background:linear-gradient(135deg, #c9a84c 0%, #e2c87b 100%); color:#0b0c10; padding:18px 48px; border-radius:16px; font-size:24px; font-weight:900; box-shadow:0 10px 40px rgba(201,168,76,0.6);">
+    <div style="display:inline-flex; align-items:center; gap:12px; background:linear-gradient(135deg, #c9a84c 0%, #ffd978 100%); color:#08090d; padding:18px 52px; border-radius:18px; font-size:26px; font-weight:900; box-shadow:0 12px 45px rgba(201,168,76,0.65);">
       🌐 hardman.pe
     </div>
   </div>
@@ -442,12 +332,12 @@
 <!-- Control Play Button -->
 <div id="controls">
   <button class="btn-play-spot" id="btn-play">
-    <span id="play-icon">▶️</span> <span id="play-text">Reproducir Spot Comercial 10/10 Sincronizado</span>
+    <span id="play-icon">▶️</span> <span id="play-text">Reproducir Spot Comercial 10/10 Ultra HD</span>
   </button>
 </div>
 
 <script>
-  // Timing sincronizado exactamente palabra por palabra con el archivo de audio
+  // Sincronización palabra por palabra con el archivo de audio
   const scenes = [
     { id: 'scene-1', start: 0.0, end: 4.5 },
     { id: 'scene-2', start: 4.5, end: 9.0 },
@@ -497,7 +387,7 @@
 
   audio.addEventListener('ended', () => {
     isPlaying = false;
-    playText.textContent = 'Repetir Spot Sincronizado';
+    playText.textContent = 'Repetir Spot Ultra HD';
     playIcon.textContent = '🔄';
     audio.currentTime = 0;
     timeline.style.width = '0%';
@@ -506,10 +396,10 @@
   // Particle background
   const canvas = document.getElementById('fx-canvas');
   const ctx = canvas.getContext('2d');
-  canvas.width = 1040;
-  canvas.height = 585;
+  canvas.width = 1080;
+  canvas.height = 608;
 
-  const particles = Array.from({ length: 50 }, () => ({
+  const particles = Array.from({ length: 45 }, () => ({
     x: Math.random() * canvas.width,
     y: Math.random() * canvas.height,
     r: Math.random() * 2 + 1,

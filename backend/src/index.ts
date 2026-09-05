@@ -49,10 +49,48 @@ app.use('/shared', sharedRouter);
 app.use('/saved', savedRouter);
 app.use('/memory', memoryRouter);
 
-app.get('/health', (_, res) => res.json({ status: 'ok' }));
+app.get('/health', (_, res) => {
+  const mem = process.memoryUsage();
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+    memory: {
+      rssMB: Math.round(mem.rss / 1024 / 1024),
+      heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
+      heapTotalMB: Math.round(mem.heapTotal / 1024 / 1024),
+    },
+    nodeVersion: process.version,
+  });
+});
 
 initNewTables()
   .then(() => console.log('DB tables verified'))
   .catch((err) => console.error('DB init error:', err));
 
-app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+
+// Graceful shutdown & process resilience for high concurrency
+process.on('uncaughtException', (err) => {
+  console.error('[CRITICAL] Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[CRITICAL] Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+const gracefulShutdown = (signal: string) => {
+  console.log(`[SHUTDOWN] Señal ${signal} recibida. Cerrando conexiones HTTP...`);
+  server.close(() => {
+    console.log('[SHUTDOWN] Servidor cerrado ordenadamente.');
+    process.exit(0);
+  });
+  // Force exit after 10s if connections hang
+  setTimeout(() => {
+    console.error('[SHUTDOWN] Forzando salida tras timeout.');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));

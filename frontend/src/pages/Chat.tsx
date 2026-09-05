@@ -736,8 +736,14 @@ export default function Chat() {
   const [pageCount, setPageCount] = useState<number | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const [speechSupported, setSpeechSupported] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(true)
   const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [recordingSeconds, setRecordingSeconds] = useState(0)
+  const [micPermissionDenied, setMicPermissionDenied] = useState(false)
+  const [liveTranscript, setLiveTranscript] = useState('')
+  const [voiceError, setVoiceError] = useState<string | null>(null)
+
   const [audioRepliesEnabled, setAudioRepliesEnabled] = useState<boolean>(() => {
     try {
       return localStorage.getItem('bufete_auto_speak') === 'true'
@@ -765,7 +771,6 @@ export default function Chat() {
   const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
   const [shareLoading, setShareLoading] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
-  const [recordingSeconds, setRecordingSeconds] = useState(0)
   const [searchParams] = useSearchParams()
   const [templatesOpen, setTemplatesOpen] = useState(false)
   const templatesRef = useRef<HTMLDivElement>(null)
@@ -774,8 +779,13 @@ export default function Chat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
+  
   const recognitionRef = useRef<any>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
+  const mediaStreamRef = useRef<MediaStream | null>(null)
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const liveTranscriptRef = useRef<string>('')
 
   useEffect(() => {
     if (!agent) navigate('/dashboard')
@@ -788,6 +798,7 @@ export default function Chat() {
     setActiveMode(null)
     setIsVoiceMessage(false)
     stopSpeaking()
+    cancelVoiceInput()
     loadConversations()
     setSidebarOpen(false)
 
@@ -825,11 +836,11 @@ export default function Chat() {
 
   useEffect(() => {
     const speechApi = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    setSpeechSupported(Boolean(speechApi))
+    const mediaSupported = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+    setSpeechSupported(Boolean(speechApi || mediaSupported))
 
     return () => {
-      if (recognitionRef.current) recognitionRef.current.stop()
-      if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+      cancelVoiceInput()
       stopSpeaking()
     }
   }, [])
@@ -914,50 +925,191 @@ export default function Chat() {
     }
   }
 
-  const toggleVoiceInput = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SpeechRecognition) return
+  const stopAllMediaTracks = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop())
+      mediaStreamRef.current = null
+    }
+  }
 
-    if (recognitionRef.current && isRecording) {
-      recognitionRef.current.stop()
+  const cancelVoiceInput = () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch {}
+      recognitionRef.current = null
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try { mediaRecorderRef.current.stop() } catch {}
+    }
+    mediaRecorderRef.current = null
+    audioChunksRef.current = []
+    stopAllMediaTracks()
+    setIsRecording(false)
+    setIsTranscribing(false)
+    setLiveTranscript('')
+    liveTranscriptRef.current = ''
+  }
+
+  const startVoiceInput = async () => {
+    cancelVoiceInput()
+    setVoiceError(null)
+    setMicPermissionDenied(false)
+    setLiveTranscript('')
+    liveTranscriptRef.current = ''
+
+    let stream: MediaStream
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Navegador no soporta captura de audio')
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+    } catch (err: any) {
+      console.warn('Microphone permission or hardware error:', err)
+      setMicPermissionDenied(true)
+      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador para hablar.')
       return
     }
 
-    const recognition = new SpeechRecognition()
-    recognition.lang = 'es-PE'
-    recognition.continuous = false
-    recognition.interimResults = false
+    setIsRecording(true)
+    setRecordingSeconds(0)
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => s + 1)
+    }, 1000)
 
-    recognition.onstart = () => {
-      setIsRecording(true)
-      setRecordingSeconds(0)
-      recordingTimerRef.current = setInterval(() => setRecordingSeconds((s) => s + 1), 1000)
-    }
-    recognition.onend = () => {
-      setIsRecording(false)
-      if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null }
-    }
-    recognition.onerror = () => {
-      setIsRecording(false)
-      if (recordingTimerRef.current) { clearInterval(recordingTimerRef.current); recordingTimerRef.current = null }
-    }
-    recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((result: any) => result[0]?.transcript || '')
-        .join(' ')
-        .trim()
+    // Setup MediaRecorder as guaranteed recording fallback
+    try {
+      const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+        ? 'audio/webm;codecs=opus'
+        : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : ''
+      const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+      mediaRecorderRef.current = recorder
+      audioChunksRef.current = []
 
-      if (!transcript) return
-      setIsVoiceMessage(true)
-      setInput((prev) => {
-        if (!prev.trim()) return transcript
-        return `${prev.trim()} ${transcript}`
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data)
+        }
+      }
+      recorder.start(250)
+    } catch (recErr) {
+      console.warn('MediaRecorder init fallback:', recErr)
+    }
+
+    // Setup Web Speech API for real-time live preview
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SpeechRecognition) {
+      try {
+        const rec = new SpeechRecognition()
+        rec.lang = 'es-PE'
+        rec.continuous = true
+        rec.interimResults = true
+
+        rec.onresult = (event: any) => {
+          let interim = ''
+          let final = ''
+          for (let i = 0; i < event.results.length; i++) {
+            const transcript = event.results[i][0]?.transcript || ''
+            if (event.results[i].isFinal) {
+              final += transcript + ' '
+            } else {
+              interim += transcript
+            }
+          }
+          const full = (final + interim).trim()
+          if (full) {
+            setLiveTranscript(full)
+            liveTranscriptRef.current = full
+          }
+        }
+
+        rec.onerror = (e: any) => {
+          console.warn('Web Speech API interim event:', e.error)
+        }
+
+        recognitionRef.current = rec
+        rec.start()
+      } catch (speechErr) {
+        console.warn('Web Speech API start failed:', speechErr)
+      }
+    }
+  }
+
+  const stopVoiceInput = async () => {
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current)
+      recordingTimerRef.current = null
+    }
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop() } catch {}
+      recognitionRef.current = null
+    }
+
+    setIsRecording(false)
+
+    const liveText = liveTranscriptRef.current.trim()
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      const recorder = mediaRecorderRef.current
+      await new Promise<void>((resolve) => {
+        recorder.onstop = () => resolve()
+        try { recorder.stop() } catch { resolve() }
       })
-      setTimeout(autoResize, 30)
     }
 
-    recognitionRef.current = recognition
-    recognition.start()
+    stopAllMediaTracks()
+
+    // If Web Speech API captured text clearly, apply it immediately
+    if (liveText.length > 1) {
+      setIsVoiceMessage(true)
+      setInput((prev) => (prev.trim() ? `${prev.trim()} ${liveText}` : liveText))
+      setLiveTranscript('')
+      liveTranscriptRef.current = ''
+      setTimeout(autoResize, 50)
+      return
+    }
+
+    // Otherwise transcribe recorded audio chunks using AI Speech-to-Text backend
+    if (audioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+      if (audioBlob.size > 500) {
+        setIsTranscribing(true)
+        try {
+          const res = await api.chat.stt(audioBlob)
+          if (res.text && res.text.trim()) {
+            setIsVoiceMessage(true)
+            const transcribed = res.text.trim()
+            setInput((prev) => (prev.trim() ? `${prev.trim()} ${transcribed}` : transcribed))
+            setTimeout(autoResize, 50)
+          }
+        } catch (sttErr: any) {
+          console.error('STT API error:', sttErr)
+          setVoiceError('No se pudo transcribir el audio. Por favor escribe tu consulta.')
+          setTimeout(() => setVoiceError(null), 5000)
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+    }
+
+    setLiveTranscript('')
+    liveTranscriptRef.current = ''
+  }
+
+  const toggleVoiceInput = () => {
+    if (isRecording) {
+      stopVoiceInput()
+    } else {
+      startVoiceInput()
+    }
   }
 
   const scrollToBottom = () => {
@@ -1628,43 +1780,142 @@ export default function Chat() {
                 }}
               />
 
+              {/* Microphone permission alert banner */}
+              <AnimatePresence>
+                {micPermissionDenied && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    className="mb-2 p-2.5 rounded-xl flex items-center justify-between gap-3 text-xs"
+                    style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.30)', color: '#fca5a5' }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <AlertTriangle size={15} className="flex-shrink-0 text-red-400" />
+                      <span className="truncate sm:whitespace-normal">
+                        <strong>Micrófono bloqueado:</strong> Haz clic en el candado 🔒 de tu navegador y permite el <strong>Micrófono</strong>.
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <button
+                        onClick={startVoiceInput}
+                        className="px-2 py-1 rounded bg-red-500/20 hover:bg-red-500/30 text-white text-[10px] font-medium transition-colors"
+                      >
+                        Reintentar
+                      </button>
+                      <button
+                        onClick={() => setMicPermissionDenied(false)}
+                        className="p-1 rounded text-white/50 hover:text-white"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Transcribing AI indicator */}
+              <AnimatePresence>
+                {isTranscribing && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mb-2 px-3 py-1.5 rounded-xl flex items-center gap-2 text-xs overflow-hidden"
+                    style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.30)', color: '#c9a84c' }}
+                  >
+                    <Loader2 size={13} className="animate-spin flex-shrink-0" />
+                    <span className="text-[11px] font-medium">Transcribiendo audio con inteligencia artificial...</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Input container */}
               <div
                 className="rounded-[14px] p-2.5 sm:p-3 transition-all duration-300"
                 style={{
-                  background: '#1a1a1a',
-                  border: '1px solid #333333',
+                  background: isRecording ? '#1f1616' : '#1a1a1a',
+                  border: isRecording ? '1px solid rgba(239,68,68,0.45)' : '1px solid #333333',
+                  boxShadow: isRecording ? '0 0 15px rgba(239,68,68,0.12)' : 'none',
                   opacity: limitReached ? 0.5 : 1,
                   pointerEvents: limitReached ? 'none' : 'auto',
                 }}
                 onFocus={(e) => {
-                  const container = e.currentTarget
-                  container.style.borderColor = '#c9a84c'
-                  container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
+                  if (!isRecording) {
+                    const container = e.currentTarget
+                    container.style.borderColor = '#c9a84c'
+                    container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
+                  }
                 }}
                 onBlur={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                  if (!isRecording && !e.currentTarget.contains(e.relatedTarget as Node)) {
                     const container = e.currentTarget
                     container.style.borderColor = '#333333'
                     container.style.boxShadow = 'none'
                   }
                 }}
               >
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => { setInput(e.target.value); autoResize(); if (isVoiceMessage) setIsVoiceMessage(false) }}
-                  onKeyDown={handleKeyDown}
-                  placeholder={isRecording ? 'Escuchando...' : `Escribe o usa el micrófono para ${agent.name}...`}
-                  rows={1}
-                  className="w-full bg-transparent outline-none resize-none text-[13px] font-light leading-relaxed px-1"
-                  style={{
-                    minHeight: '26px',
-                    maxHeight: '120px',
-                    caretColor: '#c9a84c',
-                    color: '#ffffff',
-                  }}
-                />
+                {/* Active Recording HUD */}
+                {isRecording ? (
+                  <div className="py-1 px-1">
+                    <div className="flex items-center justify-between pb-2 border-b border-red-500/20 mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                        <span className="text-red-400 font-medium text-[11px]">
+                          Grabando ({String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:{String(recordingSeconds % 60).padStart(2, '0')})
+                        </span>
+                        {/* Audio Wave animation bars */}
+                        <div className="flex items-center gap-0.5 ml-1">
+                          <span className="w-0.5 h-3 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-0.5 h-4 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-0.5 h-2 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          <span className="w-0.5 h-4 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '75ms' }} />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={cancelVoiceInput}
+                          className="px-2 py-1 rounded-md text-[10px] text-white/50 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
+                          title="Cancelar grabación"
+                        >
+                          <X size={12} />
+                          <span>Cancelar</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={stopVoiceInput}
+                          className="px-2.5 py-1 rounded-md text-[10px] font-semibold text-white bg-red-500 hover:bg-red-600 transition-all flex items-center gap-1 shadow-sm"
+                          title="Terminar y aplicar texto"
+                        >
+                          <Check size={12} />
+                          <span>Listo</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-white/90 italic font-light min-h-[26px]">
+                      {liveTranscript ? `"${liveTranscript}"` : 'Habla ahora, te escuchamos atentamente...'}
+                    </p>
+                  </div>
+                ) : (
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => { setInput(e.target.value); autoResize(); if (isVoiceMessage) setIsVoiceMessage(false) }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Escribe o usa el micrófono para ${agent.name}...`}
+                    rows={1}
+                    className="w-full bg-transparent outline-none resize-none text-[13px] font-light leading-relaxed px-1"
+                    style={{
+                      minHeight: '26px',
+                      maxHeight: '120px',
+                      caretColor: '#c9a84c',
+                      color: '#ffffff',
+                    }}
+                  />
+                )}
 
                 <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {/* Left actions */}
@@ -1766,24 +2017,34 @@ export default function Chat() {
                       </span>
                     )}
 
-                    {/* Mic button — solid red when recording, no frantic animation */}
-                    {speechSupported && (
-                      <button
-                        onClick={toggleVoiceInput}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                        style={isRecording
-                          ? { background: 'rgba(255,50,50,0.15)', border: '1.5px solid rgba(255,70,70,0.50)', color: '#ff5555' }
-                          : { background: 'rgba(255,255,255,0.07)', border: '1px solid #333333', color: 'rgba(255,255,255,0.45)' }}
-                        title={isRecording ? 'Detener grabación' : 'Grabar mensaje de voz'}
-                      >
-                        {isRecording ? <Square size={11} fill="#ff5555" /> : <Mic size={14} />}
-                      </button>
-                    )}
+                    {/* Microphone button */}
+                    <button
+                      type="button"
+                      onClick={toggleVoiceInput}
+                      disabled={isTranscribing}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+                      style={
+                        isRecording
+                          ? { background: 'rgba(239,68,68,0.20)', border: '1.5px solid rgba(239,68,68,0.70)', color: '#ef4444', boxShadow: '0 0 10px rgba(239,68,68,0.3)' }
+                          : isTranscribing
+                          ? { background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.40)', color: '#c9a84c' }
+                          : { background: 'rgba(255,255,255,0.07)', border: '1px solid #333333', color: 'rgba(255,255,255,0.60)' }
+                      }
+                      title={isRecording ? 'Detener grabación' : isTranscribing ? 'Transcribiendo audio...' : 'Hablar por micrófono (dictado por voz)'}
+                    >
+                      {isTranscribing ? (
+                        <Loader2 size={13} className="animate-spin text-[#c9a84c]" />
+                      ) : isRecording ? (
+                        <Square size={11} fill="#ef4444" />
+                      ) : (
+                        <Mic size={14} />
+                      )}
+                    </button>
 
                     {/* Send button */}
                     <motion.button
                       onClick={sendMessage}
-                      disabled={(!input.trim() && !extractedText) || loading || extracting}
+                      disabled={(!input.trim() && !extractedText) || loading || extracting || isRecording || isTranscribing}
                       whileHover={{ scale: (input.trim() || extractedText) && !loading ? 1.05 : 1 }}
                       whileTap={{ scale: (input.trim() || extractedText) && !loading ? 0.95 : 1 }}
                       className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
