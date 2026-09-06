@@ -134,7 +134,6 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
-            'gemini-2.5-flash',
             'gemini-2.0-flash',
             'gemini-1.5-flash',
           ].filter(Boolean) as string[];

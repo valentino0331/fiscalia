@@ -788,6 +788,7 @@ export default function Chat() {
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const liveTranscriptRef = useRef<string>('')
   const baseInputRef = useRef<string>('')
+  const hasSpokenRef = useRef<boolean>(false)
 
   useEffect(() => {
     if (!agent) navigate('/dashboard')
@@ -947,7 +948,14 @@ export default function Chat() {
       } catch {}
       recognitionRef.current = null
     }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try { mediaRecorderRef.current.stop() } catch {}
+    }
+    mediaRecorderRef.current = null
+    audioChunksRef.current = []
+    stopAllMediaTracks()
     setIsRecording(false)
+    setIsTranscribing(false)
     if (baseInputRef.current !== undefined) {
       setInput(baseInputRef.current)
     }
@@ -955,90 +963,108 @@ export default function Chat() {
     liveTranscriptRef.current = ''
   }
 
-  const startVoiceInput = () => {
+  const startVoiceInput = async () => {
     cancelVoiceInput()
     setVoiceError(null)
     setMicPermissionDenied(false)
     setLiveTranscript('')
     liveTranscriptRef.current = ''
+    hasSpokenRef.current = false
     baseInputRef.current = input
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    if (!SpeechRecognition) {
-      setVoiceError('Tu navegador no soporta reconocimiento de voz directo. Te recomendamos usar Google Chrome o Microsoft Edge.')
-      setTimeout(() => setVoiceError(null), 6000)
+    let stream: MediaStream | null = null
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Navegador no soporta captura de audio')
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+    } catch (err: any) {
+      console.warn('Mic permission error:', err)
+      setMicPermissionDenied(true)
+      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador.')
       return
     }
 
-    try {
-      const rec = new SpeechRecognition()
-      // Usar es-ES / es-PE para máxima compatibilidad con el motor de voz
-      rec.lang = 'es-ES'
-      rec.continuous = true
-      rec.interimResults = true
-      rec.maxAlternatives = 1
+    setIsRecording(true)
+    setRecordingSeconds(0)
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => s + 1)
+    }, 1000)
 
-      rec.onstart = () => {
-        setIsRecording(true)
-        setRecordingSeconds(0)
-        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
-        recordingTimerRef.current = setInterval(() => {
-          setRecordingSeconds((s) => s + 1)
-        }, 1000)
-      }
-
-      rec.onresult = (event: any) => {
-        let final = ''
-        let interim = ''
-        for (let i = 0; i < event.results.length; i++) {
-          const res = event.results[i]
-          if (res && res[0]) {
-            if (res.isFinal) {
-              final += res[0].transcript + ' '
-            } else {
-              interim += res[0].transcript
-            }
+    // Iniciar MediaRecorder para capturar audio como respaldo 100% garantizado
+    if (stream) {
+      try {
+        const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : ''
+        const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+        mediaRecorderRef.current = recorder
+        audioChunksRef.current = []
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            audioChunksRef.current.push(e.data)
           }
         }
-        const full = (final + interim).trim()
-        if (full) {
-          setIsVoiceMessage(true)
-          const base = baseInputRef.current.trim()
-          const combined = base ? `${base} ${full}` : full
-          setInput(combined)
-          setTimeout(autoResize, 10)
-        }
+        recorder.start(250)
+      } catch (recErr) {
+        console.warn('MediaRecorder error:', recErr)
       }
+    }
 
-      rec.onerror = (e: any) => {
-        console.warn('[STT] SpeechRecognition event:', e?.error)
-        if (e?.error === 'not-allowed' || e?.error === 'service-not-allowed') {
-          setMicPermissionDenied(true)
-          setVoiceError('Permiso de micrófono denegado. Permite el acceso al micrófono en tu navegador.')
-          setIsRecording(false)
+    // Intentar Web Speech API para dictado en tiempo real
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    if (SpeechRecognition) {
+      try {
+        const rec = new SpeechRecognition()
+        const userLang = (navigator.language || '').toLowerCase()
+        rec.lang = userLang.startsWith('es') ? navigator.language : 'es-PE'
+        rec.continuous = true
+        rec.interimResults = true
+        rec.maxAlternatives = 1
+
+        rec.onresult = (event: any) => {
+          let final = ''
+          let interim = ''
+          for (let i = 0; i < event.results.length; i++) {
+            const res = event.results[i]
+            if (res && res[0]) {
+              if (res.isFinal) {
+                final += res[0].transcript + ' '
+              } else {
+                interim += res[0].transcript
+              }
+            }
+          }
+          const full = (final + interim).trim()
+          if (full) {
+            hasSpokenRef.current = true
+            setIsVoiceMessage(true)
+            const base = baseInputRef.current.trim()
+            const combined = base ? `${base} ${full}` : full
+            setInput(combined)
+            setTimeout(autoResize, 10)
+          }
         }
-      }
 
-      rec.onend = () => {
-        // Si el usuario no lo detuvo manualmente, reiniciar para mantener el micrófono abierto
-        if (recognitionRef.current === rec) {
-          try {
-            rec.start()
-          } catch {}
+        rec.onerror = (e: any) => {
+          console.warn('[STT] Web Speech API event:', e?.error)
         }
-      }
 
-      recognitionRef.current = rec
-      rec.start()
-      setIsRecording(true)
-    } catch (err: any) {
-      console.warn('SpeechRecognition start error:', err)
-      setVoiceError('No se pudo iniciar el micrófono. Por favor verifica los permisos.')
-      setIsRecording(false)
+        recognitionRef.current = rec
+        rec.start()
+      } catch (speechErr) {
+        console.warn('SpeechRecognition start failed:', speechErr)
+      }
     }
   }
 
-  const stopVoiceInput = () => {
+  const stopVoiceInput = async () => {
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current)
       recordingTimerRef.current = null
@@ -1054,8 +1080,55 @@ export default function Chat() {
     }
 
     setIsRecording(false)
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      const recorder = mediaRecorderRef.current
+      await new Promise<void>((resolve) => {
+        recorder.onstop = () => resolve()
+        try { recorder.stop() } catch { resolve() }
+      })
+    }
+    mediaRecorderRef.current = null
+    stopAllMediaTracks()
+
     setLiveTranscript('')
     liveTranscriptRef.current = ''
+
+    // Si Web Speech API ya escribió texto en el input, terminamos de inmediato
+    if (hasSpokenRef.current) {
+      setIsVoiceMessage(true)
+      setTimeout(() => {
+        autoResize()
+        textareaRef.current?.focus()
+      }, 30)
+      return
+    }
+
+    // Si Web Speech API no capturó texto (bloqueado/sin soporte en el navegador), transcribir audio grabado con el backend
+    if (audioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+      if (audioBlob.size > 500) {
+        setIsTranscribing(true)
+        try {
+          const res = await api.chat.stt(audioBlob)
+          if (res.text && res.text.trim()) {
+            setIsVoiceMessage(true)
+            const transcribed = res.text.trim()
+            const base = baseInputRef.current.trim()
+            setInput(base ? `${base} ${transcribed}` : transcribed)
+            setTimeout(() => {
+              autoResize()
+              textareaRef.current?.focus()
+            }, 30)
+          }
+        } catch (sttErr) {
+          console.warn('STT API error:', sttErr)
+        } finally {
+          setIsTranscribing(false)
+        }
+      }
+    }
+
     setIsVoiceMessage(true)
     setTimeout(() => {
       autoResize()
