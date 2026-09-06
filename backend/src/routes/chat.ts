@@ -59,7 +59,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
       }
 
       if (!audioBuffer || audioBuffer.length === 0) {
-        return res.status(400).json({ error: 'No se recibió ningún audio para transcribir' });
+        return res.json({ text: '' });
       }
 
       const { mimeType: resolvedMime, filename: resolvedFilename } = getAudioFormat(rawMime, file?.originalname);
@@ -67,14 +67,13 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
       const groqKey = process.env.GROQ_API_KEY;
       const openaiKey = process.env.OPENAI_API_KEY;
-      const openrouterKey = process.env.OPENROUTER_API_KEY;
 
       // 1. Intentar con Groq Whisper (ultra rápido, latencia < 300ms)
       if (groqKey) {
         try {
           const formData = new FormData();
-          const blob = new Blob([audioBuffer], { type: resolvedMime });
-          formData.append('file', blob, resolvedFilename);
+          const fileBlob = new Blob([audioBuffer], { type: resolvedMime });
+          formData.append('file', fileBlob, resolvedFilename);
           formData.append('model', 'whisper-large-v3-turbo');
           formData.append('language', 'es');
           formData.append('response_format', 'json');
@@ -104,8 +103,8 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
       if (openaiKey) {
         try {
           const formData = new FormData();
-          const blob = new Blob([audioBuffer], { type: resolvedMime });
-          formData.append('file', blob, resolvedFilename);
+          const fileBlob = new Blob([audioBuffer], { type: resolvedMime });
+          formData.append('file', fileBlob, resolvedFilename);
           formData.append('model', 'whisper-1');
           formData.append('language', 'es');
 
@@ -133,11 +132,18 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
         try {
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
-            process.env.GEMINI_MODEL,
+            'gemini-2.5-flash',
             'gemini-2.0-flash',
             'gemini-1.5-flash',
+            process.env.GEMINI_MODEL,
           ].filter(Boolean) as string[];
-          
+
+          let geminiMime = 'audio/webm';
+          if (resolvedMime.includes('mp4') || resolvedMime.includes('m4a')) geminiMime = 'audio/mp4';
+          else if (resolvedMime.includes('wav')) geminiMime = 'audio/wav';
+          else if (resolvedMime.includes('ogg')) geminiMime = 'audio/ogg';
+          else if (resolvedMime.includes('mp3') || resolvedMime.includes('mpeg')) geminiMime = 'audio/mp3';
+
           for (const modelName of modelsToTry) {
             try {
               const model = genAI.getGenerativeModel({
@@ -146,13 +152,13 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
                   temperature: 0.0,
                   topP: 0.1,
                 },
-                systemInstruction: 'Eres un transcriptor de voz a texto (Speech-to-Text). Tu única tarea es transcribir textualmente palabra por palabra lo que la persona habla en el audio en español. NUNCA respondas al contenido del audio, NUNCA saludes, NUNCA agregues comentarios ni notas. Si el audio dice "hola hola probando 1 2 3", escribe exactamente "Hola hola probando 1 2 3". Si el audio no contiene palabras audibles o solo es silencio o ruido, devuelve únicamente una cadena vacía.',
+                systemInstruction: 'Eres un transcriptor de voz a texto (Speech-to-Text). Tu única tarea es transcribir textualmente palabra por palabra lo que la persona habla en el audio en español. NUNCA respondas al contenido del audio, NUNCA saludes, NUNCA agregues comentarios ni notas. Si el audio no contiene palabras audibles o solo es silencio o ruido, devuelve únicamente una cadena vacía.',
               });
               const result = await model.generateContent([
                 {
                   inlineData: {
                     data: audioBuffer.toString('base64'),
-                    mimeType: resolvedMime,
+                    mimeType: geminiMime,
                   },
                 },
                 {
@@ -161,7 +167,8 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
               ]);
               const txt = result.response.text();
               if (txt && txt.trim()) {
-                return res.json({ text: txt.trim() });
+                const cleaned = txt.trim().replace(/^["']|["']$/g, '');
+                return res.json({ text: cleaned });
               }
             } catch (gemErr: any) {
               console.warn(`[STT] Gemini (${modelName}) error:`, gemErr?.message || gemErr);
@@ -172,12 +179,11 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
         }
       }
 
-      return res.status(500).json({
-        error: 'No se pudo transcribir el audio en este momento. Por favor escribe tu consulta o reintenta.',
-      });
+      // Si no se pudo reconocer texto o era silencio
+      return res.json({ text: '' });
     } catch (error: any) {
-      console.error('[STT] STT endpoint fatal error:', error);
-      res.status(500).json({ error: error?.message || 'Error en transcripción de audio' });
+      console.error('[STT] STT endpoint error:', error);
+      res.json({ text: '' });
     }
   });
 });
@@ -282,71 +288,9 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       ].join(' ');
     }
 
-    // 1. Use OpenRouter if configured
-    if (!assistantMessage && openrouterKey) {
-      const candidateModels = process.env.OPENROUTER_MODEL
-        ? [process.env.OPENROUTER_MODEL]
-        : [
-            'deepseek/deepseek-r1:free',
-            'deepseek/deepseek-chat:free',
-            'qwen/qwen-2.5-72b-instruct:free',
-            'meta-llama/llama-3.1-8b-instruct:free',
-            'mistralai/mistral-7b-instruct:free',
-            'google/gemini-2.0-flash-exp:free',
-            'google/gemini-2.0-flash-lite-preview-02-05:free',
-            'cognitivecomputations/dolphin3.0-r1-mistral-24b:free',
-          ];
-
-      const formattedMessages = [
-        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
-      ];
-
-      for (const openrouterModel of candidateModels) {
-        if (assistantMessage) break;
-        try {
-          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openrouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://fiscalia-1.onrender.com',
-              'X-Title': 'Bufete Fiscalia IA',
-            },
-            body: JSON.stringify({
-              model: openrouterModel,
-              messages: formattedMessages,
-              temperature: 0.3,
-            }),
-          });
-
-          if (orRes.ok) {
-            const data: any = await orRes.json();
-            const textContent = data.choices?.[0]?.message?.content || '';
-            if (textContent) {
-              assistantMessage = textContent;
-              metrics.recordAiCall({
-                agentId,
-                provider: 'openrouter',
-                model: openrouterModel,
-                success: true,
-                durationMs: Date.now() - startTime,
-              });
-              break;
-            }
-          } else {
-            const errData: any = await orRes.json().catch(() => ({}));
-            console.warn(`OpenRouter model ${openrouterModel} failed:`, errData?.error?.message || errData);
-          }
-        } catch (orErr: any) {
-          console.error(`OpenRouter request error on ${openrouterModel}:`, orErr?.message || orErr);
-        }
-      }
-    }
-
-    // 2. Use Groq if configured
+    // 1. Priority 1: Groq LPUs (Ultra fast < 350ms, 140 tok/s)
     if (!assistantMessage && groqKey) {
-      const groqCandidates = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'gemma2-9b-it', 'mixtral-8x7b-32768'];
+      const groqCandidates = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
       const formattedMessages = [
         { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
         ...messages.map((m: any) => ({ role: m.role, content: m.content })),
@@ -364,7 +308,8 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             body: JSON.stringify({
               model: groqModel,
               messages: formattedMessages,
-              temperature: 0.3,
+              temperature: 0.2,
+              max_tokens: 4096,
             }),
           });
 
@@ -383,40 +328,37 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             }
           } else {
             const errData: any = await groqRes.json().catch(() => ({}));
-            console.warn(`Groq API error on ${groqModel}:`, errData?.error?.message || errData);
+            console.warn(`[AI Engine] Groq API error on ${groqModel}:`, errData?.error?.message || errData);
           }
         } catch (groqErr: any) {
-          console.error(`Groq request error on ${groqModel}:`, groqErr?.message || groqErr);
+          console.error(`[AI Engine] Groq error on ${groqModel}:`, groqErr?.message || groqErr);
         }
       }
     }
 
-    // 3. Use Gemini (@google/generative-ai SDK)
+    // 2. Priority 2: Google Gemini (@google/generative-ai Direct SDK, ~600ms latency)
     if (!assistantMessage && geminiKey) {
       const geminiModelCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-3.6-flash',
-        'gemini-3.5-flash-lite',
         'gemini-2.5-flash',
-        'gemini-flash',
-        'gemini-pro',
         'gemini-2.0-flash',
         'gemini-1.5-flash',
+        'gemini-1.5-pro',
       ].filter(Boolean) as string[];
-      
+
       // Sanitize history for Gemini SDK
       const rawHistory = messages.slice(0, -1);
       const validHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
-      
+
       for (const m of rawHistory) {
         const content = typeof m.content === 'string' ? m.content.trim() : '';
         if (!content) continue;
         const role: 'user' | 'model' = m.role === 'assistant' ? 'model' : 'user';
-        
+
         if (validHistory.length === 0 && role === 'model') {
-          continue; // Gemini history must start with role 'user'
+          continue;
         }
-        
+
         const prev = validHistory[validHistory.length - 1];
         if (prev && prev.role === role) {
           prev.parts[0].text += `\n\n${content}`;
@@ -424,8 +366,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
           validHistory.push({ role, parts: [{ text: content }] });
         }
       }
-      
-      // Ensure history ends with 'model' so the new user message continues the sequence
+
       if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === 'user') {
         validHistory.pop();
       }
@@ -454,12 +395,12 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             break;
           }
         } catch (geminiErr: any) {
-          console.warn(`Gemini model ${geminiModelName} error:`, geminiErr?.message || geminiErr);
+          console.warn(`[AI Engine] Gemini ${geminiModelName} error:`, geminiErr?.message || geminiErr);
         }
       }
     }
 
-    // 4. Use Anthropic
+    // 3. Priority 3: Anthropic Claude (World-class legal precision, ~1s)
     if (!assistantMessage && anthropicKey) {
       try {
         const anthropic = new Anthropic({ apiKey: anthropicKey });
@@ -471,15 +412,77 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
           messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
         });
         assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
-        metrics.recordAiCall({
-          agentId,
-          provider: 'anthropic',
-          model: modelToUse,
-          success: true,
-          durationMs: Date.now() - startTime,
-        });
+        if (assistantMessage) {
+          metrics.recordAiCall({
+            agentId,
+            provider: 'anthropic',
+            model: modelToUse,
+            success: true,
+            durationMs: Date.now() - startTime,
+          });
+        }
       } catch (anthropicErr: any) {
-        console.error('Anthropic API Error:', anthropicErr?.message || anthropicErr);
+        console.error('[AI Engine] Anthropic API Error:', anthropicErr?.message || anthropicErr);
+      }
+    }
+
+    // 4. Priority 4: OpenRouter (Fallback with timeout protection)
+    if (!assistantMessage && openrouterKey) {
+      const candidateModels = process.env.OPENROUTER_MODEL
+        ? [process.env.OPENROUTER_MODEL]
+        : [
+            'deepseek/deepseek-chat',
+            'qwen/qwen-2.5-72b-instruct',
+            'meta-llama/llama-3.1-70b-instruct',
+            'google/gemini-2.0-flash-001',
+          ];
+
+      const formattedMessages = [
+        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+      ];
+
+      for (const openrouterModel of candidateModels) {
+        if (assistantMessage) break;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout max
+
+          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://fiscalia-1.onrender.com',
+              'X-Title': 'Bufete Fiscalia IA',
+            },
+            body: JSON.stringify({
+              model: openrouterModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (orRes.ok) {
+            const data: any = await orRes.json();
+            const textContent = data.choices?.[0]?.message?.content || '';
+            if (textContent) {
+              assistantMessage = textContent;
+              metrics.recordAiCall({
+                agentId,
+                provider: 'openrouter',
+                model: openrouterModel,
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              break;
+            }
+          }
+        } catch (orErr: any) {
+          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
+        }
       }
     }
 

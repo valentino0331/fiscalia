@@ -789,6 +789,8 @@ export default function Chat() {
   const liveTranscriptRef = useRef<string>('')
   const baseInputRef = useRef<string>('')
   const hasSpokenRef = useRef<boolean>(false)
+  const isRecordingRef = useRef<boolean>(false)
+  const finalTranscriptRef = useRef<string>('')
 
   useEffect(() => {
     if (!agent) navigate('/dashboard')
@@ -936,6 +938,7 @@ export default function Chat() {
   }
 
   const cancelVoiceInput = () => {
+    isRecordingRef.current = false
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current)
       recordingTimerRef.current = null
@@ -944,6 +947,7 @@ export default function Chat() {
       try {
         recognitionRef.current.onend = null
         recognitionRef.current.onerror = null
+        recognitionRef.current.onresult = null
         recognitionRef.current.stop()
       } catch {}
       recognitionRef.current = null
@@ -961,6 +965,7 @@ export default function Chat() {
     }
     setLiveTranscript('')
     liveTranscriptRef.current = ''
+    finalTranscriptRef.current = ''
   }
 
   const startVoiceInput = async () => {
@@ -969,8 +974,10 @@ export default function Chat() {
     setMicPermissionDenied(false)
     setLiveTranscript('')
     liveTranscriptRef.current = ''
+    finalTranscriptRef.current = ''
     hasSpokenRef.current = false
     baseInputRef.current = input
+    isRecordingRef.current = true
 
     let stream: MediaStream | null = null
     try {
@@ -981,6 +988,7 @@ export default function Chat() {
       mediaStreamRef.current = stream
     } catch (err: any) {
       console.warn('Mic permission error:', err)
+      isRecordingRef.current = false
       setMicPermissionDenied(true)
       setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador.')
       return
@@ -1017,7 +1025,7 @@ export default function Chat() {
       }
     }
 
-    // Intentar Web Speech API para dictado en tiempo real
+    // Reconocimiento de voz en tiempo real con Web Speech API
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
       try {
@@ -1029,31 +1037,41 @@ export default function Chat() {
         rec.maxAlternatives = 1
 
         rec.onresult = (event: any) => {
-          let final = ''
           let interim = ''
-          for (let i = 0; i < event.results.length; i++) {
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
             const res = event.results[i]
             if (res && res[0]) {
               if (res.isFinal) {
-                final += res[0].transcript + ' '
+                finalTranscriptRef.current += res[0].transcript + ' '
               } else {
                 interim += res[0].transcript
               }
             }
           }
-          const full = (final + interim).trim()
+          const full = (finalTranscriptRef.current + interim).trim()
           if (full) {
             hasSpokenRef.current = true
             setIsVoiceMessage(true)
-            const base = baseInputRef.current.trim()
-            const combined = base ? `${base} ${full}` : full
-            setInput(combined)
+            const base = baseInputRef.current ? baseInputRef.current.trim() : ''
+            setInput(base ? `${base} ${full}` : full)
             setTimeout(autoResize, 10)
           }
         }
 
+        rec.onend = () => {
+          // Auto-reiniciar si el usuario sigue grabando (evita que el navegador corte tras 1 seg de silencio)
+          if (isRecordingRef.current && recognitionRef.current) {
+            try {
+              recognitionRef.current.start()
+            } catch {}
+          }
+        }
+
         rec.onerror = (e: any) => {
-          console.warn('[STT] Web Speech API event:', e?.error)
+          if (e?.error === 'not-allowed') {
+            setMicPermissionDenied(true)
+            setVoiceError('Permiso de micrófono no concedido.')
+          }
         }
 
         recognitionRef.current = rec
@@ -1065,6 +1083,7 @@ export default function Chat() {
   }
 
   const stopVoiceInput = async () => {
+    isRecordingRef.current = false
     if (recordingTimerRef.current) {
       clearInterval(recordingTimerRef.current)
       recordingTimerRef.current = null
@@ -1111,10 +1130,10 @@ export default function Chat() {
         setIsTranscribing(true)
         try {
           const res = await api.chat.stt(audioBlob)
-          if (res.text && res.text.trim()) {
+          if (res?.text && res.text.trim()) {
             setIsVoiceMessage(true)
             const transcribed = res.text.trim()
-            const base = baseInputRef.current.trim()
+            const base = baseInputRef.current ? baseInputRef.current.trim() : ''
             setInput(base ? `${base} ${transcribed}` : transcribed)
             setTimeout(() => {
               autoResize()

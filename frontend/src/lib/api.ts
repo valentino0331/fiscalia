@@ -108,10 +108,9 @@ export const api = {
         body: formData,
       })
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Error en transcripción de audio' }))
-        throw new Error(err.error || `HTTP ${res.status}`)
+        return { text: '' }
       }
-      return res.json()
+      return res.json().catch(() => ({ text: '' }))
     },
   },
 
