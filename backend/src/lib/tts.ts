@@ -64,8 +64,30 @@ function enrichTextForSpeech(text: string): string {
   t = t.replace(/\bvs\.?\s+/gi, 'versus ');
   t = t.replace(/\bpág\.\s*(\d+)/gi, 'página $1');
   t = t.replace(/\bpágs\.\s*(\d+)/gi, 'páginas $1');
-  t = t.replace(/\bNCPP\b/g, 'Nuevo Código Procesal Penal');
   t = t.replace(/\bTUO\b/g, 'Texto Único Ordenado');
+
+  // Expansión fonética de siglas e instituciones jurídicas peruanas
+  t = t.replace(/\bS\/\.?\s*(\d+(?:,\d+)*(?:\.\d+)?)/gi, '$1 soles');
+  t = t.replace(/\bUIT\b/g, 'U-I-T');
+  t = t.replace(/\bURP\b/g, 'U-R-P');
+  t = t.replace(/\bNCPP\b/gi, 'Nuevo Código Procesal Penal');
+  t = t.replace(/\bCPP\b/gi, 'Código Procesal Penal');
+  t = t.replace(/\bCPC\b/gi, 'Código Procesal Civil');
+  t = t.replace(/\bLPAG\b/gi, 'Ley del Procedimiento Administrativo General');
+  t = t.replace(/\bNLPT\b/gi, 'Nueva Ley Procesal del Trabajo');
+  t = t.replace(/\bLPCL\b/gi, 'Ley de Productividad y Competitividad Laboral');
+  t = t.replace(/\bSUNAFIL\b/gi, 'Sunafil');
+  t = t.replace(/\bINGEMMET\b/gi, 'Ingemmet');
+  t = t.replace(/\bOEFA\b/gi, 'Oefa');
+  t = t.replace(/\bSUNAT\b/gi, 'Sunat');
+  t = t.replace(/\bOSIPTEL\b/gi, 'Osiptel');
+  t = t.replace(/\bOSINERGMIN\b/gi, 'Osinergmin');
+  t = t.replace(/\bOECE\b/gi, 'Organismo Especializado de Contrataciones Eficientes');
+  t = t.replace(/\bTCP\b/gi, 'Tribunal de Contrataciones Públicas');
+  t = t.replace(/\bJPRD\b/gi, 'Junta de Prevención y Resolución de Disputas');
+  t = t.replace(/\bREINFO\b/gi, 'Reinfo');
+  t = t.replace(/\bDEMUNA\b/gi, 'Demuna');
+  t = t.replace(/\bJPLL\b/gi, 'Juzgado de Paz Letrado Laboral');
 
   // 5. Garantizar signos de interrogación en español para que module la curva de pregunta
   // Si hay una pregunta cerrada con '?' sin '¿' al inicio de la frase, la normalizamos
