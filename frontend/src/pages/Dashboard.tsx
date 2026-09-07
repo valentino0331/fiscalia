@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, Search, X, Shield, MessageSquare, Clock, FileText, Trash2, Star,
-  Sparkles, Calculator, Baby, Briefcase, Home, ShieldAlert, CreditCard, ShoppingBag, MapPin, ChevronRight
+  Sparkles, Calculator, Baby, Briefcase, Home, ShieldAlert, CreditCard, ShoppingBag, MapPin, ChevronRight,
+  Edit2, Check
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { AGENTS, getAgent } from '@/lib/agents'
@@ -15,6 +16,7 @@ import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
+import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 
 const CATEGORIES = [
   { id: 'all', label: 'Todos' },
@@ -56,8 +58,33 @@ export default function Dashboard() {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [convCount, setConvCount] = useState(0)
   const [historySearch, setHistorySearch] = useState('')
+  const [consultationsSearch, setConsultationsSearch] = useState('')
+  const [editingConvId, setEditingConvId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
   const [savedMessages, setSavedMessages] = useState<{ id: string; agentId: string; agentName: string; content: string; createdAt: string }[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
+
+  const handleStartRename = (conv: Conversation, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingConvId(conv.id)
+    setEditingTitle(conv.title)
+  }
+
+  const handleSaveRename = async (id: string, e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    if (!editingTitle.trim()) {
+      setEditingConvId(null)
+      return
+    }
+    try {
+      const updated = await api.conversations.updateTitle(id, editingTitle.trim())
+      setConversations((prev) => prev.map((c) => c.id === id ? { ...c, title: updated.title } : c))
+    } catch (err) {
+      console.error('Error updating title:', err)
+    } finally {
+      setEditingConvId(null)
+    }
+  }
 
   // Citizen Modals State
   const [scannerOpen, setScannerOpen] = useState(false)
@@ -157,6 +184,8 @@ export default function Dashboard() {
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 justify-end flex-shrink-0">
+          <UsageCounterBadge />
+
           <button onClick={() => navigate('/account')} className="flex items-center gap-2">
             <div
               className="w-[36px] h-[36px] rounded-full flex items-center justify-center text-[11px] font-semibold"
@@ -607,7 +636,7 @@ export default function Dashboard() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                <div className="flex items-center justify-between mb-5">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-[11px] font-bold uppercase" style={{ letterSpacing: '3.5px', color: 'rgba(255,255,255,0.30)' }}>
                     MIS CONSULTAS
                   </h2>
@@ -615,6 +644,27 @@ export default function Dashboard() {
                     {conversations.length} consulta{conversations.length !== 1 ? 's' : ''}
                   </span>
                 </div>
+
+                {conversations.length > 0 && (
+                  <div className="relative mb-4">
+                    <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'rgba(255,255,255,0.30)' }} />
+                    <input
+                      type="text"
+                      value={consultationsSearch}
+                      onChange={(e) => setConsultationsSearch(e.target.value)}
+                      placeholder="Buscar consulta (ej: Cliente Pérez, Exp. 042-2026)..."
+                      className="w-full h-8 pl-8 pr-3 rounded-lg text-[11px] font-light outline-none"
+                      style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#ffffff', caretColor: '#c9a84c' }}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.40)' }}
+                      onBlur={(e) => { e.currentTarget.style.borderColor = '#2a2a2a' }}
+                    />
+                    {consultationsSearch && (
+                      <button onClick={() => setConsultationsSearch('')} className="absolute right-2 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.30)' }}>
+                        <X size={11} />
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {conversations.length === 0 ? (
                   <div className="text-center py-16 rounded-xl max-w-md mx-auto p-8" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
@@ -635,7 +685,9 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {conversations.map((conv) => {
+                    {conversations
+                      .filter((c) => !consultationsSearch || c.title?.toLowerCase().includes(consultationsSearch.toLowerCase()) || getAgent(c.agentId)?.name.toLowerCase().includes(consultationsSearch.toLowerCase()))
+                      .map((conv) => {
                       const agent = getAgent(conv.agentId)
                       return (
                         <div
@@ -658,7 +710,48 @@ export default function Dashboard() {
                             </div>
                           )}
                           <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-normal text-white truncate">{conv.title}</p>
+                            {editingConvId === conv.id ? (
+                              <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="text"
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSaveRename(conv.id, e)
+                                    if (e.key === 'Escape') setEditingConvId(null)
+                                  }}
+                                  autoFocus
+                                  className="px-2 py-1 rounded bg-[#222] border border-[#c9a84c] text-white text-xs w-full focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleSaveRename(conv.id, e)}
+                                  className="p-1 rounded bg-[#c9a84c] text-black hover:bg-[#dfbc5e]"
+                                  title="Guardar"
+                                >
+                                  <Check size={13} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setEditingConvId(null) }}
+                                  className="p-1 rounded text-white/50 hover:text-white"
+                                  title="Cancelar"
+                                >
+                                  <X size={13} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2 group/title">
+                                <p className="text-[13px] font-normal text-white truncate">{conv.title}</p>
+                                <button
+                                  onClick={(e) => handleStartRename(conv, e)}
+                                  className="opacity-0 group-hover:opacity-100 hover:text-[#c9a84c] text-white/40 p-1 rounded transition-opacity"
+                                  title="Renombrar (ej: Cliente Pérez / Exp. 042-2026)"
+                                >
+                                  <Edit2 size={12} />
+                                </button>
+                              </div>
+                            )}
                             <p className="text-[10px] font-light mt-0.5" style={{ color: 'rgba(255,255,255,0.40)' }}>
                               {agent?.name} · {agent?.role} · {formatDate(conv.updatedAt)}
                             </p>
@@ -713,7 +806,7 @@ export default function Dashboard() {
                       type="text"
                       value={historySearch}
                       onChange={(e) => setHistorySearch(e.target.value)}
-                      placeholder="Buscar en historial..."
+                      placeholder="Buscar en historial (cliente, expediente, especialista)..."
                       className="w-full h-8 pl-8 pr-3 rounded-lg text-[11px] font-light outline-none"
                       style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', color: '#ffffff', caretColor: '#c9a84c' }}
                       onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(201,168,76,0.40)' }}
@@ -748,7 +841,7 @@ export default function Dashboard() {
                           <div
                             key={conv.id}
                             onClick={() => navigate(`/chat/${conv.agentId}?conv=${conv.id}`)}
-                            className="flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200 border border-white/5 bg-[#171717] hover:bg-[#1f1f1f] hover:border-[#c9a84c]/30"
+                            className="group flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200 border border-white/5 bg-[#171717] hover:bg-[#1f1f1f] hover:border-[#c9a84c]/30"
                           >
                             {agent && (
                               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mt-0.5" style={{ border: '1px solid rgba(201,168,76,0.30)' }}>
@@ -774,11 +867,63 @@ export default function Dashboard() {
                                   {formatDate(conv.updatedAt)}
                                 </span>
                               </div>
-                              <p className="text-[12px] font-light text-white line-clamp-2 leading-relaxed" title={conv.title}>
-                                {conv.title}
-                              </p>
+                              {editingConvId === conv.id ? (
+                                <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>
+                                  <input
+                                    type="text"
+                                    value={editingTitle}
+                                    onChange={(e) => setEditingTitle(e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') handleSaveRename(conv.id, e)
+                                      if (e.key === 'Escape') setEditingConvId(null)
+                                    }}
+                                    autoFocus
+                                    className="px-2 py-1 rounded bg-[#222] border border-[#c9a84c] text-white text-xs w-full focus:outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={(e) => handleSaveRename(conv.id, e)}
+                                    className="p-1 rounded bg-[#c9a84c] text-black hover:bg-[#dfbc5e]"
+                                    title="Guardar"
+                                  >
+                                    <Check size={13} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); setEditingConvId(null) }}
+                                    className="p-1 rounded text-white/50 hover:text-white"
+                                    title="Cancelar"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-2 group/title">
+                                  <p className="text-[12px] font-light text-white line-clamp-2 leading-relaxed" title={conv.title}>
+                                    {conv.title}
+                                  </p>
+                                  <button
+                                    onClick={(e) => handleStartRename(conv, e)}
+                                    className="opacity-0 group-hover:opacity-100 hover:text-[#c9a84c] text-white/40 p-1 rounded transition-opacity"
+                                    title="Renombrar (ej: Cliente Pérez / Exp. 042-2026)"
+                                  >
+                                    <Edit2 size={12} />
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                            <ArrowRight size={14} className="text-white/20 mt-2 flex-shrink-0" />
+                            <div className="flex items-center gap-2 mt-1">
+                              <button
+                                onClick={(e) => deleteConversation(conv.id, e)}
+                                className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg transition-all"
+                                style={{ color: 'rgba(255,255,255,0.30)' }}
+                                onMouseEnter={(e) => { e.currentTarget.style.color = '#ff6464'; e.currentTarget.style.background = 'rgba(255,100,100,0.10)' }}
+                                onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.30)'; e.currentTarget.style.background = 'transparent' }}
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                              <ArrowRight size={14} className="text-white/20 flex-shrink-0" />
+                            </div>
                           </div>
                         )
                       })}

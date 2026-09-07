@@ -12,7 +12,7 @@ import {
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
-  Scale, Shield, Gavel, Building2, type LucideIcon
+  Scale, Shield, Gavel, Building2, Search, Edit2, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -27,6 +27,7 @@ import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
+import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 
 const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
   sebastian: [
@@ -149,6 +150,24 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
   ],
   sebastian: [
     {
+      label: 'Recurso de Apelación contra Auto de Prisión Preventiva (Art. 278 NCPP / Plazo 3 días)',
+      icon: Scale,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta un recurso formal de apelación contra el auto que declaró fundada la prisión preventiva, conforme al Art. 278 numeral 1 del NCPP (plazo de 3 días) y D. Leg. 1585. Debe contener: Fundamentos de hecho y derecho, agravio producido, cuestionamiento de graves y fundados elementos de convicción, prognosis de pena, acreditación de arraigo familiar/laboral/domiciliario de calidad, ausencia de peligro de fuga y obstaculización, y pretensión concreta de revocatoria e imposición de comparecencia con restricciones. Incluye Otrosí Digo de Casilla SINOE y facultades Arts. 74 y 80 CPC.',
+    },
+    {
+      label: 'Excepción de Improcedencia de Acción (Art. 6.1.b NCPP)',
+      icon: Shield,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta un escrito de excepción de improcedencia de acción deducida al amparo del Art. 6 numeral 1 literal b del NCPP. Fundamenta que el hecho denunciado no constituye delito (atipicidad absoluta o relativa) o no es justiciable penalmente, analizando los elementos objetivos y subjetivos del tipo penal imputado y solicitando el sobreseimiento definitivo. Incluye Otrosí Digo legal.',
+    },
+    {
+      label: 'Recurso de Casación Penal Extraordinaria (Arts. 427 y 429 NCPP)',
+      icon: Gavel,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta un recurso de casación excepcional/extraordinaria conforme a los Arts. 427 numeral 4 y 429 causales 1, 3 y 4 del NCPP ante la Sala Penal de la Corte Suprema, justificando el interés casacional para el desarrollo de la doctrina jurisprudencial, quebrantamiento de precepto constitucional y falta de motivación lógica. Incluye Otrosí Digo.',
+    },
+    {
       label: 'Recurso de Oposición a Prisión Preventiva (DL 1585 / NCPP)',
       icon: Shield,
       badgeColor: '#EF4444',
@@ -174,6 +193,24 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
     },
   ],
   diego: [
+    {
+      label: 'Recurso de Apelación contra Sentencia Civil (Arts. 364 y 366 CPC)',
+      icon: Scale,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta un recurso formal de apelación contra sentencia civil de primera instancia al amparo de los Arts. 364 y 366 del Código Procesal Civil. Fundamenta el error de hecho y de derecho en que incurrió el juzgador, la naturaleza del agravio sufrido, la inadecuada valoración probatoria y el sustento de la pretensión impugnatoria solicitando su revocatoria o nulidad total. Incluye los tres Otrosí Digo de rigor (Casilla SINOE, física y Arts. 74/80 CPC).',
+    },
+    {
+      label: 'Demanda de Desalojo por Allanamiento Futuro (Art. 594 CPC / Ley 30201)',
+      icon: Home,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una demanda judicial completa de desalojo por vencimiento de contrato / falta de pago al amparo del Art. 594 del Código Procesal Civil modificado por la Ley 30201 (cláusula de allanamiento futuro ante notario). Cumple con los Arts. 424 y 425 CPC, medios probatorios, apercibimiento de lanzamiento en 15 días y los Otrosí Digo legales.',
+    },
+    {
+      label: 'Medida Cautelar de Embargo en Forma de Retención (Art. 657 CPC)',
+      icon: Shield,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una solicitud de medida cautelar de embargo en forma de retención sobre cuentas bancarias y fondos del demandado ante el Juez Especializado en lo Civil / Paz Letrado conforme al Art. 657 del Código Procesal Civil. Fundamenta la verosimilitud del derecho (fumus boni iuris), peligro en la demora (periculum in mora), razonabilidad de la medida y contracautela en forma de caución juratoria. Incluye Otrosí Digo.',
+    },
     {
       label: 'Contrato de Alquiler con Desalojo Notarial Express (Ley 30933)',
       icon: Home,
@@ -775,6 +812,32 @@ export default function Chat() {
   const [searchParams] = useSearchParams()
   const [templatesOpen, setTemplatesOpen] = useState(false)
   const templatesRef = useRef<HTMLDivElement>(null)
+
+  const [convSearch, setConvSearch] = useState('')
+  const [editingConvId, setEditingConvId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState('')
+
+  const handleStartRename = (conv: Conversation, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditingConvId(conv.id)
+    setEditingTitle(conv.title)
+  }
+
+  const handleSaveRename = async (id: string, e?: React.FormEvent | React.MouseEvent) => {
+    if (e) e.stopPropagation()
+    if (!editingTitle.trim()) {
+      setEditingConvId(null)
+      return
+    }
+    try {
+      const updated = await api.conversations.updateTitle(id, editingTitle.trim())
+      setConversations((prev) => prev.map((c) => c.id === id ? { ...c, title: updated.title } : c))
+    } catch (err) {
+      console.error('Error updating title:', err)
+    } finally {
+      setEditingConvId(null)
+    }
+  }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -1437,31 +1500,7 @@ export default function Chat() {
 
         {/* Right: controls */}
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
-          {isLimited && (
-            <div
-              className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1 md:py-1.5 rounded-lg"
-              style={{ background: 'rgba(201,168,76,0.08)', border: '1px solid rgba(201,168,76,0.15)' }}
-            >
-              {/* Bars — desktop only */}
-              <div className="hidden sm:flex gap-0.5">
-                {Array.from({ length: usage!.limit! }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-4 rounded-sm"
-                    style={{
-                      background: i < usage!.questionsUsed
-                        ? (usage!.questionsUsed >= usage!.limit! ? '#ff6464' : '#c9a84c')
-                        : 'rgba(255,255,255,0.10)',
-                    }}
-                  />
-                ))}
-              </div>
-              <span className="text-[9px] font-semibold" style={{ color: usage!.questionsUsed >= usage!.limit! ? '#ff6464' : '#c9a84c' }}>
-                {usage!.questionsUsed}/{usage!.limit!}
-              </span>
-            </div>
-          )}
-
+          <UsageCounterBadge />
 
           {conversationId && (
             <button
@@ -1536,7 +1575,7 @@ export default function Chat() {
           className={`fixed md:static top-14 bottom-0 left-0 z-40 md:z-auto w-[84vw] max-w-[280px] md:w-[220px] flex-shrink-0 flex flex-col overflow-hidden h-[calc(100vh-56px)] md:h-full border-r transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
           style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}
         >
-          <div className="flex items-center justify-between px-4 py-3.5 border-b" style={{ borderColor: '#2a2a2a' }}>
+          <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: '#2a2a2a' }}>
             <span
               className="text-[7px] font-bold uppercase"
               style={{ letterSpacing: '3px', color: 'rgba(255,255,255,0.30)' }}
@@ -1554,6 +1593,20 @@ export default function Chat() {
             >
               + Nueva
             </button>
+          </div>
+
+          {/* Quick Search */}
+          <div className="px-3 py-2 border-b" style={{ borderColor: '#262626' }}>
+            <div className="relative">
+              <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/30" />
+              <input
+                type="text"
+                value={convSearch}
+                onChange={(e) => setConvSearch(e.target.value)}
+                placeholder="Buscar (cliente, exp)..."
+                className="w-full h-7 pl-7 pr-2 rounded text-[10px] bg-[#141414] border border-[#2a2a2a] text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c]"
+              />
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 py-3 space-y-1">
@@ -1576,7 +1629,9 @@ export default function Chat() {
                 </p>
               </div>
             ) : (
-              conversations.map((conv) => {
+              conversations
+                .filter((c) => !convSearch || c.title?.toLowerCase().includes(convSearch.toLowerCase()))
+                .map((conv) => {
                 const isCurrent = conversationId === conv.id
                 return (
                   <div
@@ -1604,16 +1659,59 @@ export default function Chat() {
                           {agent.badge}
                         </span>
                       </div>
-                      <p
-                        className="text-[11px] leading-tight line-clamp-2"
-                        style={{
-                          fontWeight: isCurrent ? 500 : 300,
-                          color: isCurrent ? '#ffffff' : 'rgba(255,255,255,0.70)',
-                        }}
-                        title={conv.title}
-                      >
-                        {conv.title}
-                      </p>
+
+                      {editingConvId === conv.id ? (
+                        <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="text"
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveRename(conv.id, e)
+                              if (e.key === 'Escape') setEditingConvId(null)
+                            }}
+                            autoFocus
+                            className="px-1.5 py-0.5 rounded bg-[#111] border border-[#c9a84c] text-white text-[11px] w-full focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => handleSaveRename(conv.id, e)}
+                            className="p-1 rounded bg-[#c9a84c] text-black hover:bg-[#dfbc5e]"
+                            title="Guardar"
+                          >
+                            <Check size={11} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setEditingConvId(null) }}
+                            className="p-1 rounded text-white/50 hover:text-white"
+                            title="Cancelar"
+                          >
+                            <X size={11} />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1">
+                          <p
+                            className="text-[11px] leading-tight line-clamp-2 flex-1"
+                            style={{
+                              fontWeight: isCurrent ? 500 : 300,
+                              color: isCurrent ? '#ffffff' : 'rgba(255,255,255,0.70)',
+                            }}
+                            title={conv.title}
+                          >
+                            {conv.title}
+                          </p>
+                          <button
+                            onClick={(e) => handleStartRename(conv, e)}
+                            className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-[#c9a84c] text-white/30 transition-opacity"
+                            title="Renombrar (ej: Cliente Pérez / Exp. 042-2026)"
+                          >
+                            <Edit2 size={10} />
+                          </button>
+                        </div>
+                      )}
+
                       <p className="text-[9px] mt-1" style={{ color: 'rgba(255,255,255,0.30)' }}>
                         {formatDate(conv.updatedAt)}
                       </p>

@@ -27,6 +27,30 @@ conversationsRouter.get('/:id', requireAuth, async (req: any, res) => {
   res.json(conv);
 });
 
+conversationsRouter.patch('/:id', requireAuth, async (req: any, res) => {
+  const { title } = req.body;
+  if (!title || typeof title !== 'string') {
+    return res.status(400).json({ error: 'Título requerido' });
+  }
+
+  const updated = await db
+    .update(conversations)
+    .set({ title: title.trim(), updatedAt: new Date() })
+    .where(
+      and(
+        eq(conversations.id, req.params.id),
+        eq(conversations.userId, req.userId)
+      )
+    )
+    .returning({ id: conversations.id, title: conversations.title, updatedAt: conversations.updatedAt });
+
+  if (!updated || updated.length === 0) {
+    return res.status(404).json({ error: 'Conversación no encontrada' });
+  }
+
+  res.json(updated[0]);
+});
+
 conversationsRouter.delete('/:id', requireAuth, async (req: any, res) => {
   await db
     .delete(conversations)

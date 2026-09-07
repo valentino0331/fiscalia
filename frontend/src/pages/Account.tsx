@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft, LogOut, User, CheckCircle2,
-  Shield, Zap, Award
+  Shield, Zap, Award, Building2, Check
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
@@ -24,6 +24,11 @@ export default function Account() {
   const [data, setData] = useState<AccountData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const [firmName, setFirmName] = useState('')
+  const [attorneyInfo, setAttorneyInfo] = useState('')
+  const [contactInfo, setContactInfo] = useState('')
+  const [savedLetterheadMsg, setSavedLetterheadMsg] = useState(false)
+
   const cardRef = useRef<HTMLDivElement>(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [isHovered, setIsHovered] = useState(false)
@@ -42,7 +47,28 @@ export default function Account() {
       .then(setData)
       .catch(() => {})
       .finally(() => setLoading(false))
+
+    try {
+      const raw = localStorage.getItem('hardman_letterhead')
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed.firmName) setFirmName(parsed.firmName)
+        if (parsed.attorneyInfo) setAttorneyInfo(parsed.attorneyInfo)
+        if (parsed.contactInfo) setContactInfo(parsed.contactInfo)
+      }
+    } catch {
+      // ignore
+    }
   }, [])
+
+  const handleSaveLetterhead = () => {
+    localStorage.setItem(
+      'hardman_letterhead',
+      JSON.stringify({ firmName, attorneyInfo, contactInfo })
+    )
+    setSavedLetterheadMsg(true)
+    setTimeout(() => setSavedLetterheadMsg(false), 3000)
+  }
 
   const handleLogout = () => {
     logout()
@@ -320,6 +346,90 @@ export default function Account() {
                         <span>Generación judicial en Word (.docx)</span>
                       </li>
                     </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Membrete de Estudio Jurídico / Marca Blanca */}
+              <div
+                className="p-5 rounded-xl border space-y-4"
+                style={{ background: '#161616', borderColor: '#2a2a2a' }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 size={16} className="text-[#c9a84c]" />
+                    <h5 className="text-[11px] font-bold uppercase tracking-wider text-white">
+                      Membrete de mi Estudio Jurídico (Marca Blanca)
+                    </h5>
+                  </div>
+                  <span className="text-[9px] px-2 py-0.5 rounded bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/20 font-semibold">
+                    Word (.docx) & PDF
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/50 leading-relaxed">
+                  Personaliza los escritos y recursos que exportes a Microsoft Word (.docx) o imprimas a PDF. Este membrete aparecerá automáticamente en la cabecera de tus documentos.
+                </p>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                      Nombre del Estudio o Razón Social
+                    </label>
+                    <input
+                      type="text"
+                      value={firmName}
+                      onChange={(e) => setFirmName(e.target.value)}
+                      placeholder="Ej: ESTUDIO JURÍDICO VALDIVIA & ASOCIADOS"
+                      className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                      Abogado(s) y Registro Colegio de Abogados (CAL / CAJ / otros)
+                    </label>
+                    <input
+                      type="text"
+                      value={attorneyInfo}
+                      onChange={(e) => setAttorneyInfo(e.target.value)}
+                      placeholder="Ej: Dr. Carlos Valdivia R. — Reg. C.A.L. N° 45892"
+                      className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                      Datos de Contacto, Dirección y Casilla SINOE
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={contactInfo}
+                      onChange={(e) => setContactInfo(e.target.value)}
+                      placeholder="Ej: Av. Nicolás de Piérola 1220 Of. 402, Cercado de Lima | Cel: 929 727 274&#10;Casilla Electrónica SINOE N° 18452 | contacto@estudiovaldivia.pe"
+                      className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors resize-none"
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[10px] text-white/40">
+                      {savedLetterheadMsg && (
+                        <span className="text-emerald-400 font-medium flex items-center gap-1">
+                          <Check size={12} /> ¡Membrete guardado con éxito!
+                        </span>
+                      )}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleSaveLetterhead}
+                      className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                      style={{
+                        background: '#c9a84c',
+                        color: '#111',
+                      }}
+                    >
+                      <Check size={13} />
+                      Guardar Membrete
+                    </button>
                   </div>
                 </div>
               </div>

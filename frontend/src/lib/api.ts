@@ -129,6 +129,11 @@ export const api = {
       }>(`/conversations/${id}`),
     delete: (id: string) =>
       request<{ success: boolean }>(`/conversations/${id}`, { method: 'DELETE' }),
+    updateTitle: (id: string, title: string) =>
+      request<{ id: string; title: string }>(`/conversations/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ title }),
+      }),
     share: (id: string) =>
       request<{ token: string }>(`/conversations/${id}/share`, { method: 'POST' }),
     getShared: (token: string) =>

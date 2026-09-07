@@ -212,7 +212,7 @@ function classifyLine(line: string): LineKind {
   if (/^[IVXLCDM]+\.\s+[A-ZÁÉÍÓÚÑ].{2,}/i.test(plain)) return 'SECTION_ROMAN'
 
   // Secciones texto: PRIMERO, SEGUNDO, POR TANTO, OTROSI...
-  if (/^(PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|S[EÉ]PTIMO|OCTAVO|NOVENO|D[EÉ]CIMO|POR\s+TANTO|OTROSI\s+DIGO|OTROSI|PETITORIO|FUNDAMENTOS?(\s+DE)?\s+(HECHO|DERECHO)|MEDIOS?\s+PROBATORIOS?|ANEXOS?|POR\s+LO\s+EXPUESTO)\s*:?\s*$/i.test(plain)) return 'SECTION_TEXT'
+  if (/^((PRIMER|SEGUNDO|TERCER|CUARTO|QUINTO|SEXTO)\s+)?OTROS[IÍ](\s+DIGO)?(\.-|\s*:|\s*-)/i.test(plain) || /^(PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|S[EÉ]PTIMO|OCTAVO|NOVENO|D[EÉ]CIMO|POR\s+TANTO|OTROSI\s+DIGO|OTROSI|PETITORIO|FUNDAMENTOS?(\s+DE)?\s+(HECHO|DERECHO)|MEDIOS?\s+PROBATORIOS?|ANEXOS?|POR\s+LO\s+EXPUESTO)\s*:?\s*$/i.test(plain)) return 'SECTION_TEXT'
 
   // Numeración de sección: 1. texto 2. texto
   if (/^\d{1,2}\.\s+[A-ZÁÉÍÓÚÑ].{3,}/.test(plain) && plain.length < 80) return 'SECTION_NUM'
@@ -432,6 +432,27 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
 }
 
 // ─── CONSTRUCTOR HTML OFICIAL PARA IMPRESIÓN Y PDF ────────────────────────────
+export interface LawFirmLetterhead {
+  firmName?: string
+  attorneyInfo?: string
+  contactInfo?: string
+}
+
+export function getSavedLetterhead(): LawFirmLetterhead | null {
+  try {
+    const raw = localStorage.getItem('hardman_letterhead')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (parsed.firmName || parsed.attorneyInfo || parsed.contactInfo) {
+        return parsed
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
 export function buildPrintHTML(
   title: string,
   content: string,
@@ -440,6 +461,21 @@ export function buildPrintHTML(
   const fmt = { ...DEFAULT_LEGAL_FORMAT, ...options } as Required<DocFormatOptions>
   const bodyHtml = renderDocHtmlBody(content)
   const css = buildDocCSS(fmt)
+  const letterhead = getSavedLetterhead()
+
+  let letterheadHtml = ''
+  if (letterhead) {
+    letterheadHtml = `
+    <div style="border-bottom: 2px solid #222; padding-bottom: 10px; margin-bottom: 18pt; display: flex; justify-content: space-between; align-items: flex-end;">
+      <div>
+        <div style="font-size: 13pt; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; color: #111;">${parseInlineMarkdownToHtml(letterhead.firmName || '')}</div>
+        <div style="font-size: 9.5pt; color: #444; margin-top: 3px;">${parseInlineMarkdownToHtml(letterhead.attorneyInfo || '')}</div>
+      </div>
+      <div style="font-size: 8.5pt; color: #555; text-align: right; line-height: 1.35;">
+        ${parseInlineMarkdownToHtml(letterhead.contactInfo || '').replace(/\n/g, '<br>')}
+      </div>
+    </div>`
+  }
 
   return `<!DOCTYPE html>
 <html lang="es">
@@ -453,6 +489,7 @@ export function buildPrintHTML(
   <button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF Oficial</button>
 </div>
 <div class="doc-container">
+${letterheadHtml}
 ${bodyHtml}
 </div>
 </body>
@@ -474,6 +511,69 @@ export async function downloadWordDoc(
     .split('\n')
 
   const docChildren: Paragraph[] = []
+
+  const letterhead = getSavedLetterhead()
+  if (letterhead) {
+    if (letterhead.firmName) {
+      docChildren.push(new Paragraph({
+        alignment: AlignmentType.LEFT,
+        spacing: { before: 0, after: 40, line: 240 },
+        children: [
+          new TextRun({
+            text: letterhead.firmName.toUpperCase(),
+            font: 'Times New Roman',
+            size: 24, // 12pt
+            bold: true,
+            color: '1A1A1A',
+          }),
+        ],
+      }))
+    }
+    if (letterhead.attorneyInfo) {
+      docChildren.push(new Paragraph({
+        alignment: AlignmentType.LEFT,
+        spacing: { before: 0, after: 40, line: 220 },
+        children: [
+          new TextRun({
+            text: letterhead.attorneyInfo,
+            font: 'Times New Roman',
+            size: 19, // 9.5pt
+            italics: true,
+            color: '444444',
+          }),
+        ],
+      }))
+    }
+    if (letterhead.contactInfo) {
+      const contactLines = letterhead.contactInfo.split('\n').map(c => c.trim()).filter(Boolean)
+      for (const cl of contactLines) {
+        docChildren.push(new Paragraph({
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 0, after: 30, line: 200 },
+          children: [
+            new TextRun({
+              text: cl,
+              font: 'Times New Roman',
+              size: 18, // 9pt
+              color: '555555',
+            }),
+          ],
+        }))
+      }
+    }
+    docChildren.push(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 40, after: 200, line: 200 },
+      children: [
+        new TextRun({
+          text: '____________________________________________________________________',
+          font: 'Times New Roman',
+          size: 18,
+          color: '333333',
+        }),
+      ],
+    }))
+  }
 
   // Agrupar líneas en párrafos lógicos (las líneas vacías son separadores)
   let paraBuffer: string[] = []
