@@ -46,11 +46,6 @@ filesRouter.post(
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'Archivo requerido' });
 
-      if (req.userPlan === 'normal' && !req.isAdmin && file.size > 5 * 1024 * 1024) {
-        return res.status(413).json({
-          error: 'Tu Plan Normal permite subir archivos de hasta 5MB. Para analizar expedientes judiciales completos o documentos de hasta 50MB, actualiza a Plan Pro.',
-        });
-      }
 
       const mime = resolveMime(file.mimetype, file.originalname);
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;

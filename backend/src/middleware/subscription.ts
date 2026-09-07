@@ -23,7 +23,7 @@ export const requireSubscription = async (
     ),
   });
 
-  // If user has no subscription record yet, grant trial
+  // If user has no subscription record yet, grant first month trial for founders
   if (!sub) {
     const existingSub = await db.query.subscriptions.findFirst({
       where: eq(subscriptions.userId, req.userId!),
@@ -36,60 +36,67 @@ export const requireSubscription = async (
           id: uuidv4(),
           userId: req.userId!,
           status: 'active',
-          plan: 'pro-trial',
+          plan: 'junior',
           currentPeriodEnd: periodEnd,
         });
         sub = {
           id: uuidv4(),
           userId: req.userId!,
           status: 'active',
-          plan: 'pro-trial',
+          plan: 'junior',
           hotmartTransaction: null,
           currentPeriodEnd: periodEnd,
           createdAt: new Date(),
           updatedAt: new Date(),
         };
       } catch (err) {
-        console.error('Error creating auto-trial subscription:', err);
+        console.error('Error creating founder-trial subscription:', err);
       }
     } else {
       return res.status(403).json({ error: 'Suscripción inactiva o expirada', code: 'NO_SUBSCRIPTION' });
     }
   }
 
-  req.userPlan = sub?.plan || 'normal';
+  const plan = sub?.plan || 'junior';
+  req.userPlan = plan;
 
-  // If on normal, trial or free tier, enforce respective question limit
-  const isNormal = sub?.plan === 'normal';
-  const isTrialOrFree = sub?.plan === 'pro-trial' || sub?.plan === 'free';
+  // Plan Junior (or legacy normal): 50 queries / user / month
+  // Plan Senior (or legacy pro): unlimited queries
+  const isJunior = plan === 'junior' || plan === 'normal';
 
-  if (isNormal || isTrialOrFree) {
-    const LIMIT = isNormal
-      ? parseInt(process.env.NORMAL_QUESTION_LIMIT || '25', 10)
-      : parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10);
+  if (isJunior) {
+    const LIMIT = parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10);
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     const userConversations = await db.query.conversations.findMany({
       where: eq(conversations.userId, req.userId!),
     });
 
-    let totalUserQuestions = 0;
+    let monthlyQuestions = 0;
     for (const conv of userConversations) {
       if (Array.isArray(conv.messages)) {
-        totalUserQuestions += conv.messages.filter((m: any) => m.role === 'user').length;
+        for (const m of conv.messages as any[]) {
+          if (m.role === 'user') {
+            const msgDate = m.timestamp ? new Date(m.timestamp) : null;
+            if (msgDate) {
+              if (msgDate >= startOfMonth) monthlyQuestions++;
+            } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
+              monthlyQuestions++;
+            }
+          }
+        }
       }
     }
 
-    if (totalUserQuestions >= LIMIT) {
-      const msg = isNormal
-        ? `Has alcanzado el límite de ${LIMIT} consultas mensuales de tu Plan Normal. Actualiza a Plan Pro para consultas ilimitadas y acceso a los 8 especialistas.`
-        : `Has alcanzado el límite de ${LIMIT} consultas gratuitas de prueba. Suscríbete a Plan Normal o Plan Pro para continuar consultando a los especialistas.`;
-
+    if (monthlyQuestions >= LIMIT) {
       return res.status(403).json({
-        error: msg,
+        error: `Has alcanzado el límite de ${LIMIT} consultas mensuales de tu Plan Junior. Actualiza a Plan Senior (S/ 69/mes) para consultas ilimitadas y soporte por WhatsApp prioritario.`,
         code: 'LIMIT_REACHED',
-        questionsUsed: totalUserQuestions,
+        questionsUsed: monthlyQuestions,
         limit: LIMIT,
-        plan: sub?.plan,
+        plan: 'junior',
       });
     }
   }

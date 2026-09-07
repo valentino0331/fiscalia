@@ -184,22 +184,22 @@ export default function Account() {
                     <span
                       className="px-2 py-0.5 rounded text-[8px] font-bold uppercase"
                       style={{
-                        background: (data?.subscription?.plan === 'normal' ? 'rgba(52,209,122,0.15)' : 'rgba(201,168,76,0.15)'),
-                        border: `1px solid ${data?.subscription?.plan === 'normal' ? 'rgba(52,209,122,0.35)' : 'rgba(201,168,76,0.35)'}`,
-                        color: data?.subscription?.plan === 'normal' ? '#34d17a' : '#c9a84c',
+                        background: (data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? 'rgba(52,209,122,0.15)' : 'rgba(201,168,76,0.15)'),
+                        border: `1px solid ${data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? 'rgba(52,209,122,0.35)' : 'rgba(201,168,76,0.35)'}`,
+                        color: data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? '#34d17a' : '#c9a84c',
                         letterSpacing: '1.5px',
                       }}
                     >
-                      {data?.subscription?.plan === 'normal' ? 'PLAN NORMAL' : 'PLAN PRO'}
+                      {data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? 'PLAN JUNIOR' : 'PLAN SENIOR'}
                     </span>
                   </div>
                   <h4 className="text-[15px] font-light text-white">
-                    {data?.subscription?.plan === 'normal' ? 'Membresía Ciudadana Estándar' : 'Membresía Jurídica Ilimitada'}
+                    {data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? 'Membresía Junior (S/ 39/mes)' : 'Membresía Senior Ilimitada (S/ 69/mes)'}
                   </h4>
                   <p className="text-[11px] font-light" style={{ color: 'rgba(255,255,255,0.40)' }}>
-                    {data?.subscription?.plan === 'normal'
-                      ? '25 consultas/mes y acceso a los 4 especialistas fundamentales.'
-                      : 'Consultas ilimitadas y acceso total a los 8 especialistas con exportación judicial Word.'}
+                    {data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal'
+                      ? '50 consultas mensuales con acceso a los 8 agentes especializados y subida de expedientes.'
+                      : 'Consultas ilimitadas con acceso a los 8 agentes especializados y soporte WhatsApp prioritario.'}
                   </p>
                 </div>
                 <div
@@ -217,91 +217,107 @@ export default function Account() {
               {/* Plans Comparison Grid */}
               <div className="space-y-3">
                 <h5 className="text-[9px] font-bold uppercase tracking-widest text-white/30">
-                  COMPARATIVA DE PLANES DE SUSCRIPCIÓN
+                  ESTRUCTURA DE PLANES HARDMAN
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* Plan Normal */}
+                  {/* Plan Junior */}
                   <div
                     className="p-4 rounded-xl border space-y-3 relative"
                     style={{
                       background: '#161616',
-                      borderColor: data?.subscription?.plan === 'normal' ? '#34d17a' : 'rgba(255,255,255,0.08)',
+                      borderColor: (data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal') ? '#34d17a' : 'rgba(255,255,255,0.08)',
                     }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#34d17a]">
-                        PLAN NORMAL
-                      </span>
-                      {data?.subscription?.plan === 'normal' && (
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#34d17a]">
+                          PLAN JUNIOR
+                        </span>
+                        <div className="text-lg font-bold text-white mt-0.5">
+                          S/ 39 <span className="text-[11px] font-normal text-white/50">/ mes</span>
+                        </div>
+                      </div>
+                      {(data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal') && (
                         <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
                           ACTUAL
                         </span>
                       )}
                     </div>
+                    <div className="inline-block px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold">
+                      🎁 1er mes gratis para fundadores
+                    </div>
                     <p className="text-[11px] text-white/50 leading-snug">
-                      Ideal para personas y ciudadanos que necesitan resolver trámites y consultas legales puntuales.
+                      Ideal para litigantes individuales y bachilleres que necesitan soporte legal automatizado.
                     </p>
                     <ul className="space-y-1.5 text-[11px] text-white/70">
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
-                        <span>25 consultas legales al mes</span>
+                        <span className="font-semibold text-white">50 consultas mensuales</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
-                        <span>4 Especialistas: Laboral, Penal, Civil y Familia</span>
+                        <span>8 agentes especializados (acceso total)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
-                        <span>Cartas notariales y modelos estándar</span>
+                        <span>Subida de documentos (PDF, expedientes)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
-                        <span>Carga de archivos hasta 5 MB</span>
+                        <span>Soporte por email</span>
                       </li>
                     </ul>
                   </div>
 
-                  {/* Plan Pro */}
+                  {/* Plan Senior */}
                   <div
                     className="p-4 rounded-xl border space-y-3 relative"
                     style={{
                       background: '#161616',
-                      borderColor: data?.subscription?.plan !== 'normal' ? '#c9a84c' : 'rgba(255,255,255,0.08)',
+                      borderColor: (data?.subscription?.plan !== 'junior' && data?.subscription?.plan !== 'normal') ? '#c9a84c' : 'rgba(255,255,255,0.08)',
                     }}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c]">
-                        PLAN PRO
-                      </span>
-                      {data?.subscription?.plan !== 'normal' && (
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c]">
+                          PLAN SENIOR
+                        </span>
+                        <div className="text-lg font-bold text-white mt-0.5">
+                          S/ 69 <span className="text-[11px] font-normal text-white/50">/ mes</span>
+                        </div>
+                      </div>
+                      {(data?.subscription?.plan !== 'junior' && data?.subscription?.plan !== 'normal') && (
                         <span className="text-[8px] bg-[#c9a84c]/20 text-[#c9a84c] font-bold px-2 py-0.5 rounded-full border border-[#c9a84c]/30">
                           ACTUAL
                         </span>
                       )}
                     </div>
+                    <div className="inline-block px-2 py-0.5 rounded bg-gold-500/10 border border-gold-500/20 text-[10px] text-gold-400 font-semibold">
+                      🎁 1er mes gratis para fundadores
+                    </div>
                     <p className="text-[11px] text-white/50 leading-snug">
-                      Para abogados, estudios y empresas con necesidad de análisis normativo continuo y redacción oficial.
+                      Para abogados litigantes y estudios que exigen máxima capacidad y atención directa.
                     </p>
                     <ul className="space-y-1.5 text-[11px] text-white/70">
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span className="font-semibold text-white">Consultas y análisis ilimitados</span>
+                        <span className="font-semibold text-white">Consultas ilimitadas</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span>Acceso a los 8 Especialistas (+Tributario, Minero, etc.)</span>
+                        <span>8 agentes especializados (acceso total)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span>Descarga directa en Word (.docx) y PDF judicial</span>
+                        <span>Subida de documentos (PDF, expedientes)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span>Voz Neural TTS y reconocimiento por voz</span>
+                        <span className="font-semibold text-white">Soporte por WhatsApp prioritario (929 727 274)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span>Expedientes y PDFs grandes hasta 50 MB</span>
+                        <span>Generación judicial en Word (.docx)</span>
                       </li>
                     </ul>
                   </div>

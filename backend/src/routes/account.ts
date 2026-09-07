@@ -50,20 +50,29 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
       where: eq(conversations.userId, req.userId!),
     });
 
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
     let questionsUsed = 0;
     for (const conv of userConvs) {
       if (Array.isArray(conv.messages)) {
-        questionsUsed += conv.messages.filter((m: any) => m.role === 'user').length;
+        for (const m of conv.messages as any[]) {
+          if (m.role === 'user') {
+            const msgDate = m.timestamp ? new Date(m.timestamp) : null;
+            if (msgDate) {
+              if (msgDate >= startOfMonth) questionsUsed++;
+            } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
+              questionsUsed++;
+            }
+          }
+        }
       }
     }
 
-    const plan = sub?.plan || 'normal';
-    const isNormal = plan === 'normal';
-    const isTrialOrFree = plan === 'pro-trial' || plan === 'free';
-    const limit = isNormal
-      ? parseInt(process.env.NORMAL_QUESTION_LIMIT || '25', 10)
-      : isTrialOrFree
-      ? parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10)
+    const plan = sub?.plan || 'junior';
+    const isJunior = plan === 'junior' || plan === 'normal';
+    const limit = isJunior
+      ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
       : null;
 
     res.json({
