@@ -257,14 +257,101 @@ V. MEDIOS PROBATORIOS Y ANEXOS
 • Copia del DNI del recurrente
 • [Otros documentos sustentatorios]
 
-POR LO EXPUESTO:
-A usted pido admitir el presente recurso, elevarlo al superior jerarquico y declararlo FUNDADO.
+==== DEMANDA DE ALIMENTOS (R.A. 115-2020-CE-PJ / Ley 31464) ====
+FORMATO OFICIAL DE DEMANDA DE ALIMENTOS PARA NIÑAS, NIÑOS Y ADOLESCENTES
 
-[Ciudad], [fecha completa]
+SEÑOR(A) JUEZ(A) DEL JUZGADO DE PAZ LETRADO DE FAMILIA DE [CIUDAD / DISTRITO]:
 
+I. DATOS DEL/DE LA DEMANDANTE:
+[NOMBRE COMPLETO], DNI N° [DNI], domicilio real en [DIRECCION], domicilio procesal en [DIRECCION PROCESAL], Casilla Electronica SINOE N° [CASILLA SINOE], celular [NUMERO] y correo [CORREO]; en representacion de mi menor hijo(a):
+
+II. DATOS DEL NIÑO, NIÑA O ADOLESCENTE (ALIMENTISTA):
+Nombres y Apellidos: [NOMBRE DEL MENOR], Fecha de Nacimiento: [FECHA], Edad: [EDAD] años.
+
+III. DATOS DEL DEMANDADO:
+[NOMBRE DEL OBLIGADO], DNI N° [DNI], con domicilio real para notificaciones en [DIRECCION DEMANDADO], centro de labores en [CENTRO LABORAL O ACTIVIDAD].
+
+IV. PETITORIO:
+Interpongo DEMANDA DE ALIMENTOS a favor de mi menor hijo(a) [NOMBRE], a fin de que el demandado cumpla con acudir con una pension alimenticia mensual y adelantada ascendente a [MONTO EN S/ O PORCENTAJE DE INGRESOS].
+
+V. FUNDAMENTOS DE HECHO:
+1. DEL ENTROCAMIENTO: Acreditado fehacientemente con el Acta de Nacimiento adjunta.
+2. DEL ESTADO DE NECESIDAD: Gastos mensuales indispensables detallados: Alimentacion, educacion, salud, vestimenta y recreacion por un total estimado de S/ [MONTO].
+3. DE LA CAPACIDAD DEL DEMANDADO: Cuenta con capacidad economica suficiente por su labor en [EMPRESA / ACTIVIDAD].
+
+VI. FUNDAMENTOS DE DERECHO:
+- Articulos 4 y 6 de la Constitucion Politica.
+- Articulos 472 y 481 del Codigo Civil.
+- Articulos 92, 93 y 164 del Codigo de los Niños y Adolescentes y Ley 31464.
+
+VII. MEDIOS PROBATORIOS Y ANEXOS:
+1-A. Copia del DNI del demandante.
+1-B. Acta de Nacimiento original o certificada del menor.
+1-C. Comprobantes de gastos de alimentos, salud y educacion.
+
+PRIMER OTROSI DIGO (ASIGNACION ANTICIPADA): Al amparo del Art. 675 del Codigo Procesal Civil y la Ley 31464, solicito se dicte ASIGNACION ANTICIPADA DE ALIMENTOS por un monto no menor al 50% de lo pretendido.
+SEGUNDO OTROSI DIGO (FACULTADES): Delego facultades de representacion y señalo Casilla SINOE N° [CASILLA SINOE].
+
+POR TANTO: A usted pido admitir la demanda y declararla FUNDADA.
+[Ciudad], [fecha]
+______________________________          ______________________________
+DEMANDANTE                              ABOGADO PATROCINANTE
+DNI N° [DNI]                            Reg. Colegiatura N° [NUMERO]
+
+==== APELACION DE PRISION PREVENTIVA (Art. 278.1 NCPP / D. Leg. 1585) ====
+EXPEDIENTE: [NUMERO]
+ESPECIALISTA: [NOMBRE]
+CUADERNO: DE PRISION PREVENTIVA
+ESCRITO: 01-2026
+SUMILLA: Interpongo Recurso de Apelacion contra Resolucion N° [NUMERO] que declaro fundada la Prision Preventiva.
+
+SEÑOR JUEZ DEL [NUMERO] JUZGADO DE INVESTIGACION PREPARATORIA DE [CIUDAD]:
+
+[NOMBRE DEL ABOGADO DEFENSOR], abogado defensor de don [NOMBRE DEL IMPUTADO], en la investigacion por el presunto delito de [DELITO]; Casilla SINOE N° [CASILLA SINOE], ante usted digo:
+
+I. PLAZO DE LEY (ART. 278.1 NCPP): Interpuesto dentro del plazo fatal de TRES (03) DIAS HABILES de notificada la resolucion oral en audiencia.
+II. PRETECIÓN IMPUGNATORIA: Solicito que la Sala Penal Superior REVOQUE el auto apelado y, REFORMÁNDOLA, dicte MANDATO DE COMPARECENCIA CON RESTRICCIONES (Art. 287 NCPP) bajo caucion economica y reglas de conducta.
+III. AGRAVIOS DE DERECHO:
+1. Ausencia de sospecha grave: Inexistencia de graves y fundados elementos de conviccion (Casacion 1-2017/CIJ-433 y Acuerdo Plenario 1-2019/CIJ-116).
+2. Acreditacion plena de arraigo y desproporcionalidad: Acreditacion de arraigo familiar, domiciliario y laboral de calidad conforme a los criterios del D. Leg. 1585.
+3. Falta de motivacion cualificada sobre peligro procesal de fuga o perturbacion probatoria.
+IV. FUNDAMENTACION JURIDICA: Arts. 2.24 Constitucion; Arts. 268, 269, 270 y 278.1 del NCPP; D. Leg. 1585.
+PRIMER OTROSI DIGO: Solicito se eleven los actuados a la Sala Penal de Apelaciones y señalo Casilla SINOE N° [CASILLA SINOE].
+POR TANTO: Pido conceder la apelacion con efecto devolutivo.
+[Ciudad], [fecha]
 ______________________________
-[NOMBRE DEL RECURRENTE]
-DNI N°: [DNI]
+ABOGADO DEFENSOR
+Reg. Colegiatura N° [NUMERO]
+
+==== SOLICITUD DE DESALOJO NOTARIAL (Ley 30933) ====
+SEÑOR NOTARIO PUBLICO DE [CIUDAD]:
+[NOMBRE DEL ARRENDADOR], con DNI/RUC N° [NUMERO], con domicilio en [DIRECCION], ante usted solicito:
+I. INVITADO/REQUERIDO: [NOMBRE DEL ARRENDATARIO], DNI N° [NUMERO], con domicilio en el predio materia de desalojo ubicado en [DIRECCION EXACTA].
+II. PETITORIO: Al amparo de la Ley N° 30933, solicito notifique al arrendatario otorgandole 5 dias habiles para que desvirtue la causal de [VENCIMIENTO DE PLAZO / FALTA DE PAGO DE RENTA] y, en su defecto, emita el ACTA NOTARIAL DE PROCEDENCIA DE DESALOJO para posterior ejecucion judicial de lanzamiento por el Juez de Paz Letrado.
+III. REQUISITOS DE PROCEDIBILIDAD CUMPLIDOS (Arts. 4 y 5 Ley 30933):
+1. Contrato de arrendamiento con firmas legalizadas notarialmente de fecha [FECHA].
+2. Clausula expresa de allanamiento a futuro (Art. 594 CPC) y clausula expresa de sometimiento a la Ley 30933.
+3. Cuenta bancaria estipulada para el abono de la renta: [BANCO Y NUMERO DE CUENTA].
+4. Carta Notarial previa de requerimiento de fecha [FECHA].
+POR TANTO: Solicito dar tramite al procedimiento conforme a la Ley 30933.
+[Ciudad], [fecha]
+______________________________          ______________________________
+ARRENDADOR                              ABOGADO PATROCINANTE
+
+==== RECLAMACION TRIBUTARIA SUNAT (Art. 137 Codigo Tributario) ====
+SUMILLA: Interpongo Recurso de Reclamacion contra [Resolucion de Determinacion / Multa / Orden de Pago N° ...]
+SEÑOR INTENDENTE DE LA [INTENDENCIA REGIONAL / PRINCIPALES CONTRIBUYENTES SUNAT]:
+[RAZON SOCIAL / NOMBRE], con RUC N° [RUC], domicilio fiscal en [DOMICILIO], Buzon SOL [CORREO], ante usted digo:
+I. PETITORIO: Al amparo del Art. 135 y 137 del TUO del Codigo Tributario (D.S. 133-2013-EF), interpongo formal RECURSO DE RECLAMACION contra [VALORES IMPUGNADOS] correspondientes al ejercicio [AÑO/PERIODO], solicitando se dejen sin efecto por ser contrarios a ley.
+II. PLAZO DE INTERPOSICION: Presentado dentro del plazo de 20 dias habiles de notificado en el Buzon SOL, no requiriendose pago previo ni carta fianza (Art. 136 y 137 CT).
+III. FUNDAMENTOS:
+1. Vulneracion del principio de causalidad y fehaciencia probatoria (Art. 37 LIR / Art. 18 LIGV).
+2. Acreditacion fehaciente de bancarizacion y asientos contables.
+3. Vulneracion del deber de motivacion y verdad material (Art. 109 CT y TUO Ley 27444).
+POR TANTO: Solicito admitir a tramite y declarar FUNDADA la reclamacion.
+[Ciudad], [fecha]
+______________________________          ______________________________
+CONTRIBUYENTE / REPRESENTANTE           ABOGADO TRIBUTARISTA — [COLEGIATURA]
 
 ════════════════════════════════════════════════════════════════
 RECORDATORIO FINAL SOBRE FORMATO DE DOCUMENTOS:
