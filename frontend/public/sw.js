@@ -1,8 +1,6 @@
-const CACHE = 'hardman-v3';
-const PRECACHE = ['/', '/index.html'];
+const CACHE = 'hardman-v4';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)));
   self.skipWaiting();
 });
 
@@ -17,9 +15,37 @@ self.addEventListener('activate', (e) => {
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
-  // Never cache API calls or cross-origin requests
+  // Never cache API calls, WebSockets or cross-origin requests
   if (e.request.method !== 'GET' || url.origin !== self.location.origin) return;
+
+  // Network First for HTML and document navigation (ensures immediate deploy updates)
+  if (e.request.mode === 'navigate' || e.request.headers.get('accept')?.includes('text/html')) {
+    e.respondWith(
+      fetch(e.request)
+        .then((res) => {
+          if (res.status === 200) {
+            const resClone = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(e.request, resClone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(e.request).then((cached) => cached || caches.match('/index.html')))
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate / Cache with Network Fallback for hashed assets
   e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request).catch(() => caches.match('/index.html')))
+    caches.match(e.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(e.request).then((res) => {
+        if (res.status === 200) {
+          const resClone = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(e.request, resClone));
+        }
+        return res;
+      });
+    })
   );
 });
+
