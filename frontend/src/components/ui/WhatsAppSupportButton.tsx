@@ -22,17 +22,18 @@ export default function WhatsAppSupportButton() {
   const whatsappUrl = `https://wa.me/51929727274?text=${message}`
 
   return (
-    <div className="fixed bottom-5 right-5 z-40 flex items-center gap-2 group">
-      {/* Tooltip on hover */}
+    <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end group pointer-events-auto">
+      {/* Tooltip on hover (arriba del botón) */}
       <div
-        className="opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 transform translate-x-2 group-hover:translate-x-0 hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs shadow-xl"
+        className="opacity-0 group-hover:opacity-100 pointer-events-none select-none transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 mb-2 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] shadow-2xl whitespace-nowrap"
         style={{
           background: '#1a1a1a',
-          borderColor: isSenior ? 'rgba(201,168,76,0.30)' : '#333333',
+          borderColor: isSenior ? 'rgba(201,168,76,0.40)' : '#333333',
           color: '#ffffff',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
         }}
       >
-        <span>Soporte WhatsApp {isSenior ? 'Prioritario Senior' : ''} (929 727 274)</span>
+        <span>Soporte WhatsApp {isSenior ? 'VIP' : ''} (929 727 274)</span>
         {isSenior && (
           <span className="text-[8px] bg-[#c9a84c]/20 text-[#c9a84c] px-1.5 py-0.5 rounded font-bold uppercase">
             VIP

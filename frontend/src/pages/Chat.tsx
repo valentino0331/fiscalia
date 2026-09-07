@@ -9,7 +9,7 @@ import {
   ThumbsUp, ThumbsDown, CornerDownLeft, RefreshCw,
   Download, Paperclip, Image as ImageIcon,
   X, AlertTriangle, FileText, Loader2, FileDown, Printer,
-  Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2,
+  Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2, MessageCircle,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
   Scale, Shield, Gavel, Building2, Search, Edit2, type LucideIcon
@@ -28,7 +28,6 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
-import WhatsAppSupportButton from '@/components/ui/WhatsAppSupportButton'
 
 const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
   sebastian: [
@@ -1504,6 +1503,22 @@ export default function Chat() {
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
+          <a
+            href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
+            target="_blank"
+            rel="noreferrer"
+            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+            style={{
+              background: 'rgba(37,211,102,0.12)',
+              border: '1px solid rgba(37,211,102,0.30)',
+              color: '#25D366',
+            }}
+            title="Soporte directo por WhatsApp (929 727 274)"
+          >
+            <MessageCircle size={14} className="fill-[#25D366]" />
+            <span className="hidden sm:inline font-semibold">WhatsApp</span>
+          </a>
+
           {conversationId && (
             <button
               onClick={handleShare}
@@ -2193,8 +2208,6 @@ export default function Chat() {
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
       />
-
-      <WhatsAppSupportButton />
     </div>
   )
 }
