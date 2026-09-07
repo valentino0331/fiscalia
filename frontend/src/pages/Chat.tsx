@@ -1676,7 +1676,12 @@ export default function Chat() {
                     }
                   />
                 ))}
-                {loading && <ThinkingIndicator agent={agent} />}
+                {loading && (
+                  <ThinkingIndicator
+                    agent={agent}
+                    lastUserMessage={messages.filter((m) => m.role === 'user').slice(-1)[0]?.content}
+                  />
+                )}
               </>
             )}
             <div ref={messagesEndRef} />
@@ -1687,9 +1692,6 @@ export default function Chat() {
             <div className="max-w-4xl mx-auto space-y-2">
               {/* Mode tags */}
               <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <span className="text-[8px] uppercase font-bold mr-1 hidden sm:inline flex-shrink-0" style={{ letterSpacing: '2px', color: 'rgba(255,255,255,0.25)' }}>
-                  MODO
-                </span>
                 {PROMPT_MODES.map((mode) => {
                   const isSelected = activeMode === mode.id
                   const ModeIcon = mode.icon
@@ -2684,13 +2686,175 @@ function MessageBubble({
   )
 }
 
-function ThinkingIndicator({ agent }: { agent: NonNullable<ReturnType<typeof getAgent>> }) {
+function getDynamicThinkingSteps(
+  agent: NonNullable<ReturnType<typeof getAgent>>,
+  query?: string
+): [string, string, string] {
+  const q = (query || '').toLowerCase()
+
+  // 1. Redacción de escritos / documentos formales
+  if (
+    q.includes('redact') ||
+    q.includes('escrito') ||
+    q.includes('demanda') ||
+    q.includes('denuncia') ||
+    q.includes('carta') ||
+    q.includes('contrato') ||
+    q.includes('minuta') ||
+    q.includes('apelacion') ||
+    q.includes('recurso')
+  ) {
+    if (agent.id === 'sebastian') {
+      return [
+        'Identificando tipo penal y artículo aplicable del Código Penal',
+        'Revisando presupuestos del NCPP (DL 1585) y elementos de convicción',
+        'Estructurando denuncia o escrito penal con petitorio y fundamentos fácticos',
+      ]
+    }
+    if (agent.id === 'valentina') {
+      return [
+        'Analizando régimen laboral (DL 728) y petitorio de demanda o requerimiento',
+        'Verificando precedentes NLPT (Ley 29497/32155) y criterios SUNAFIL',
+        'Estructurando escrito laboral o carta notarial con liquidación detallada',
+      ]
+    }
+    if (agent.id === 'diego') {
+      return [
+        'Determinando naturaleza contractual y causales de resolución o desalojo',
+        'Revisando Código Civil y Ley 30933 de Desalojo Notarial con Cláusula de Allanamiento',
+        'Estructurando carta notarial o demanda civil con apercibimiento formal',
+      ]
+    }
+    if (agent.id === 'camila') {
+      return [
+        'Evaluando pretensión de alimentos, tenencia compartida o régimen de visitas',
+        'Revisando Código de los Niños y Adolescentes y Ley 31590',
+        'Estructurando demanda de familia con propuesta de pensión y medidas cautelares',
+      ]
+    }
+    if (agent.id === 'adriana') {
+      return [
+        'Analizando estructura estatutaria, acuerdos de junta o contrato asociativo',
+        'Revisando Ley General de Sociedades y prevención de responsabilidad (Ley 30424)',
+        'Redactando instrumento corporativo blindado con cláusulas de gobierno y salida',
+      ]
+    }
+    if (agent.id === 'rodrigo') {
+      return [
+        'Verificando estado del derecho minero y expediente administrativo INGEMMET',
+        'Analizando TUO Ley General de Minería, REINFO y fiscalización ambiental OEFA',
+        'Estructurando recurso minero o descargo administrativo sancionador',
+      ]
+    }
+    if (agent.id === 'fernanda') {
+      return [
+        'Verificando plazos perentorios de notificación SUNAT y norma tributaria aplicable',
+        'Revisando Código Tributario, Ley 32430 y precedentes del Tribunal Fiscal (RTF)',
+        'Estructurando recurso de reclamación o apelación con fundamentación contable',
+      ]
+    }
+    if (agent.id === 'marco') {
+      return [
+        'Analizando acto administrativo impugnado y plazo perentorio de 15 días hábiles',
+        'Revisando TUO Ley 27444 (DS 006-2026-JUS) y Ley de Contrataciones 32069 (OECE/TCP)',
+        'Estructurando recurso de apelación / reconsideración o descargos PAS',
+      ]
+    }
+  }
+
+  // 2. Cálculo / Liquidación / Montos
+  if (
+    q.includes('calcul') ||
+    q.includes('monto') ||
+    q.includes('cuanto') ||
+    q.includes('liquid') ||
+    q.includes('soles') ||
+    q.includes('porcentaje')
+  ) {
+    return [
+      `Determinando base imponible y conceptos computables para ${agent.name}`,
+      'Aplicando UIT 2026 (S/ 5,500), escalas porcentuales y normativa vigente',
+      'Estructurando desglose económico exacto y liquidación detallada',
+    ]
+  }
+
+  // 3. Plazos / Notificaciones / Prescripción
+  if (
+    q.includes('plazo') ||
+    q.includes('dias') ||
+    q.includes('notific') ||
+    q.includes('prescri') ||
+    q.includes('caduc')
+  ) {
+    return [
+      'Verificando fecha de notificación y cómputo de días hábiles procesales',
+      `Contrastando causales de suspensión y jurisprudencia aplicable a ${agent.role}`,
+      'Determinando fecha exacta de vencimiento y vía procesal inmediata',
+    ]
+  }
+
+  // 4. Default dinámico adaptado a cada agente y materia
+  const agentDefaults: Record<string, [string, string, string]> = {
+    sebastian: [
+      'Analizando tipo penal, elementos de convicción y presupuestos procesales',
+      'Revisando Código Penal, NCPP (DL 1585), Acuerdos Plenarios y Casaciones',
+      'Estructurando estrategia de defensa técnica y plazos procesales peruanos',
+    ],
+    valentina: [
+      'Verificando modalidad contractual y cómputo de plazos laborales',
+      'Revisando LPCL (DL 728), criterios SUNAFIL y competencias JPLL (Ley 32155)',
+      'Estructurando fundamentación legal y liquidación de beneficios sociales',
+    ],
+    diego: [
+      'Analizando relación contractual, derechos reales y posesión',
+      'Evaluando Código Civil, Ley 30933 y Plenos Casatorios Civiles',
+      'Estructurando estrategia de tutela patrimonial y requerimiento formal',
+    ],
+    adriana: [
+      'Evaluando estructura societaria, pactos de socios y riesgos de contingencia',
+      'Revisando Ley General de Sociedades, modelo de prevención Ley 30424 y M&A',
+      'Estructurando dictamen de gobierno corporativo y protección societaria',
+    ],
+    rodrigo: [
+      'Verificando estado de derechos mineros, TUPA INGEMMET 2026 y REINFO',
+      'Analizando marco ambiental OEFA y estándares de fiscalización',
+      'Estructurando petitorio minero y estrategia ambiental aplicable',
+    ],
+    camila: [
+      'Evaluando pretensiones de alimentos, tenencia y régimen de visitas',
+      'Revisando Ley 31590 de Tenencia Compartida y Código de los Niños y Adolescentes',
+      'Estructurando fundamentación familiar y medidas cautelares urgentes',
+    ],
+    fernanda: [
+      'Verificando notificación SUNAT, gradualidad de multas y plazos perentorios',
+      'Analizando Código Tributario, Ley 32430 y Resoluciones del Tribunal Fiscal (RTF)',
+      'Estructurando estrategia de defensa tributaria y contingencia fiscal',
+    ],
+    marco: [
+      'Analizando tipicidad del acto administrativo y plazo perentorio de 15 días',
+      'Revisando TUO Ley 27444 (DS 006-2026-JUS) y Ley 32069 (OECE/TCP)',
+      'Estructurando fundamentación administrativa y agotamiento de vía previa',
+    ],
+  }
+
+  return (
+    agentDefaults[agent.id] || [
+      `Analizando marco legal peruano para ${agent.role}`,
+      'Revisando normativa y jurisprudencia aplicable al caso',
+      'Estructurando dictamen jurídico y pasos a seguir',
+    ]
+  )
+}
+
+function ThinkingIndicator({
+  agent,
+  lastUserMessage,
+}: {
+  agent: NonNullable<ReturnType<typeof getAgent>>
+  lastUserMessage?: string
+}) {
   const [expanded, setExpanded] = useState(true)
-  const steps = AGENT_THINKING_STEPS[agent.id] || [
-    'Identificando pretensiones y marco normativo peruano',
-    `Revisando jurisprudencia y casaciones aplicables (${agent.badge})`,
-    'Estructurando dictamen y fundamentación legal',
-  ]
+  const steps = getDynamicThinkingSteps(agent, lastUserMessage)
 
   return (
     <motion.div

@@ -21,8 +21,12 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'codigo procesal penal', 'proceso penal', 'crimen', 'imputado', 'querella',
       'investigacion preparatoria', 'diligencias preliminares', 'juicio oral', 'etapa intermedia',
       'acusacion fiscal', 'sobreseimiento', 'tutela de derechos', 'control de plazos',
-      'plazos penales', 'plazo penal', 'habeas corpus', 'cesacion', 'comparecencia',
-      'prescripcion penal', 'inculpado', 'agraviado', 'ministerio publico', 'dl 1585',
+      'plazos penales', 'plazo penal', 'plazos procesales', 'plazo procesal', 'formalizacion',
+      'formalizacion de investigacion preparatoria', 'resolucion de prision preventiva',
+      'duracion de juicio oral', 'habeas corpus', 'cesacion de prision preventiva', 'cesacion',
+      'comparecencia con restricciones', 'comparecencia simple', 'prescripcion penal',
+      'inculpado', 'agraviado', 'ministerio publico', 'dl 1585', 'acuerdo plenario 1-2019',
+      'medidas de coercion', 'requerimiento fiscal', 'apelacion de auto',
     ],
   },
   diego: {
@@ -45,9 +49,9 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   rodrigo: {
     label: 'Minero',
     keywords: [
-      'concesion minera', 'ingemmet', 'oefa', 'reinfo', 'formalizacion minera',
-      'petitorio minero', 'cierre de mina', 'estudio de impacto ambiental', 'eia minero',
-      'pas ambiental', 'canon minero', 'derecho minero',
+      'concesion minera', 'ingemmet', 'oefa minero', 'oefa', 'reinfo', 'formalizacion minera',
+      'petitorio minero', 'cierre de mina', 'estudio de impacto ambiental minero', 'eia minero',
+      'pas ambiental minero', 'canon minero', 'derecho minero', 'titular minero',
     ],
   },
   camila: {
@@ -129,6 +133,18 @@ export function suggestAgentTransfer(
 ): AgentTransferSuggestion | null {
   const normalizedInput = normalize(userText);
   if (!normalizedInput || normalizedInput.length < 10) return null;
+
+  // Si Sebastián (Penal) está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, NUNCA transferir
+  if (currentAgentId === 'sebastian') {
+    const penalTriggers = [
+      'plazo', 'proceso', 'penal', 'fiscal', 'investigacion', 'prision', 'juicio', 'delito',
+      'formalizacion', 'audiencia', 'etapa', 'cpp', 'ncpp', 'sobreseimiento', 'acusacion',
+      'imputado', 'carpeta', 'diligencias', 'defensa', 'coercion'
+    ];
+    if (penalTriggers.some((t) => normalizedInput.includes(t))) {
+      return null;
+    }
+  }
 
   const currentRule = AGENT_ROUTING_RULES[currentAgentId];
   const currentCheck = currentRule ? scoreTopic(normalizedInput, currentRule.keywords) : { score: 0, hits: [] };

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 export interface AuthRequest extends Request {
   userId?: string;
   isAdmin?: boolean;
+  userPlan?: string;
 }
 
 export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction) => {

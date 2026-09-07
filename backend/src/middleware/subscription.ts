@@ -57,9 +57,16 @@ export const requireSubscription = async (
     }
   }
 
-  // If on trial or free tier, enforce the free question limit (default 3)
-  if (sub?.plan === 'pro-trial' || sub?.plan === 'free') {
-    const FREE_LIMIT = parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10);
+  req.userPlan = sub?.plan || 'normal';
+
+  // If on normal, trial or free tier, enforce respective question limit
+  const isNormal = sub?.plan === 'normal';
+  const isTrialOrFree = sub?.plan === 'pro-trial' || sub?.plan === 'free';
+
+  if (isNormal || isTrialOrFree) {
+    const LIMIT = isNormal
+      ? parseInt(process.env.NORMAL_QUESTION_LIMIT || '25', 10)
+      : parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10);
 
     const userConversations = await db.query.conversations.findMany({
       where: eq(conversations.userId, req.userId!),
@@ -72,12 +79,17 @@ export const requireSubscription = async (
       }
     }
 
-    if (totalUserQuestions >= FREE_LIMIT) {
+    if (totalUserQuestions >= LIMIT) {
+      const msg = isNormal
+        ? `Has alcanzado el límite de ${LIMIT} consultas mensuales de tu Plan Normal. Actualiza a Plan Pro para consultas ilimitadas y acceso a los 8 especialistas.`
+        : `Has alcanzado el límite de ${LIMIT} consultas gratuitas de prueba. Suscríbete a Plan Normal o Plan Pro para continuar consultando a los especialistas.`;
+
       return res.status(403).json({
-        error: `Has alcanzado el límite de ${FREE_LIMIT} consultas gratuitas de prueba. Suscríbete para continuar consultando a los especialistas de Hardman de forma ilimitada.`,
+        error: msg,
         code: 'LIMIT_REACHED',
         questionsUsed: totalUserQuestions,
-        limit: FREE_LIMIT,
+        limit: LIMIT,
+        plan: sub?.plan,
       });
     }
   }

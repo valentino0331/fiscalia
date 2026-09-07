@@ -240,6 +240,21 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       return res.status(400).json({ error: 'Mensajes requeridos' });
     }
 
+    const PRO_AGENTS = ['adriana', 'rodrigo', 'fernanda', 'marco'];
+    if (req.userPlan === 'normal' && !req.isAdmin && PRO_AGENTS.includes(agentId)) {
+      const agentLabels: Record<string, string> = {
+        adriana: 'Adriana (Corporativo y M&A)',
+        rodrigo: 'Rodrigo (Minero y Ambiental)',
+        fernanda: 'Fernanda (Tributario y SUNAT)',
+        marco: 'Marco (Administrativo y Contrataciones Ley 32069)',
+      };
+      return res.status(403).json({
+        error: `El especialista ${agentLabels[agentId] || agentId} está reservado para miembros del Plan Pro. Puedes consultar con nuestros especialistas del Plan Normal (Sebastián, Valentina, Diego y Camila) o actualizar a Plan Pro para acceso ilimitado.`,
+        code: 'PRO_REQUIRED',
+        agentId,
+      });
+    }
+
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;

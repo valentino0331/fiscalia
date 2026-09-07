@@ -721,11 +721,23 @@ export function extractDocumentFromMessage(rawContent: string): {
     /(?:^|\n)(CARTA NOTARIAL[\s\S]{100,})/i,
     /(?:^|\n)(SE[ÑN]OR\s+JUEZ[\s\S]{100,})/i,
     /(?:^|\n)(SE[ÑN]OR\s+FISCAL[\s\S]{100,})/i,
+    /(?:^|\n)(SE[ÑN]OR\s+DIRECTOR[\s\S]{100,})/i,
+    /(?:^|\n)(SE[ÑN]ORES\s+DE\s+SUNAFIL[\s\S]{100,})/i,
+    /(?:^|\n)(SE[ÑN]OR\s+PRESIDENTE\s+DEL\s+TRIBUNAL[\s\S]{100,})/i,
+    /(?:^|\n)(A\s+LA\s+SUPERINTENDENCIA[\s\S]{100,})/i,
     /(?:^|\n)(CONTRATO DE[\s\S]{100,})/i,
+    /(?:^|\n)(MINUTA DE[\s\S]{100,})/i,
     /(?:^|\n)(SOLICITO:\s*[\s\S]{100,})/i,
     /(?:^|\n)(EXPEDIENTE\s*:\s*[\s\S]{100,})/i,
+    /(?:^|\n)(SUMILLA\s*:\s*[\s\S]{100,})/i,
     /(?:^|\n)(RECURSO DE APELACI[ÓO]N[\s\S]{100,})/i,
+    /(?:^|\n)(RECURSO DE RECONSIDERACI[ÓO]N[\s\S]{100,})/i,
+    /(?:^|\n)(DEMANDA DE[\s\S]{100,})/i,
     /(?:^|\n)(DENUNCIA PENAL[\s\S]{100,})/i,
+    /(?:^|\n)(ESCRITO DE DESCARGO[\s\S]{100,})/i,
+    /(?:^|\n)(ESCRITO\s+N[°º]\s*[\s\S]{100,})/i,
+    /(?:^|\n)(CARTA DE RENUNCIA[\s\S]{100,})/i,
+    /(?:^|\n)(PODER ESPECIAL|PODER SIMPLE[\s\S]{100,})/i,
   ]
 
   for (const marker of legalMarkers) {

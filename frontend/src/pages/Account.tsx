@@ -170,7 +170,8 @@ export default function Account() {
             </div>
 
             {/* Plan details */}
-            <div className="p-8 space-y-6 relative z-20">
+            <div className="p-6 sm:p-8 space-y-6 relative z-20">
+              {/* Active Plan Banner */}
               <div
                 className="p-5 rounded-xl flex items-center justify-between"
                 style={{ background: '#222222', border: '1px solid #2a2a2a' }}
@@ -183,18 +184,22 @@ export default function Account() {
                     <span
                       className="px-2 py-0.5 rounded text-[8px] font-bold uppercase"
                       style={{
-                        background: 'rgba(201,168,76,0.10)',
-                        border: '1px solid rgba(201,168,76,0.25)',
-                        color: '#c9a84c',
+                        background: (data?.subscription?.plan === 'normal' ? 'rgba(52,209,122,0.15)' : 'rgba(201,168,76,0.15)'),
+                        border: `1px solid ${data?.subscription?.plan === 'normal' ? 'rgba(52,209,122,0.35)' : 'rgba(201,168,76,0.35)'}`,
+                        color: data?.subscription?.plan === 'normal' ? '#34d17a' : '#c9a84c',
                         letterSpacing: '1.5px',
                       }}
                     >
-                      PRO
+                      {data?.subscription?.plan === 'normal' ? 'PLAN NORMAL' : 'PLAN PRO'}
                     </span>
                   </div>
-                  <h4 className="text-[15px] font-light text-white">Membresía Ilimitada</h4>
+                  <h4 className="text-[15px] font-light text-white">
+                    {data?.subscription?.plan === 'normal' ? 'Membresía Ciudadana Estándar' : 'Membresía Jurídica Ilimitada'}
+                  </h4>
                   <p className="text-[11px] font-light" style={{ color: 'rgba(255,255,255,0.40)' }}>
-                    Acceso total a los 8 especialistas en derecho peruano.
+                    {data?.subscription?.plan === 'normal'
+                      ? '25 consultas/mes y acceso a los 4 especialistas fundamentales.'
+                      : 'Consultas ilimitadas y acceso total a los 8 especialistas con exportación judicial Word.'}
                   </p>
                 </div>
                 <div
@@ -209,23 +214,97 @@ export default function Account() {
                 </div>
               </div>
 
-              {/* Perks */}
-              <div className="space-y-2.5">
-                <h5 className="text-[8px] font-bold uppercase" style={{ letterSpacing: '3px', color: 'rgba(255,255,255,0.25)' }}>
-                  BENEFICIOS
+              {/* Plans Comparison Grid */}
+              <div className="space-y-3">
+                <h5 className="text-[9px] font-bold uppercase tracking-widest text-white/30">
+                  COMPARATIVA DE PLANES DE SUSCRIPCIÓN
                 </h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] font-light" style={{ color: 'rgba(255,255,255,0.60)' }}>
-                  {[
-                    '8 Áreas del Derecho Peruano',
-                    'Respuesta inmediata 24/7',
-                    'Exportación de dictámenes',
-                    'Cifrado de secreto profesional',
-                  ].map((perk) => (
-                    <div key={perk} className="flex items-center gap-2">
-                      <CheckCircle2 size={13} style={{ color: '#c9a84c' }} />
-                      <span>{perk}</span>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* Plan Normal */}
+                  <div
+                    className="p-4 rounded-xl border space-y-3 relative"
+                    style={{
+                      background: '#161616',
+                      borderColor: data?.subscription?.plan === 'normal' ? '#34d17a' : 'rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#34d17a]">
+                        PLAN NORMAL
+                      </span>
+                      {data?.subscription?.plan === 'normal' && (
+                        <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                          ACTUAL
+                        </span>
+                      )}
                     </div>
-                  ))}
+                    <p className="text-[11px] text-white/50 leading-snug">
+                      Ideal para personas y ciudadanos que necesitan resolver trámites y consultas legales puntuales.
+                    </p>
+                    <ul className="space-y-1.5 text-[11px] text-white/70">
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
+                        <span>25 consultas legales al mes</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
+                        <span>4 Especialistas: Laboral, Penal, Civil y Familia</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
+                        <span>Cartas notariales y modelos estándar</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#34d17a] flex-shrink-0" />
+                        <span>Carga de archivos hasta 5 MB</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Plan Pro */}
+                  <div
+                    className="p-4 rounded-xl border space-y-3 relative"
+                    style={{
+                      background: '#161616',
+                      borderColor: data?.subscription?.plan !== 'normal' ? '#c9a84c' : 'rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c]">
+                        PLAN PRO
+                      </span>
+                      {data?.subscription?.plan !== 'normal' && (
+                        <span className="text-[8px] bg-[#c9a84c]/20 text-[#c9a84c] font-bold px-2 py-0.5 rounded-full border border-[#c9a84c]/30">
+                          ACTUAL
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-white/50 leading-snug">
+                      Para abogados, estudios y empresas con necesidad de análisis normativo continuo y redacción oficial.
+                    </p>
+                    <ul className="space-y-1.5 text-[11px] text-white/70">
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
+                        <span className="font-semibold text-white">Consultas y análisis ilimitados</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
+                        <span>Acceso a los 8 Especialistas (+Tributario, Minero, etc.)</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
+                        <span>Descarga directa en Word (.docx) y PDF judicial</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
+                        <span>Voz Neural TTS y reconocimiento por voz</span>
+                      </li>
+                      <li className="flex items-center gap-1.5">
+                        <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
+                        <span>Expedientes y PDFs grandes hasta 50 MB</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
 

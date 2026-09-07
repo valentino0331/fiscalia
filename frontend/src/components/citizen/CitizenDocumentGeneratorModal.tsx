@@ -1170,8 +1170,8 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
         </div>
 
         {/* SELECTOR DE DOCUMENTOS — SCROLL HORIZONTAL FLUIDO */}
-        <div className="px-3 sm:px-6 py-2.5 border-b flex-shrink-0 overflow-x-auto" style={{ borderColor: '#262626' }}>
-          <div className="flex gap-2 min-w-max">
+        <div className="px-3 sm:px-6 py-2.5 border-b flex-shrink-0 overflow-x-auto scrollbar-thin" style={{ borderColor: '#262626' }}>
+          <div className="flex gap-2 min-w-max pr-10 pb-0.5">
             {DOC_TYPES.map((dt) => {
               const isSelected = docType === dt.id
               return (

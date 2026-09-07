@@ -57,9 +57,12 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
       }
     }
 
-    const plan = sub?.plan || 'free';
-    const isLimited = plan === 'pro-trial' || plan === 'free';
-    const limit = isLimited
+    const plan = sub?.plan || 'normal';
+    const isNormal = plan === 'normal';
+    const isTrialOrFree = plan === 'pro-trial' || plan === 'free';
+    const limit = isNormal
+      ? parseInt(process.env.NORMAL_QUESTION_LIMIT || '25', 10)
+      : isTrialOrFree
       ? parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10)
       : null;
 

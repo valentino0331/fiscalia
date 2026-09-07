@@ -318,17 +318,29 @@ export default function Dashboard() {
                     }}
                   >
                     <span
-                      className="w-[6px] h-[6px] rounded-full flex-shrink-0"
-                      style={{ background: isActive ? '#c9a84c' : '#333333' }}
+                      className="w-[7px] h-[7px] rounded-full flex-shrink-0"
+                      style={{
+                        background: isActive ? '#c9a84c' : '#34d17a',
+                        boxShadow: isActive ? '0 0 6px rgba(201,168,76,0.6)' : '0 0 4px rgba(52,209,122,0.4)',
+                      }}
                     />
                     <span
-                      className="text-[12px]"
+                      className="text-[12px] flex-1 truncate"
                       style={{
-                        fontWeight: isActive ? 400 : 300,
-                        color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.60)',
+                        fontWeight: isActive ? 500 : 300,
+                        color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.70)',
                       }}
                     >
                       {spec.label}
+                    </span>
+                    <span
+                      className="text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded tracking-wider flex-shrink-0"
+                      style={{
+                        background: isActive ? 'rgba(201,168,76,0.15)' : 'rgba(52,209,122,0.10)',
+                        color: isActive ? '#c9a84c' : '#34d17a',
+                      }}
+                    >
+                      {isActive ? 'ACTIVO' : 'EN LÍNEA'}
                     </span>
                   </button>
                 )
@@ -401,28 +413,28 @@ export default function Dashboard() {
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <FileText size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="truncate sm:overflow-visible">Generar Documentos</span>
+                          <span className="text-[11px] leading-tight text-left">Generar Documentos</span>
                         </button>
                         <button
                           onClick={() => setScannerOpen(true)}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <Sparkles size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="truncate sm:overflow-visible">Escanear Cédula/PDF</span>
+                          <span className="text-[11px] leading-tight text-left">Escanear Cédula/PDF</span>
                         </button>
                         <button
                           onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <Calculator size={15} className="text-[#34d17a] flex-shrink-0" />
-                          <span className="truncate sm:overflow-visible">Calculadoras S/</span>
+                          <span className="text-[11px] leading-tight text-left">Calculadoras S/</span>
                         </button>
                         <button
                           onClick={() => setWhereToGoOpen(true)}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <MapPin size={15} className="text-[#f59e0b] flex-shrink-0" />
-                          <span className="truncate sm:overflow-visible">A Dónde Acudir</span>
+                          <span className="text-[11px] leading-tight text-left">A Dónde Acudir</span>
                         </button>
                       </div>
                     </div>
@@ -751,7 +763,7 @@ export default function Dashboard() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     {[...conversations]
                       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
                       .filter((c) => !historySearch || c.title?.toLowerCase().includes(historySearch.toLowerCase()) || getAgent(c.agentId)?.name.toLowerCase().includes(historySearch.toLowerCase()))
@@ -761,21 +773,37 @@ export default function Dashboard() {
                           <div
                             key={conv.id}
                             onClick={() => navigate(`/chat/${conv.agentId}?conv=${conv.id}`)}
-                            className="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-all duration-200"
-                            style={{ background: 'transparent' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)' }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
+                            className="flex items-start gap-3 p-3.5 rounded-xl cursor-pointer transition-all duration-200 border border-white/5 bg-[#171717] hover:bg-[#1f1f1f] hover:border-[#c9a84c]/30"
                           >
-                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: agent?.color || '#c9a84c' }} />
+                            {agent && (
+                              <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mt-0.5" style={{ border: '1px solid rgba(201,168,76,0.30)' }}>
+                                <img src={agent.image} alt={agent.name} className="w-full h-full object-cover object-top" />
+                              </div>
+                            )}
                             <div className="flex-1 min-w-0">
-                              <p className="text-[12px] font-light text-white truncate">{conv.title}</p>
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span
+                                  className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded tracking-wider"
+                                  style={{
+                                    background: 'rgba(201,168,76,0.12)',
+                                    color: '#c9a84c',
+                                    border: '1px solid rgba(201,168,76,0.25)',
+                                  }}
+                                >
+                                  {agent?.badge || 'CONSULTA'}
+                                </span>
+                                <span className="text-[10px] font-medium text-white/70">
+                                  {agent?.name} · {agent?.role}
+                                </span>
+                                <span className="text-[9px] font-light text-white/30 ml-auto">
+                                  {formatDate(conv.updatedAt)}
+                                </span>
+                              </div>
+                              <p className="text-[12px] font-light text-white line-clamp-2 leading-relaxed" title={conv.title}>
+                                {conv.title}
+                              </p>
                             </div>
-                            <span className="text-[10px] font-light flex-shrink-0" style={{ color: 'rgba(255,255,255,0.30)' }}>
-                              {agent?.name}
-                            </span>
-                            <span className="text-[9px] font-light flex-shrink-0" style={{ color: 'rgba(255,255,255,0.20)' }}>
-                              {formatDate(conv.updatedAt)}
-                            </span>
+                            <ArrowRight size={14} className="text-white/20 mt-2 flex-shrink-0" />
                           </div>
                         )
                       })}
