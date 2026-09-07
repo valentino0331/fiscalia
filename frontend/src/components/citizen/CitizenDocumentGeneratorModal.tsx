@@ -25,6 +25,7 @@ import {
   FileDown,
   Sparkles,
 } from 'lucide-react'
+import { buildPrintHTML, downloadWordDoc, renderDocHtmlBody } from '@/lib/exportDoc'
 
 interface CitizenDocumentGeneratorModalProps {
   isOpen: boolean
@@ -268,175 +269,6 @@ const DOC_FORMAT: Record<DocType, {
     marginTopCm: 3.5, marginBottomCm: 2.5, marginLeftCm: 3.5, marginRightCm: 2.5,
     note: 'CC Art. 1648 — Mutuo Dinerario con Mérito Ejecutivo'
   },
-}
-
-// ─── Generador de HTML para Impresión Oficial con Márgenes Notariales ────────
-function buildPrintHTML(
-  title: string,
-  content: string,
-  fmt: typeof DOC_FORMAT[DocType]
-): string {
-  const fontFamilyCss = fmt.fontFamilyCss
-
-  const safeContent = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-
-  return `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>${title}</title>
-<style>
-  @page {
-    size: A4 portrait;
-    margin: ${fmt.marginTopCm}cm ${fmt.marginRightCm}cm ${fmt.marginBottomCm}cm ${fmt.marginLeftCm}cm;
-  }
-  * {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-  body {
-    font-family: ${fontFamilyCss};
-    font-size: ${fmt.fontSizePt}pt;
-    line-height: ${fmt.lineHeight};
-    color: #111111;
-    background: #ffffff;
-    padding: ${fmt.marginTopCm}cm ${fmt.marginRightCm}cm ${fmt.marginBottomCm}cm ${fmt.marginLeftCm}cm;
-    max-width: 21cm;
-    margin: 0 auto;
-  }
-  pre {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    word-break: normal;
-    overflow-wrap: break-word;
-    hyphens: none;
-    font-family: ${fontFamilyCss};
-    font-size: ${fmt.fontSizePt}pt;
-    line-height: ${fmt.lineHeight};
-    text-align: justify;
-    color: #111111;
-  }
-  .no-print {
-    margin: 16px auto 24px auto;
-    text-align: center;
-  }
-  .btn-print {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 28px;
-    background: #c9a84c;
-    color: #111111;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    font-family: Arial, sans-serif;
-    box-shadow: 0 4px 12px rgba(201,168,76,0.35);
-  }
-  @media print {
-    body {
-      padding: 0 !important;
-      margin: 0 !important;
-      max-width: 100% !important;
-    }
-    .no-print {
-      display: none !important;
-    }
-    pre {
-      page-break-inside: auto;
-    }
-  }
-</style>
-</head>
-<body>
-<div class="no-print">
-  <button class="btn-print" onclick="window.print()">🖨️ Imprimir Documento / Guardar como PDF</button>
-</div>
-<pre>${safeContent}</pre>
-</body>
-</html>`
-}
-
-// ─── Generador de archivo Word (.doc) nativo ────────────────────────────────
-function downloadWordDoc(
-  filename: string,
-  content: string,
-  title: string,
-  fmt: typeof DOC_FORMAT[DocType]
-) {
-  const fontFamilyCss = fmt.fontFamilyCss
-  const marginPt = (cm: number) => `${Math.round(cm * 28.35)}pt`
-
-  const safeContent = content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\n\n+/g, '</p><p>')
-    .replace(/\n/g, '<br>')
-
-  const wordHTML = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-<head>
-<meta charset="utf-8">
-<title>${title}</title>
-<!--[if gte mso 9]>
-<xml>
-  <w:WordDocument>
-    <w:View>Print</w:View>
-    <w:Zoom>100</w:Zoom>
-    <w:DoNotOptimizeForBrowser/>
-  </w:WordDocument>
-</xml>
-<![endif]-->
-<style>
-  @page Section1 {
-    size: 595.3pt 841.9pt; /* A4 */
-    margin: ${marginPt(fmt.marginTopCm)} ${marginPt(fmt.marginRightCm)} ${marginPt(fmt.marginBottomCm)} ${marginPt(fmt.marginLeftCm)};
-    mso-header-margin: 0pt;
-    mso-footer-margin: 0pt;
-    mso-paper-source: 0;
-  }
-  div.Section1 { page: Section1; }
-  body {
-    font-family: ${fontFamilyCss};
-    font-size: ${fmt.fontSizePt}pt;
-    line-height: ${fmt.lineHeight};
-    color: #000000;
-  }
-  p {
-    margin: 0 0 10pt 0;
-    text-align: justify;
-    line-height: ${fmt.lineHeight};
-  }
-  h1, h2, h3 {
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 12pt;
-  }
-</style>
-</head>
-<body>
-<div class="Section1">
-  <p>${safeContent}</p>
-</div>
-</body>
-</html>`
-
-  const blob = new Blob(['\ufeff' + wordHTML], { type: 'application/msword;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `${filename}.doc`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
 }
 
 export default function CitizenDocumentGeneratorModal({
@@ -1506,18 +1338,15 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
                 >
                   {/* Texto del documento — sin membrete publicitario, justificado y con tipografía oficial */}
                   <div
+                    className="doc-preview-sheet"
                     style={{
-                      whiteSpace: 'pre-wrap',
-                      wordBreak: 'normal',
-                      overflowWrap: 'break-word',
-                      hyphens: 'none',
-                      WebkitHyphens: 'none',
-                      textAlign: 'justify',
+                      fontFamily: fmt.fontFamilyCss,
+                      fontSize: `${fmt.fontSizePt}pt`,
+                      lineHeight: `${fmt.lineHeight}`,
                       color: '#111111',
                     }}
-                  >
-                    {docData.content}
-                  </div>
+                    dangerouslySetInnerHTML={{ __html: renderDocHtmlBody(docData.content) }}
+                  />
                 </div>
               ) : (
                 <pre

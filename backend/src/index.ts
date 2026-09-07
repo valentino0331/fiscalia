@@ -13,6 +13,7 @@ import { sharedRouter } from './routes/shared';
 import { savedRouter } from './routes/saved';
 import { memoryRouter } from './routes/memory';
 import { initNewTables } from './db/init';
+import { startKeepAlive, getKeepAliveStatus } from './lib/keepAlive';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -77,6 +78,7 @@ app.get('/health', (_, res) => {
     status: 'ok',
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
+    keepAlive: getKeepAliveStatus(),
     memory: {
       rssMB: Math.round(mem.rss / 1024 / 1024),
       heapUsedMB: Math.round(mem.heapUsed / 1024 / 1024),
@@ -90,7 +92,10 @@ initNewTables()
   .then(() => console.log('DB tables verified'))
   .catch((err) => console.error('DB init error:', err));
 
-const server = app.listen(PORT, () => console.log(`Servidor corriendo en puerto ${PORT}`));
+const server = app.listen(PORT, () => {
+  console.log(`Servidor corriendo en puerto ${PORT}`);
+  startKeepAlive();
+});
 
 // Graceful shutdown & process resilience for high concurrency
 process.on('uncaughtException', (err) => {

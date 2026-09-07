@@ -293,6 +293,131 @@
     margin-top: 0.5rem;
   }
 
+  /* ── Legal Document Sheet Preview (in-chat & modal) ── */
+  .doc-preview-sheet {
+    font-family: 'Times New Roman', Times, 'Liberation Serif', Georgia, serif !important;
+    font-size: 12pt;
+    line-height: 1.55 !important;
+    color: #111 !important;
+    text-rendering: optimizeLegibility;
+    background: #fff;
+  }
+
+  /* Título principal centrado */
+  .doc-preview-sheet .doc-title {
+    font-size: 13pt;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin: 1.4rem 0 1.1rem;
+    color: #000;
+    page-break-after: avoid;
+  }
+
+  /* Autoridad destinataria (SEÑOR JUEZ / SEÑOR FISCAL) */
+  .doc-preview-sheet .doc-authority {
+    font-weight: 700;
+    margin: 0.5rem 0 0.4rem;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  /* Sumilla / Expediente */
+  .doc-preview-sheet .doc-sumilla {
+    font-weight: 700;
+    margin: 0 0 1rem;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  /* Secciones (I. PETITORIO, PRIMERO:, etc.) */
+  .doc-preview-sheet .doc-section {
+    font-size: 12pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 1.1rem 0 0.4rem;
+    color: #111;
+    page-break-after: avoid;
+  }
+
+  /* Párrafo legal justificado */
+  .doc-preview-sheet .doc-paragraph {
+    text-align: justify;
+    text-justify: inter-word;
+    margin: 0 0 0.65rem;
+    line-height: 1.55;
+    color: #1a1a1a;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Campos de datos (Nombre: / DNI:) */
+  .doc-preview-sheet .doc-field {
+    margin: 0.15rem 0 0.15rem 1.1rem;
+    line-height: 1.4;
+    color: #1a1a1a;
+  }
+
+  /* Viñetas */
+  .doc-preview-sheet .doc-bullet {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    margin: 0.2rem 0 0.2rem 0.9rem;
+    text-align: justify;
+    line-height: 1.5;
+    color: #1a1a1a;
+  }
+  .doc-preview-sheet .doc-bullet-dot {
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  /* Línea de firma */
+  .doc-preview-sheet .doc-sig-line {
+    text-align: center;
+    margin: 2.5rem 0 0.2rem;
+    letter-spacing: 2px;
+    color: #111;
+    font-size: 11pt;
+  }
+
+  /* Etiqueta de firma (Nombre / DNI / CAL) */
+  .doc-preview-sheet .doc-sig-field {
+    text-align: center;
+    font-weight: 700;
+    margin: 0.15rem 0;
+    line-height: 1.4;
+    color: #000;
+  }
+
+  /* Inline bold / italic */
+  .doc-preview-sheet strong,
+  .doc-preview-sheet b { font-weight: 700; color: #000; }
+  .doc-preview-sheet em,
+  .doc-preview-sheet i { font-style: italic; }
+  .doc-preview-sheet code {
+    font-family: Consolas, 'Courier New', monospace;
+    font-size: 10pt;
+    background: #f4f4f4;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+
+  /* Legacy classes (backwards compat) */
+  .doc-preview-sheet .doc-header { font-weight: 700; margin: 0.6rem 0 0.8rem; }
+  .doc-preview-sheet .doc-list { margin: 0.4rem 0 0.8rem 1.4rem; list-style-type: disc; }
+  .doc-preview-sheet .doc-list-item,
+  .doc-preview-sheet .doc-bullet-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    margin: 0.3rem 0 0.3rem 0.8rem; text-align: justify; line-height: 1.5;
+  }
+  .doc-preview-sheet .bullet-dot { font-weight: 700; flex-shrink: 0; }
+  .doc-preview-sheet .doc-signature { margin-top: 2.5rem; text-align: center; }
+
+
   /* ── Mobile responsive helpers ── */
   @media (max-width: 640px) {
     .mobile-compact-btn {
@@ -314,3 +439,4 @@
     }
   }
 }
+

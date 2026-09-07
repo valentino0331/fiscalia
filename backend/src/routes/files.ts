@@ -48,16 +48,28 @@ filesRouter.post(
 
       const mime = resolveMime(file.mimetype, file.originalname);
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-      const geminiModelCandidates = [
+      const withTimeout = <T>(promise: Promise<T>, ms: number, errorLabel: string): Promise<T> => {
+        let timeoutId: NodeJS.Timeout;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error(`[Timeout] ${errorLabel} excedió el límite de ${ms}ms`));
+          }, ms);
+        });
+        return Promise.race([promise, timeoutPromise]).finally(() => {
+          clearTimeout(timeoutId);
+        });
+      };
+
+      const rawCandidates = [
         process.env.GEMINI_MODEL,
+        'gemini-3.8-flash',
+        'gemini-3.7-flash',
         'gemini-3.6-flash',
         'gemini-3.5-flash-lite',
+        'gemini-2.5-flash-lite',
         'gemini-2.5-flash',
-        'gemini-flash',
-        'gemini-pro',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
       ].filter(Boolean) as string[];
+      const geminiModelCandidates = [...new Set(rawCandidates)];
       let extractedText = '';
       let pageCount: number | null = null;
 
@@ -72,15 +84,19 @@ filesRouter.post(
             if (extractedText) break;
             try {
               const model = genAI.getGenerativeModel({ model: modelName });
-              const result = await model.generateContent([
-                {
-                  inlineData: {
-                    mimeType: 'application/pdf',
-                    data: base64,
+              const result = await withTimeout(
+                model.generateContent([
+                  {
+                    inlineData: {
+                      mimeType: 'application/pdf',
+                      data: base64,
+                    },
                   },
-                },
-                'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.',
-              ]);
+                  'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.',
+                ]),
+                10000,
+                `Files PDF ${modelName}`
+              );
               extractedText = result.response.text() || '';
             } catch (gemErr) {
               console.warn(`[Files] Gemini (${modelName}) error:`, gemErr);
@@ -124,15 +140,19 @@ filesRouter.post(
           if (extractedText) break;
           try {
             const model = genAI.getGenerativeModel({ model: modelName });
-            const result = await model.generateContent([
-              {
-                inlineData: {
-                  mimeType: mime,
-                  data: base64,
+            const result = await withTimeout(
+              model.generateContent([
+                {
+                  inlineData: {
+                    mimeType: mime,
+                    data: base64,
+                  },
                 },
-              },
-              'Analiza esta imagen con detalle. Si contiene texto, documentos, resoluciones o expedientes legales, transcríbelos completos con precisión. Si es una foto de un documento, extrae todo el texto visible. Responde en español.',
-            ]);
+                'Analiza esta imagen con detalle. Si contiene texto, documentos, resoluciones o expedientes legales, transcríbelos completos con precisión. Si es una foto de un documento, extrae todo el texto visible. Responde en español.',
+              ]),
+              10000,
+              `Files Image ${modelName}`
+            );
             extractedText = result.response.text() || '';
           } catch (imgErr) {
             console.warn(`[Files Image] Gemini (${modelName}) error:`, imgErr);

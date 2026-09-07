@@ -13,7 +13,7 @@ export interface AiRequestMetric {
   id: string;
   timestamp: string;
   agentId: string;
-  provider: 'gemini' | 'anthropic' | 'openrouter' | 'groq';
+  provider: 'gemini' | 'anthropic' | 'openrouter' | 'groq' | 'openai';
   model: string;
   success: boolean;
   durationMs: number;

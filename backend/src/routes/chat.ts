@@ -288,6 +288,21 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       ].join(' ');
     }
 
+    // Helper de timeout estricto para evitar esperas infinitas
+    const withTimeout = <T>(promise: Promise<T>, ms: number, errorLabel: string): Promise<T> => {
+      let timeoutId: NodeJS.Timeout;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => {
+          reject(new Error(`[Timeout] ${errorLabel} excedió el límite de ${ms}ms`));
+        }, ms);
+      });
+      return Promise.race([promise, timeoutPromise]).finally(() => {
+        clearTimeout(timeoutId);
+      });
+    };
+
+    const openaiKey = process.env.OPENAI_API_KEY;
+
     // 1. Priority 1: Groq LPUs (Ultra fast < 350ms, 140 tok/s)
     if (!assistantMessage && groqKey) {
       const groqCandidates = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
@@ -299,6 +314,8 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       for (const groqModel of groqCandidates) {
         if (assistantMessage) break;
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 6000);
           const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -311,7 +328,9 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
               temperature: 0.2,
               max_tokens: 4096,
             }),
+            signal: controller.signal,
           });
+          clearTimeout(timeoutId);
 
           if (groqRes.ok) {
             const data: any = await groqRes.json();
@@ -336,15 +355,19 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       }
     }
 
-    // 2. Priority 2: Google Gemini (@google/generative-ai Direct SDK, ~600ms latency)
+    // 2. Priority 2: Google Gemini (@google/generative-ai Direct SDK con timeout de 7.5s y modelos activos)
     if (!assistantMessage && geminiKey) {
-      const geminiModelCandidates = [
+      const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
+        'gemini-3.8-flash',
+        'gemini-3.7-flash',
+        'gemini-3.6-flash',
+        'gemini-3.5-flash-lite',
+        'gemini-2.5-flash-lite',
         'gemini-2.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-flash',
-        'gemini-1.5-pro',
+        'gemini-2.5-pro',
       ].filter(Boolean) as string[];
+      const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
       // Sanitize history for Gemini SDK
       const rawHistory = messages.slice(0, -1);
@@ -381,7 +404,13 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             systemInstruction: SYSTEM_PROMPTS[agentId] + memoryBlock,
           });
           const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
-          const result = await chat.sendMessage(latestUserMessage);
+
+          // Timeout estricto de 7.5s por intento de modelo para evitar colgar la llamada por minutos
+          const result = await withTimeout(
+            chat.sendMessage(latestUserMessage),
+            7500,
+            `Gemini ${geminiModelName}`
+          );
           assistantMessage = result.response.text();
 
           if (assistantMessage) {
@@ -400,17 +429,70 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       }
     }
 
-    // 3. Priority 3: Anthropic Claude (World-class legal precision, ~1s)
+    // 3. Priority 3: OpenAI (Ultra estable y rápido si OPENAI_API_KEY está configurada)
+    if (!assistantMessage && openaiKey) {
+      const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
+      const formattedMessages = [
+        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+      ];
+
+      for (const oaiModel of oaiModels) {
+        if (assistantMessage) break;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 7000);
+          const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openaiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: oaiModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+              max_tokens: 4096,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (oaiRes.ok) {
+            const data: any = await oaiRes.json();
+            assistantMessage = data.choices?.[0]?.message?.content || '';
+            if (assistantMessage) {
+              metrics.recordAiCall({
+                agentId,
+                provider: 'openai',
+                model: oaiModel,
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              break;
+            }
+          }
+        } catch (oaiErr: any) {
+          console.warn(`[AI Engine] OpenAI error on ${oaiModel}:`, oaiErr?.message || oaiErr);
+        }
+      }
+    }
+
+    // 4. Priority 4: Anthropic Claude (World-class legal precision, ~1s)
     if (!assistantMessage && anthropicKey) {
       try {
         const anthropic = new Anthropic({ apiKey: anthropicKey });
         const modelToUse = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
-        const response = await anthropic.messages.create({
-          model: modelToUse,
-          max_tokens: 4096,
-          system: SYSTEM_PROMPTS[agentId] + memoryBlock,
-          messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
-        });
+        const response = await withTimeout(
+          anthropic.messages.create({
+            model: modelToUse,
+            max_tokens: 4096,
+            system: SYSTEM_PROMPTS[agentId] + memoryBlock,
+            messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
+          }),
+          8000,
+          `Anthropic ${modelToUse}`
+        );
         assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
         if (assistantMessage) {
           metrics.recordAiCall({
@@ -426,15 +508,15 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       }
     }
 
-    // 4. Priority 4: OpenRouter (Fallback with timeout protection)
+    // 5. Priority 5: OpenRouter (Fallback multimodelo con timeout)
     if (!assistantMessage && openrouterKey) {
       const candidateModels = process.env.OPENROUTER_MODEL
         ? [process.env.OPENROUTER_MODEL]
         : [
             'deepseek/deepseek-chat',
+            'meta-llama/llama-3.3-70b-instruct',
             'qwen/qwen-2.5-72b-instruct',
-            'meta-llama/llama-3.1-70b-instruct',
-            'google/gemini-2.0-flash-001',
+            'google/gemini-2.5-flash',
           ];
 
       const formattedMessages = [

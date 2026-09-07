@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
-import { downloadWordDoc, printDocument, extractDocumentFromMessage } from '@/lib/exportDoc'
+import { downloadWordDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody } from '@/lib/exportDoc'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
@@ -2252,28 +2252,17 @@ function MessageBubble({
   const isUser = message.role === 'user'
   const [copied, setCopied] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
-  const [exportOpen, setExportOpen] = useState(false)
   const [feedback, setFeedback] = useState<'up' | 'down' | null>(null)
   const [saved, setSaved] = useState(false)
   const [savingMsg, setSavingMsg] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
   const isSpeaking = speakingMessageId === message.timestamp
   const isLoadingAudio = audioLoadingId === message.timestamp
-  const exportRef = useRef<HTMLDivElement>(null)
   const deadlines = !isUser ? detectDeadlines(message.content) : []
 
   const { conversationalText, document: extractedDoc } = !isUser
     ? extractDocumentFromMessage(message.content)
     : { conversationalText: message.content, document: null }
-
-  useEffect(() => {
-    if (!exportOpen) return
-    const handler = (e: MouseEvent) => {
-      if (!exportRef.current?.contains(e.target as Node)) setExportOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [exportOpen])
 
   const cleanTextForSpeech = (text: string) =>
     text
@@ -2301,111 +2290,7 @@ function MessageBubble({
     }
   }
 
-  const stripInline = (s: string) =>
-    s.replace(/\*\*(.+?)\*\*/g, '$1').replace(/\*(.+?)\*/g, '$1')
-     .replace(/`(.+?)`/g, '$1').replace(/\[(.+?)\]\(.+?\)/g, '$1')
 
-  const handleExportPDF = () => {
-    setExportOpen(false)
-    setDownloaded(true)
-    try {
-      const fecha = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })
-      // Convert markdown to HTML for proper UTF-8 rendering
-      const toHtmlContent = (md: string) => {
-        return md
-          .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-          .replace(/^### (.+)$/gm, '<h3>$1</h3>')
-          .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-          .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.+?)\*/g, '<em>$1</em>')
-          .replace(/`(.+?)`/g, '<code>$1</code>')
-          .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-          .replace(/^[-*] (.+)$/gm, '<li>$1</li>')
-          .replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>')
-          .replace(/\n\n+/g, '</p><p>')
-          .replace(/\n/g, '<br>')
-      }
-      const htmlContent = `<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="UTF-8">
-<title>Dictamen Legal — ${agent.name}</title>
-<style>
-  @page { size: A4 portrait; margin: 3cm 2.5cm 2.5cm 3cm; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Times New Roman', Times, serif; font-size: 12pt; line-height: 1.6; color: #111111; background: #fff; padding: 3cm 2.5cm 2.5cm 3cm; }
-  h1 { font-size: 18pt; font-weight: bold; color: #111; border-bottom: 1.5pt solid #111; padding-bottom: 6pt; margin: 0 0 12pt; text-align: center; }
-  h2 { font-size: 13pt; font-weight: bold; color: #111; margin: 14pt 0 6pt; }
-  h3 { font-size: 11pt; font-weight: bold; color: #333; margin: 10pt 0 4pt; }
-  p { margin-bottom: 10pt; text-align: justify; }
-  ul { margin: 8pt 0 8pt 20pt; }
-  li { margin-bottom: 4pt; }
-  blockquote { border-left: 2pt solid #666; padding: 6pt 10pt; color: #333; font-style: italic; margin: 10pt 0; }
-  code { font-family: Consolas, monospace; font-size: 9.5pt; background: #f5f5f5; padding: 1pt 4pt; border-radius: 2pt; }
-  strong { font-weight: 700; color: #111; }
-  .meta { font-family: Arial, sans-serif; font-size: 9pt; color: #666; margin-bottom: 18pt; text-align: center; }
-  .btn-print { display: block; margin: 16px auto; padding: 12px 32px; background: #c9a84c; color: #111; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; font-family: Arial, sans-serif; font-weight: 700; }
-  @media print {
-    body { padding: 0 !important; margin: 0 !important; }
-    .btn-print { display: none !important; }
-  }
-</style>
-</head>
-<body>
-<button class="btn-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
-<h1>Respuesta Legal Especializada</h1>
-<p class="meta">${agent.name} &nbsp;·&nbsp; ${agent.role} &nbsp;·&nbsp; ${fecha}</p>
-<div>${toHtmlContent(message.content)}</div>
-</body>
-</html>`
-      const win = window.open('', '_blank', 'width=900,height=700')
-      if (win) {
-        win.document.write(htmlContent)
-        win.document.close()
-      } else {
-        alert('Tu navegador bloqueó la ventana emergente. Permítela para poder imprimir/exportar.')
-        setDownloaded(false)
-        return
-      }
-    } catch (err) {
-      console.error('Export error:', err)
-      setDownloaded(false)
-    }
-    setTimeout(() => setDownloaded(false), 2500)
-  }
-
-  const handleExportWord = () => {
-    setExportOpen(false)
-    const fecha = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })
-    const toHtml = (md: string) => md
-      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-      .replace(/^### (.+)$/gm, '<h3>$1</h3>').replace(/^## (.+)$/gm, '<h2>$1</h2>').replace(/^# (.+)$/gm, '<h1>$1</h1>')
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').replace(/\*(.+?)\*/g, '<em>$1</em>').replace(/`(.+?)`/g, '<code>$1</code>')
-      .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>').replace(/^[-*] (.+)$/gm, '<li>$1</li>')
-      .replace(/\n\n+/g, '</p><p>').replace(/\n/g, '<br>')
-    const wordHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="UTF-8">
-<style>
-@page Section1 { size: 595.3pt 841.9pt; margin: 99.2pt 70.8pt 70.8pt 99.2pt; mso-header-margin: 0pt; mso-footer-margin: 0pt; }
-div.Section1 { page: Section1; }
-body { font-family: 'Times New Roman', serif; font-size: 12pt; line-height: 1.5; color: #000000; }
-h1 { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 12pt; }
-p { margin-bottom: 8pt; text-align: justify; }
-</style></head><body>
-<div class="Section1">
-<h1>Respuesta Legal — ${agent.name} (${agent.role})</h1>
-<p style="text-align:center; font-size:9pt; color:#666; margin-bottom:16pt;">${fecha}</p>
-<p>${toHtml(message.content)}</p>
-</div>
-</body></html>`
-    const blob = new Blob([wordHtml], { type: 'application/msword' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = `Respuesta_${agent.name}_${new Date().toISOString().slice(0, 10)}.doc`
-    a.click(); URL.revokeObjectURL(url)
-    setDownloaded(true)
-    setTimeout(() => setDownloaded(false), 2500)
-  }
 
   const displayContent = isUser
     ? message.content.replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n/, '')
@@ -2616,17 +2501,15 @@ p { margin-bottom: 8pt; text-align: justify; }
                         style={{ background: '#0a0d14' }}
                       >
                         <div
-                          className="p-5 sm:p-8 rounded-lg shadow-2xl border text-black font-serif text-xs leading-relaxed max-w-2xl mx-auto select-text"
+                          className="p-6 sm:p-10 rounded-lg shadow-2xl border text-black font-serif text-[12px] sm:text-[13px] leading-[1.6] max-w-2xl mx-auto select-text doc-preview-sheet"
                           style={{
                             background: '#ffffff',
-                            borderColor: '#e5e7eb',
-                            fontFamily: '"Times New Roman", Times, serif',
+                            borderColor: '#d1d5db',
+                            fontFamily: '"Times New Roman", Times, "Liberation Serif", serif',
+                            color: '#111111',
                           }}
-                        >
-                          <pre className="whitespace-pre-wrap font-serif text-[11px] sm:text-[12px] leading-relaxed text-gray-900 text-justify">
-                            {extractedDoc.content}
-                          </pre>
-                        </div>
+                          dangerouslySetInnerHTML={{ __html: renderDocHtmlBody(extractedDoc.content) }}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -2682,8 +2565,9 @@ p { margin-bottom: 8pt; text-align: justify; }
             {/* Direct Word (.docx) download */}
             <button
               onClick={async () => {
-                const title = `Escrito_${agent.name}_${new Date().toISOString().slice(0, 10)}`
-                await downloadWordDoc(title, message.content, `Respuesta Legal — ${agent.name} (${agent.role})`)
+                const docToDownload = extractedDoc ? extractedDoc.content : message.content
+                const docTitle = extractedDoc ? extractedDoc.title : `Escrito_${agent.name}_${new Date().toISOString().slice(0, 10)}`
+                await downloadWordDoc(docTitle, docToDownload, docTitle)
                 setDownloaded(true)
                 setTimeout(() => setDownloaded(false), 2500)
               }}
@@ -2702,8 +2586,9 @@ p { margin-bottom: 8pt; text-align: justify; }
             {/* Direct Print / PDF */}
             <button
               onClick={() => {
-                const title = `Respuesta Legal — ${agent.name} (${agent.role})`
-                printDocument(title, message.content)
+                const docToPrint = extractedDoc ? extractedDoc.content : message.content
+                const docTitle = extractedDoc ? extractedDoc.title : `Respuesta Legal — ${agent.name} (${agent.role})`
+                printDocument(docTitle, docToPrint)
               }}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-medium transition-all"
               style={{
