@@ -99,8 +99,11 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
       freeLimit: parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10),
       geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
       anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022',
+      hasDeepseekKey: Boolean(process.env.DEEPSEEK_API_KEY),
       hasGeminiKey: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
       hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
+      hasOpenrouterKey: Boolean(process.env.OPENROUTER_API_KEY),
+      hasGroqKey: Boolean(process.env.GROQ_API_KEY),
       hasElevenLabsKey: Boolean(process.env.ELEVENLABS_API_KEY),
     };
 

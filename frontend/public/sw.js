@@ -1,4 +1,4 @@
-const CACHE = 'hardman-v4';
+const CACHE = 'hardman-v5';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();
@@ -38,13 +38,15 @@ self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cached) => {
       if (cached) return cached;
-      return fetch(e.request).then((res) => {
-        if (res.status === 200) {
-          const resClone = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(e.request, resClone));
-        }
-        return res;
-      });
+      return fetch(e.request)
+        .then((res) => {
+          if (res.status === 200) {
+            const resClone = res.clone();
+            caches.open(CACHE).then((cache) => cache.put(e.request, resClone));
+          }
+          return res;
+        })
+        .catch(() => new Response('', { status: 408, statusText: 'Network Timeout' }));
     })
   );
 });

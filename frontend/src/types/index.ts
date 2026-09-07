@@ -80,6 +80,7 @@ export interface AdminAiMetrics {
   failedCalls: number
   successRate: number
   avgDurationMs: number
+  deepseekCount?: number
   geminiCount: number
   anthropicCount: number
   trialUsers: number
@@ -87,6 +88,7 @@ export interface AdminAiMetrics {
   freeLimit: number
   geminiModel: string
   anthropicModel: string
+  hasDeepseekKey?: boolean
   hasGeminiKey: boolean
   hasAnthropicKey: boolean
   hasElevenLabsKey: boolean

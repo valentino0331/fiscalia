@@ -132,10 +132,10 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
         try {
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
             process.env.GEMINI_MODEL,
+            'gemini-2.5-flash',
+            'gemini-2.0-flash-exp',
+            'gemini-1.5-flash-latest',
           ].filter(Boolean) as string[];
 
           let geminiMime = 'audio/webm';
@@ -240,10 +240,12 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       return res.status(400).json({ error: 'Mensajes requeridos' });
     }
 
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
 
     let assistantMessage = '';
     let transferTo: string | undefined;
@@ -301,68 +303,137 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       });
     };
 
-    const openaiKey = process.env.OPENAI_API_KEY;
-
-    // 1. Priority 1: Groq LPUs (Ultra fast < 350ms, 140 tok/s)
-    if (!assistantMessage && groqKey) {
-      const groqCandidates = ['llama-3.3-70b-versatile', 'llama-3.1-8b-instant', 'mixtral-8x7b-32768'];
+    // ─────────────────────────────────────────────────────────────
+    // 1. PRIORIDAD 1: DeepSeek API Directa (Máxima precisión jurídica y razonamiento)
+    // ─────────────────────────────────────────────────────────────
+    if (!assistantMessage && deepseekKey) {
+      const deepseekModels = ['deepseek-chat', 'deepseek-reasoner'];
       const formattedMessages = [
         { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
         ...messages.map((m: any) => ({ role: m.role, content: m.content })),
       ];
 
-      for (const groqModel of groqCandidates) {
+      for (const dsModel of deepseekModels) {
         if (assistantMessage) break;
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000);
-          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout para razonamiento profundo
+          const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${groqKey}`,
+              'Authorization': `Bearer ${deepseekKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: groqModel,
+              model: dsModel,
               messages: formattedMessages,
-              temperature: 0.2,
+              temperature: dsModel === 'deepseek-reasoner' ? undefined : 0.2,
               max_tokens: 4096,
             }),
             signal: controller.signal,
           });
           clearTimeout(timeoutId);
 
-          if (groqRes.ok) {
-            const data: any = await groqRes.json();
-            assistantMessage = data.choices?.[0]?.message?.content || '';
-            if (assistantMessage) {
+          if (dsRes.ok) {
+            const data: any = await dsRes.json();
+            const reply = data.choices?.[0]?.message?.content || '';
+            if (reply) {
+              assistantMessage = reply;
               metrics.recordAiCall({
                 agentId,
-                provider: 'groq',
-                model: groqModel,
+                provider: 'deepseek',
+                model: dsModel,
                 success: true,
                 durationMs: Date.now() - startTime,
               });
+              console.log(`[AI Engine] Éxito con DeepSeek (${dsModel}) en ${Date.now() - startTime}ms`);
               break;
             }
           } else {
-            const errData: any = await groqRes.json().catch(() => ({}));
-            console.warn(`[AI Engine] Groq API error on ${groqModel}:`, errData?.error?.message || errData);
+            const errBody = await dsRes.text().catch(() => '');
+            console.warn(`[AI Engine] DeepSeek error (${dsModel} HTTP ${dsRes.status}):`, errBody);
           }
-        } catch (groqErr: any) {
-          console.error(`[AI Engine] Groq error on ${groqModel}:`, groqErr?.message || groqErr);
+        } catch (dsErr: any) {
+          console.error(`[AI Engine] DeepSeek fallo en ${dsModel}:`, dsErr?.message || dsErr);
         }
       }
     }
 
-    // 2. Priority 2: Google Gemini (@google/generative-ai Direct SDK con timeout de 7.5s y modelos activos)
+    // ─────────────────────────────────────────────────────────────
+    // 2. PRIORIDAD 2: DeepSeek vía OpenRouter (si hay OPENROUTER_API_KEY)
+    // ─────────────────────────────────────────────────────────────
+    if (!assistantMessage && openrouterKey) {
+      const deepseekOpenrouterModels = [
+        'deepseek/deepseek-chat',
+        'deepseek/deepseek-r1',
+        'deepseek/deepseek-r1:free',
+        'deepseek/deepseek-chat:free',
+        process.env.OPENROUTER_MODEL,
+      ].filter(Boolean) as string[];
+      const uniqueOrModels = [...new Set(deepseekOpenrouterModels)];
+      const formattedMessages = [
+        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+      ];
+
+      for (const orModel of uniqueOrModels) {
+        if (assistantMessage) break;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 25000);
+          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
+              'X-Title': 'Bufete Fiscalia IA',
+            },
+            body: JSON.stringify({
+              model: orModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (orRes.ok) {
+            const data: any = await orRes.json();
+            const textContent = data.choices?.[0]?.message?.content || '';
+            if (textContent) {
+              assistantMessage = textContent;
+              metrics.recordAiCall({
+                agentId,
+                provider: 'openrouter',
+                model: orModel,
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              console.log(`[AI Engine] Éxito con OpenRouter (${orModel}) en ${Date.now() - startTime}ms`);
+              break;
+            }
+          } else {
+            const errTxt = await orRes.text().catch(() => '');
+            console.warn(`[AI Engine] OpenRouter error en ${orModel} (${orRes.status}):`, errTxt);
+          }
+        } catch (orErr: any) {
+          console.warn(`[AI Engine] OpenRouter error en ${orModel}:`, orErr?.message || orErr);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 3. PRIORIDAD 3: Google Gemini (SDK directo con timeout de 25s y modelos actualizados)
+    // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && geminiKey) {
       const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-pro',
         'gemini-2.5-flash',
+        'gemini-3.6-flash',
+        'gemini-2.0-flash-exp',
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro-latest',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
@@ -402,10 +473,10 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
           });
           const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
 
-          // Timeout estricto de 7.5s por intento de modelo para evitar colgar la llamada por minutos
+          // Timeout de 25s (suficiente para respuestas jurídicas largas y detalladas)
           const result = await withTimeout(
             chat.sendMessage(latestUserMessage),
-            7500,
+            25000,
             `Gemini ${geminiModelName}`
           );
           assistantMessage = result.response.text();
@@ -418,6 +489,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
               success: true,
               durationMs: Date.now() - startTime,
             });
+            console.log(`[AI Engine] Éxito con Gemini (${geminiModelName}) en ${Date.now() - startTime}ms`);
             break;
           }
         } catch (geminiErr: any) {
@@ -426,7 +498,68 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       }
     }
 
-    // 3. Priority 3: OpenAI (Ultra estable y rápido si OPENAI_API_KEY está configurada)
+    // ─────────────────────────────────────────────────────────────
+    // 4. PRIORIDAD 4: Groq LPUs (DeepSeek-R1 Distill + Llama 3.3)
+    // ─────────────────────────────────────────────────────────────
+    if (!assistantMessage && groqKey) {
+      const groqCandidates = [
+        'deepseek-r1-distill-llama-70b',
+        'llama-3.3-70b-versatile',
+        'llama-3.1-8b-instant',
+      ];
+      const formattedMessages = [
+        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
+        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+      ];
+
+      for (const groqModel of groqCandidates) {
+        if (assistantMessage) break;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${groqKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: groqModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+              max_tokens: 4096,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (groqRes.ok) {
+            const data: any = await groqRes.json();
+            assistantMessage = data.choices?.[0]?.message?.content || '';
+            if (assistantMessage) {
+              metrics.recordAiCall({
+                agentId,
+                provider: 'groq',
+                model: groqModel,
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              console.log(`[AI Engine] Éxito con Groq (${groqModel}) en ${Date.now() - startTime}ms`);
+              break;
+            }
+          } else {
+            const errData: any = await groqRes.json().catch(() => ({}));
+            console.warn(`[AI Engine] Groq API error on ${groqModel}:`, errData?.error?.message || errData);
+          }
+        } catch (groqErr: any) {
+          console.error(`[AI Engine] Groq error on ${groqModel}:`, groqErr?.message || groqErr);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 5. PRIORIDAD 5: OpenAI (gpt-4o-mini / gpt-4o)
+    // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && openaiKey) {
       const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
       const formattedMessages = [
@@ -438,7 +571,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         if (assistantMessage) break;
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 7000);
+          const timeoutId = setTimeout(() => controller.abort(), 20000);
           const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -466,6 +599,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
                 success: true,
                 durationMs: Date.now() - startTime,
               });
+              console.log(`[AI Engine] Éxito con OpenAI (${oaiModel}) en ${Date.now() - startTime}ms`);
               break;
             }
           }
@@ -475,7 +609,9 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       }
     }
 
-    // 4. Priority 4: Anthropic Claude (World-class legal precision, ~1s)
+    // ─────────────────────────────────────────────────────────────
+    // 6. PRIORIDAD 6: Anthropic Claude (claude-3-5-haiku / claude-3-7-sonnet)
+    // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && anthropicKey) {
       try {
         const anthropic = new Anthropic({ apiKey: anthropicKey });
@@ -487,7 +623,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             system: SYSTEM_PROMPTS[agentId] + memoryBlock,
             messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
           }),
-          8000,
+          25000,
           `Anthropic ${modelToUse}`
         );
         assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
@@ -499,18 +635,20 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             success: true,
             durationMs: Date.now() - startTime,
           });
+          console.log(`[AI Engine] Éxito con Anthropic (${modelToUse}) en ${Date.now() - startTime}ms`);
         }
       } catch (anthropicErr: any) {
         console.error('[AI Engine] Anthropic API Error:', anthropicErr?.message || anthropicErr);
       }
     }
 
-    // 5. Priority 5: OpenRouter (Fallback multimodelo con timeout)
+    // ─────────────────────────────────────────────────────────────
+    // 7. PRIORIDAD 7: OpenRouter Fallback General
+    // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && openrouterKey) {
       const candidateModels = process.env.OPENROUTER_MODEL
         ? [process.env.OPENROUTER_MODEL]
         : [
-            'deepseek/deepseek-chat',
             'meta-llama/llama-3.3-70b-instruct',
             'qwen/qwen-2.5-72b-instruct',
             'google/gemini-2.5-flash',
@@ -525,14 +663,14 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         if (assistantMessage) break;
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout max
+          const timeoutId = setTimeout(() => controller.abort(), 20000);
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${openrouterKey}`,
               'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://fiscalia-1.onrender.com',
+              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
               'X-Title': 'Bufete Fiscalia IA',
             },
             body: JSON.stringify({

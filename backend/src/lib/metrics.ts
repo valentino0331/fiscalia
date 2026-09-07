@@ -13,7 +13,7 @@ export interface AiRequestMetric {
   id: string;
   timestamp: string;
   agentId: string;
-  provider: 'gemini' | 'anthropic' | 'openrouter' | 'groq' | 'openai';
+  provider: 'deepseek' | 'gemini' | 'anthropic' | 'openrouter' | 'groq' | 'openai';
   model: string;
   success: boolean;
   durationMs: number;
@@ -64,6 +64,7 @@ class MetricsManager {
       ? Math.round(this.aiMetrics.reduce((acc, m) => acc + m.durationMs, 0) / totalAi)
       : 0;
 
+    const deepseekCount = this.aiMetrics.filter((m) => m.provider === 'deepseek').length;
     const geminiCount = this.aiMetrics.filter((m) => m.provider === 'gemini').length;
     const anthropicCount = this.aiMetrics.filter((m) => m.provider === 'anthropic').length;
     const openrouterCount = this.aiMetrics.filter((m) => m.provider === 'openrouter').length;
@@ -79,6 +80,7 @@ class MetricsManager {
         failedCalls: failedAi,
         successRate: totalAi > 0 ? Math.round((successfulAi / totalAi) * 100) : 100,
         avgDurationMs,
+        deepseekCount,
         geminiCount,
         anthropicCount,
         openrouterCount,

@@ -63,10 +63,11 @@ filesRouter.post(
 
       const rawCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-pro',
         'gemini-2.5-flash',
+        'gemini-3.6-flash',
+        'gemini-2.0-flash-exp',
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-pro-latest',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawCandidates)];
       let extractedText = '';
@@ -93,7 +94,7 @@ filesRouter.post(
                   },
                   'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.',
                 ]),
-                10000,
+                30000,
                 `Files PDF ${modelName}`
               );
               extractedText = result.response.text() || '';
