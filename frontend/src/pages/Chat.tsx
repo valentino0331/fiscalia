@@ -1690,28 +1690,6 @@ export default function Chat() {
           {/* Input area */}
           <div className="flex-shrink-0 p-3 sm:p-4 md:px-8 md:pb-6 relative z-20">
             <div className="max-w-4xl mx-auto space-y-2">
-              {/* Mode tags */}
-              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {PROMPT_MODES.map((mode) => {
-                  const isSelected = activeMode === mode.id
-                  const ModeIcon = mode.icon
-                  return (
-                    <button
-                      key={mode.id}
-                      onClick={() => applyMode(mode)}
-                      className="whitespace-nowrap px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1.5 flex-shrink-0"
-                      style={{
-                        border: `1px solid ${isSelected ? 'rgba(201,168,76,0.40)' : '#2a2a2a'}`,
-                        background: isSelected ? 'rgba(201,168,76,0.12)' : '#171717',
-                        color: isSelected ? '#c9a84c' : 'rgba(255,255,255,0.60)',
-                      }}
-                    >
-                      <ModeIcon size={12} style={{ color: isSelected ? '#c9a84c' : 'rgba(255,255,255,0.45)' }} />
-                      <span>{mode.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
 
               {/* Voice message indicator in input */}
               {isVoiceMessage && input.trim() && !isRecording && (

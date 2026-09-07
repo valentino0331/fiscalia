@@ -152,7 +152,7 @@ export default function Dashboard() {
         className="h-14 flex-shrink-0 flex items-center justify-between gap-2 px-4 border-b z-40"
         style={{ background: '#111111', borderColor: '#2a2a2a' }}
       >
-        <div className="flex items-center flex-shrink-0">
+        <div className="flex items-center justify-center md:w-[220px] flex-shrink-0">
           <JurisClaudeLogo size="sm" />
         </div>
 
