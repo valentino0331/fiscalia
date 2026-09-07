@@ -28,6 +28,7 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
+import WhatsAppSupportButton from '@/components/ui/WhatsAppSupportButton'
 
 const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
   sebastian: [
@@ -814,6 +815,7 @@ export default function Chat() {
   const templatesRef = useRef<HTMLDivElement>(null)
 
   const [convSearch, setConvSearch] = useState('')
+  const [convTagFilter, setConvTagFilter] = useState<'all' | 'cliente' | 'expediente'>('all')
   const [editingConvId, setEditingConvId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
 
@@ -1595,9 +1597,9 @@ export default function Chat() {
             </button>
           </div>
 
-          {/* Quick Search */}
+          {/* Quick Search & Tag Filters */}
           <div className="px-3 py-2 border-b" style={{ borderColor: '#262626' }}>
-            <div className="relative">
+            <div className="relative mb-2">
               <Search size={11} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-white/30" />
               <input
                 type="text"
@@ -1606,6 +1608,43 @@ export default function Chat() {
                 placeholder="Buscar (cliente, exp)..."
                 className="w-full h-7 pl-7 pr-2 rounded text-[10px] bg-[#141414] border border-[#2a2a2a] text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c]"
               />
+            </div>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setConvTagFilter('all')}
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
+                  convTagFilter === 'all'
+                    ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
+                    : 'text-white/40 hover:text-white/70 border border-transparent'
+                }`}
+              >
+                Todos
+              </button>
+              <button
+                type="button"
+                onClick={() => setConvTagFilter('cliente')}
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
+                  convTagFilter === 'cliente'
+                    ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
+                    : 'text-white/40 hover:text-white/70 border border-transparent'
+                }`}
+                title="Filtrar por Cliente"
+              >
+                👤 Clientes
+              </button>
+              <button
+                type="button"
+                onClick={() => setConvTagFilter('expediente')}
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
+                  convTagFilter === 'expediente'
+                    ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
+                    : 'text-white/40 hover:text-white/70 border border-transparent'
+                }`}
+                title="Filtrar por Expediente"
+              >
+                📂 Expedientes
+              </button>
             </div>
           </div>
 
@@ -1630,7 +1669,18 @@ export default function Chat() {
               </div>
             ) : (
               conversations
-                .filter((c) => !convSearch || c.title?.toLowerCase().includes(convSearch.toLowerCase()))
+                .filter((c) => {
+                  const title = (c.title || '').toLowerCase()
+                  const matchesSearch = !convSearch || title.includes(convSearch.toLowerCase())
+                  if (!matchesSearch) return false
+                  if (convTagFilter === 'cliente') {
+                    return title.includes('cliente') || title.includes('caso') || title.includes('defensa')
+                  }
+                  if (convTagFilter === 'expediente') {
+                    return title.includes('exp') || title.includes('carpeta') || title.includes('diligencia') || title.includes('0') || title.includes('202')
+                  }
+                  return true
+                })
                 .map((conv) => {
                 const isCurrent = conversationId === conv.id
                 return (
@@ -2143,6 +2193,8 @@ export default function Chat() {
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
       />
+
+      <WhatsAppSupportButton />
     </div>
   )
 }

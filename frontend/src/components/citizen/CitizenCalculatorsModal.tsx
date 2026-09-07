@@ -11,14 +11,16 @@ import {
   ArrowRight,
   Copy,
   Check,
-  MessageSquare
+  MessageSquare,
+  Landmark,
+  Scale
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface CitizenCalculatorsModalProps {
   isOpen: boolean
   onClose: () => void
-  initialTab?: 'liquidacion' | 'alimentos' | 'prescripcion'
+  initialTab?: 'liquidacion' | 'alimentos' | 'prescripcion' | 'aranceles'
 }
 
 export default function CitizenCalculatorsModal({
@@ -27,7 +29,7 @@ export default function CitizenCalculatorsModal({
   initialTab = 'liquidacion',
 }: CitizenCalculatorsModalProps) {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<'liquidacion' | 'alimentos' | 'prescripcion'>(initialTab)
+  const [tab, setTab] = useState<'liquidacion' | 'alimentos' | 'prescripcion' | 'aranceles'>(initialTab)
   const [copied, setCopied] = useState(false)
 
   // Liquidación State
@@ -46,6 +48,10 @@ export default function CitizenCalculatorsModal({
   // Prescripción State
   const [tipoDeuda, setTipoDeuda] = useState<'sat' | 'tributario' | 'banco' | 'pagare'>('sat')
   const [fechaUltimoPago, setFechaUltimoPago] = useState('2020-01-15')
+
+  // Aranceles PJ 2026 State
+  const [actoProcesal, setActoProcesal] = useState<string>('apelacion_auto')
+  const [numCopias, setNumCopias] = useState<string>('10')
 
   if (!isOpen) return null
 
@@ -169,9 +175,40 @@ export default function CitizenCalculatorsModal({
     }
   }
 
+  // Aranceles PJ 2026 Logic
+  const ARANCELES_PJ_2026: Record<string, { label: string; pctURP: number; desc: string }> = {
+    apelacion_auto: { label: 'Apelación de Auto (Art. 278 NCPP / CPC)', pctURP: 0.10, desc: 'Apelación contra autos interlocutorios o resoluciones que no ponen fin al proceso.' },
+    apelacion_sentencia: { label: 'Apelación de Sentencia (Art. 364 CPC / NCPP)', pctURP: 0.40, desc: 'Recurso de apelación contra sentencia definitiva de primera instancia.' },
+    casacion: { label: 'Recurso de Casación Extraordinaria (Arts. 427 y 429 NCPP / CPC)', pctURP: 1.60, desc: 'Recurso extraordinario ante las Salas Supremas de la Corte Suprema de Justicia.' },
+    cautelar: { label: 'Medida Cautelar / Embargo en Forma de Retención (Art. 657 CPC)', pctURP: 0.25, desc: 'Solicitud de medida cautelar para asegurar la eficacia de la sentencia.' },
+    excepcion: { label: 'Excepción Previa / Improcedencia de Acción (Art. 6 NCPP / CPC)', pctURP: 0.10, desc: 'Deducción de excepciones de prescripción, atipicidad o incompetencia.' },
+    nulidad: { label: 'Nulidad de Acto Procesal / Cuestión Probatoria', pctURP: 0.10, desc: 'Pedido de nulidad deducido contra resoluciones o actuaciones viciadas.' },
+    pruebas: { label: 'Ofrecimiento de Medios Probatorios Extemporáneos', pctURP: 0.03, desc: 'Acreditación de nuevos medios probatorios en el proceso.' },
+    copias: { label: 'Expedición de Copias Certificadas (por foja)', pctURP: 0.01, desc: 'Expedición de testimonios y copias autenticadas por el especialista legal.' },
+  }
+
+  const calcularAranceles = () => {
+    const urp = 550 // URP 2026 = S/ 550.00 (10% UIT S/ 5,500)
+    const item = ARANCELES_PJ_2026[actoProcesal] || ARANCELES_PJ_2026['apelacion_auto']
+    let monto = Math.round(item.pctURP * urp)
+    if (actoProcesal === 'copias') {
+      const fojas = Math.max(1, parseInt(numCopias, 10) || 1)
+      monto = Math.round(fojas * (0.01 * urp))
+    }
+    return {
+      monto,
+      urp,
+      codigoTributo: '07153',
+      label: item.label,
+      desc: item.desc,
+      pctURP: Math.round(item.pctURP * 100),
+    }
+  }
+
   const resLiq = calcularLiquidacion()
   const resAli = calcularAlimentos()
   const resPres = calcularPrescripcion()
+  const resAran = calcularAranceles()
 
   const handleCopy = async () => {
     let summaryText = ''
@@ -190,6 +227,14 @@ Ingreso del Demandado: S/ ${ingresoDemandado}
 Número de Hijos: ${resAli.hijos}
 Rango legal estimado por Juez (20% a 60%):
 Entre S/ ${resAli.montoMin} y S/ ${resAli.montoMax} Soles mensuales (${resAli.pctMin}% - ${resAli.pctMax}%)`
+    } else if (tab === 'aranceles') {
+      summaryText = `TASA ARANCEL JUDICIAL PODER JUDICIAL DEL PERÚ (2026)
+Acto Procesal: ${resAran.label}
+Monto oficial a pagar: S/ ${resAran.monto}.00 (${resAran.pctURP}% URP)
+Valor URP 2026: S/ ${resAran.urp}.00 (10% UIT S/ 5,500)
+Código de Tributo Banco de la Nación: ${resAran.codigoTributo} (Tasas Judiciales PJ)
+Lugar de Pago: Págalo.pe / Agentes y ventanillas del Banco de la Nación
+Requisito: Indicar DNI/RUC del presentante, número de expediente y juzgado.`
     } else {
       summaryText = `VERIFICACIÓN DE PRESCRIPCIÓN DE DEUDA (PERÚ)
 Tipo de Deuda: ${tipoDeuda.toUpperCase()}
@@ -215,6 +260,12 @@ Base legal: ${resPres.nombreNorma}`
       navigate('/chat/camila', {
         state: {
           transferMessage: `Hola Camila, calculé la pensión para mis ${resAli.hijos} hijo(s) y el demandado gana aprox S/ ${ingresoDemandado}. Corresponde un estimado entre S/ ${resAli.montoMin} y S/ ${resAli.montoMax}. ¿Cómo redactamos la demanda gratuita de alimentos?`,
+        },
+      })
+    } else if (tab === 'aranceles') {
+      navigate('/chat/diego', {
+        state: {
+          transferMessage: `Hola Diego, voy a presentar un acto procesal de ${resAran.label} y el arancel judicial PJ (código 07153) es de S/ ${resAran.monto}.00. ¿Me ayudas a redactar el escrito con la fundamentación jurídica completa y los Otrosí Digo de rigor?`,
         },
       })
     } else {
@@ -264,10 +315,10 @@ Base legal: ${resPres.nombreNorma}`
         </div>
 
         {/* Tab Selection — Responsive Mobile Scroll & Desktop Grid */}
-        <div className="flex gap-2 mb-4 flex-shrink-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-3">
+        <div className="flex gap-2 mb-4 flex-shrink-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-4">
           <button
             onClick={() => setTab('liquidacion')}
-            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[160px] sm:min-w-0 flex-1 ${
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
               tab === 'liquidacion'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
@@ -275,14 +326,14 @@ Base legal: ${resPres.nombreNorma}`
           >
             <Briefcase size={16} className={tab === 'liquidacion' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
-              <span className="font-semibold block">Liquidación Laboral</span>
-              <span className="block text-[8.5px] opacity-70">CTS, Grati y Despido</span>
+              <span className="font-semibold block">Liquidación</span>
+              <span className="block text-[8.5px] opacity-70">CTS y Despido</span>
             </div>
           </button>
 
           <button
             onClick={() => setTab('alimentos')}
-            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[160px] sm:min-w-0 flex-1 ${
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
               tab === 'alimentos'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
@@ -290,14 +341,14 @@ Base legal: ${resPres.nombreNorma}`
           >
             <Baby size={16} className={tab === 'alimentos' ? 'text-[#34d17a]' : 'text-white/40'} />
             <div>
-              <span className="font-semibold block">Pensión Alimentos</span>
-              <span className="block text-[8.5px] opacity-70">Rango y % Judicial</span>
+              <span className="font-semibold block">Alimentos</span>
+              <span className="block text-[8.5px] opacity-70">Rango y % Juez</span>
             </div>
           </button>
 
           <button
             onClick={() => setTab('prescripcion')}
-            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[160px] sm:min-w-0 flex-1 ${
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
               tab === 'prescripcion'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
@@ -305,8 +356,23 @@ Base legal: ${resPres.nombreNorma}`
           >
             <CreditCard size={16} className={tab === 'prescripcion' ? 'text-[#60a5fa]' : 'text-white/40'} />
             <div>
-              <span className="font-semibold block">Prescripción Deudas</span>
-              <span className="block text-[8.5px] opacity-70">SAT, Bancos y Multas</span>
+              <span className="font-semibold block">Prescripción</span>
+              <span className="block text-[8.5px] opacity-70">SAT y Deudas</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setTab('aranceles')}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
+              tab === 'aranceles'
+                ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
+                : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
+            }`}
+          >
+            <Scale size={16} className={tab === 'aranceles' ? 'text-[#c9a84c]' : 'text-white/40'} />
+            <div>
+              <span className="font-semibold block">Aranceles PJ</span>
+              <span className="block text-[8.5px] opacity-70">Tasas URP 2026</span>
             </div>
           </button>
         </div>
@@ -535,6 +601,107 @@ Base legal: ${resPres.nombreNorma}`
 
                 <div className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">
                   🛡️ Protección al sueldo: En el Perú, las cuentas de sueldo son <strong>inembargables hasta por S/ 2,575</strong> (5 URP).
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: ARANCELES JUDICIALES PJ 2026 */}
+          {tab === 'aranceles' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3 bg-[#111111] p-3.5 rounded-xl border border-white/5">
+                <div>
+                  <label className="block text-[9px] uppercase font-semibold text-white/40 mb-1">
+                    Acto Procesal a Interponer
+                  </label>
+                  <select
+                    value={actoProcesal}
+                    onChange={(e) => setActoProcesal(e.target.value)}
+                    className="w-full bg-[#161616] border border-white/10 rounded-lg px-2.5 py-2 text-white outline-none focus:border-[#c9a84c] text-xs"
+                  >
+                    <option value="apelacion_auto">Apelación de Auto (10% URP — Art. 278 NCPP / CPC)</option>
+                    <option value="apelacion_sentencia">Apelación de Sentencia (40% URP — Art. 364 CPC)</option>
+                    <option value="casacion">Recurso de Casación (160% URP — Arts. 427 y 429 NCPP)</option>
+                    <option value="cautelar">Medida Cautelar / Embargo (25% URP — Art. 657 CPC)</option>
+                    <option value="excepcion">Excepción Previa / Improcedencia de Acción (10% URP)</option>
+                    <option value="nulidad">Nulidad de Acto Procesal / Cuestión Probatoria (10% URP)</option>
+                    <option value="pruebas">Ofrecimiento de Medios Probatorios (3% URP)</option>
+                    <option value="copias">Expedición de Copias Certificadas (por foja)</option>
+                  </select>
+                  <p className="text-[10px] text-white/50 mt-1.5 leading-snug">
+                    {resAran.desc}
+                  </p>
+                </div>
+
+                {actoProcesal === 'copias' && (
+                  <div>
+                    <label className="block text-[9px] uppercase font-semibold text-white/40 mb-1">
+                      Número de Fojas / Páginas
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={numCopias}
+                      onChange={(e) => setNumCopias(e.target.value)}
+                      className="w-full bg-[#161616] border border-white/10 rounded-lg px-2.5 py-1.5 text-white outline-none focus:border-[#c9a84c]"
+                    />
+                  </div>
+                )}
+
+                <div className="p-3 rounded-lg border border-white/5 bg-white/[0.02] space-y-1 text-[10px] text-white/60">
+                  <div className="flex justify-between">
+                    <span>Valor URP 2026:</span>
+                    <strong className="text-white">S/ 550.00</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Valor UIT 2026:</span>
+                    <strong className="text-white">S/ 5,500.00</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Porcentaje URP aplicado:</span>
+                    <strong className="text-[#c9a84c]">{resAran.pctURP}%</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Resultado Aranceles */}
+              <div
+                className="p-4 rounded-xl border flex flex-col justify-between"
+                style={{
+                  background: 'rgba(201,168,76,0.06)',
+                  borderColor: 'rgba(201,168,76,0.30)',
+                }}
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Landmark size={16} className="text-[#c9a84c]" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c]">
+                      TASA JUDICIAL PODER JUDICIAL
+                    </span>
+                  </div>
+
+                  <div className="text-2xl font-bold text-white my-2">
+                    S/ {resAran.monto}.00 <span className="text-xs font-normal text-white/40">Soles</span>
+                  </div>
+
+                  <div className="space-y-1.5 text-[10px] text-white/80 mt-2">
+                    <div className="flex items-center justify-between p-2 rounded bg-black/30 border border-white/5">
+                      <span className="text-white/60">Código Banco de la Nación:</span>
+                      <strong className="text-[#34d17a] font-mono text-xs">07153</strong>
+                    </div>
+                    <div className="flex items-center justify-between p-2 rounded bg-black/30 border border-white/5">
+                      <span className="text-white/60">Nombre tributo:</span>
+                      <strong className="text-white">Tasas Judiciales PJ</strong>
+                    </div>
+                  </div>
+
+                  <p className="text-[10px] text-white/50 mt-2.5 leading-relaxed">
+                    💳 <strong>¿Dónde pagar?:</strong> En ventanilla del Banco de la Nación, agentes BN o en línea vía <strong>Págalo.pe</strong> consignando el DNI/RUC del litigante o abogado patrocinante.
+                  </p>
+                </div>
+
+                <div className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">
+                  📌 Al adjuntar el comprobante en mesa de partes SINOE o física, consigna el número de secuencia, fecha y código de operación del arancel.
                 </div>
               </div>
             </div>

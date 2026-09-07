@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '@/lib/api'
 import { Zap } from 'lucide-react'
+import UpgradeModal from './UpgradeModal'
 
 interface UsageCounterBadgeProps {
   className?: string
@@ -16,6 +17,7 @@ export default function UsageCounterBadge({
     questionsUsed: number
     limit: number | null
   } | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
 
   useEffect(() => {
     api.account.usage()
@@ -42,41 +44,51 @@ export default function UsageCounterBadge({
     else if (ratio >= 0.7) dotColor = '#f59e0b'
   }
 
-  if (isUnlimited) {
-    return (
-      <div
-        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border select-none transition-all ${className}`}
-        style={{
-          background: 'rgba(201,168,76,0.08)',
-          borderColor: 'rgba(201,168,76,0.25)',
-        }}
-        title="Plan Senior: Consultas y análisis ilimitados"
-      >
-        <Zap size={11} className="text-[#c9a84c] flex-shrink-0" />
-        <span className="text-[10px] sm:text-[11px] font-medium text-[#c9a84c] tracking-wide">
-          {compact ? 'Ilimitado' : 'Consultas: Ilimitadas'}
-        </span>
-      </div>
-    )
-  }
-
   return (
-    <div
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border select-none transition-all ${className}`}
-      style={{
-        background: '#161616',
-        borderColor: 'rgba(255,255,255,0.10)',
-      }}
-      title={`Plan Junior: ${used} consultas usadas de ${limit} permitidas en el mes`}
-    >
-      <span
-        className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-        style={{ background: dotColor }}
+    <>
+      {isUnlimited ? (
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border select-none transition-all hover:scale-[1.02] cursor-pointer ${className}`}
+          style={{
+            background: 'rgba(201,168,76,0.08)',
+            borderColor: 'rgba(201,168,76,0.30)',
+          }}
+          title="Plan Senior: Consultas ilimitadas. Haz clic para ver detalles y soporte VIP."
+        >
+          <Zap size={11} className="text-[#c9a84c] flex-shrink-0" />
+          <span className="text-[10px] sm:text-[11px] font-medium text-[#c9a84c] tracking-wide">
+            {compact ? 'Ilimitado' : 'Consultas: Ilimitadas'}
+          </span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border select-none transition-all hover:border-[#c9a84c]/50 hover:bg-[#1f1f1f] cursor-pointer ${className}`}
+          style={{
+            background: '#161616',
+            borderColor: 'rgba(255,255,255,0.12)',
+          }}
+          title={`Plan Junior: ${used}/${limit} consultas. Haz clic para ver detalles o subir a Senior Ilimitado.`}
+        >
+          <span
+            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+            style={{ background: dotColor }}
+          />
+          <span className="text-[10px] sm:text-[11px] font-light text-white/70">
+            <span className="text-white/40 hidden md:inline">Consultas: </span>
+            <strong className="text-white font-medium">{used}</strong> / {limit}
+          </span>
+        </button>
+      )}
+
+      <UpgradeModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        usage={usage}
       />
-      <span className="text-[10px] sm:text-[11px] font-light text-white/70">
-        <span className="text-white/40 hidden md:inline">Consultas: </span>
-        <strong className="text-white font-medium">{used}</strong> / {limit}
-      </span>
-    </div>
+    </>
   )
 }

@@ -17,6 +17,7 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
+import WhatsAppSupportButton from '@/components/ui/WhatsAppSupportButton'
 
 const CATEGORIES = [
   { id: 'all', label: 'Todos' },
@@ -59,6 +60,7 @@ export default function Dashboard() {
   const [convCount, setConvCount] = useState(0)
   const [historySearch, setHistorySearch] = useState('')
   const [consultationsSearch, setConsultationsSearch] = useState('')
+  const [convTagFilter, setConvTagFilter] = useState<'all' | 'cliente' | 'expediente'>('all')
   const [editingConvId, setEditingConvId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState('')
   const [savedMessages, setSavedMessages] = useState<{ id: string; agentId: string; agentName: string; content: string; createdAt: string }[]>([])
@@ -666,6 +668,47 @@ export default function Dashboard() {
                   </div>
                 )}
 
+                {conversations.length > 0 && (
+                  <div className="flex items-center gap-1.5 mb-4 overflow-x-auto pb-1">
+                    <button
+                      onClick={() => setConvTagFilter('all')}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                        convTagFilter === 'all'
+                          ? 'bg-[#c9a84c] text-black font-semibold'
+                          : 'bg-[#181818] text-white/50 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      Todos ({conversations.length})
+                    </button>
+                    <button
+                      onClick={() => setConvTagFilter('cliente')}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1 ${
+                        convTagFilter === 'cliente'
+                          ? 'bg-[#c9a84c] text-black font-semibold'
+                          : 'bg-[#181818] text-white/50 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <span>👤 Clientes</span>
+                      <span className="text-[9px] opacity-70">
+                        ({conversations.filter(c => c.title.toLowerCase().includes('cliente')).length})
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setConvTagFilter('expediente')}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1 ${
+                        convTagFilter === 'expediente'
+                          ? 'bg-[#c9a84c] text-black font-semibold'
+                          : 'bg-[#181818] text-white/50 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <span>📂 Expedientes</span>
+                      <span className="text-[9px] opacity-70">
+                        ({conversations.filter(c => c.title.toLowerCase().includes('exp') || c.title.toLowerCase().includes('carpeta')).length})
+                      </span>
+                    </button>
+                  </div>
+                )}
+
                 {conversations.length === 0 ? (
                   <div className="text-center py-16 rounded-xl max-w-md mx-auto p-8" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
                     <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#222222', border: '1px solid #2a2a2a' }}>
@@ -686,7 +729,13 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-3">
                     {conversations
-                      .filter((c) => !consultationsSearch || c.title?.toLowerCase().includes(consultationsSearch.toLowerCase()) || getAgent(c.agentId)?.name.toLowerCase().includes(consultationsSearch.toLowerCase()))
+                      .filter((c) => {
+                        const matchSearch = !consultationsSearch || c.title?.toLowerCase().includes(consultationsSearch.toLowerCase()) || getAgent(c.agentId)?.name.toLowerCase().includes(consultationsSearch.toLowerCase())
+                        const matchTag = convTagFilter === 'all'
+                          || (convTagFilter === 'cliente' && c.title?.toLowerCase().includes('cliente'))
+                          || (convTagFilter === 'expediente' && (c.title?.toLowerCase().includes('exp') || c.title?.toLowerCase().includes('carpeta')))
+                        return matchSearch && matchTag
+                      })
                       .map((conv) => {
                       const agent = getAgent(conv.agentId)
                       return (
@@ -820,6 +869,47 @@ export default function Dashboard() {
                   </div>
                 )}
 
+                {conversations.length > 0 && (
+                  <div className="flex items-center gap-1.5 mb-4 overflow-x-auto pb-1">
+                    <button
+                      onClick={() => setConvTagFilter('all')}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                        convTagFilter === 'all'
+                          ? 'bg-[#c9a84c] text-black font-semibold'
+                          : 'bg-[#181818] text-white/50 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      Todos ({conversations.length})
+                    </button>
+                    <button
+                      onClick={() => setConvTagFilter('cliente')}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1 ${
+                        convTagFilter === 'cliente'
+                          ? 'bg-[#c9a84c] text-black font-semibold'
+                          : 'bg-[#181818] text-white/50 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <span>👤 Por Clientes</span>
+                      <span className="text-[9px] opacity-70">
+                        ({conversations.filter(c => c.title.toLowerCase().includes('cliente')).length})
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setConvTagFilter('expediente')}
+                      className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-all flex items-center gap-1 ${
+                        convTagFilter === 'expediente'
+                          ? 'bg-[#c9a84c] text-black font-semibold'
+                          : 'bg-[#181818] text-white/50 hover:text-white border border-white/10'
+                      }`}
+                    >
+                      <span>📂 Por Expedientes</span>
+                      <span className="text-[9px] opacity-70">
+                        ({conversations.filter(c => c.title.toLowerCase().includes('exp') || c.title.toLowerCase().includes('carpeta')).length})
+                      </span>
+                    </button>
+                  </div>
+                )}
+
                 {conversations.length === 0 ? (
                   <div className="text-center py-16 rounded-xl max-w-md mx-auto p-8" style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}>
                     <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: '#222222', border: '1px solid #2a2a2a' }}>
@@ -834,7 +924,13 @@ export default function Dashboard() {
                   <div className="space-y-2.5">
                     {[...conversations]
                       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-                      .filter((c) => !historySearch || c.title?.toLowerCase().includes(historySearch.toLowerCase()) || getAgent(c.agentId)?.name.toLowerCase().includes(historySearch.toLowerCase()))
+                      .filter((c) => {
+                        const matchSearch = !historySearch || c.title?.toLowerCase().includes(historySearch.toLowerCase()) || getAgent(c.agentId)?.name.toLowerCase().includes(historySearch.toLowerCase())
+                        const matchTag = convTagFilter === 'all'
+                          || (convTagFilter === 'cliente' && c.title?.toLowerCase().includes('cliente'))
+                          || (convTagFilter === 'expediente' && (c.title?.toLowerCase().includes('exp') || c.title?.toLowerCase().includes('carpeta')))
+                        return matchSearch && matchTag
+                      })
                       .map((conv) => {
                         const agent = getAgent(conv.agentId)
                         return (
@@ -1191,6 +1287,8 @@ export default function Dashboard() {
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
       />
+
+      <WhatsAppSupportButton />
     </div>
   )
 }
