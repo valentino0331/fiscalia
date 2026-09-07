@@ -152,33 +152,8 @@ export default function Dashboard() {
         className="h-14 flex-shrink-0 flex items-center justify-between gap-2 px-4 border-b z-40"
         style={{ background: '#111111', borderColor: '#2a2a2a' }}
       >
-        <div className="flex items-center justify-center md:w-[220px] flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <JurisClaudeLogo size="sm" />
-        </div>
-
-        {/* Search — desktop only */}
-        <div className="hidden md:flex justify-center flex-1 px-4">
-          <div className="relative w-full" style={{ maxWidth: '580px' }}>
-            <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'rgba(255,255,255,0.30)' }} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                if (activeSideItem !== 'specialists') setActiveSideItem('specialists')
-              }}
-              placeholder="Buscar materia jurídica, casación o especialista..."
-              className="w-full h-9 pl-9 pr-8 rounded-lg text-[12px] font-light outline-none transition-all duration-300"
-              style={{ background: '#222222', border: '1px solid #333333', color: '#ffffff', caretColor: '#c9a84c' }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = '#c9a84c'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)' }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = '#333333'; e.currentTarget.style.boxShadow = 'none' }}
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1" style={{ color: 'rgba(255,255,255,0.30)' }}>
-                <X size={12} />
-              </button>
-            )}
-          </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 justify-end flex-shrink-0">
