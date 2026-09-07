@@ -4,10 +4,11 @@
  * ══════════════════════════════════════════════════════════════════════════════
  * Estándares aplicados:
  *  - Poder Judicial del Perú: Art. 424-425 CPC, Art. 16 NLPT, NCPP
- *  - Notarías Perú: D.Leg. 1049 (Ley del Notariado)
- *  - Ministerio Público: NCPP — Denuncia Penal
- *  - Formato A4 oficial | Times New Roman 12pt | Interlineado 1.5
- *  - Márgenes: Sup 3.0cm · Izq 3.0cm · Der 2.5cm · Inf 2.5cm
+ *  - Notarías Perú: D.Leg. 1049 (Ley del Notariado), Ley 30933, Ley 32430 (2026)
+ *  - Formato A4 oficial | Times New Roman 12pt / 11pt | Interlineado 1.15 - 1.5
+ *  - Márgenes procesales y notariales: Sup 2.5cm · Izq 3.0cm · Der 2.5cm · Inf 2.5cm
+ *  - Soporte nativo de firmas dobles (Arrendador/Arrendatario, Demandante/Abogado)
+ *    en tabla invisible a 2 columnas (Word), grid CSS (HTML) y coordenadas paralelas (PDF)
  *  - CERO asteriscos, markdown ni caracteres extraños en el documento final
  * ══════════════════════════════════════════════════════════════════════════════
  */
@@ -22,6 +23,11 @@ import {
   Header,
   Footer,
   PageNumber,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  BorderStyle,
 } from 'docx'
 import { jsPDF } from 'jspdf'
 
@@ -38,45 +44,33 @@ export interface DocFormatOptions {
 export const DEFAULT_LEGAL_FORMAT: DocFormatOptions = {
   fontFamilyCss: '"Times New Roman", Times, "Liberation Serif", Georgia, serif',
   fontSizePt: 12,
-  lineHeight: 1.5,
-  marginTopCm: 3.0,
-  marginRightCm: 2.0,
+  lineHeight: 1.4,
+  marginTopCm: 2.5,
+  marginRightCm: 2.5,
   marginBottomCm: 2.5,
-  marginLeftCm: 3.5, // 3.5 cm oficial para foliación y cosido del expediente judicial
+  marginLeftCm: 3.0,
 }
 
-// ─── LIMPIEZA TOTAL DE MARKDOWN (para texto plano en documentos) ──────────────
+// ─── LIMPIEZA TOTAL DE MARKDOWN ───────────────────────────────────────────────
 export function stripAllMarkdown(raw: string): string {
   if (!raw) return ''
   return raw
-    // Negritas triples ***
     .replace(/\*{3}([^*]+)\*{3}/g, '$1')
-    // Negritas dobles **
     .replace(/\*{2}([^*]+)\*{2}/g, '$1')
-    // Cursivas simples *
     .replace(/\*([^*]+)\*/g, '$1')
-    // Subrayado triple ___
     .replace(/_{3}([^_]+)_{3}/g, '$1')
-    // Subrayado doble __
     .replace(/_{2}([^_]+)_{2}/g, '$1')
-    // Subrayado simple _  (solo si no es parte de una palabra)
     .replace(/(?<!\w)_([^_]+)_(?!\w)/g, '$1')
-    // Código `backtick`
     .replace(/`([^`]+)`/g, '$1')
-    // Headings ### ## #
     .replace(/^#{1,6}\s+/gm, '')
-    // Blockquote >
     .replace(/^>\s*/gm, '')
-    // Líneas horizontales ---  ***  ___
     .replace(/^[-*_]{3,}\s*$/gm, '')
-    // Marcadores de lista - · •
     .replace(/^[-•·]\s+/gm, '• ')
-    // Limpiar espacios múltiples
     .replace(/  +/g, ' ')
     .trim()
 }
 
-// ─── PARSER INLINE MARKDOWN → DOCX TextRuns (mantiene bold/italic reales y elimina asteriscos) ─────
+// ─── PARSER INLINE MARKDOWN → DOCX TextRuns ───────────────────────────────────
 export function parseInlineMarkdownToDocx(
   rawText: string,
   baseStyle: { font?: string; size?: number; bold?: boolean; italics?: boolean } = {}
@@ -87,14 +81,12 @@ export function parseInlineMarkdownToDocx(
   if (!rawText) return [new TextRun({ text: '', font, size })]
 
   const parts: Array<{ text: string; bold: boolean; italics: boolean }> = []
-  // Tokeniza: ***texto***, **texto**, *texto*, __texto__, _texto_
   const regex = /(\*{3}[^*]+\*{3}|_{3}[^_]+_{3}|\*{2}[^*]+\*{2}|_{2}[^_]+_{2}|\*[^*]+\*|_[^_]+_)/g
   let lastIdx = 0
   let m: RegExpExecArray | null
 
   while ((m = regex.exec(rawText)) !== null) {
     if (m.index > lastIdx) {
-      // Elimina cualquier asterisco o carácter markdown residual del texto plano
       const plain = rawText.slice(lastIdx, m.index).replace(/[*_`#]/g, '')
       if (plain) {
         parts.push({
@@ -116,7 +108,6 @@ export function parseInlineMarkdownToDocx(
     } else {
       text = token.slice(1, -1); italics = true
     }
-    // Asegurar que no quede ningún asterisco o markdown anidado
     text = text.replace(/[*_`#]/g, '')
     if (text) parts.push({ text, bold, italics })
     lastIdx = regex.lastIndex
@@ -143,14 +134,13 @@ export function parseInlineMarkdownToDocx(
     .map((p) => new TextRun({ text: p.text, font, size, bold: p.bold, italics: p.italics }))
 }
 
-// ─── PARSER INLINE MARKDOWN → HTML LIMPIO (para vista previa y PDF) ───────────
+// ─── PARSER INLINE MARKDOWN → HTML LIMPIO ─────────────────────────────────────
 export function parseInlineMarkdownToHtml(rawText: string): string {
   if (!rawText) return ''
   let s = rawText
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-  // Orden importa: más largo primero
   s = s.replace(/\*{3}([^*]+)\*{3}/g, '<strong><em>$1</em></strong>')
   s = s.replace(/_{3}([^_]+)_{3}/g, '<strong><em>$1</em></strong>')
   s = s.replace(/\*{2}([^*]+)\*{2}/g, '<strong>$1</strong>')
@@ -158,7 +148,6 @@ export function parseInlineMarkdownToHtml(rawText: string): string {
   s = s.replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
   s = s.replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, '<em>$1</em>')
   s = s.replace(/`([^`]+)`/g, '<code>$1</code>')
-  // Elimina cualquier asterisco o símbolo markdown que haya quedado suelto
   s = s.replace(/[*`#]/g, '')
   return s
 }
@@ -176,32 +165,43 @@ export function cleanHeading(text: string): string {
     .trim()
 }
 
-// ─── IDENTIFICADOR UNIVERSAL DE TIPO DE LÍNEA ─────────────────────────────────
-type LineKind =
-  | 'MAIN_TITLE'      // DEMANDA, CARTA NOTARIAL, CONTRATO, DENUNCIA PENAL...
-  | 'AUTHORITY'       // SEÑOR JUEZ, SEÑOR FISCAL, AL JUZGADO...
-  | 'SUMILLA'         // SUMILLA: ...
-  | 'SECTION_ROMAN'   // I. OBJETO  II. HECHOS   III. DERECHO...
-  | 'SECTION_TEXT'    // PRIMERO: PETITORIO   OTROSI DIGO...
-  | 'SECTION_NUM'     // 1. ... 2. ... numerados en secciones
-  | 'HEADING_MD'      // ## Título markdown
-  | 'BULLET'          // • - * item
-  | 'SEPARATOR'       // __________ (línea de firma)
-  | 'SIGNATURE_LABEL' // DNI N°: ... ABOGADO: ... CAL N°:
-  | 'FIELD'           // Nombre: [xxx] DNI: [xxx] Domicilio: ...
-  | 'PLAIN'           // Párrafo normal
+// ─── IDENTIFICADOR DE CLÁUSULA CONTRACTUAL PERUANA ───────────────────────────
+export function isClauseHeading(text: string): boolean {
+  if (!text) return false
+  const p = cleanHeading(text).toUpperCase()
+  return /^(CL[ÁA]USULA\s+)?(PRIMER[OA]|SEGUND[OA]|TERCER[OA]|CUART[OA]|QUINT[OA]|SEXT[OA]|S[ÉE]PTIM[OA]|OCTAV[OA]|NOVEN[OA]|D[ÉE]CIM[OA](\s+(PRIMER[OA]|SEGUND[OA]|TERCER[OA]|CUART[OA]|QUINT[OA]|SEXT[OA]|S[ÉE]PTIM[OA]|OCTAV[OA]|NOVEN[OA]))?|VIG[ÉE]SIM[OA](\s+\w+)?)\s*(\.-|\.|\:|\-)/i.test(p)
+}
 
-function classifyLine(line: string): LineKind {
+// ─── IDENTIFICADOR UNIVERSAL DE TIPO DE LÍNEA ─────────────────────────────────
+export type LineKind =
+  | 'MAIN_TITLE'
+  | 'AUTHORITY'
+  | 'SUMILLA'
+  | 'CLAUSE'
+  | 'SECTION_ROMAN'
+  | 'SECTION_TEXT'
+  | 'SECTION_NUM'
+  | 'HEADING_MD'
+  | 'BULLET'
+  | 'SEPARATOR'
+  | 'SIGNATURE_LABEL'
+  | 'FIELD'
+  | 'PLAIN'
+
+export function classifyLine(line: string): LineKind {
   const t = line.trim()
   const plain = cleanHeading(t)
 
   if (!t) return 'PLAIN'
 
   // Separador de firma
-  if (/^_{5,}[-–—_\s]*$/.test(t)) return 'SEPARATOR'
+  if (/^_{4,}[-–—_\s]*$/.test(t)) return 'SEPARATOR'
 
-  // Título principal del documento (centrado, bold, mayúsculas)
-  if (/^(CARTA NOTARIAL|DENUNCIA PENAL|DENUNCIA|DEMANDA DE|DEMANDA|CONTRATO DE|CONTRATO|RECURSO DE APELACI[OÓ]N|RECURSO DE RECLAMACI[OÓ]N|RECURSO DE QUEJA|MEDIDA CAUTELAR|SOLICITUD DE|SOLICITUD|ESCRITO DE DESCARGO|ESCRITO|INFORME|DICTAMEN)/i.test(plain)) return 'MAIN_TITLE'
+  // Cláusulas de contratos (PRIMERA.-, SEGUNDA.-, DÉCIMO PRIMERA.-, etc.)
+  if (isClauseHeading(t)) return 'CLAUSE'
+
+  // Título principal del documento
+  if (/^(CONTRATO DE ARRENDAMIENTO|CONTRATO DE|CONTRATO|CARTA NOTARIAL|DENUNCIA PENAL|DENUNCIA|DEMANDA DE|DEMANDA|RECURSO DE APELACI[OÓ]N|RECURSO DE RECLAMACI[OÓ]N|RECURSO DE QUEJA|MEDIDA CAUTELAR|SOLICITUD DE|SOLICITUD|ESCRITO DE DESCARGO|ESCRITO|INFORME|DICTAMEN|PODER SIMPLE|PODER ESPECIAL)/i.test(plain)) return 'MAIN_TITLE'
 
   // Autoridad destinataria
   if (/^(SE[ÑN]OR\s+(JUEZ|FISCAL|PRESIDENTE|DIRECTOR|NOTARIO|SECRETARIO)|AL\s+(JUZGADO|SEÑOR|SE[ÑN]OR|DESPACHO)|A\s+LA\s+(FISCALÍA|JUNTA|AUTORIDAD|CORTE|SALA))/i.test(plain)) return 'AUTHORITY'
@@ -233,92 +233,400 @@ function classifyLine(line: string): LineKind {
   return 'PLAIN'
 }
 
-// ─── GENERADOR DE CUERPO HTML PARA PREVIEW EN CHAT / PDF ──────────────────────
-export function renderDocHtmlBody(content: string): string {
-  const lines = content
+// ─── ESTRUCTURA DE FIRMA Y BLOQUES DE DOCUMENTO ──────────────────────────────
+export interface SignatureCol {
+  line?: string
+  role?: string
+  name?: string
+  docId?: string
+  extra?: string
+}
+
+export interface DoubleSignatureData {
+  left: SignatureCol
+  right: SignatureCol
+}
+
+export type DocBlock =
+  | { kind: 'MAIN_TITLE'; text: string }
+  | { kind: 'AUTHORITY'; lines: string[] }
+  | { kind: 'SUMILLA'; lines: string[] }
+  | { kind: 'CLAUSE'; text: string }
+  | { kind: 'SECTION'; text: string; sublines: string[] }
+  | { kind: 'BULLET'; items: string[] }
+  | { kind: 'FIELD'; lines: string[] }
+  | { kind: 'SEPARATOR'; text: string }
+  | { kind: 'SIGNATURE_LABEL'; lines: string[] }
+  | { kind: 'DOUBLE_SIGNATURE'; data: DoubleSignatureData }
+  | { kind: 'PLAIN'; text: string }
+
+// ─── PARSER INTELIGENTE DE BLOQUES LEGALES ────────────────────────────────────
+export function parseDocumentBlocks(content: string): DocBlock[] {
+  const rawLines = content
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .split('\n')
 
-  const blocks: string[] = []
+  const blocks: DocBlock[] = []
   let i = 0
 
-  while (i < lines.length) {
-    const line = lines[i]
+  while (i < rawLines.length) {
+    const line = rawLines[i]
     const trimmed = line.trim()
-    const kind = classifyLine(trimmed)
 
-    // Línea vacía → separador visual
     if (!trimmed) {
       i++
       continue
     }
 
-    const htmlLine = parseInlineMarkdownToHtml(cleanHeading(trimmed))
+    // 1. Detección de bloque de firmas dobles en una misma línea (ej. "_____          _____")
+    if (/^_{4,}\s{3,}_{4,}/.test(trimmed)) {
+      const leftCol: SignatureCol = { line: '_________________________________' }
+      const rightCol: SignatureCol = { line: '_________________________________' }
+      i++
+
+      const sigLines: string[] = []
+      while (i < rawLines.length && sigLines.length < 5) {
+        const next = rawLines[i].trim()
+        if (!next) {
+          i++
+          if (i < rawLines.length && rawLines[i].trim()) continue
+          break
+        }
+        if (/^_{5,}/.test(next) || isClauseHeading(next) || classifyLine(next) === 'MAIN_TITLE') {
+          break
+        }
+        sigLines.push(next)
+        i++
+      }
+
+      for (const sl of sigLines) {
+        const parts = sl.split(/\s{3,}|\t+/).map(p => p.trim()).filter(Boolean)
+        if (parts.length >= 2) {
+          const pLeft = parts[0]
+          const pRight = parts[1]
+
+          if (!leftCol.role && (/^(EL\s+ARRENDADOR|EL\s+DEMANDANTE|EL\s+PRESTAMISTA|EL\s+MUTUANTE|EL\s+OTORGANTE|EL\s+VENDEDOR|EL\s+LOCADOR|EL\s+PROPIETARIO|PARTE\s+A|DEMANDANTE|PROPIETARIO)/i.test(pLeft) || /^(EL\s+ARRENDATARIO|EL\s+DEMANDADO|EL\s+PRESTATARIO|EL\s+MUTUARIO|EL\s+APODERADO|EL\s+COMPRADOR|EL\s+INQUILINO|ABOGADO|PARTE\s+B)/i.test(pRight))) {
+            leftCol.role = pLeft
+            rightCol.role = pRight
+            continue
+          }
+
+          if (!leftCol.name && !/^(DNI|RUC|CAL|CIP|LEGALIZACI[OÓ]N)/i.test(pLeft)) {
+            leftCol.name = pLeft
+            rightCol.name = pRight
+            continue
+          }
+
+          if (/^(DNI|RUC|CAL|CIP|DOCUMENTO)/i.test(pLeft) || !leftCol.docId) {
+            leftCol.docId = pLeft
+            rightCol.docId = pRight
+            continue
+          }
+
+          if (!leftCol.extra) {
+            leftCol.extra = pLeft
+            rightCol.extra = pRight
+          }
+        }
+      }
+
+      blocks.push({
+        kind: 'DOUBLE_SIGNATURE',
+        data: { left: leftCol, right: rightCol },
+      })
+      continue
+    }
+
+    // 2. Detección de dos bloques de firmas consecutivos (ej. contratos extraídos donde cada parte tiene su propio bloque)
+    if (/^_{4,}/.test(trimmed)) {
+      let lookAheadIdx = i + 1
+      const firstBlockLines: string[] = []
+      while (lookAheadIdx < rawLines.length && firstBlockLines.length < 5) {
+        const la = rawLines[lookAheadIdx].trim()
+        if (!la) {
+          lookAheadIdx++
+          continue
+        }
+        if (/^_{4,}/.test(la)) {
+          break
+        }
+        if (isClauseHeading(la) || classifyLine(la) === 'MAIN_TITLE') {
+          break
+        }
+        firstBlockLines.push(la)
+        lookAheadIdx++
+      }
+
+      // Si inmediatamente o tras líneas vacías sigue otro separador de firma
+      if (lookAheadIdx < rawLines.length && /^_{4,}/.test(rawLines[lookAheadIdx].trim())) {
+        const secondBlockLines: string[] = []
+        lookAheadIdx++ // salta el segundo separador
+        while (lookAheadIdx < rawLines.length && secondBlockLines.length < 5) {
+          const la = rawLines[lookAheadIdx].trim()
+          if (!la) {
+            lookAheadIdx++
+            continue
+          }
+          if (/^_{4,}/.test(la) || isClauseHeading(la) || classifyLine(la) === 'MAIN_TITLE') {
+            break
+          }
+          secondBlockLines.push(la)
+          lookAheadIdx++
+        }
+
+        const parseSigLines = (arr: string[]): SignatureCol => {
+          const col: SignatureCol = { line: '_________________________________' }
+          for (const item of arr) {
+            if (/^(EL\s+ARRENDADOR|EL\s+ARRENDATARIO|EL\s+DEMANDANTE|EL\s+DEMANDADO|EL\s+PRESTAMISTA|EL\s+PRESTATARIO|EL\s+MUTUANTE|EL\s+MUTUARIO|EL\s+OTORGANTE|EL\s+APODERADO|EL\s+VENDEDOR|EL\s+COMPRADOR|EL\s+LOCADOR|ABOGADO|PROPIETARIO|INQUILINO|FIRMA)/i.test(item)) {
+              col.role = item
+            } else if (/^(DNI|RUC|CAL|CIP|DOCUMENTO)/i.test(item)) {
+              col.docId = item
+            } else if (!col.name) {
+              col.name = item
+            } else {
+              col.extra = item
+            }
+          }
+          return col
+        }
+
+        const left = parseSigLines(firstBlockLines)
+        const right = parseSigLines(secondBlockLines)
+
+        blocks.push({
+          kind: 'DOUBLE_SIGNATURE',
+          data: { left, right },
+        })
+        i = lookAheadIdx
+        continue
+      }
+    }
+
+    // 3. Cláusula de contrato
+    if (isClauseHeading(trimmed)) {
+      blocks.push({ kind: 'CLAUSE', text: cleanHeading(trimmed) })
+      i++
+      continue
+    }
+
+    const kind = classifyLine(trimmed)
 
     switch (kind) {
       case 'MAIN_TITLE':
-        blocks.push(`<h1 class="doc-title">${htmlLine}</h1>`)
+        blocks.push({ kind: 'MAIN_TITLE', text: cleanHeading(trimmed) })
+        i++
         break
 
-      case 'AUTHORITY':
-        blocks.push(`<div class="doc-authority">${htmlLine}</div>`)
+      case 'AUTHORITY': {
+        const authLines = [cleanHeading(trimmed)]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (classifyLine(next) === 'AUTHORITY') {
+            authLines.push(cleanHeading(next))
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'AUTHORITY', lines: authLines })
         break
+      }
 
-      case 'SUMILLA':
-        blocks.push(`<div class="doc-sumilla">${htmlLine}</div>`)
+      case 'SUMILLA': {
+        const sumLines = [cleanHeading(trimmed)]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (classifyLine(next) === 'SUMILLA') {
+            sumLines.push(cleanHeading(next))
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'SUMILLA', lines: sumLines })
         break
-
-      case 'HEADING_MD':
-        blocks.push(`<h2 class="doc-section">${htmlLine}</h2>`)
-        break
+      }
 
       case 'SECTION_ROMAN':
       case 'SECTION_TEXT':
       case 'SECTION_NUM':
-        blocks.push(`<h2 class="doc-section">${htmlLine}</h2>`)
+      case 'HEADING_MD': {
+        const titleText = cleanHeading(trimmed)
+        const sublines: string[] = []
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (isClauseHeading(next)) break
+          const nKind = classifyLine(next)
+          if (nKind === 'PLAIN') {
+            sublines.push(next)
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'SECTION', text: titleText, sublines })
         break
-
-      case 'SEPARATOR':
-        blocks.push(`<div class="doc-sig-line">_______________________________</div>`)
-        break
-
-      case 'SIGNATURE_LABEL':
-        blocks.push(`<div class="doc-sig-field">${htmlLine}</div>`)
-        break
-
-      case 'FIELD':
-        blocks.push(`<div class="doc-field">${htmlLine}</div>`)
-        break
+      }
 
       case 'BULLET': {
-        const bulletText = trimmed.replace(/^[•\-\*·]\s+/, '').trim()
-        blocks.push(`<div class="doc-bullet"><span class="doc-bullet-dot">•</span><span>${parseInlineMarkdownToHtml(bulletText)}</span></div>`)
+        const items = [trimmed.replace(/^[•\-\*·]\s+/, '').trim()]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (classifyLine(next) === 'BULLET') {
+            items.push(next.replace(/^[•\-\*·]\s+/, '').trim())
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'BULLET', items })
+        break
+      }
+
+      case 'FIELD': {
+        const fieldLines = [cleanHeading(trimmed)]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (classifyLine(next) === 'FIELD') {
+            fieldLines.push(cleanHeading(next))
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'FIELD', lines: fieldLines })
+        break
+      }
+
+      case 'SEPARATOR':
+        blocks.push({ kind: 'SEPARATOR', text: '_______________________________' })
+        i++
+        break
+
+      case 'SIGNATURE_LABEL': {
+        const sigLines = [cleanHeading(trimmed)]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (classifyLine(next) === 'SIGNATURE_LABEL') {
+            sigLines.push(cleanHeading(next))
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'SIGNATURE_LABEL', lines: sigLines })
         break
       }
 
       case 'PLAIN':
       default: {
-        // Acumula líneas PLAIN consecutivas en un párrafo
-        const paraLines: string[] = [parseInlineMarkdownToHtml(trimmed)]
+        const paraLines = [trimmed]
         i++
-        while (i < lines.length) {
-          const next = lines[i].trim()
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
           if (!next) break
-          const nextKind = classifyLine(next)
-          if (nextKind === 'PLAIN') {
-            paraLines.push(parseInlineMarkdownToHtml(next))
+          if (isClauseHeading(next)) break
+          if (/^_{4,}/.test(next)) break
+          const nKind = classifyLine(next)
+          if (nKind === 'PLAIN') {
+            paraLines.push(next)
             i++
           } else break
         }
-        blocks.push(`<p class="doc-paragraph">${paraLines.join(' ')}</p>`)
-        continue
+        blocks.push({ kind: 'PLAIN', text: paraLines.join(' ') })
+        break
       }
     }
-    i++
   }
 
-  return blocks.join('\n')
+  return blocks
+}
+
+// ─── GENERADOR DE CUERPO HTML PARA PREVIEW EN CHAT Y MODALES ───────────────────
+export function renderDocHtmlBody(content: string): string {
+  const blocks = parseDocumentBlocks(content)
+  const htmlParts: string[] = []
+
+  for (const block of blocks) {
+    switch (block.kind) {
+      case 'MAIN_TITLE':
+        htmlParts.push(`<h1 class="doc-title">${parseInlineMarkdownToHtml(block.text)}</h1>`)
+        break
+
+      case 'AUTHORITY':
+        for (const l of block.lines) {
+          htmlParts.push(`<div class="doc-authority">${parseInlineMarkdownToHtml(l)}</div>`)
+        }
+        break
+
+      case 'SUMILLA':
+        for (const l of block.lines) {
+          htmlParts.push(`<div class="doc-sumilla">${parseInlineMarkdownToHtml(l)}</div>`)
+        }
+        break
+
+      case 'CLAUSE':
+        htmlParts.push(`<div class="doc-clause">${parseInlineMarkdownToHtml(block.text)}</div>`)
+        break
+
+      case 'SECTION':
+        htmlParts.push(`<h2 class="doc-section">${parseInlineMarkdownToHtml(block.text)}</h2>`)
+        for (const sl of block.sublines) {
+          htmlParts.push(`<p class="doc-paragraph">${parseInlineMarkdownToHtml(sl)}</p>`)
+        }
+        break
+
+      case 'BULLET':
+        for (const item of block.items) {
+          htmlParts.push(`<div class="doc-bullet"><span class="doc-bullet-dot">•</span><span>${parseInlineMarkdownToHtml(item)}</span></div>`)
+        }
+        break
+
+      case 'FIELD':
+        for (const f of block.lines) {
+          htmlParts.push(`<div class="doc-field">${parseInlineMarkdownToHtml(f)}</div>`)
+        }
+        break
+
+      case 'SEPARATOR':
+        htmlParts.push(`<div class="doc-sig-line">_______________________________</div>`)
+        break
+
+      case 'SIGNATURE_LABEL':
+        for (const sl of block.lines) {
+          htmlParts.push(`<div class="doc-sig-field">${parseInlineMarkdownToHtml(sl)}</div>`)
+        }
+        break
+
+      case 'DOUBLE_SIGNATURE':
+        htmlParts.push(`
+          <div class="doc-sig-grid">
+            <div class="doc-sig-col">
+              <div class="doc-sig-line">${block.data.left.line || '_________________________________'}</div>
+              ${block.data.left.role ? `<div class="doc-sig-role">${parseInlineMarkdownToHtml(block.data.left.role)}</div>` : ''}
+              ${block.data.left.name ? `<div class="doc-sig-name">${parseInlineMarkdownToHtml(block.data.left.name)}</div>` : ''}
+              ${block.data.left.docId ? `<div class="doc-sig-id">${parseInlineMarkdownToHtml(block.data.left.docId)}</div>` : ''}
+              ${block.data.left.extra ? `<div class="doc-sig-extra">${parseInlineMarkdownToHtml(block.data.left.extra)}</div>` : ''}
+            </div>
+            <div class="doc-sig-col">
+              <div class="doc-sig-line">${block.data.right.line || '_________________________________'}</div>
+              ${block.data.right.role ? `<div class="doc-sig-role">${parseInlineMarkdownToHtml(block.data.right.role)}</div>` : ''}
+              ${block.data.right.name ? `<div class="doc-sig-name">${parseInlineMarkdownToHtml(block.data.right.name)}</div>` : ''}
+              ${block.data.right.docId ? `<div class="doc-sig-id">${parseInlineMarkdownToHtml(block.data.right.docId)}</div>` : ''}
+              ${block.data.right.extra ? `<div class="doc-sig-extra">${parseInlineMarkdownToHtml(block.data.right.extra)}</div>` : ''}
+            </div>
+          </div>
+        `)
+        break
+
+      case 'PLAIN':
+        htmlParts.push(`<p class="doc-paragraph">${parseInlineMarkdownToHtml(block.text)}</p>`)
+        break
+    }
+  }
+
+  return htmlParts.join('\n')
 }
 
 // ─── HOJA CSS COMPLETA PARA IMPRESIÓN / PDF ────────────────────────────────────
@@ -342,7 +650,7 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
     }
     /* ── Título principal centrado ── */
     .doc-title {
-      font-size: 13pt;
+      font-size: 13.5pt;
       font-weight: bold;
       text-align: center;
       text-transform: uppercase;
@@ -362,6 +670,16 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
       font-weight: bold;
       margin: 0 0 14pt;
       line-height: 1.4;
+      text-align: right;
+    }
+    /* ── Cláusulas de contratos (PRIMERA.-, SEGUNDA.-, etc.) ── */
+    .doc-clause {
+      font-size: ${fmt.fontSizePt}pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin: 16pt 0 6pt;
+      letter-spacing: 0.3px;
+      page-break-after: avoid;
     }
     /* ── Secciones (I. II. PRIMERO: etc.) ── */
     .doc-section {
@@ -400,18 +718,62 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
       flex-shrink: 0;
       margin-top: 1px;
     }
-    /* ── Línea de firma ── */
+    /* ── Línea de firma individual ── */
     .doc-sig-line {
       text-align: center;
-      margin: 42pt 0 3pt;
-      letter-spacing: 2px;
+      margin: 36pt 0 3pt;
+      letter-spacing: 1px;
     }
-    /* ── Etiquetas de firma ── */
+    /* ── Etiquetas de firma individual ── */
     .doc-sig-field {
       text-align: center;
       font-weight: bold;
       margin: 2pt 0;
       line-height: 1.4;
+    }
+    /* ── Firmas dobles en paralelo (Arrendador / Arrendatario) ── */
+    .doc-sig-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 36px;
+      row-gap: 6px;
+      margin-top: 48pt;
+      margin-bottom: 24pt;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .doc-sig-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .doc-sig-grid .doc-sig-line {
+      margin: 0 0 6pt;
+      letter-spacing: 1px;
+      color: #333;
+    }
+    .doc-sig-grid .doc-sig-role {
+      font-weight: bold;
+      text-transform: uppercase;
+      font-size: 10.5pt;
+      margin-bottom: 3pt;
+      color: #111;
+    }
+    .doc-sig-grid .doc-sig-name {
+      font-size: 10.5pt;
+      margin-bottom: 2pt;
+      color: #222;
+    }
+    .doc-sig-grid .doc-sig-id {
+      font-size: 9.5pt;
+      color: #444;
+    }
+    .doc-sig-grid .doc-sig-extra {
+      font-size: 9pt;
+      font-style: italic;
+      color: #666;
+      margin-top: 2pt;
     }
     /* ── Inline ── */
     strong, b { font-weight: bold; }
@@ -431,6 +793,7 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
       body { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
       .no-print { display: none !important; }
       .doc-paragraph { page-break-inside: auto; }
+      .doc-sig-grid { page-break-inside: avoid; }
     }
   `
 }
@@ -508,13 +871,7 @@ export async function downloadWordDoc(
   options?: DocFormatOptions
 ) {
   const fmt = { ...DEFAULT_LEGAL_FORMAT, ...options } as Required<DocFormatOptions>
-
-  const lines = content
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
-
-  const docChildren: Paragraph[] = []
+  const docChildren: any[] = []
 
   const letterhead = getSavedLetterhead()
   if (letterhead) {
@@ -579,36 +936,29 @@ export async function downloadWordDoc(
     }))
   }
 
-  // Agrupar líneas en párrafos lógicos (las líneas vacías son separadores)
-  let paraBuffer: string[] = []
+  const blocks = parseDocumentBlocks(content)
 
-  const flushPara = () => {
-    if (!paraBuffer.length) return
-
-    const firstLine = paraBuffer[0].trim()
-    const kind = classifyLine(firstLine)
-    const allText = paraBuffer.map((l) => l.trim()).filter(Boolean)
-
-    switch (kind) {
+  for (const block of blocks) {
+    switch (block.kind) {
       case 'MAIN_TITLE':
         docChildren.push(new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 320, after: 240, line: 360 },
+          spacing: { before: 280, after: 220, line: 360 },
           keepNext: true,
           children: [new TextRun({
-            text: cleanHeading(firstLine).toUpperCase(),
+            text: cleanHeading(block.text).toUpperCase(),
             font: 'Times New Roman',
-            size: 27, // 13.5pt
+            size: 28, // 14pt
             bold: true,
           })],
         }))
         break
 
       case 'AUTHORITY':
-        for (const l of allText) {
+        for (const l of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.LEFT,
-            spacing: { before: 80, after: 60, line: 320 },
+            spacing: { before: 60, after: 40, line: 320 },
             keepNext: true,
             children: [new TextRun({
               text: cleanHeading(l),
@@ -621,7 +971,7 @@ export async function downloadWordDoc(
         break
 
       case 'SUMILLA':
-        for (const l of allText) {
+        for (const l of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.RIGHT,
             spacing: { before: 40, after: 40, line: 280 },
@@ -632,27 +982,62 @@ export async function downloadWordDoc(
         }
         break
 
-      case 'SECTION_ROMAN':
-      case 'SECTION_TEXT':
-      case 'SECTION_NUM':
-      case 'HEADING_MD':
+      case 'CLAUSE':
         docChildren.push(new Paragraph({
           alignment: AlignmentType.LEFT,
-          spacing: { before: 280, after: 100, line: 360 },
+          spacing: { before: 260, after: 120, line: 276 },
           keepNext: true,
           children: [new TextRun({
-            text: cleanHeading(firstLine).toUpperCase(),
+            text: cleanHeading(block.text),
             font: 'Times New Roman',
             size: 24,
             bold: true,
           })],
         }))
-        // Líneas adicionales del mismo bloque
-        for (let idx = 1; idx < allText.length; idx++) {
+        break
+
+      case 'SECTION':
+        docChildren.push(new Paragraph({
+          alignment: AlignmentType.LEFT,
+          spacing: { before: 260, after: 100, line: 320 },
+          keepNext: true,
+          children: [new TextRun({
+            text: cleanHeading(block.text).toUpperCase(),
+            font: 'Times New Roman',
+            size: 24,
+            bold: true,
+          })],
+        }))
+        for (const sl of block.sublines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 40, after: 100, line: 360 },
-            children: parseInlineMarkdownToDocx(allText[idx], { size: 24 }),
+            spacing: { before: 40, after: 120, line: 320 },
+            children: parseInlineMarkdownToDocx(sl, { size: 24 }),
+          }))
+        }
+        break
+
+      case 'BULLET':
+        for (const item of block.items) {
+          docChildren.push(new Paragraph({
+            alignment: AlignmentType.JUSTIFIED,
+            indent: { left: convertMillimetersToTwip(12), hanging: convertMillimetersToTwip(6) },
+            spacing: { before: 40, after: 60, line: 320 },
+            children: [
+              new TextRun({ text: '•  ', font: 'Times New Roman', size: 24, bold: true }),
+              ...parseInlineMarkdownToDocx(item, { size: 24 }),
+            ],
+          }))
+        }
+        break
+
+      case 'FIELD':
+        for (const f of block.lines) {
+          docChildren.push(new Paragraph({
+            alignment: AlignmentType.LEFT,
+            indent: { left: convertMillimetersToTwip(10) },
+            spacing: { before: 40, after: 40, line: 300 },
+            children: parseInlineMarkdownToDocx(f, { size: 24 }),
           }))
         }
         break
@@ -660,7 +1045,7 @@ export async function downloadWordDoc(
       case 'SEPARATOR':
         docChildren.push(new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 720, after: 120, line: 280 },
+          spacing: { before: 600, after: 100, line: 260 },
           children: [new TextRun({
             text: '______________________________',
             font: 'Times New Roman',
@@ -670,68 +1055,117 @@ export async function downloadWordDoc(
         break
 
       case 'SIGNATURE_LABEL':
-        for (const l of allText) {
+        for (const sl of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 60, after: 60, line: 280 },
-            children: parseInlineMarkdownToDocx(l, { bold: true, size: 24 }),
+            spacing: { before: 40, after: 40, line: 260 },
+            children: parseInlineMarkdownToDocx(sl, { bold: true, size: 24 }),
           }))
         }
         break
 
-      case 'FIELD':
-        for (const l of allText) {
-          docChildren.push(new Paragraph({
-            alignment: AlignmentType.LEFT,
-            indent: { left: convertMillimetersToTwip(10) },
-            spacing: { before: 40, after: 40, line: 320 },
-            children: parseInlineMarkdownToDocx(l, { size: 24 }),
-          }))
-        }
-        break
-
-      case 'BULLET':
-        for (const l of allText) {
-          const bulletText = l.trim().replace(/^[•\-\*·]\s+/, '').trim()
-          docChildren.push(new Paragraph({
-            alignment: AlignmentType.JUSTIFIED,
-            indent: { left: convertMillimetersToTwip(12), hanging: convertMillimetersToTwip(6) },
-            spacing: { before: 40, after: 60, line: 340 },
-            children: [
-              new TextRun({ text: '•  ', font: 'Times New Roman', size: 24, bold: true }),
-              ...parseInlineMarkdownToDocx(bulletText, { size: 24 }),
-            ],
-          }))
-        }
+      case 'DOUBLE_SIGNATURE':
+        // ── Renderizado de firmas paralelas mediante Tabla Word invisible (estándar notarial peruano) ──
+        docChildren.push(new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: {
+            top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+          },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({
+                  width: { size: 50, type: WidthType.PERCENTAGE },
+                  borders: {
+                    top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                  },
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 680, after: 60, line: 240 },
+                      children: [new TextRun({ text: block.data.left.line || '_________________________________', font: 'Times New Roman', size: 22 })],
+                    }),
+                    ...(block.data.left.role ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.left.role.toUpperCase(), font: 'Times New Roman', size: 22, bold: true })],
+                    })] : []),
+                    ...(block.data.left.name ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.left.name, font: 'Times New Roman', size: 22 })],
+                    })] : []),
+                    ...(block.data.left.docId ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.left.docId, font: 'Times New Roman', size: 22 })],
+                    })] : []),
+                    ...(block.data.left.extra ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.left.extra, font: 'Times New Roman', size: 20, italics: true })],
+                    })] : []),
+                  ],
+                }),
+                new TableCell({
+                  width: { size: 50, type: WidthType.PERCENTAGE },
+                  borders: {
+                    top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                  },
+                  children: [
+                    new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 680, after: 60, line: 240 },
+                      children: [new TextRun({ text: block.data.right.line || '_________________________________', font: 'Times New Roman', size: 22 })],
+                    }),
+                    ...(block.data.right.role ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.right.role.toUpperCase(), font: 'Times New Roman', size: 22, bold: true })],
+                    })] : []),
+                    ...(block.data.right.name ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.right.name, font: 'Times New Roman', size: 22 })],
+                    })] : []),
+                    ...(block.data.right.docId ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.right.docId, font: 'Times New Roman', size: 22 })],
+                    })] : []),
+                    ...(block.data.right.extra ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.right.extra, font: 'Times New Roman', size: 20, italics: true })],
+                    })] : []),
+                  ],
+                }),
+              ],
+            }),
+          ],
+        }))
         break
 
       case 'PLAIN':
-      default: {
-        // Párrafo normal justificado — une líneas y preserva formato negrita real
-        const joined = allText.join(' ')
-        if (joined.trim()) {
-          docChildren.push(new Paragraph({
-            alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 60, after: 160, line: 360 },
-            children: parseInlineMarkdownToDocx(joined, { size: 24 }),
-          }))
-        }
+        docChildren.push(new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: { before: 40, after: 140, line: 300 },
+          children: parseInlineMarkdownToDocx(block.text, { size: 24 }),
+        }))
         break
-      }
-    }
-
-    paraBuffer = []
-  }
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) {
-      flushPara()
-    } else {
-      paraBuffer.push(trimmed)
     }
   }
-  flushPara()
 
   // ── Documento OpenXML .docx con márgenes oficiales peruanos y paginación judicial ──
   const doc = new Document({
@@ -743,10 +1177,10 @@ export async function downloadWordDoc(
         properties: {
           page: {
             margin: {
-              top: convertMillimetersToTwip(fmt.marginTopCm * 10),       // 30 mm
-              bottom: convertMillimetersToTwip(fmt.marginBottomCm * 10), // 25 mm
-              left: convertMillimetersToTwip(fmt.marginLeftCm * 10),     // 35 mm (margen para foliación y cosido judicial)
-              right: convertMillimetersToTwip(fmt.marginRightCm * 10),   // 20 mm
+              top: convertMillimetersToTwip(fmt.marginTopCm * 10),
+              bottom: convertMillimetersToTwip(fmt.marginBottomCm * 10),
+              left: convertMillimetersToTwip(fmt.marginLeftCm * 10),
+              right: convertMillimetersToTwip(fmt.marginRightCm * 10),
             },
           },
         },
@@ -760,7 +1194,7 @@ export async function downloadWordDoc(
                   new TextRun({
                     text: letterhead?.firmName ? `${letterhead.firmName.toUpperCase()}  |  ` : 'HARDMAN JURÍDICO  |  ',
                     font: 'Times New Roman',
-                    size: 17, // 8.5pt
+                    size: 17,
                     color: '777777',
                   }),
                   new TextRun({
@@ -811,15 +1245,7 @@ export async function downloadWordDoc(
   URL.revokeObjectURL(url)
 }
 
-/**
- * ─── GENERADOR NATIVO PDF OFICIAL A4 (jsPDF) ──────────────────────────────────
- * Genera y descarga directamente un archivo PDF A4 listo para Mesa de Partes Virtual
- * (Poder Judicial, Ministerio Público, SUNAT, SUNAFIL) con estándares procesales peruanos:
- *  - Margen izquierdo de 35 mm (área para foliación y cosido del expediente)
- *  - Margen derecho de 20 mm, superior de 30 mm, inferior de 25 mm
- *  - Membrete formal de estudio jurídico si está configurado
- *  - Paginación continua ("Página X de Y") y sello de trazabilidad digital
- */
+// ─── GENERADOR NATIVO PDF OFICIAL A4 (jsPDF) ──────────────────────────────────
 export async function downloadPdfDoc(
   filename: string,
   content: string,
@@ -835,10 +1261,10 @@ export async function downloadPdfDoc(
 
   const pageWidth = 210
   const pageHeight = 297
-  const marginLeft = 35 // mm (margen para cosido/foliado judicial)
-  const marginRight = 20 // mm
-  const marginTop = 26 // mm
-  const marginBottom = 24 // mm
+  const marginLeft = 30 // mm
+  const marginRight = 25 // mm
+  const marginTop = 25 // mm
+  const marginBottom = 25 // mm
   const contentWidth = pageWidth - marginLeft - marginRight // 155 mm
 
   const letterhead = getSavedLetterhead()
@@ -886,142 +1312,290 @@ export async function downloadPdfDoc(
     currentY = 27
   }
 
-  const lines = content
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .split('\n')
+  const blocks = parseDocumentBlocks(content)
 
-  for (let i = 0; i < lines.length; i++) {
-    const rawLine = lines[i]
-    const trimmed = rawLine.trim()
-    if (!trimmed) {
-      currentY += 3.5
-      continue
-    }
-
-    const kind = classifyLine(trimmed)
-    const cleanText = cleanHeading(trimmed)
-
-    if (kind === 'MAIN_TITLE') {
-      currentY += 3
-      if (currentY > pageHeight - marginBottom) {
-        pdf.addPage()
-        currentY = letterhead?.firmName ? 27 : marginTop
-      }
-      pdf.setFont('times', 'bold')
-      pdf.setFontSize(12.5)
-      pdf.setTextColor(10, 10, 10)
-      const wrapped = pdf.splitTextToSize(cleanText.toUpperCase(), contentWidth)
-      wrapped.forEach((wl: string) => {
-        const textW = pdf.getTextWidth(wl)
-        const xPos = marginLeft + (contentWidth - textW) / 2
-        pdf.text(wl, xPos, currentY)
-        currentY += 5.5
-      })
-      currentY += 2.5
-      continue
-    }
-
-    if (kind === 'SUMILLA') {
-      pdf.setFont('times', 'bold')
-      pdf.setFontSize(10)
-      pdf.setTextColor(20, 20, 20)
-      const sumillaWidth = 95
-      const sumillaX = pageWidth - marginRight - sumillaWidth
-      const wrapped = pdf.splitTextToSize(cleanText, sumillaWidth)
-      wrapped.forEach((wl: string) => {
-        if (currentY > pageHeight - marginBottom) {
+  for (const block of blocks) {
+    switch (block.kind) {
+      case 'MAIN_TITLE': {
+        currentY += 4
+        if (currentY > pageHeight - marginBottom - 15) {
           pdf.addPage()
           currentY = letterhead?.firmName ? 27 : marginTop
         }
-        pdf.text(wl, sumillaX, currentY)
-        currentY += 4.8
-      })
-      currentY += 1.5
-      continue
-    }
-
-    if (kind === 'AUTHORITY') {
-      currentY += 2.5
-      if (currentY > pageHeight - marginBottom) {
-        pdf.addPage()
-        currentY = letterhead?.firmName ? 27 : marginTop
+        pdf.setFont('times', 'bold')
+        pdf.setFontSize(13)
+        pdf.setTextColor(10, 10, 10)
+        const wrapped = pdf.splitTextToSize(cleanHeading(block.text).toUpperCase(), contentWidth)
+        wrapped.forEach((wl: string) => {
+          const textW = pdf.getTextWidth(wl)
+          const xPos = marginLeft + (contentWidth - textW) / 2
+          pdf.text(wl, xPos, currentY)
+          currentY += 6
+        })
+        currentY += 2
+        break
       }
-      pdf.setFont('times', 'bold')
-      pdf.setFontSize(10.5)
-      pdf.setTextColor(10, 10, 10)
-      const wrapped = pdf.splitTextToSize(cleanText.toUpperCase(), contentWidth)
-      wrapped.forEach((wl: string) => {
-        pdf.text(wl, marginLeft, currentY)
-        currentY += 5.2
-      })
-      currentY += 1.5
-      continue
-    }
 
-    if (kind === 'SECTION_ROMAN' || kind === 'SECTION_TEXT') {
-      currentY += 3
-      if (currentY > pageHeight - marginBottom) {
-        pdf.addPage()
-        currentY = letterhead?.firmName ? 27 : marginTop
+      case 'SUMILLA': {
+        pdf.setFont('times', 'bold')
+        pdf.setFontSize(10)
+        pdf.setTextColor(20, 20, 20)
+        const sumillaWidth = 95
+        const sumillaX = pageWidth - marginRight - sumillaWidth
+        for (const l of block.lines) {
+          const wrapped = pdf.splitTextToSize(cleanHeading(l), sumillaWidth)
+          wrapped.forEach((wl: string) => {
+            if (currentY > pageHeight - marginBottom - 10) {
+              pdf.addPage()
+              currentY = letterhead?.firmName ? 27 : marginTop
+            }
+            pdf.text(wl, sumillaX, currentY)
+            currentY += 4.8
+          })
+        }
+        currentY += 2
+        break
       }
-      pdf.setFont('times', 'bold')
-      pdf.setFontSize(10.5)
-      pdf.setTextColor(15, 15, 15)
-      const wrapped = pdf.splitTextToSize(cleanText.toUpperCase(), contentWidth)
-      wrapped.forEach((wl: string) => {
-        pdf.text(wl, marginLeft, currentY)
-        currentY += 5.2
-      })
-      currentY += 1
-      continue
-    }
 
-    if (kind === 'SEPARATOR') {
-      currentY += 10
-      if (currentY > pageHeight - marginBottom) {
-        pdf.addPage()
-        currentY = letterhead?.firmName ? 27 : marginTop
+      case 'AUTHORITY': {
+        currentY += 2.5
+        pdf.setFont('times', 'bold')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(10, 10, 10)
+        for (const l of block.lines) {
+          const wrapped = pdf.splitTextToSize(cleanHeading(l).toUpperCase(), contentWidth)
+          wrapped.forEach((wl: string) => {
+            if (currentY > pageHeight - marginBottom - 10) {
+              pdf.addPage()
+              currentY = letterhead?.firmName ? 27 : marginTop
+            }
+            pdf.text(wl, marginLeft, currentY)
+            currentY += 5.2
+          })
+        }
+        currentY += 1.5
+        break
       }
-      pdf.setFont('times', 'normal')
-      pdf.setFontSize(10)
-      pdf.setTextColor(60, 60, 60)
-      const sigLine = '____________________________________'
-      const sigW = pdf.getTextWidth(sigLine)
-      pdf.text(sigLine, marginLeft + (contentWidth - sigW) / 2, currentY)
-      currentY += 4.5
-      continue
-    }
 
-    if (kind === 'SIGNATURE_LABEL') {
-      if (currentY > pageHeight - marginBottom) {
-        pdf.addPage()
-        currentY = letterhead?.firmName ? 27 : marginTop
+      case 'CLAUSE': {
+        currentY += 3.5
+        if (currentY > pageHeight - marginBottom - 15) {
+          pdf.addPage()
+          currentY = letterhead?.firmName ? 27 : marginTop
+        }
+        pdf.setFont('times', 'bold')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(15, 15, 15)
+        const wrapped = pdf.splitTextToSize(cleanHeading(block.text), contentWidth)
+        wrapped.forEach((wl: string) => {
+          pdf.text(wl, marginLeft, currentY)
+          currentY += 5.2
+        })
+        currentY += 1
+        break
       }
-      pdf.setFont('times', 'bold')
-      pdf.setFontSize(9)
-      pdf.setTextColor(20, 20, 20)
-      const textW = pdf.getTextWidth(cleanText)
-      pdf.text(cleanText, marginLeft + (contentWidth - textW) / 2, currentY)
-      currentY += 4.2
-      continue
-    }
 
-    // Párrafo legal estándar
-    pdf.setFont('times', 'normal')
-    pdf.setFontSize(10.5)
-    pdf.setTextColor(30, 30, 30)
+      case 'SECTION': {
+        currentY += 3
+        if (currentY > pageHeight - marginBottom - 15) {
+          pdf.addPage()
+          currentY = letterhead?.firmName ? 27 : marginTop
+        }
+        pdf.setFont('times', 'bold')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(15, 15, 15)
+        const wrappedTitle = pdf.splitTextToSize(cleanHeading(block.text).toUpperCase(), contentWidth)
+        wrappedTitle.forEach((wl: string) => {
+          pdf.text(wl, marginLeft, currentY)
+          currentY += 5.2
+        })
+        currentY += 1
 
-    const wrapped = pdf.splitTextToSize(cleanText, contentWidth)
-    wrapped.forEach((wl: string) => {
-      if (currentY > pageHeight - marginBottom) {
-        pdf.addPage()
-        currentY = letterhead?.firmName ? 27 : marginTop
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(30, 30, 30)
+        for (const sl of block.sublines) {
+          const wrapped = pdf.splitTextToSize(cleanHeading(sl), contentWidth)
+          wrapped.forEach((wl: string) => {
+            if (currentY > pageHeight - marginBottom - 10) {
+              pdf.addPage()
+              currentY = letterhead?.firmName ? 27 : marginTop
+            }
+            pdf.text(wl, marginLeft, currentY)
+            currentY += 4.9
+          })
+          currentY += 1
+        }
+        break
       }
-      pdf.text(wl, marginLeft, currentY)
-      currentY += 4.9
-    })
-    currentY += 1.2
+
+      case 'BULLET': {
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(30, 30, 30)
+        for (const item of block.items) {
+          if (currentY > pageHeight - marginBottom - 10) {
+            pdf.addPage()
+            currentY = letterhead?.firmName ? 27 : marginTop
+          }
+          pdf.setFont('times', 'bold')
+          pdf.text('•', marginLeft + 2, currentY)
+          pdf.setFont('times', 'normal')
+          const wrapped = pdf.splitTextToSize(cleanHeading(item), contentWidth - 8)
+          wrapped.forEach((wl: string, idx: number) => {
+            pdf.text(wl, marginLeft + 7, currentY)
+            currentY += 4.9
+          })
+          currentY += 0.8
+        }
+        break
+      }
+
+      case 'FIELD': {
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10)
+        pdf.setTextColor(20, 20, 20)
+        for (const f of block.lines) {
+          if (currentY > pageHeight - marginBottom - 10) {
+            pdf.addPage()
+            currentY = letterhead?.firmName ? 27 : marginTop
+          }
+          pdf.text(cleanHeading(f), marginLeft + 6, currentY)
+          currentY += 4.8
+        }
+        break
+      }
+
+      case 'SEPARATOR': {
+        currentY += 12
+        if (currentY > pageHeight - marginBottom - 25) {
+          pdf.addPage()
+          currentY = letterhead?.firmName ? 27 : marginTop
+        }
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10)
+        pdf.setTextColor(60, 60, 60)
+        const sigLine = '____________________________________'
+        const sigW = pdf.getTextWidth(sigLine)
+        pdf.text(sigLine, marginLeft + (contentWidth - sigW) / 2, currentY)
+        currentY += 4.5
+        break
+      }
+
+      case 'SIGNATURE_LABEL': {
+        for (const sl of block.lines) {
+          if (currentY > pageHeight - marginBottom - 10) {
+            pdf.addPage()
+            currentY = letterhead?.firmName ? 27 : marginTop
+          }
+          pdf.setFont('times', 'bold')
+          pdf.setFontSize(9.5)
+          pdf.setTextColor(20, 20, 20)
+          const textW = pdf.getTextWidth(cleanHeading(sl))
+          pdf.text(cleanHeading(sl), marginLeft + (contentWidth - textW) / 2, currentY)
+          currentY += 4.2
+        }
+        break
+      }
+
+      case 'DOUBLE_SIGNATURE': {
+        currentY += 14
+        if (currentY > pageHeight - marginBottom - 35) {
+          pdf.addPage()
+          currentY = letterhead?.firmName ? 27 : marginTop
+        }
+
+        const leftX = marginLeft + (contentWidth * 0.25)
+        const rightX = marginLeft + (contentWidth * 0.75)
+        const sigLine = '________________________________'
+
+        // 1. Líneas de firma
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10)
+        pdf.setTextColor(60, 60, 60)
+        pdf.text(sigLine, leftX - pdf.getTextWidth(sigLine) / 2, currentY)
+        pdf.text(sigLine, rightX - pdf.getTextWidth(sigLine) / 2, currentY)
+        currentY += 5
+
+        // 2. Roles (Bold)
+        if (block.data.left.role || block.data.right.role) {
+          pdf.setFont('times', 'bold')
+          pdf.setFontSize(9.5)
+          pdf.setTextColor(15, 15, 15)
+          if (block.data.left.role) {
+            const r = block.data.left.role.toUpperCase()
+            pdf.text(r, leftX - pdf.getTextWidth(r) / 2, currentY)
+          }
+          if (block.data.right.role) {
+            const r = block.data.right.role.toUpperCase()
+            pdf.text(r, rightX - pdf.getTextWidth(r) / 2, currentY)
+          }
+          currentY += 4.5
+        }
+
+        // 3. Nombres
+        if (block.data.left.name || block.data.right.name) {
+          pdf.setFont('times', 'normal')
+          pdf.setFontSize(9.5)
+          pdf.setTextColor(20, 20, 20)
+          if (block.data.left.name) {
+            pdf.text(block.data.left.name, leftX - pdf.getTextWidth(block.data.left.name) / 2, currentY)
+          }
+          if (block.data.right.name) {
+            pdf.text(block.data.right.name, rightX - pdf.getTextWidth(block.data.right.name) / 2, currentY)
+          }
+          currentY += 4.2
+        }
+
+        // 4. Documentos / DNIs
+        if (block.data.left.docId || block.data.right.docId) {
+          pdf.setFont('times', 'normal')
+          pdf.setFontSize(9)
+          pdf.setTextColor(50, 50, 50)
+          if (block.data.left.docId) {
+            pdf.text(block.data.left.docId, leftX - pdf.getTextWidth(block.data.left.docId) / 2, currentY)
+          }
+          if (block.data.right.docId) {
+            pdf.text(block.data.right.docId, rightX - pdf.getTextWidth(block.data.right.docId) / 2, currentY)
+          }
+          currentY += 4.2
+        }
+
+        // 5. Extras (si existen)
+        if (block.data.left.extra || block.data.right.extra) {
+          pdf.setFont('times', 'italic')
+          pdf.setFontSize(8)
+          pdf.setTextColor(80, 80, 80)
+          if (block.data.left.extra) {
+            pdf.text(block.data.left.extra, leftX - pdf.getTextWidth(block.data.left.extra) / 2, currentY)
+          }
+          if (block.data.right.extra) {
+            pdf.text(block.data.right.extra, rightX - pdf.getTextWidth(block.data.right.extra) / 2, currentY)
+          }
+          currentY += 4
+        }
+
+        currentY += 6
+        break
+      }
+
+      case 'PLAIN': {
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(30, 30, 30)
+        const wrapped = pdf.splitTextToSize(cleanHeading(block.text), contentWidth)
+        wrapped.forEach((wl: string) => {
+          if (currentY > pageHeight - marginBottom - 10) {
+            pdf.addPage()
+            currentY = letterhead?.firmName ? 27 : marginTop
+          }
+          pdf.text(wl, marginLeft, currentY)
+          currentY += 4.9
+        })
+        currentY += 1.5
+        break
+      }
+    }
   }
 
   const totalPages = (pdf as any).internal.getNumberOfPages()
@@ -1090,6 +1664,8 @@ export function extractDocumentFromMessage(rawContent: string): {
 
   // 2. Detección automática de encabezados legales formales
   const legalMarkers = [
+    /(?:^|\n)(CONTRATO DE ARRENDAMIENTO[\s\S]{100,})/i,
+    /(?:^|\n)(CONTRATO DE[\s\S]{100,})/i,
     /(?:^|\n)(CARTA NOTARIAL[\s\S]{100,})/i,
     /(?:^|\n)(SE[ÑN]OR\s+JUEZ[\s\S]{100,})/i,
     /(?:^|\n)(SE[ÑN]OR\s+FISCAL[\s\S]{100,})/i,
@@ -1097,7 +1673,6 @@ export function extractDocumentFromMessage(rawContent: string): {
     /(?:^|\n)(SE[ÑN]ORES\s+DE\s+SUNAFIL[\s\S]{100,})/i,
     /(?:^|\n)(SE[ÑN]OR\s+PRESIDENTE\s+DEL\s+TRIBUNAL[\s\S]{100,})/i,
     /(?:^|\n)(A\s+LA\s+SUPERINTENDENCIA[\s\S]{100,})/i,
-    /(?:^|\n)(CONTRATO DE[\s\S]{100,})/i,
     /(?:^|\n)(MINUTA DE[\s\S]{100,})/i,
     /(?:^|\n)(SOLICITO:\s*[\s\S]{100,})/i,
     /(?:^|\n)(EXPEDIENTE\s*:\s*[\s\S]{100,})/i,

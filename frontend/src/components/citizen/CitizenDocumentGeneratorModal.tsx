@@ -234,12 +234,12 @@ const DOC_FORMAT: Record<DocType, {
     marginTopCm: 3.5, marginBottomCm: 2.5, marginLeftCm: 3.5, marginRightCm: 2.5,
     note: 'CPC Art. 130 — Poder Judicial del Perú'
   },
-  // Contrato de Alquiler → Ley 30933 / D. Leg. 1177: Arial 11pt, interlineado 1.5, márgenes civiles
+  // Contrato de Alquiler → Estándar Notarial Perú: Times New Roman 11pt, interlineado 1.15, márgenes notariales
   alquiler: {
-    fontFamily: 'Arial', fontFamilyCss: 'Arial, Helvetica, sans-serif',
-    fontSizePt: 11, lineHeight: 1.5,
-    marginTopCm: 3.0, marginBottomCm: 2.5, marginLeftCm: 3.0, marginRightCm: 2.5,
-    note: 'Ley 30933 — Desalojo Notarial Express'
+    fontFamily: 'Times New Roman', fontFamilyCss: "'Times New Roman', Times, serif",
+    fontSizePt: 11, lineHeight: 1.15,
+    marginTopCm: 2.5, marginBottomCm: 2.5, marginLeftCm: 3.0, marginRightCm: 3.0,
+    note: 'Estándar Notarial Perú — Ley 30933, Ley 32430 y Art. 594 CPC'
   },
   // Reclamo INDECOPI → Ley 29571 (Código de Consumo): Arial 12pt, interlineado 1.5
   indecopi: {
@@ -269,6 +269,64 @@ const DOC_FORMAT: Record<DocType, {
     marginTopCm: 3.5, marginBottomCm: 2.5, marginLeftCm: 3.5, marginRightCm: 2.5,
     note: 'CC Art. 1648 — Mutuo Dinerario con Mérito Ejecutivo'
   },
+}
+
+function numeroALetras(monto: number): string {
+  const unidades = ['', 'un', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve']
+  const especiales = ['diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve']
+  const decenas = ['', 'diez', 'veinte', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa']
+  const centenas = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos']
+
+  const entero = Math.floor(Math.abs(monto))
+  const centavos = Math.round((Math.abs(monto) - entero) * 100)
+  const centavosStr = centavos.toString().padStart(2, '0') + '/100 soles'
+
+  if (entero === 0) return `Cero y ${centavosStr}`
+  if (entero === 100) return `Cien y ${centavosStr}`
+
+  function convertirGrupo(n: number): string {
+    let res = ''
+    const c = Math.floor(n / 100)
+    const d = Math.floor((n % 100) / 10)
+    const u = n % 10
+
+    if (c > 0) {
+      if (c === 1 && d === 0 && u === 0) res += 'cien '
+      else res += centenas[c] + ' '
+    }
+
+    if (d === 1) {
+      res += especiales[u] + ' '
+    } else if (d === 2) {
+      if (u === 0) res += 'veinte '
+      else res += 'veinti' + unidades[u] + ' '
+    } else if (d > 2) {
+      res += decenas[d] + ' '
+      if (u > 0) res += 'y ' + unidades[u] + ' '
+    } else if (u > 0) {
+      res += unidades[u] + ' '
+    }
+    return res.trim()
+  }
+
+  let palabras = ''
+  const miles = Math.floor(entero / 1000)
+  const resto = entero % 1000
+
+  if (miles === 1) {
+    palabras += 'mil '
+  } else if (miles > 1) {
+    palabras += convertirGrupo(miles) + ' mil '
+  }
+
+  if (resto > 0) {
+    palabras += convertirGrupo(resto) + ' '
+  }
+
+  palabras = palabras.trim()
+  if (!palabras) palabras = 'Cero'
+  palabras = palabras.charAt(0).toUpperCase() + palabras.slice(1)
+  return `${palabras} y ${centavosStr}`
 }
 
 export default function CitizenDocumentGeneratorModal({
@@ -329,18 +387,30 @@ export default function CitizenDocumentGeneratorModal({
   const [montoReclamado, setMontoReclamado] = useState('')
   const [pedidoConcreto, setPedidoConcreto] = useState('')
 
-  // ── Alquiler ────────────────────────────────────────────────
+  // ── Alquiler (Estándar Notarial Perú 2026: Ley 30933, Ley 32430, DL 1529, Art. 594 CPC) ──
   const [arrendador, setArrendador] = useState('')
   const [arrendadorDni, setArrendadorDni] = useState('')
+  const [arrendadorEstadoCivil, setArrendadorEstadoCivil] = useState('soltero(a)')
+  const [arrendadorDomicilio, setArrendadorDomicilio] = useState('')
   const [arrendatario, setArrendatario] = useState('')
   const [arrendatarioDni, setArrendatarioDni] = useState('')
+  const [arrendatarioEstadoCivil, setArrendatarioEstadoCivil] = useState('soltero(a)')
+  const [arrendatarioDomicilio, setArrendatarioDomicilio] = useState('')
   const [inmuebleDireccion, setInmuebleDireccion] = useState('')
-  const [rentaMensual, setRentaMensual] = useState('1200')
-  const [garantiaMeses, setGarantiaMeses] = useState('1')
+  const [inmueblePartida, setInmueblePartida] = useState('')
+  const [inmuebleZonaRegistral, setInmuebleZonaRegistral] = useState('')
+  const [inmuebleArea, setInmuebleArea] = useState('120')
+  const [inmuebleDetalle, setInmuebleDetalle] = useState('3 dormitorios, 2 baños, sala-comedor, cocina y cochera')
+  const [rentaMensual, setRentaMensual] = useState('2500')
+  const [garantiaMeses, setGarantiaMeses] = useState('2')
   const [diaPago, setDiaPago] = useState('5')
+  const [bancoNombre, setBancoNombre] = useState('BCP')
   const [cuentaBancaria, setCuentaBancaria] = useState('')
+  const [cuentaCci, setCuentaCci] = useState('')
+  const [plazoTexto, setPlazoTexto] = useState('un (01) año')
   const [fechaInicio, setFechaInicio] = useState('')
-  const [penalidad, setPenalidad] = useState('10')
+  const [fechaFin, setFechaFin] = useState('')
+  const [ciudadContrato, setCiudadContrato] = useState('Lima')
 
   // ── Renuncia ────────────────────────────────────────────────
   const [renunciaNombre, setRenunciaNombre] = useState('')
@@ -566,56 +636,82 @@ NOTA DE LEY: Trámite gratuito — No requiere firma de abogado defensor (Ley N�
     }
 
     if (docType === 'alquiler') {
-      const garantiaTotal = (parseFloat(rentaMensual || '0') * parseFloat(garantiaMeses || '1')).toFixed(2)
+      const rentaNum = parseFloat(rentaMensual || '0') || 0
+      const garantiaMesesNum = parseFloat(garantiaMeses || '1') || 1
+      const garantiaTotalNum = rentaNum * garantiaMesesNum
+      const rentaFormatted = rentaNum.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      const garantiaFormatted = garantiaTotalNum.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      const rentaEnLetras = numeroALetras(rentaNum)
+      const garantiaEnLetras = numeroALetras(garantiaTotalNum)
+
+      const fInicioStr = fechaInicio
+        ? new Date(fechaInicio + 'T00:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '1 de septiembre de 2026'
+      const fFinStr = fechaFin
+        ? new Date(fechaFin + 'T00:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '31 de agosto de 2027'
+
+      const ciudad = ciudadContrato.trim() || 'Lima'
+
       return {
-        title: `Contrato_Arrendamiento_${arrendador.replace(/\s+/g, '_') || 'Inmueble'}`,
+        title: `Contrato_Arrendamiento_${(arrendador || 'Inmueble').replace(/\s+/g, '_')}`,
         content: `CONTRATO DE ARRENDAMIENTO DE INMUEBLE
-CON CLÁUSULA DE ALLANAMIENTO A FUTURO Y SOMETIMIENTO A LA LEY N° 30933
-(Documento Privado con Firmas Legalizadas Notarialmente)
 
-Conste por el presente documento privado, el Contrato de Arrendamiento que celebran de una parte:
+Conste por el presente documento el contrato de arrendamiento que celebran, de una parte, don/doña ${arrendador || '[NOMBRE DEL ARRENDADOR]'}, identificado(a) con DNI N.º ${arrendadorDni || '[DNI ARRENDADOR]'}, de estado civil ${arrendadorEstadoCivil || 'soltero(a)'}, con domicilio en ${arrendadorDomicilio || '[DOMICILIO DEL ARRENDADOR]'}, a quien en adelante se denominará EL ARRENDADOR; y, de la otra parte, don/doña ${arrendatario || '[NOMBRE DEL ARRENDATARIO]'}, identificado(a) con DNI N.º ${arrendatarioDni || '[DNI ARRENDATARIO]'}, de estado civil ${arrendatarioEstadoCivil || 'soltero(a)'}, con domicilio en ${arrendatarioDomicilio || '[DOMICILIO DEL ARRENDATARIO]'}, a quien en adelante se denominará EL ARRENDATARIO; en los términos y condiciones siguientes:
 
-EL ARRENDADOR: ${arrendador || '[NOMBRE Y APELLIDOS DEL PROPIETARIO]'}, identificado(a) con DNI N° ${arrendadorDni || '[N° DNI]'}, domiciliado(a) en [DIRECCIÓN PROPIETARIO]; y de la otra parte:
+PRIMERA.- DEL INMUEBLE
+EL ARRENDADOR es propietario del inmueble ubicado en ${inmuebleDireccion || '[DIRECCIÓN EXACTA DEL INMUEBLE]'}, inscrito en la Partida Registral N.º ${inmueblePartida || '[PARTIDA REGISTRAL]'} del Registro de Predios de la Zona Registral N.º ${inmuebleZonaRegistral || '[SEDE / ZONA REGISTRAL]'} (SUNARP). El inmueble tiene un área aproximada de ${inmuebleArea || '120'} m² y consta de ${inmuebleDetalle || '3 dormitorios, 2 baños, sala-comedor, cocina y cochera'}. El estado de conservación del inmueble a la fecha de entrega consta en el Acta de Entrega que como Anexo 1 forma parte integrante del presente contrato, con el respectivo registro fotográfico.
 
-EL ARRENDATARIO: ${arrendatario || '[NOMBRE Y APELLIDOS DEL INQUILINO]'}, identificado(a) con DNI N° ${arrendatarioDni || '[N° DNI]'}, domiciliado(a) para efectos del presente contrato en el inmueble arrendado; bajo los términos siguientes:
+SEGUNDA.- DESTINO
+El inmueble será destinado exclusivamente a vivienda de EL ARRENDATARIO y su núcleo familiar directo. El uso del inmueble para un fin distinto al pactado constituye causal de resolución del contrato, conforme al artículo 1697°, inciso 2, del Código Civil.
 
-PRIMERA: OBJETO DEL CONTRATO.-
-EL ARRENDADOR cede en arrendamiento a favor de EL ARRENDATARIO el inmueble ubicado en ${inmuebleDireccion || '[DIRECCIÓN EXACTA, DISTRITO Y PROVINCIA DEL INMUEBLE]'}, para destinarlo única y exclusivamente a uso de vivienda familiar.
+TERCERA.- PLAZO
+El plazo del presente contrato es de ${plazoTexto || 'un (01) año'}, plazo máximo permitido entre personas naturales conforme al artículo 1688° del Código Civil, contado desde el ${fInicioStr} hasta el ${fFinStr}. El contrato concluye de pleno derecho al vencimiento del plazo, sin necesidad de aviso previo, conforme al artículo 1699° del Código Civil. Si EL ARRENDATARIO permaneciera en el inmueble después del vencimiento sin oposición de EL ARRENDADOR, se entenderá continuado el arrendamiento bajo las mismas condiciones y por plazo indeterminado, pudiendo cualquiera de las partes ponerle fin cursando aviso con no menos de treinta (30) días calendario de anticipación mediante carta notarial, conforme al artículo 1700° del Código Civil.
 
-SEGUNDA: PLAZO DEL CONTRATO.-
-El plazo de vigencia del presente contrato es de UN (01) AÑO FORZOSO, que inicia el ${fechaInicio ? new Date(fechaInicio).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' }) : '[FECHA INICIO]'} y vence indefectiblemente el [FECHA DE VENCIMIENTO].
+CUARTA.- RENTA MENSUAL
+La renta mensual asciende a S/ ${rentaFormatted} (${rentaEnLetras}), que EL ARRENDATARIO pagará por adelantado dentro de los primeros ${diaPago || '5'} días de cada mes, mediante transferencia o depósito bancario a la cuenta N.º ${cuentaBancaria || '[N° DE CUENTA]'} del Banco ${bancoNombre || 'BCP'}${cuentaCci ? ` (CCI: ${cuentaCci})` : ''}, a nombre de EL ARRENDADOR, en cumplimiento de lo dispuesto por la Ley N.º 28194 (Ley para la Lucha contra la Evasión y para la Formalización de la Economía), modificada por el Decreto Legislativo N.º 1529, que exige el uso de medios de pago para obligaciones iguales o superiores a S/ 2,000.00. El comprobante de la transferencia o depósito constituye el único medio válido de acreditación del pago.
 
-TERCERA: RENTA MENSUAL Y FORMA DE PAGO.-
-La renta pactada de común acuerdo asciende a S/ ${parseFloat(rentaMensual || '0').toLocaleString('es-PE', { minimumFractionDigits: 2 })} Soles mensuales, que EL ARRENDATARIO pagará por adelantado los días ${diaPago || '5'} de cada mes.
-${cuentaBancaria ? `Medio de pago autorizado: Abono en Cuenta Bancaria N° ${cuentaBancaria} de entidad financiera supervisada por la SBS.` : 'Medio de pago: Depósito en cuenta bancaria bancarizada conforme a la Ley 30933.'}
-Penalidad por mora diaria: ${penalidad || '10'}% sobre la cuota impaga.
+QUINTA.- GARANTÍA
+EL ARRENDATARIO entrega la suma de S/ ${garantiaFormatted} (${garantiaEnLetras}) como depósito en garantía del cumplimiento de sus obligaciones, incluyendo el pago de rentas pendientes, servicios impagos y daños al inmueble distintos del deterioro por uso ordinario. Dicha suma será devuelta a EL ARRENDATARIO dentro de los quince (15) días calendario siguientes a la devolución efectiva del inmueble, previa verificación de su estado de conservación, deduciéndose únicamente los conceptos antes señalados debidamente acreditados. La garantía no podrá ser aplicada por EL ARRENDATARIO como pago de la renta de los últimos meses de vigencia del contrato.
 
-CUARTA: DEPÓSITO DE GARANTÍA.-
-EL ARRENDATARIO entrega la suma de S/ ${parseFloat(garantiaTotal).toLocaleString('es-PE', { minimumFractionDigits: 2 })} Soles en calidad de depósito de garantía, para responder por eventuales deterioros en el inmueble o deudas de servicios públicos.
+SEXTA.- SERVICIOS
+Los servicios de agua, luz, gas e internet serán de cargo de EL ARRENDATARIO, quien se obliga a mantenerlos al día durante la vigencia del contrato y a acreditar dicho pago cuando le sea requerido, conforme al artículo 1681°, inciso 3, del Código Civil.
 
-QUINTA: CLÁUSULA DE ALLANAMIENTO A FUTURO (ART. 594° CÓDIGO PROCESAL CIVIL).-
-EL ARRENDATARIO SE ALLANA DE FORMA EXPRESA, IRREVOCABLE E INCONDICIONAL a la demanda de desalojo que EL ARRENDADOR interponga ante el Juzgado de Paz Letrado por las causales de:
-a) Vencimiento del plazo contractual estipulado.
-b) Falta de pago de la renta por el plazo de dos meses y quince días.
+SÉPTIMA.- REPARACIONES
+Las reparaciones locativas u ordinarias, derivadas del uso normal del inmueble, serán de cargo de EL ARRENDATARIO. Las reparaciones necesarias, estructurales o derivadas del desgaste natural del bien serán de cargo de EL ARRENDADOR, conforme al artículo 1678° del Código Civil, salvo que el deterioro sea imputable a dolo o culpa de EL ARRENDATARIO, en cuyo caso el costo será asumido por este último.
 
-SEXTA: SOMETIMIENTO AL DESALOJO CON INTERVENCIÓN NOTARIAL (LEY N° 30933).-
-Las partes convienen de forma expresa e irrevocable acogerse al Procedimiento Especial de Desalojo con Intervención Notarial regulado por la Ley N° 30933. En caso de configuración de las causales de vencimiento de contrato o falta de pago de rentas, el Notario Público constatará el incumplimiento y remitirá el expediente al Juez de Paz Letrado para la orden judicial de lanzamiento inmediato en un plazo máximo de tres (3) días hábiles.
+OCTAVA.- RESOLUCIÓN DEL CONTRATO
+EL ARRENDADOR podrá solicitar la resolución del contrato en los siguientes casos, conforme al artículo 1697° del Código Civil: (a) falta de pago de la renta por un periodo de dos (2) meses y quince (15) días; (b) uso del inmueble para fin distinto al pactado en la Cláusula Segunda; (c) subarrendamiento o cesión del inmueble sin autorización escrita de EL ARRENDADOR; y (d) incumplimiento de cualquier otra obligación esencial establecida en el presente contrato, previo requerimiento escrito con un plazo de subsanación de cinco (5) días hábiles.
 
-SÉTIMA: LEGALIZACIÓN NOTARIAL DE FIRMAS.-
-Las partes acuerdan legalizar sus firmas ante Notario Público, requisito obligatorio de validez y exigibilidad previsto en el artículo 4° de la Ley N° 30933.
+NOVENA.- PENALIDAD POR INCUMPLIMIENTO
+En caso de resolución del contrato por causa imputable a EL ARRENDATARIO, este deberá pagar a EL ARRENDADOR una penalidad equivalente al triple de la renta mensual vigente a la fecha de resolución, sin perjuicio del pago de las rentas adeudadas y de la indemnización por los daños y perjuicios adicionales que EL ARRENDADOR acredite. La aplicación de esta penalidad no limita el derecho de EL ARRENDATARIO a cuestionarla o hacer valer sus derechos por la vía que corresponda.
 
-En señal de plena conformidad, suscriben el presente contrato en duplicado ejemplar en la ciudad de Lima, a los ${today}.
+DÉCIMA.- DEVOLUCIÓN DEL INMUEBLE
+Al término del contrato, por vencimiento del plazo o por resolución, EL ARRENDATARIO devolverá el inmueble en el mismo estado de conservación en que lo recibió según el Acta de Entrega (Anexo 1), salvo el deterioro proveniente del uso ordinario y el transcurso del tiempo. Si EL ARRENDATARIO no devolviera el inmueble en la fecha correspondiente, pagará a EL ARRENDADOR una penalidad equivalente a la renta mensual vigente por cada mes o fracción de retraso, conforme al artículo 1704° del Código Civil, sin perjuicio de las acciones de desalojo a que hubiera lugar.
 
+DÉCIMO PRIMERA.- PROHIBICIÓN DE SUBARRENDAMIENTO Y CESIÓN
+EL ARRENDATARIO no podrá subarrendar el inmueble, ceder su posición contractual ni ceder el uso del bien a terceros, total o parcialmente, sin autorización previa y por escrito de EL ARRENDADOR, conforme al artículo 1692° del Código Civil. La contravención de esta cláusula constituye causal de resolución del contrato.
 
-__________________________________           __________________________________
-${arrendador || 'EL ARRENDADOR'}             ${arrendatario || 'EL ARRENDATARIO'}
-DNI N°: ${arrendadorDni || '_______________'}       DNI N°: ${arrendatarioDni || '_______________'}
+DÉCIMO SEGUNDA.- CLÁUSULA DE ALLANAMIENTO A FUTURO
+EL ARRENDATARIO declara su allanamiento expreso a la futura demanda de desalojo que EL ARRENDADOR pudiera interponer por conclusión del contrato o por resolución derivada de la falta de pago de la renta, conforme al artículo 594° del Código Procesal Civil, modificado por la Ley N.º 30201. Las partes dejan constancia de que, para la validez de esta cláusula, sus firmas serán legalizadas notarialmente.
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-CONSTANCIA DE LEGALIZACIÓN NOTARIAL DE FIRMAS
-Doy fe de que las firmas que anteceden corresponden a las partes contratantes.
-Registro Notarial N°: ______________________  Fecha: ____/____/202__
-Sello y firma del Notario Público: __________________________________________`,
+DÉCIMO TERCERA.- SOMETIMIENTO A LA LEY N.º 30933 (DESALOJO NOTARIAL EXPRESS)
+Las partes se someten expresamente al procedimiento de desalojo notarial regulado por la Ley N.º 30933 y su reglamento, para el caso de vencimiento del contrato o falta de pago de la renta. Para dicho efecto, EL ARRENDADOR designa la cuenta bancaria señalada en la Cláusula Cuarta como cuenta para la acreditación de los pagos de renta.
+
+DÉCIMO CUARTA.- RÉGIMEN TRIBUTARIO
+Las partes dejan constancia de que la renta de primera categoría generada por el presente arrendamiento se imputará bajo el criterio de lo percibido, conforme a la Ley N.º 32430 (Ley de Arrendamiento Justo), vigente desde el 1 de enero de 2026, que modifica el artículo 57°, inciso b), del Texto Único Ordenado de la Ley del Impuesto a la Renta. EL ARRENDADOR declarará y pagará el Impuesto a la Renta correspondiente (5% de la renta) únicamente respecto de las rentas efectivamente percibidas, acreditadas mediante los comprobantes de transferencia o depósito bancario señalados en la Cláusula Cuarta.
+
+DÉCIMO QUINTA.- JURISDICCIÓN
+Para todos los efectos derivados del presente contrato, las partes se someten a la competencia de los jueces y tribunales del distrito judicial de ${ciudad}, renunciando al fuero de sus domicilios de ser este distinto.
+
+Firmado en la ciudad de ${ciudad}, a los ${today}, en dos ejemplares de igual tenor y valor, con firmas legalizadas notarialmente conforme a lo señalado en la Cláusula Décimo Segunda.
+
+Nota: el presente contrato, al tener como destino la vivienda, puede alternativamente celebrarse mediante el Formulario Único de Arrendamiento (FUA) previsto en el Decreto Legislativo N.º 1177, el cual facilita el acceso a los mecanismos de garantía y desalojo antes referidos.
+
+_________________________________          _________________________________
+EL ARRENDADOR                              EL ARRENDATARIO
+${arrendador || 'EL ARRENDADOR'}           ${arrendatario || 'EL ARRENDATARIO'}
+DNI N°: ${arrendadorDni || '_______________'}       DNI N°: ${arrendatarioDni || '_______________'}`,
       }
     }
 
@@ -1023,33 +1119,87 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
       return (
         <div className="space-y-4">
           <div
-            className="p-3 rounded-xl border text-[11px] flex items-start gap-2.5"
+            className="p-3.5 rounded-xl border text-[11px] flex items-start gap-2.5"
             style={{ background: 'rgba(201,168,76,0.08)', borderColor: 'rgba(201,168,76,0.25)', color: '#c9a84c' }}
           >
             <Home size={18} className="flex-shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold block mb-0.5">Cláusula de Allanamiento y Desalojo Notarial Express</span>
+              <span className="font-semibold block mb-0.5">Contrato Notarial de Arrendamiento (15 Cláusulas — Estándar 2026)</span>
               <p className="opacity-80 leading-relaxed">
-                Este contrato incorpora las cláusulas de la Ley N° 30933 y el Art. 594° del Código Procesal Civil para desalojar en semanas y no en años.
+                Incluye Desalojo Notarial Express (Ley N° 30933), Allanamiento a Futuro (Art. 594 CPC), Arrendamiento Justo (Ley N° 32430 - IR 5% por lo percibido) y Bancarización (D. Leg. 1529).
               </p>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FieldInput label="Propietario (Arrendador)" value={arrendador} onChange={setArrendador} placeholder="Carlos Alberto Mendoza Rojas" required />
-            <FieldInput label="DNI del Propietario" value={arrendadorDni} onChange={setArrendadorDni} placeholder="12345678" />
+
+          {/* 1. Datos del Arrendador (Propietario) */}
+          <div className="p-3.5 rounded-xl border space-y-3" style={{ background: '#141414', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-400">1. Datos del Arrendador (Propietario)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Nombre Completo del Propietario" value={arrendador} onChange={setArrendador} placeholder="Jorge Luis Mendoza Ríos" required />
+              <FieldInput label="DNI del Propietario" value={arrendadorDni} onChange={setArrendadorDni} placeholder="42857391" required />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Estado Civil" value={arrendadorEstadoCivil} onChange={setArrendadorEstadoCivil} placeholder="soltero(a) / casado(a)" />
+              <FieldInput label="Domicilio Real del Propietario" value={arrendadorDomicilio} onChange={setArrendadorDomicilio} placeholder="Calle Los Álamos 245, Urb. El Golf, Trujillo" />
+            </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <FieldInput label="Inquilino (Arrendatario)" value={arrendatario} onChange={setArrendatario} placeholder="Rosa María Huanca López" required />
-            <FieldInput label="DNI del Inquilino" value={arrendatarioDni} onChange={setArrendatarioDni} placeholder="87654321" />
+
+          {/* 2. Datos del Arrendatario (Inquilino) */}
+          <div className="p-3.5 rounded-xl border space-y-3" style={{ background: '#141414', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-400">2. Datos del Arrendatario (Inquilino)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Nombre Completo del Inquilino" value={arrendatario} onChange={setArrendatario} placeholder="María Elena Castro Villanueva" required />
+              <FieldInput label="DNI del Inquilino" value={arrendatarioDni} onChange={setArrendatarioDni} placeholder="70394528" required />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Estado Civil" value={arrendatarioEstadoCivil} onChange={setArrendatarioEstadoCivil} placeholder="soltero(a) / casado(a)" />
+              <FieldInput label="Domicilio Actual del Inquilino" value={arrendatarioDomicilio} onChange={setArrendatarioDomicilio} placeholder="Av. España 1420, Trujillo" />
+            </div>
           </div>
-          <FieldInput label="Dirección Exacta del Inmueble" value={inmuebleDireccion} onChange={setInmuebleDireccion} placeholder="Jr. Los Pinos 234, Dpto. 3B, San Miguel, Lima" required />
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <FieldInput label="Renta Mensual (S/)" value={rentaMensual} onChange={setRentaMensual} placeholder="1200" type="number" />
-            <FieldInput label="Meses de Garantía" value={garantiaMeses} onChange={setGarantiaMeses} placeholder="1" type="number" />
-            <FieldInput label="Día de Pago (cada mes)" value={diaPago} onChange={setDiaPago} placeholder="5" type="number" />
+
+          {/* 3. Inmueble y Registro SUNARP */}
+          <div className="p-3.5 rounded-xl border space-y-3" style={{ background: '#141414', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-400">3. Inmueble y Registro SUNARP</h4>
+            <FieldInput label="Dirección Exacta del Inmueble" value={inmuebleDireccion} onChange={setInmuebleDireccion} placeholder="Calle Las Begonias 312, Urb. Primavera, Víctor Larco, Trujillo" required />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Partida Registral (SUNARP)" value={inmueblePartida} onChange={setInmueblePartida} placeholder="11048293" hint="Registro de Predios" />
+              <FieldInput label="Sede / Zona Registral" value={inmuebleZonaRegistral} onChange={setInmuebleZonaRegistral} placeholder="Zona Registral N.º V - Sede Trujillo" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <FieldInput label="Área Aprox. (m²)" value={inmuebleArea} onChange={setInmuebleArea} placeholder="120" type="number" />
+              <div className="sm:col-span-2">
+                <FieldInput label="Distribución / Ambientes" value={inmuebleDetalle} onChange={setInmuebleDetalle} placeholder="3 dormitorios, 2 baños, sala-comedor, cocina y cochera" />
+              </div>
+            </div>
           </div>
-          <FieldInput label="Cuenta Bancaria para Depósito (Ley 30933)" value={cuentaBancaria} onChange={setCuentaBancaria} placeholder="BCP Soles 191-12345678-0-01" hint="Debe ser cuenta bancarizada" />
-          <FieldInput label="Fecha de Inicio de Contrato" value={fechaInicio} onChange={setFechaInicio} type="date" />
+
+          {/* 4. Renta, Depósito de Garantía y Bancarización */}
+          <div className="p-3.5 rounded-xl border space-y-3" style={{ background: '#141414', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-400">4. Renta, Garantía y Bancarización (D. Leg. 1529)</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <FieldInput label="Renta Mensual (S/)" value={rentaMensual} onChange={setRentaMensual} placeholder="2500" type="number" required />
+              <FieldInput label="Meses de Garantía" value={garantiaMeses} onChange={setGarantiaMeses} placeholder="2" type="number" />
+              <FieldInput label="Día Límite de Pago" value={diaPago} onChange={setDiaPago} placeholder="5" type="number" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <FieldInput label="Banco Receptor" value={bancoNombre} onChange={setBancoNombre} placeholder="BCP / BBVA / Interbank" />
+              <FieldInput label="N° de Cuenta Bancaria" value={cuentaBancaria} onChange={setCuentaBancaria} placeholder="191-12345678-0-01" hint="Medio de pago bancarizado" />
+              <FieldInput label="Código Interbancario (CCI)" value={cuentaCci} onChange={setCuentaCci} placeholder="002-191-001234567801-52" />
+            </div>
+          </div>
+
+          {/* 5. Plazo, Fechas y Ciudad */}
+          <div className="p-3.5 rounded-xl border space-y-3" style={{ background: '#141414', borderColor: 'rgba(255,255,255,0.08)' }}>
+            <h4 className="text-[11px] font-bold uppercase tracking-wider text-amber-400">5. Plazo, Vigencia y Ciudad</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Plazo del Contrato" value={plazoTexto} onChange={setPlazoTexto} placeholder="un (01) año / diez (10) años" />
+              <FieldInput label="Ciudad de Celebración" value={ciudadContrato} onChange={setCiudadContrato} placeholder="Trujillo / Lima" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <FieldInput label="Fecha de Inicio" value={fechaInicio} onChange={setFechaInicio} type="date" />
+              <FieldInput label="Fecha de Término" value={fechaFin} onChange={setFechaFin} type="date" />
+            </div>
+          </div>
         </div>
       )
     }

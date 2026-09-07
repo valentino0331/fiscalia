@@ -195,40 +195,66 @@ ______________________________
 DNI N°: [DNI]
 Domicilio: [DIRECCION]
 
-==== CONTRATO DE ARRENDAMIENTO (Arts. 1666-1712 CC) ====
-CONTRATO DE ARRENDAMIENTO
+==== CONTRATO DE ARRENDAMIENTO DE INMUEBLE (Estándar Notarial Perú 2026 - 15 Cláusulas) ====
+CONTRATO DE ARRENDAMIENTO DE INMUEBLE
 
-Conste por el presente documento privado que celebran:
-EL ARRENDADOR: [NOMBRE COMPLETO], identificado con DNI N° [DNI], con domicilio en [DIRECCION]; y
-EL ARRENDATARIO: [NOMBRE COMPLETO], identificado con DNI N° [DNI], con domicilio en [DIRECCION].
+Conste por el presente documento el contrato de arrendamiento que celebran, de una parte, don/doña [NOMBRE ARRENDADOR], identificado con DNI N.º [DNI], [estado civil], con domicilio en [DOMICILIO COMPLETO], a quien en adelante se denominará EL ARRENDADOR; y, de la otra parte, don/doña [NOMBRE ARRENDATARIO], identificado con DNI N.º [DNI], [estado civil], con domicilio en [DOMICILIO COMPLETO], a quien en adelante se denominará EL ARRENDATARIO; en los términos y condiciones siguientes:
 
-CLAUSULA PRIMERA: OBJETO
-El ARRENDADOR da en arrendamiento al ARRENDATARIO el inmueble ubicado en [DIRECCION DEL INMUEBLE], para uso de [vivienda / comercio / oficina].
+PRIMERA.- DEL INMUEBLE
+EL ARRENDADOR es propietario del inmueble ubicado en [DIRECCION EXACTA: CALLE/AV., DISTRITO, PROVINCIA, DEPARTAMENTO], inscrito en la Partida Registral N.º [NUMERO DE PARTIDA] del Registro de Predios de la Zona Registral N.º [SEDE/ZONA] (SUNARP). El inmueble tiene un área aproximada de [AREA] m² y consta de [DISTRIBUCION DETALLADA: dormitorios, baños, sala-comedor, cocina, cochera]. El estado de conservación del inmueble a la fecha de entrega consta en el Acta de Entrega que como Anexo 1 forma parte integrante del presente contrato, con el respectivo registro fotográfico.
 
-CLAUSULA SEGUNDA: PLAZO
-La duracion del arrendamiento es de [DURACION], con inicio el [FECHA INICIO] y termino el [FECHA FIN].
+SEGUNDA.- DESTINO
+El inmueble será destinado exclusivamente a vivienda de EL ARRENDATARIO y su núcleo familiar directo. El uso del inmueble para un fin distinto al pactado constituye causal de resolución de pleno derecho del contrato, conforme al artículo 1697°, inciso 2, del Código Civil.
 
-CLAUSULA TERCERA: RENTA
-La renta mensual es de S/ [MONTO], pagadera dentro de los primeros [X] dias de cada mes mediante [forma de pago].
+TERCERA.- PLAZO
+El plazo del presente contrato es de [PLAZO: ej. un (01) año / diez (10) años, plazo máximo entre personas naturales conforme al Art. 1688 del Código Civil], contado desde el [FECHA INICIO] hasta el [FECHA FIN]. El contrato concluye de pleno derecho al vencimiento del plazo, sin necesidad de aviso previo, conforme al artículo 1699° del Código Civil. Si EL ARRENDATARIO permaneciera en el inmueble después del vencimiento sin oposición de EL ARRENDADOR, se entenderá continuado el arrendamiento bajo las mismas condiciones y por plazo indeterminado, pudiendo cualquiera de las partes ponerle fin cursando aviso con no menos de treinta (30) días calendario de anticipación mediante carta notarial, conforme al artículo 1700° del Código Civil.
 
-CLAUSULA CUARTA: GARANTIA
-El ARRENDATARIO entrega en garantia la suma de S/ [MONTO], equivalente a [X] mensualidades, a ser devuelta al concluir el contrato previa inspeccion del bien.
+CUARTA.- RENTA MENSUAL
+La renta mensual asciende a S/ [MONTO] ([MONTO EN LETRAS]), que EL ARRENDATARIO pagará por adelantado dentro de los primeros [X] días de cada mes, mediante transferencia o depósito bancario a la cuenta N.º [NUMERO CUENTA] del Banco [BANCO] (CCI: [CCI]), a nombre de EL ARRENDADOR, en cumplimiento estricto de la Ley N.º 28194 modificada por el Decreto Legislativo N.º 1529, que exige el uso obligatorio de medios de pago para obligaciones iguales o superiores a S/ 2,000.00. El comprobante de la transferencia o depósito bancario constituye el único medio válido de acreditación del pago de la renta.
 
-CLAUSULA QUINTA: ALLANAMIENTO FUTURO (Ley 30933)
-El ARRENDATARIO se somete expresamente al procedimiento de desalojo notarial previsto en la Ley N° 30933 y modificatorias para supuestos de falta de pago y vencimiento del plazo.
+QUINTA.- GARANTÍA
+EL ARRENDATARIO entrega la suma de S/ [MONTO GARANTIA] ([GARANTIA EN LETRAS]), equivalente a [X] meses de renta, como depósito en garantía del fiel cumplimiento de sus obligaciones, incluyendo rentas pendientes, servicios impagos y reparaciones de daños al bien distintos del desgaste ordinario. Dicha suma será devuelta a EL ARRENDATARIO dentro de los quince (15) días calendario siguientes a la desocupación y devolución efectiva del inmueble, previa verificación de su estado de conservación, deduciéndose únicamente los conceptos impagos debidamente acreditados. La garantía en ningún caso podrá ser aplicada por EL ARRENDATARIO como pago de renta de los últimos meses del contrato.
 
-CLAUSULA SEXTA: OBLIGACIONES
-El ARRENDATARIO se obliga a: (a) conservar el inmueble, (b) no subarrendar sin autorizacion escrita, (c) asumir gastos de servicios, (d) devolver el bien al termino del contrato.
+SEXTA.- SERVICIOS
+Los servicios de energía eléctrica, agua potable, gas natural, arbitrios municipales de barrido y serenazgo, telefonía e internet serán de cargo exclusivo de EL ARRENDATARIO, quien se obliga a mantenerlos al día durante la vigencia del contrato y a exhibir los comprobantes de pago cancelados cuando EL ARRENDADOR lo requiera, conforme al artículo 1681°, inciso 3, del Código Civil.
 
-CLAUSULA SEPTIMA: RESOLUCION
-El incumplimiento de cualquier clausula faculta a la parte afectada a resolver el contrato sin perjuicio de las acciones legales.
+SÉPTIMA.- REPARACIONES Y MODIFICACIONES
+Las reparaciones locativas u ordinarias originadas por el uso habitual del bien serán asumidas por EL ARRENDATARIO. Las reparaciones estructurales o necesarias derivadas del desgaste natural del inmueble serán de cargo de EL ARRENDADOR, conforme al artículo 1678° del Código Civil, salvo que el deterioro sea atribuible a dolo o negligencia de EL ARRENDATARIO. Queda prohibida cualquier modificación, alteración arquitectónica o perforación estructural sin la previa autorización escrita del ARRENDADOR.
 
-En señal de conformidad, las partes suscriben en [Ciudad], el [fecha].
+OCTAVA.- RESOLUCIÓN DEL CONTRATO
+EL ARRENDADOR podrá declarar resuelto el presente contrato de pleno derecho en los siguientes supuestos, conforme al artículo 1697° del Código Civil: (a) falta de pago de la renta mensual por un periodo de dos (2) meses y quince (15) días consecutivos o alternados; (b) destino del inmueble a un fin comercial, industrial o distinto al de vivienda pactado; (c) subarriendo, cesión del contrato o traspaso total o parcial sin autorización expresa; y (d) incumplimiento reiterado de las normas de convivencia vecinal o de cualquier otra obligación contractual, previo requerimiento notarial con plazo de subsanación de cinco (5) días hábiles.
 
-______________________________          ______________________________
-EL ARRENDADOR                           EL ARRENDATARIO
-[Nombre]                                [Nombre]
-DNI N°: [DNI]                           DNI N°: [DNI]
+NOVENA.- PENALIDAD POR RESOLUCIÓN CULPABLE
+En caso de resolución contractual por causas imputables a EL ARRENDATARIO, este pagará a EL ARRENDADOR una penalidad compensatoria equivalente al triple de la renta mensual vigente a la fecha de resolución, sin perjuicio de exigir el pago de las mensualidades devengadas pendientes y la indemnización de daños y perjuicios que correspondan conforme a ley.
+
+DÉCIMA.- DEVOLUCIÓN DEL INMUEBLE Y PENALIDAD POR DEMORA
+Al vencimiento del plazo o producida la resolución del contrato, EL ARRENDATARIO devolverá el inmueble inmediatamente en el mismo estado en que lo recibió según el Acta de Entrega (Anexo 1). Si EL ARRENDATARIO no desocupara ni devolviera el bien en la fecha pactada, pagará a EL ARRENDADOR una penalidad diaria equivalente a la renta mensual proporcional vigente por cada día o mes de retraso no consentido, conforme al artículo 1704° del Código Civil, sin que ello implique prórroga o renovación tácita del contrato.
+
+DÉCIMO PRIMERA.- PROHIBICIÓN DE SUBARRENDAMIENTO Y CESIÓN
+EL ARRENDATARIO no podrá subarrendar en todo ni en parte el inmueble, ceder su posición contractual ni conceder el uso o posesión a terceros bajo ningún título gratuito u oneroso, conforme al artículo 1692° del Código Civil. La contravención generará la resolución automática del contrato.
+
+DÉCIMO SEGUNDA.- CLÁUSULA DE ALLANAMIENTO A FUTURO (ART. 594° CPC)
+EL ARRENDATARIO declara su allanamiento anticipado y expreso a la futura demanda judicial de desalojo que EL ARRENDADOR interponga por las causales de conclusión del contrato por vencimiento del plazo estipulado o por resolución por falta de pago de la renta, de conformidad con el artículo 594° del Código Procesal Civil, modificado por la Ley N.º 30201. Las partes ratifican que para la plena validez de esta cláusula sus firmas serán legalizadas notarialmente.
+
+DÉCIMO TERCERA.- SOMETIMIENTO A LA LEY N.º 30933 (DESALOJO NOTARIAL EXPRESS)
+Las partes se someten expresamente al Procedimiento Especial de Desalojo Notarial con Ejecución Judicial regulado por la Ley N.º 30933 y su reglamento (D.S. N.º 013-2019-JUS). Para tal efecto, designan la cuenta bancaria consignada en la Cláusula Cuarta como la única cuenta oficial para acreditar el cumplimiento del pago oportuno de las rentas mensuales.
+
+DÉCIMO CUARTA.- RÉGIMEN TRIBUTARIO (LEY N.º 32430 DE ARRENDAMIENTO JUSTO - 2026)
+Las partes declaran que, de conformidad con la Ley N.º 32430 (Ley de Arrendamiento Justo vigente desde el 1 de enero de 2026), que modifica el artículo 57°, inciso b), del TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF), las rentas de primera categoría tributan bajo el principio de lo percibido. EL ARRENDADOR declarará y abonará a la SUNAT el Impuesto a la Renta de primera categoría (5%) únicamente respecto de las mensualidades efectivamente cobradas y sustentadas en los medios de pago bancarios previstos en la Cláusula Cuarta.
+
+DÉCIMO QUINTA.- JURISDICCIÓN Y COMPETENCIA
+Para todos los efectos derivados de la interpretación, ejecución o litigio del presente contrato, las partes renuncian expresamente al fuero de sus domicilios y se someten a la competencia territorial de los jueces y tribunales del distrito judicial de [CIUDAD / DISTRITO JUDICIAL].
+
+Firmado en la ciudad de [CIUDAD], a los [DIA] días del mes de [MES] de 2026, en dos ejemplares de igual tenor y valor legal, con firmas legalizadas notarialmente.
+
+Nota: Las partes dejan constancia de que, al tener destino de vivienda, el presente arrendamiento puede alternativamente formalizarse mediante el Formulario Único de Arrendamiento (FUA) regulado por el Decreto Legislativo N.º 1177.
+
+_________________________________          _________________________________
+EL ARRENDADOR                              EL ARRENDATARIO
+[Nombre Completo Arrendador]               [Nombre Completo Arrendatario]
+DNI N°: [DNI]                              DNI N°: [DNI]
+
+
 
 ==== RECURSO DE APELACION ADMINISTRATIVO (Art. 209 LPAG) ====
 SUMILLA: Interpongo Recurso de Apelacion contra Resolucion N° [NUMERO] de fecha [FECHA].
