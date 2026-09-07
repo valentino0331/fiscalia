@@ -25,7 +25,7 @@ import {
   FileDown,
   Sparkles,
 } from 'lucide-react'
-import { buildPrintHTML, downloadWordDoc, renderDocHtmlBody } from '@/lib/exportDoc'
+import { buildPrintHTML, downloadWordDoc, downloadPdfDoc, renderDocHtmlBody } from '@/lib/exportDoc'
 
 interface CitizenDocumentGeneratorModalProps {
   isOpen: boolean
@@ -279,6 +279,7 @@ export default function CitizenDocumentGeneratorModal({
   const [docType, setDocType] = useState<DocType>(initialDocType)
   const [copied, setCopied] = useState(false)
   const [downloadedWord, setDownloadedWord] = useState(false)
+  const [downloadedPdf, setDownloadedPdf] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [showMobilePreview, setShowMobilePreview] = useState(false)
   const [viewMode, setViewMode] = useState<'sheet' | 'text'>('sheet')
@@ -769,6 +770,13 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
     downloadWordDoc(docData.title, docData.content, docData.title, fmt)
     setDownloadedWord(true)
     setTimeout(() => setDownloadedWord(false), 2500)
+  }
+
+  const handleDownloadPdf = async () => {
+    if (!validate()) return
+    await downloadPdfDoc(docData.title, docData.content, docData.title, fmt)
+    setDownloadedPdf(true)
+    setTimeout(() => setDownloadedPdf(false), 2500)
   }
 
   const handleCopy = async () => {
@@ -1380,27 +1388,38 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
           </motion.button>
 
           {/* Fila 2: acciones secundarias */}
-          <div className="grid grid-cols-2 gap-0 border-t" style={{ borderColor: '#262626' }}>
+          <div className="grid grid-cols-3 gap-0 border-t" style={{ borderColor: '#262626' }}>
             <button
               onClick={handleDownloadWord}
-              className="flex items-center justify-center gap-2 py-3.5 text-[12px] font-semibold border-r transition-all active:bg-white/5"
+              className="flex items-center justify-center gap-1.5 py-3.5 text-[11px] font-semibold border-r transition-all active:bg-white/5"
               style={{ borderColor: '#262626', color: '#60a5fa', background: 'rgba(96,165,250,0.06)' }}
             >
               {downloadedWord ? (
-                <><Check size={15} className="text-blue-400" /><span>¡Descargado!</span></>
+                <><Check size={14} className="text-blue-400" /><span>Word</span></>
               ) : (
-                <><FileDown size={15} /><span>Word (.docx)</span></>
+                <><FileDown size={14} /><span>Word (.docx)</span></>
+              )}
+            </button>
+            <button
+              onClick={handleDownloadPdf}
+              className="flex items-center justify-center gap-1.5 py-3.5 text-[11px] font-semibold border-r transition-all active:bg-white/5"
+              style={{ borderColor: '#262626', color: '#f87171', background: 'rgba(248,113,113,0.06)' }}
+            >
+              {downloadedPdf ? (
+                <><Check size={14} className="text-red-400" /><span>PDF</span></>
+              ) : (
+                <><Download size={14} /><span>PDF (.pdf)</span></>
               )}
             </button>
             <button
               onClick={handleCopy}
-              className="flex items-center justify-center gap-2 py-3.5 text-[12px] font-semibold transition-all active:bg-white/5"
+              className="flex items-center justify-center gap-1.5 py-3.5 text-[11px] font-semibold transition-all active:bg-white/5"
               style={{ color: 'rgba(255,255,255,0.70)', background: 'transparent' }}
             >
               {copied ? (
-                <><Check size={15} className="text-green-400" /><span>¡Copiado!</span></>
+                <><Check size={14} className="text-green-400" /><span>Copiado</span></>
               ) : (
-                <><Copy size={15} /><span>Copiar Texto</span></>
+                <><Copy size={14} /><span>Copiar</span></>
               )}
             </button>
           </div>
@@ -1431,6 +1450,19 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
                 <><Check size={14} className="text-blue-400" /><span>¡Descargado!</span></>
               ) : (
                 <><FileDown size={14} /><span>Word (.docx)</span></>
+              )}
+            </button>
+
+            <button
+              onClick={handleDownloadPdf}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[12px] font-medium border transition-all"
+              style={{ borderColor: 'rgba(248,113,113,0.30)', color: '#f87171', background: 'rgba(248,113,113,0.08)' }}
+              title="Descargar directamente como documento PDF oficial A4 listo para Mesa de Partes Virtual"
+            >
+              {downloadedPdf ? (
+                <><Check size={14} className="text-red-400" /><span>¡Descargado!</span></>
+              ) : (
+                <><Download size={14} /><span>PDF (.pdf)</span></>
               )}
             </button>
           </div>

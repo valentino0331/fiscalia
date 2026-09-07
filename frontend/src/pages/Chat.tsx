@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
-import { downloadWordDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody } from '@/lib/exportDoc'
+import { downloadWordDoc, downloadPdfDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody } from '@/lib/exportDoc'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
@@ -2594,6 +2594,23 @@ function MessageBubble({
                       </button>
 
                       <button
+                        onClick={async () => {
+                          await downloadPdfDoc(extractedDoc.title, extractedDoc.content, extractedDoc.title)
+                        }}
+                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+                        style={{
+                          background: '#dc2626',
+                          color: '#ffffff',
+                          boxShadow: '0 2px 8px rgba(220,38,38,0.35)',
+                        }}
+                        title="Descargar directamente como documento PDF oficial A4 listo para Mesa de Partes Virtual"
+                      >
+                        <Download size={13} />
+                        <span className="hidden sm:inline">Descargar PDF (.pdf)</span>
+                        <span className="sm:hidden">PDF</span>
+                      </button>
+
+                      <button
                         onClick={() => {
                           printDocument(extractedDoc.title, extractedDoc.content)
                         }}
@@ -2603,10 +2620,10 @@ function MessageBubble({
                           border: '1px solid rgba(201,168,76,0.35)',
                           color: '#c9a84c',
                         }}
-                        title="Abrir o Imprimir como PDF oficial"
+                        title="Abrir vista de impresión y guardado A4 con alta fidelidad"
                       >
                         <Printer size={13} />
-                        <span className="hidden sm:inline">PDF</span>
+                        <span className="hidden sm:inline">Imprimir</span>
                       </button>
 
                       <button
