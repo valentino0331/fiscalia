@@ -1,6 +1,9 @@
 import { Router } from 'express';
-import { sql } from 'drizzle-orm';
+import { sql, eq, desc } from 'drizzle-orm';
+import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
+import { users, subscriptions, conversations } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { metrics } from '../lib/metrics';
 
@@ -168,3 +171,197 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
     res.status(500).json({ error: 'Error obteniendo estadísticas admin' });
   }
 });
+
+// ─────────────────────────────────────────────────────────────
+// GESTIÓN DE USUARIOS Y SUSCRIPCIONES
+// ─────────────────────────────────────────────────────────────
+
+// 1. Listar todos los usuarios con su suscripción, vencimiento y consultas del mes
+adminRouter.get('/users', requireAuth, requireAdmin, async (_, res) => {
+  try {
+    const allUsers = await db.query.users.findMany({
+      orderBy: [desc(users.createdAt)],
+    });
+
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const userList = await Promise.all(
+      allUsers.map(async (u) => {
+        const sub = await db.query.subscriptions.findFirst({
+          where: eq(subscriptions.userId, u.id),
+          orderBy: [desc(subscriptions.createdAt)],
+        });
+
+        // Contar consultas enviadas este mes
+        const userConvs = await db.query.conversations.findMany({
+          where: eq(conversations.userId, u.id),
+        });
+
+        let questionsThisMonth = 0;
+        for (const conv of userConvs) {
+          if (Array.isArray(conv.messages)) {
+            for (const m of conv.messages as any[]) {
+              if (m.role === 'user') {
+                const msgDate = m.timestamp ? new Date(m.timestamp) : null;
+                if (msgDate) {
+                  if (msgDate >= startOfMonth) questionsThisMonth++;
+                } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
+                  questionsThisMonth++;
+                }
+              }
+            }
+          }
+        }
+
+        const currentPeriodEnd = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null;
+        const isExpired = currentPeriodEnd ? currentPeriodEnd < now : false;
+        const daysRemaining = currentPeriodEnd
+          ? Math.max(0, Math.ceil((currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+          : 0;
+
+        const effectivePlan = sub ? sub.plan : (u.isAdmin ? 'pro' : 'normal');
+        const effectiveStatus = sub ? sub.status : (u.isAdmin ? 'active' : 'inactive');
+        const expiresAtIso = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toISOString() : null;
+
+        return {
+          id: u.id,
+          email: u.email,
+          name: u.name,
+          isAdmin: u.isAdmin,
+          createdAt: u.createdAt,
+          conversationsCount: userConvs.length,
+          questionsThisMonth,
+          plan: effectivePlan,
+          status: effectiveStatus,
+          expiresAt: expiresAtIso,
+          daysRemaining: sub ? daysRemaining : (u.isAdmin ? 999 : null),
+          subscription: sub
+            ? {
+                id: sub.id,
+                status: sub.status,
+                plan: sub.plan, // 'pro' | 'normal' | 'junior'
+                currentPeriodEnd: sub.currentPeriodEnd,
+                isExpired,
+                daysRemaining,
+              }
+            : null,
+        };
+      })
+    );
+
+    res.json({ users: userList });
+  } catch (error: any) {
+    console.error('Error fetching admin users:', error);
+    res.status(500).json({ error: error.message || 'Error al obtener usuarios' });
+  }
+});
+
+// 2. Eliminar cuenta de usuario (si no renueva o a petición)
+adminRouter.delete('/users/:id', requireAuth, requireAdmin, async (req: any, res) => {
+  try {
+    const targetId = req.params.id;
+    if (req.userId === targetId) {
+      return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador en uso' });
+    }
+
+    const targetUser = await db.query.users.findFirst({ where: eq(users.id, targetId) });
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    await db.delete(users).where(eq(users.id, targetId));
+    console.log(`[Admin] Cuenta eliminada: ${targetUser.email} (ID: ${targetId}) por admin ID: ${req.userId}`);
+
+    res.json({ success: true, message: `Usuario ${targetUser.email} eliminado exitosamente` });
+  } catch (error: any) {
+    console.error('Error deleting user:', error);
+    res.status(500).json({ error: error.message || 'Error al eliminar el usuario' });
+  }
+});
+
+// 3. Modificar plan o renovar (+30 días)
+adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any, res) => {
+  try {
+    const targetId = req.params.id;
+    const { plan, addDays, status } = req.body;
+
+    const targetUser = await db.query.users.findFirst({ where: eq(users.id, targetId) });
+    if (!targetUser) return res.status(404).json({ error: 'Usuario no encontrado' });
+
+    let sub = await db.query.subscriptions.findFirst({ where: eq(subscriptions.userId, targetId) });
+    const now = new Date();
+    let newPeriodEnd = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : now;
+    if (newPeriodEnd < now) newPeriodEnd = now;
+
+    if (addDays && typeof addDays === 'number') {
+      newPeriodEnd = new Date(newPeriodEnd.getTime() + addDays * 24 * 60 * 60 * 1000);
+    }
+
+    const updatedFields: any = {
+      updatedAt: new Date(),
+    };
+    if (plan) updatedFields.plan = plan;
+    if (status) updatedFields.status = status;
+    if (addDays) updatedFields.currentPeriodEnd = newPeriodEnd;
+
+    if (sub) {
+      await db.update(subscriptions).set(updatedFields).where(eq(subscriptions.id, sub.id));
+    } else {
+      await db.insert(subscriptions).values({
+        id: uuidv4(),
+        userId: targetId,
+        status: status || 'active',
+        plan: plan || 'pro',
+        currentPeriodEnd: addDays ? newPeriodEnd : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+      });
+    }
+
+    res.json({ success: true, message: 'Plan actualizado con éxito' });
+  } catch (error: any) {
+    console.error('Error updating user plan:', error);
+    res.status(500).json({ error: error.message || 'Error al actualizar el plan' });
+  }
+});
+
+// 4. Crear cuenta directamente desde el Panel Admin
+adminRouter.post('/users', requireAuth, requireAdmin, async (req: any, res) => {
+  try {
+    const { email, password, name, plan = 'pro', isAdmin = false, durationDays = 30 } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email y contraseña requeridos' });
+    }
+
+    const cleanEmail = String(email).toLowerCase().trim();
+    const existing = await db.query.users.findFirst({ where: eq(users.email, cleanEmail) });
+    if (existing) {
+      return res.status(400).json({ error: 'Ya existe una cuenta con ese correo electrónico' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 12);
+    const newUserId = uuidv4();
+
+    await db.insert(users).values({
+      id: newUserId,
+      email: cleanEmail,
+      name: name ? String(name).trim() : null,
+      passwordHash,
+      isAdmin: Boolean(isAdmin),
+    });
+
+    const periodEnd = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+    await db.insert(subscriptions).values({
+      id: uuidv4(),
+      userId: newUserId,
+      status: 'active',
+      plan: String(plan),
+      currentPeriodEnd: periodEnd,
+    });
+
+    res.json({ success: true, message: `Usuario ${cleanEmail} creado exitosamente` });
+  } catch (error: any) {
+    console.error('Error creating user by admin:', error);
+    res.status(500).json({ error: error.message || 'Error al crear el usuario' });
+  }
+});
+

@@ -48,6 +48,28 @@ export interface AuthState {
   isAuthenticated: boolean
 }
 
+export interface AdminUserItem {
+  id: string
+  email: string
+  name: string | null
+  isAdmin: boolean
+  createdAt: string
+  conversationsCount: number
+  questionsThisMonth: number
+  plan: string
+  status: string
+  expiresAt: string | null
+  daysRemaining: number | null
+  subscription: {
+    id: string
+    status: string
+    plan: string
+    currentPeriodEnd: string | null
+    isExpired: boolean
+    daysRemaining: number
+  } | null
+}
+
 export interface AdminOverview {
   totalUsers: number
   activeSubscriptions: number
@@ -158,4 +180,3 @@ export interface AdminStats {
     error?: string
   }>
 }
-

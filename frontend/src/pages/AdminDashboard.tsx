@@ -6,15 +6,17 @@ import {
   Shield, TrendingUp, RefreshCw, BarChart3, Target, Award,
   Sparkles, DollarSign, HeartHandshake, Cpu, CheckCircle2,
   AlertTriangle, ArrowUpRight, Copy, Check, Download, Zap, PieChart,
-  Server, Gauge, Database, Lock, CheckCheck, RefreshCcw
+  Server, Gauge, Database, Lock, CheckCheck, RefreshCcw,
+  Trash2, UserPlus, Calendar, Clock, Crown, ShieldAlert, CheckCircle, X, Search,
+  Key, UserCheck, AlertCircle
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { AGENTS } from '@/lib/agents'
-import type { AdminStats, BalancedScorecard } from '@/types'
+import type { AdminStats, BalancedScorecard, AdminUserItem } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 
-type DashboardTab = 'scorecard' | 'operations' | 'capacity'
+type DashboardTab = 'users' | 'scorecard' | 'operations' | 'capacity'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -24,8 +26,107 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
-  const [activeTab, setActiveTab] = useState<DashboardTab>('scorecard')
+  const [activeTab, setActiveTab] = useState<DashboardTab>('users')
   const [copiedReport, setCopiedReport] = useState(false)
+
+  // ── Gestión de Cuentas / Usuarios ──
+  const [usersList, setUsersList] = useState<AdminUserItem[]>([])
+  const [loadingUsers, setLoadingUsers] = useState(false)
+  const [userSearch, setUserSearch] = useState('')
+  const [userFilter, setUserFilter] = useState<'all' | 'admin' | 'pro' | 'normal' | 'expired'>('all')
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState<AdminUserItem | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [createModalOpen, setCreateModalOpen] = useState(false)
+  const [creatingUser, setCreatingUser] = useState(false)
+  const [newUserEmail, setNewUserEmail] = useState('')
+  const [newUserPass, setNewUserPass] = useState('')
+  const [newUserName, setNewUserName] = useState('')
+  const [newUserPlan, setNewUserPlan] = useState<'pro' | 'normal'>('normal')
+  const [newUserIsAdmin, setNewUserIsAdmin] = useState(false)
+  const [newUserDurationDays, setNewUserDurationDays] = useState(30)
+  const [createError, setCreateError] = useState<string | null>(null)
+  const [actionNotice, setActionNotice] = useState<string | null>(null)
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true)
+      const res = await api.admin.users()
+      setUsersList(res.users || [])
+    } catch (err: any) {
+      console.error('Error fetching admin users:', err)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
+  const handleDeleteUser = async (targetId: string) => {
+    try {
+      setDeletingId(targetId)
+      await api.admin.deleteUser(targetId)
+      setDeleteConfirmUser(null)
+      setActionNotice('Cuenta eliminada correctamente del sistema.')
+      setTimeout(() => setActionNotice(null), 4000)
+      await Promise.all([fetchUsers(), fetchStats()])
+    } catch (err: any) {
+      alert(err?.message || 'Error al eliminar usuario')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleRenewUser = async (targetId: string) => {
+    try {
+      await api.admin.updateUserPlan(targetId, { addDays: 30, status: 'active' })
+      setActionNotice('Suscripción renovada por 30 días adicionales.')
+      setTimeout(() => setActionNotice(null), 4000)
+      await Promise.all([fetchUsers(), fetchStats()])
+    } catch (err: any) {
+      alert(err?.message || 'Error al renovar usuario')
+    }
+  }
+
+  const handleTogglePlan = async (targetId: string, currentPlan: string) => {
+    try {
+      const nextPlan = currentPlan === 'pro' ? 'normal' : 'pro'
+      await api.admin.updateUserPlan(targetId, { plan: nextPlan })
+      setActionNotice(`Plan actualizado a ${nextPlan.toUpperCase()} exitosamente.`)
+      setTimeout(() => setActionNotice(null), 4000)
+      await Promise.all([fetchUsers(), fetchStats()])
+    } catch (err: any) {
+      alert(err?.message || 'Error al cambiar plan')
+    }
+  }
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newUserEmail || !newUserPass) {
+      setCreateError('Email y contraseña obligatorios')
+      return
+    }
+    setCreatingUser(true)
+    setCreateError(null)
+    try {
+      await api.admin.createUser({
+        email: newUserEmail,
+        password: newUserPass,
+        name: newUserName || undefined,
+        plan: newUserPlan,
+        isAdmin: newUserIsAdmin,
+        durationDays: newUserDurationDays,
+      })
+      setCreateModalOpen(false)
+      setNewUserEmail('')
+      setNewUserPass('')
+      setNewUserName('')
+      setActionNotice(`Cuenta ${newUserEmail} creada exitosamente.`)
+      setTimeout(() => setActionNotice(null), 4000)
+      await Promise.all([fetchUsers(), fetchStats()])
+    } catch (err: any) {
+      setCreateError(err?.message || 'Error al crear la cuenta')
+    } finally {
+      setCreatingUser(false)
+    }
+  }
 
   const fetchStats = async () => {
     try {
@@ -43,6 +144,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats()
+    fetchUsers()
   }, [])
 
   const maxRegistrations = useMemo(() => {
@@ -54,6 +156,29 @@ export default function AdminDashboard() {
     if (!stats || stats.agentPerformance.length === 0) return 1
     return Math.max(...stats.agentPerformance.map((a) => a.messages), 1)
   }, [stats])
+
+  const filteredUsers = useMemo(() => {
+    return usersList.filter((u) => {
+      const q = userSearch.toLowerCase().trim()
+      const matchesSearch =
+        !q ||
+        u.email.toLowerCase().includes(q) ||
+        (u.name && u.name.toLowerCase().includes(q)) ||
+        u.id.toLowerCase().includes(q)
+      if (!matchesSearch) return false
+
+      if (userFilter === 'admin') return u.isAdmin
+      if (userFilter === 'pro') return u.plan === 'pro' && !u.isAdmin
+      if (userFilter === 'normal') return u.plan === 'normal' && !u.isAdmin
+      if (userFilter === 'expired') return typeof u.daysRemaining === 'number' && u.daysRemaining <= 0
+      return true
+    })
+  }, [usersList, userSearch, userFilter])
+
+  const totalUsersCount = usersList.length
+  const adminUsersCount = usersList.filter((u) => u.isAdmin).length
+  const proUsersCount = usersList.filter((u) => u.plan === 'pro' && !u.isAdmin).length
+  const normalUsersCount = usersList.filter((u) => u.plan === 'normal' && !u.isAdmin).length
 
   const handleLogout = () => {
     logout()
@@ -166,19 +291,30 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
               Panel de Control Gerencial & Calidad
             </div>
             <h1 className="text-2xl sm:text-3xl font-light text-white tracking-wide">
-              Balanced Scorecard & Auditoría de Escala
+              Control de Cuentas & Auditoría de Escala
             </h1>
             <p className="text-[11px] sm:text-[12px] font-light mt-1" style={{ color: 'rgba(255,255,255,0.45)' }}>
-              Cuadro de mando integral, telemetría operativa y certificación de carga para 1,000+ abogados concurrentes.
+              Gestión centralizada de cuentas, control de límites y vencimientos a 1 mes, scorecard y telemetría operativa.
             </p>
           </div>
 
-          {/* Tab Switcher (3 Tabs) & Export */}
+          {/* Tab Switcher (4 Tabs) & Export */}
           <div className="flex items-center gap-2 flex-wrap">
             <div
               className="p-1 rounded-xl flex items-center gap-1 border overflow-x-auto"
               style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}
             >
+              <button
+                onClick={() => setActiveTab('users')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'users'
+                    ? 'bg-[#c9a84c] text-[#111111] shadow-lg shadow-[#c9a84c]/20 font-semibold'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <Users size={13} />
+                Cuentas & Suscripciones ({usersList.length})
+              </button>
               <button
                 onClick={() => setActiveTab('scorecard')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap ${
@@ -210,7 +346,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                 }`}
               >
                 <Gauge size={13} />
-                Escala 1000+ Usuarios
+                Escala 1000+
               </button>
             </div>
 
@@ -257,17 +393,414 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
           </div>
         )}
 
-        {stats && !loading && (
-          <AnimatePresence mode="wait">
-            {activeTab === 'scorecard' && (
-              <motion.div
-                key="scorecard-view"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.25 }}
-                className="space-y-8"
+        {actionNotice && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mb-6 p-4 rounded-xl text-[12px] flex items-center justify-between border"
+            style={{
+              background: 'rgba(52,209,122,0.1)',
+              borderColor: 'rgba(52,209,122,0.3)',
+              color: '#34d17a',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <CheckCircle size={15} />
+              <span>{actionNotice}</span>
+            </div>
+            <button onClick={() => setActionNotice(null)} className="text-white/40 hover:text-white">
+              <X size={14} />
+            </button>
+          </motion.div>
+        )}
+
+        <AnimatePresence mode="wait">
+          {activeTab === 'users' && (
+            <motion.div
+              key="users-view"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-6"
+            >
+              {/* 4 Cards Summary */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <AdminCard
+                  title="Total de Cuentas"
+                  value={totalUsersCount.toString()}
+                  hint="Cuentas en Neon PostgreSQL"
+                  icon={<Users size={18} style={{ color: '#c9a84c' }} />}
+                  trend="Base de datos oficial"
+                />
+                <AdminCard
+                  title="Administradores"
+                  value={adminUsersCount.toString()}
+                  hint="Control total y acceso vitalicio"
+                  icon={<Shield size={18} style={{ color: '#f59e0b' }} />}
+                  trend="Vitalicio / Panel Admin"
+                />
+                <AdminCard
+                  title="Cuentas PRO"
+                  value={proUsersCount.toString()}
+                  hint="Sin límites de preguntas"
+                  icon={<Crown size={18} style={{ color: '#c9a84c' }} />}
+                  trend="⚡ Consultas Ilimitadas"
+                />
+                <AdminCard
+                  title="Cuentas Normales"
+                  value={normalUsersCount.toString()}
+                  hint="Límite: 50 consultas/mes"
+                  icon={<Zap size={18} style={{ color: '#38bdf8' }} />}
+                  trend="Control de cuota activo"
+                />
+              </div>
+
+              {/* Filter & Action Toolbar */}
+              <div
+                className="p-4 rounded-2xl border flex flex-col md:flex-row md:items-center justify-between gap-3"
+                style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}
               >
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 flex-1">
+                  {/* Search Input */}
+                  <div className="relative flex-1 max-w-md">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+                    <input
+                      type="text"
+                      value={userSearch}
+                      onChange={(e) => setUserSearch(e.target.value)}
+                      placeholder="Buscar por correo o ID..."
+                      className="w-full pl-9 pr-3 py-1.5 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                    />
+                    {userSearch && (
+                      <button
+                        onClick={() => setUserSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white text-[10px]"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+                    {(
+                      [
+                        { key: 'all', label: `Todos (${totalUsersCount})` },
+                        { key: 'admin', label: `Admins (${adminUsersCount})` },
+                        { key: 'pro', label: `PRO (${proUsersCount})` },
+                        { key: 'normal', label: `Normales (${normalUsersCount})` },
+                        { key: 'expired', label: 'Vencidas' },
+                      ] as const
+                    ).map((tab) => (
+                      <button
+                        key={tab.key}
+                        onClick={() => setUserFilter(tab.key)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap ${
+                          userFilter === tab.key
+                            ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
+                            : 'bg-[#222222] text-white/50 hover:text-white border border-[#2a2a2a]'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 justify-end">
+                  <button
+                    onClick={fetchUsers}
+                    disabled={loadingUsers}
+                    className="p-2 rounded-xl border border-[#2a2a2a] bg-[#222222] text-white/60 hover:text-white transition-colors"
+                    title="Refrescar lista de usuarios"
+                  >
+                    <RefreshCw size={13} className={loadingUsers ? 'animate-spin text-[#c9a84c]' : ''} />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCreateError(null)
+                      setCreateModalOpen(true)
+                    }}
+                    className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-semibold bg-[#c9a84c] text-[#111111] hover:bg-[#d4b558] transition-all shadow-lg shadow-[#c9a84c]/20 whitespace-nowrap"
+                  >
+                    <UserPlus size={14} />
+                    Crear Cuenta
+                  </button>
+                </div>
+              </div>
+
+              {/* Users Table */}
+              <div className="p-6 rounded-2xl border" style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-[14px] font-medium text-white flex items-center gap-2">
+                      <Users size={16} className="text-[#c9a84c]" />
+                      Cuentas Registradas en el Sistema
+                    </h3>
+                    <p className="text-[10px] font-light text-white/40">
+                      Visualización de roles, fecha de creación, vencimiento a 1 mes, consumo de consultas y control de baja.
+                    </p>
+                  </div>
+                  <span className="text-[11px] text-white/40">
+                    Mostrando {filteredUsers.length} de {usersList.length} cuentas
+                  </span>
+                </div>
+
+                {loadingUsers && usersList.length === 0 ? (
+                  <div className="py-12 text-center">
+                    <RefreshCw size={24} className="animate-spin mx-auto text-[#c9a84c] mb-2" />
+                    <p className="text-[11px] text-white/40">Cargando cuentas desde Neon PostgreSQL...</p>
+                  </div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="py-12 text-center border border-dashed border-[#2a2a2a] rounded-xl">
+                    <p className="text-[12px] text-white/50 mb-1">No se encontraron cuentas con el filtro actual</p>
+                    <p className="text-[10px] text-white/30">Prueba ajustando el término de búsqueda o filtro</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[11px] border-collapse">
+                      <thead>
+                        <tr className="border-b border-[#2a2a2a] text-white/30 uppercase text-[9px] tracking-wider">
+                          <th className="py-3 px-3">Usuario / Correo</th>
+                          <th className="py-3 px-3">Rol & Plan</th>
+                          <th className="py-3 px-3">Estado</th>
+                          <th className="py-3 px-3">Fecha Creación</th>
+                          <th className="py-3 px-3">Vencimiento (1 Mes)</th>
+                          <th className="py-3 px-3">Límite / Consultas Mes</th>
+                          <th className="py-3 px-3 text-right">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#222222]">
+                        {filteredUsers.map((u) => {
+                          const isCurrentUser = user?.email === u.email
+                          const isLifetime = typeof u.daysRemaining === 'number' && u.daysRemaining > 300
+                          const isExpired = typeof u.daysRemaining === 'number' && u.daysRemaining <= 0
+                          const isNormal = u.plan === 'normal' && !u.isAdmin
+                          const limitMax = 50
+                          const usagePercent = Math.min(Math.round(((u.questionsThisMonth || 0) / limitMax) * 100), 100)
+
+                          return (
+                            <tr key={u.id} className="hover:bg-white/[0.02] transition-colors">
+                              {/* Email / User */}
+                              <td className="py-3.5 px-3">
+                                <div className="flex items-center gap-2.5">
+                                  <div
+                                    className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] flex-shrink-0"
+                                    style={{
+                                      background: u.isAdmin
+                                        ? 'rgba(245,158,11,0.15)'
+                                        : u.plan === 'pro'
+                                        ? 'rgba(201,168,76,0.15)'
+                                        : 'rgba(56,189,248,0.15)',
+                                      color: u.isAdmin ? '#f59e0b' : u.plan === 'pro' ? '#c9a84c' : '#38bdf8',
+                                      border: `1px solid ${
+                                        u.isAdmin
+                                          ? 'rgba(245,158,11,0.3)'
+                                          : u.plan === 'pro'
+                                          ? 'rgba(201,168,76,0.3)'
+                                          : 'rgba(56,189,248,0.3)'
+                                      }`,
+                                    }}
+                                  >
+                                    {u.email.slice(0, 2).toUpperCase()}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="text-white font-medium truncate">{u.email}</span>
+                                      {isCurrentUser && (
+                                        <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/30">
+                                          Tú
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-2 text-[9px] text-white/30 font-mono">
+                                      <span>ID: {u.id.slice(0, 8)}...</span>
+                                      {u.name && <span className="text-white/50">{u.name}</span>}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* Role & Plan */}
+                              <td className="py-3.5 px-3">
+                                {u.isAdmin ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                                    <Shield size={11} />
+                                    ADMINISTRADOR
+                                  </span>
+                                ) : u.plan === 'pro' ? (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#c9a84c]/15 text-[#c9a84c] border border-[#c9a84c]/30">
+                                    <Crown size={11} />
+                                    PLAN PRO
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/30">
+                                    <Users size={11} />
+                                    PLAN NORMAL
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Status */}
+                              <td className="py-3.5 px-3">
+                                {isExpired ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-500/10 text-rose-400 border border-rose-500/25">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-400" />
+                                    Vencida
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    Activa
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Created At */}
+                              <td className="py-3.5 px-3 whitespace-nowrap">
+                                <div className="text-white/80 font-light">
+                                  {new Date(u.createdAt).toLocaleDateString('es-PE', {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                    year: 'numeric',
+                                  })}
+                                </div>
+                                <div className="text-[9px] text-white/30">
+                                  {new Date(u.createdAt).toLocaleTimeString('es-PE', {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </div>
+                              </td>
+
+                              {/* Expires At */}
+                              <td className="py-3.5 px-3 whitespace-nowrap">
+                                {u.expiresAt ? (
+                                  <div>
+                                    <div className="text-white/80 font-light">
+                                      {new Date(u.expiresAt).toLocaleDateString('es-PE', {
+                                        day: '2-digit',
+                                        month: '2-digit',
+                                        year: 'numeric',
+                                      })}
+                                    </div>
+                                    <div className="text-[10px]">
+                                      {isLifetime ? (
+                                        <span className="text-white/40">Vitalicio (2027+)</span>
+                                      ) : isExpired ? (
+                                        <span className="text-rose-400 font-medium">
+                                          Venció hace {Math.abs(u.daysRemaining || 0)} días
+                                        </span>
+                                      ) : (
+                                        <span className="text-emerald-400 font-medium">
+                                          Vence en {u.daysRemaining ?? 0} días (1 mes)
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-white/30 text-[10px]">Sin expiración</span>
+                                )}
+                              </td>
+
+                              {/* Limit / Consumption */}
+                              <td className="py-3.5 px-3 min-w-[140px]">
+                                {isNormal ? (
+                                  <div className="space-y-1">
+                                    <div className="flex items-center justify-between text-[10px]">
+                                      <span className="text-sky-300 font-medium">
+                                        {u.questionsThisMonth} / {limitMax} preguntas
+                                      </span>
+                                      <span className="text-white/40">{usagePercent}%</span>
+                                    </div>
+                                    <div className="w-full h-1.5 rounded-full bg-[#222222] overflow-hidden">
+                                      <div
+                                        className="h-full rounded-full transition-all"
+                                        style={{
+                                          width: `${Math.max(usagePercent, 4)}%`,
+                                          background: usagePercent >= 90 ? '#ef4444' : '#38bdf8',
+                                        }}
+                                      />
+                                    </div>
+                                    <p className="text-[9px] text-white/30">Límite mensual activo</p>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
+                                      <Zap size={12} />
+                                      Ilimitado
+                                    </span>
+                                    <p className="text-[9px] text-white/30">
+                                      {u.questionsThisMonth} consultas este mes
+                                    </p>
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Actions */}
+                              <td className="py-3.5 px-3 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {/* +30 Days Renewal */}
+                                  <button
+                                    onClick={() => handleRenewUser(u.id)}
+                                    className="px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-colors bg-[#222222] hover:bg-[#2a2a2a] text-white/70 hover:text-emerald-400 border-[#2a2a2a]"
+                                    title="Extender suscripción por +30 días"
+                                  >
+                                    +30 días
+                                  </button>
+
+                                  {/* Toggle Plan (Normal <-> PRO) */}
+                                  {!u.isAdmin && (
+                                    <button
+                                      onClick={() => handleTogglePlan(u.id, u.plan)}
+                                      className="px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors bg-[#222222] hover:bg-[#2a2a2a] text-white/70 hover:text-[#c9a84c] border-[#2a2a2a]"
+                                      title={`Cambiar a ${u.plan === 'pro' ? 'Normal' : 'PRO'}`}
+                                    >
+                                      {u.plan === 'pro' ? 'A Normal' : 'A PRO'}
+                                    </button>
+                                  )}
+
+                                  {/* Delete Button */}
+                                  <button
+                                    onClick={() => setDeleteConfirmUser(u)}
+                                    disabled={isCurrentUser}
+                                    className={`p-1.5 rounded-lg border transition-colors ${
+                                      isCurrentUser
+                                        ? 'opacity-20 cursor-not-allowed border-transparent text-white/20'
+                                        : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border-rose-500/20'
+                                    }`}
+                                    title={
+                                      isCurrentUser
+                                        ? 'No puedes eliminar tu propia cuenta en sesión'
+                                        : 'Eliminar cuenta de la base de datos'
+                                    }
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'scorecard' && stats && (
+            <motion.div
+              key="scorecard-view"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              className="space-y-8"
+            >
                 {/* Scorecard Hero Banner */}
                 <div
                   className="p-6 rounded-2xl border relative overflow-hidden"
@@ -478,7 +1011,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
               </motion.div>
             )}
 
-            {activeTab === 'operations' && (
+            {activeTab === 'operations' && stats && (
               <motion.div
                 key="operations-view"
                 initial={{ opacity: 0, y: 10 }}
@@ -878,6 +1411,223 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
               </motion.div>
             )}
           </AnimatePresence>
+
+        {/* Modal de Confirmación para Eliminar Cuenta */}
+        {deleteConfirmUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+            <div
+              className="w-full max-w-md rounded-2xl border p-6 shadow-2xl relative"
+              style={{ background: '#1c1c1c', borderColor: '#2f2f2f' }}
+            >
+              <div className="flex items-center gap-3 text-rose-400 mb-3">
+                <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <h3 className="text-[16px] font-medium text-white">¿Eliminar cuenta permanentemente?</h3>
+                  <p className="text-[10px] text-white/40">Esta acción no se puede deshacer</p>
+                </div>
+              </div>
+
+              <p className="text-[12px] text-white/60 mb-4 leading-relaxed">
+                Estás a punto de dar de baja definitiva y eliminar al siguiente usuario de la base de datos PostgreSQL:
+              </p>
+
+              <div className="p-3.5 rounded-xl bg-[#242424] border border-[#2f2f2f] mb-4 space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40">Correo Electrónico:</span>
+                  <span className="font-semibold text-white">{deleteConfirmUser.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40">Plan actual:</span>
+                  <span className="uppercase text-[#c9a84c] font-medium tracking-wider">{deleteConfirmUser.plan}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40">ID único:</span>
+                  <span className="font-mono text-white/40 text-[10px]">{deleteConfirmUser.id}</span>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px] mb-5">
+                ⚠️ <strong>Aviso:</strong> Se borrará el usuario, su suscripción asignada, sus conversaciones e historial guardado de forma permanente en Neon PostgreSQL.
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmUser(null)}
+                  disabled={Boolean(deletingId)}
+                  className="px-4 py-2 rounded-xl text-[12px] font-medium text-white/70 hover:text-white bg-[#262626] hover:bg-[#303030] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUser(deleteConfirmUser.id)}
+                  disabled={Boolean(deletingId)}
+                  className="px-4 py-2 rounded-xl text-[12px] font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg shadow-rose-600/30 flex items-center gap-1.5"
+                >
+                  {deletingId === deleteConfirmUser.id ? (
+                    <>
+                      <RefreshCw size={13} className="animate-spin" />
+                      <span>Eliminando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 size={13} />
+                      <span>Sí, Eliminar Cuenta</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para Crear Nueva Cuenta */}
+        {createModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+            <div
+              className="w-full max-w-lg rounded-2xl border p-6 shadow-2xl relative"
+              style={{ background: '#1c1c1c', borderColor: '#2f2f2f' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-[#c9a84c]/10 border border-[#c9a84c]/20 text-[#c9a84c]">
+                    <UserPlus size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-[16px] font-medium text-white">Crear Nueva Cuenta</h3>
+                    <p className="text-[10px] text-white/40">Crea una cuenta en Neon Postgres con suscripción y límites asignados</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setCreateModalOpen(false)}
+                  className="text-white/40 hover:text-white p-1"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {createError && (
+                <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-[11px] flex items-center gap-2">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span>{createError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleCreateUser} className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-medium text-white/70 mb-1">Correo Electrónico *</label>
+                  <input
+                    type="email"
+                    required
+                    value={newUserEmail}
+                    onChange={(e) => setNewUserEmail(e.target.value)}
+                    placeholder="ejemplo@abogado.pe"
+                    className="w-full px-3 py-2 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-white/70 mb-1">Contraseña *</label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      value={newUserPass}
+                      onChange={(e) => setNewUserPass(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      className="w-full px-3 py-2 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-white/70 mb-1">Nombre Completo (Opcional)</label>
+                    <input
+                      type="text"
+                      value={newUserName}
+                      onChange={(e) => setNewUserName(e.target.value)}
+                      placeholder="Dr. Juan Pérez"
+                      className="w-full px-3 py-2 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-white/70 mb-1">Plan Asignado</label>
+                    <select
+                      value={newUserPlan}
+                      onChange={(e) => setNewUserPlan(e.target.value as 'pro' | 'normal')}
+                      className="w-full px-3 py-2 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white focus:outline-none focus:border-[#c9a84c]"
+                    >
+                      <option value="normal">Normal / Junior (Límite 50 preguntas/mes)</option>
+                      <option value="pro">PRO Ilimitado (Sin límites de consultas)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-white/70 mb-1">Vigencia Inicial</label>
+                    <select
+                      value={newUserDurationDays}
+                      onChange={(e) => setNewUserDurationDays(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white focus:outline-none focus:border-[#c9a84c]"
+                    >
+                      <option value={30}>1 Mes (30 días)</option>
+                      <option value={60}>2 Meses (60 días)</option>
+                      <option value={90}>3 Meses (90 días)</option>
+                      <option value={365}>1 Año (365 días)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-xl bg-[#222222] border border-[#2a2a2a]">
+                  <label className="flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newUserIsAdmin}
+                      onChange={(e) => setNewUserIsAdmin(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#c9a84c] focus:ring-0 bg-[#1a1a1a] border-[#333]"
+                    />
+                    <div>
+                      <span className="text-[12px] font-medium text-white">Privilegios de Administrador</span>
+                      <p className="text-[10px] text-white/40">Permite acceder al panel de control gerencial</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreateModalOpen(false)}
+                    disabled={creatingUser}
+                    className="px-4 py-2 rounded-xl text-[12px] font-medium text-white/70 hover:text-white bg-[#262626] hover:bg-[#303030] transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={creatingUser}
+                    className="px-5 py-2 rounded-xl text-[12px] font-semibold text-[#111111] bg-[#c9a84c] hover:bg-[#d4b558] transition-all shadow-lg shadow-[#c9a84c]/20 flex items-center gap-1.5"
+                  >
+                    {creatingUser ? (
+                      <>
+                        <RefreshCw size={13} className="animate-spin" />
+                        <span>Creando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={13} />
+                        <span>Crear y Activar Cuenta</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </main>
     </div>

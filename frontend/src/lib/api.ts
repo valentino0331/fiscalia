@@ -174,16 +174,15 @@ export const api = {
 
   admin: {
     stats: () =>
-      request<{
-        overview: {
-          totalUsers: number
-          activeSubscriptions: number
-          totalConversations: number
-          connectedNow: number
-        }
-        registrations: { day: string; total: number }[]
-        agentPerformance: { agentId: string; conversations: number; messages: number }[]
-      }>('/admin/stats'),
+      request<any>('/admin/stats'),
+    users: () =>
+      request<{ users: import('@/types').AdminUserItem[] }>('/admin/users'),
+    deleteUser: (id: string) =>
+      request<{ success: boolean; message: string }>(`/admin/users/${id}`, { method: 'DELETE' }),
+    updateUserPlan: (id: string, data: { plan?: string; addDays?: number; status?: string }) =>
+      request<{ success: boolean; message: string }>(`/admin/users/${id}/plan`, { method: 'PATCH', body: JSON.stringify(data) }),
+    createUser: (data: { email: string; password: string; name?: string; plan?: string; isAdmin?: boolean; durationDays?: number }) =>
+      request<{ success: boolean; message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   saved: {
