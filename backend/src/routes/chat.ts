@@ -374,13 +374,10 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     if (!assistantMessage && geminiKey) {
       const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-3.8-flash',
-        'gemini-3.7-flash',
-        'gemini-3.6-flash',
-        'gemini-3.5-flash-lite',
-        'gemini-2.5-flash-lite',
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-pro',
         'gemini-2.5-flash',
-        'gemini-2.5-pro',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
