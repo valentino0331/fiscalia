@@ -32,16 +32,19 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   diego: {
     label: 'Civil',
     keywords: [
+      'civil', 'derecho civil', 'problema civil', 'tema civil', 'caso civil', 'asunto civil',
+      'demanda civil', 'abogado civil', 'juicio civil', 'materia civil',
       'desalojo', 'arrendamiento', 'contrato civil', 'incumplimiento contractual',
       'indemnizacion', 'responsabilidad civil', 'carta notarial', 'resolucion contractual',
       'deuda', 'prestamo', 'garantia hipotecaria', 'derechos reales', 'propiedad',
-      'codigo civil', 'ley 30933', 'allanamiento futuro',
+      'codigo civil', 'ley 30933', 'allanamiento futuro', 'cpc', 'codigo procesal civil',
     ],
   },
   adriana: {
     label: 'Corporativo',
     keywords: [
-      'sociedad anonima', 'sac', 'srl', 'accionistas', 'fusiones y adquisiciones', 'm&a',
+      'corporativo', 'derecho corporativo', 'societario', 'derecho societario', 'problema societario',
+      'abogado corporativo', 'sociedad anonima', 'sac', 'srl', 'accionistas', 'fusiones y adquisiciones', 'm&a',
       'compliance', 'due diligence', 'junta general de accionistas', 'pacto de socios',
       'drag along', 'tag along', 'ley general de sociedades', 'ley 30424', 'reorganizacion societaria',
     ],
@@ -49,15 +52,17 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   rodrigo: {
     label: 'Minero',
     keywords: [
+      'minero', 'derecho minero', 'problema minero', 'abogado minero', 'tema minero',
       'concesion minera', 'ingemmet', 'oefa minero', 'oefa', 'reinfo', 'formalizacion minera',
       'petitorio minero', 'cierre de mina', 'estudio de impacto ambiental minero', 'eia minero',
-      'pas ambiental minero', 'canon minero', 'derecho minero', 'titular minero',
+      'pas ambiental minero', 'canon minero', 'titular minero',
     ],
   },
   camila: {
     label: 'Familia',
     keywords: [
-      'divorcio', 'pension de alimentos', 'demanda de alimentos', 'aumento de alimentos',
+      'familia', 'derecho de familia', 'problema familiar', 'tema familiar', 'caso de familia',
+      'abogado de familia', 'divorcio', 'pension de alimentos', 'demanda de alimentos', 'aumento de alimentos',
       'tenencia compartida', 'tenencia exclusiva', 'regimen de visitas', 'violencia familiar',
       'patria potestad', 'filiacion', 'sociedad de gananciales', 'separacion de patrimonios',
       'ley 31590', 'ley 30364', 'codigo de los ninos y adolescentes',
@@ -66,7 +71,8 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   fernanda: {
     label: 'Tributario',
     keywords: [
-      'sunat', 'fiscalizacion sunat', 'reclamacion tributaria', 'tribunal fiscal',
+      'tributario', 'derecho tributario', 'problema tributario', 'tema tributario', 'caso tributario',
+      'abogado tributario', 'sunat', 'fiscalizacion sunat', 'reclamacion tributaria', 'tribunal fiscal',
       'apelacion tf', 'impuesto a la renta', 'igv', 'orden de pago', 'resolucion de determinacion',
       'resolucion de multa', 'cobranza coactiva', 'gradualidad de multas', 'codigo tributario',
       'prescripcion tributaria', 'nrus', 'rer', 'rmt', 'regimen general',
@@ -75,7 +81,8 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   marco: {
     label: 'Administrativo',
     keywords: [
-      'licitacion publica', 'contrataciones del estado', 'oece', 'osce', 'ley 32069',
+      'administrativo', 'derecho administrativo', 'problema administrativo', 'tema administrativo',
+      'abogado administrativo', 'licitacion publica', 'contrataciones del estado', 'oece', 'osce', 'ley 32069',
       'tribunal de contrataciones publicas', 'tcp', 'procedimiento administrativo sancionador',
       'pas administrativo', 'recurso de reconsideracion', 'recurso de apelacion administrativa',
       'tupa', 'silencio administrativo', 'proceso contencioso administrativo', 'ley 27444',
@@ -94,6 +101,93 @@ const AGENT_NAMES: Record<string, string> = {
   fernanda: 'Fernanda',
   marco: 'Marco',
 };
+
+const EXPLICIT_BRANCH_TRIGGERS: Array<{
+  agentId: string;
+  label: string;
+  name: string;
+  triggers: string[];
+}> = [
+  {
+    agentId: 'diego',
+    label: 'Civil',
+    name: 'Diego',
+    triggers: [
+      'problema civil', 'derecho civil', 'tema civil', 'caso civil', 'abogado civil',
+      'asunto civil', 'demanda civil', 'materia civil', 'juicio civil', 'litigio civil',
+      'un civil', 'algo civil', 'desalojo', 'arrendamiento', 'contrato de alquiler',
+    ],
+  },
+  {
+    agentId: 'sebastian',
+    label: 'Penal',
+    name: 'Sebastián',
+    triggers: [
+      'problema penal', 'derecho penal', 'tema penal', 'caso penal', 'abogado penal',
+      'asunto penal', 'denuncia penal', 'materia penal', 'juicio penal', 'un penal',
+      'algo penal', 'prision preventiva', 'detenido', 'fiscalia penal',
+    ],
+  },
+  {
+    agentId: 'valentina',
+    label: 'Laboral',
+    name: 'Valentina',
+    triggers: [
+      'problema laboral', 'derecho laboral', 'tema laboral', 'caso laboral', 'abogado laboral',
+      'asunto laboral', 'demanda laboral', 'materia laboral', 'un laboral', 'algo laboral',
+      'despido arbitrario', 'liquidacion de beneficios', 'sunafil', 'cobro de cts',
+    ],
+  },
+  {
+    agentId: 'camila',
+    label: 'Familia',
+    name: 'Camila',
+    triggers: [
+      'problema familiar', 'derecho de familia', 'tema de familia', 'caso de familia',
+      'abogado de familia', 'asunto familiar', 'demanda de alimentos', 'pension de alimentos',
+      'divorcio', 'tenencia compartida', 'regimen de visitas', 'patria potestad',
+    ],
+  },
+  {
+    agentId: 'fernanda',
+    label: 'Tributario',
+    name: 'Fernanda',
+    triggers: [
+      'problema tributario', 'derecho tributario', 'tema tributario', 'caso tributario',
+      'abogado tributario', 'asunto tributario', 'fiscalizacion de sunat', 'multa de sunat',
+      'tribunal fiscal', 'reclamacion tributaria', 'cobranza coactiva sunat',
+    ],
+  },
+  {
+    agentId: 'marco',
+    label: 'Administrativo',
+    name: 'Marco',
+    triggers: [
+      'problema administrativo', 'derecho administrativo', 'tema administrativo',
+      'caso administrativo', 'abogado administrativo', 'contratacion publica', 'oece',
+      'licitacion publica', 'procedimiento administrativo sancionador', 'silencio administrativo',
+    ],
+  },
+  {
+    agentId: 'adriana',
+    label: 'Corporativo',
+    name: 'Adriana',
+    triggers: [
+      'problema corporativo', 'derecho corporativo', 'tema corporativo', 'caso corporativo',
+      'abogado corporativo', 'derecho societario', 'tema societario', 'problema societario',
+      'junta de accionistas', 'pacto de socios', 'compliance corporativo',
+    ],
+  },
+  {
+    agentId: 'rodrigo',
+    label: 'Minero',
+    name: 'Rodrigo',
+    triggers: [
+      'problema minero', 'derecho minero', 'tema minero', 'caso minero', 'abogado minero',
+      'concesion minera', 'petitorio minero', 'reinfo', 'oefa minero', 'ingemmet',
+    ],
+  },
+];
 
 const normalize = (value: string): string =>
   value
@@ -132,9 +226,27 @@ export function suggestAgentTransfer(
   userText: string
 ): AgentTransferSuggestion | null {
   const normalizedInput = normalize(userText);
-  if (!normalizedInput || normalizedInput.length < 10) return null;
+  if (!normalizedInput || normalizedInput.length < 5) return null;
 
-  // Si Sebastián (Penal) está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, NUNCA transferir
+  // 1. REGLA DE TRANSFERENCIA EXPLÍCITA DIRECTA (Máxima prioridad)
+  // Si el usuario dice "tengo un problema civil", "tema laboral", "consulta familiar", etc.
+  for (const item of EXPLICIT_BRANCH_TRIGGERS) {
+    if (item.agentId !== currentAgentId) {
+      for (const phrase of item.triggers) {
+        const normPhrase = normalize(phrase);
+        if (normPhrase && normalizedInput.includes(normPhrase)) {
+          return {
+            agentId: item.agentId,
+            agentLabel: item.label,
+            agentName: item.name,
+            matchedKeywords: [phrase],
+          };
+        }
+      }
+    }
+  }
+
+  // 2. Si Sebastián (Penal) está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, no transferir salvo trigger explícito
   if (currentAgentId === 'sebastian') {
     const penalTriggers = [
       'plazo', 'proceso', 'penal', 'fiscal', 'investigacion', 'prision', 'juicio', 'delito',

@@ -34,6 +34,7 @@ interface CitizenDocumentGeneratorModalProps {
 }
 
 export type DocType =
+  | 'denuncia_penal'
   | 'alimentos'
   | 'carta_notarial'
   | 'indecopi'
@@ -52,6 +53,14 @@ interface DocMeta {
 }
 
 const DOC_TYPES: DocMeta[] = [
+  {
+    id: 'denuncia_penal',
+    label: 'Denuncia Penal',
+    sublabel: 'Mesa de Partes Fiscalía (NCPP Art. 326-328)',
+    icon: <Scale size={16} />,
+    free: true,
+    badgeColor: '#ef4444',
+  },
   {
     id: 'carta_notarial',
     label: 'Carta Notarial',
@@ -220,6 +229,13 @@ const DOC_FORMAT: Record<DocType, {
   marginRightCm: number
   note: string
 }> = {
+  // Denuncia Penal → NCPP Art. 326-328 / MP-FN: TNR 12pt, interlineado 1.5, formato fiscal
+  denuncia_penal: {
+    fontFamily: 'Times New Roman', fontFamilyCss: "'Times New Roman', Times, serif",
+    fontSizePt: 12, lineHeight: 1.5,
+    marginTopCm: 3.5, marginBottomCm: 2.5, marginLeftCm: 3.5, marginRightCm: 2.5,
+    note: 'NCPP Art. 326-328 — Ministerio Público del Perú'
+  },
   // Carta Notarial → D. Leg. 1049: TNR 12pt, interlineado 1.5, márgenes protocolo notarial
   carta_notarial: {
     fontFamily: 'Times New Roman', fontFamilyCss: "'Times New Roman', Times, serif",
@@ -345,6 +361,25 @@ export default function CitizenDocumentGeneratorModal({
   // Formato reglamentario automático según tipo de documento (no editable por el usuario)
   const fmt = DOC_FORMAT[docType]
 
+  // ── Denuncia Penal (Mesa de Partes Fiscalía — NCPP Art. 326-328) ──
+  const [denunciaFiscalia, setDenunciaFiscalia] = useState('Fiscalía Provincial Penal Corporativa de Turno')
+  const [denunciaCiudad, setDenunciaCiudad] = useState('Lima')
+  const [denunciaDelito, setDenunciaDelito] = useState('Estafa Agravada (Art. 196-A del Código Penal)')
+  const [denuncianteNombre, setDenuncianteNombre] = useState('')
+  const [denuncianteDni, setDenuncianteDni] = useState('')
+  const [denuncianteDireccion, setDenuncianteDireccion] = useState('')
+  const [denuncianteTelefono, setDenuncianteTelefono] = useState('')
+  const [denuncianteCorreo, setDenuncianteCorreo] = useState('')
+  const [denuncianteCasilla, setDenuncianteCasilla] = useState('')
+  const [denunciadoNombre, setDenunciadoNombre] = useState('')
+  const [denunciadoDni, setDenunciadoDni] = useState('')
+  const [denunciadoDireccion, setDenunciadoDireccion] = useState('')
+  const [denunciaFechaHechos, setDenunciaFechaHechos] = useState('')
+  const [denunciaLugarHechos, setDenunciaLugarHechos] = useState('')
+  const [denunciaHechos, setDenunciaHechos] = useState('')
+  const [denunciaElementosConviccion, setDenunciaElementosConviccion] = useState('')
+  const [denunciaDiligenciasUrgentes, setDenunciaDiligenciasUrgentes] = useState('')
+
   // ── Carta Notarial ───────────────────────────────────────────
   const [cartaCiudad, setCartaCiudad] = useState('Lima')
   const [cartaRemitente, setCartaRemitente] = useState('')
@@ -447,7 +482,13 @@ export default function CitizenDocumentGeneratorModal({
   // ─── Validaciones ──────────────────────────────────────────
   const validate = (): boolean => {
     const errs: string[] = []
-    if (docType === 'carta_notarial') {
+    if (docType === 'denuncia_penal') {
+      if (!denuncianteNombre.trim()) errs.push('Nombre completo del denunciante')
+      if (!denuncianteDni.trim()) errs.push('DNI del denunciante')
+      if (!denunciadoNombre.trim()) errs.push('Nombre del denunciado o "Los que resulten responsables"')
+      if (!denunciaDelito.trim()) errs.push('Delito imputado')
+      if (!denunciaHechos.trim()) errs.push('Narración circunstanciada de los hechos')
+    } else if (docType === 'carta_notarial') {
       if (!cartaRemitente.trim()) errs.push('Tu nombre completo (Remitente)')
       if (!cartaRemitenteDni.trim()) errs.push('Tu número de DNI')
       if (!cartaDestinatario.trim()) errs.push('Nombre del destinatario o razón social')
@@ -485,6 +526,79 @@ export default function CitizenDocumentGeneratorModal({
 
   // ─── Generación de Contenido Jurídico Formal ───────────────
   const generateContent = (): { title: string; content: string } => {
+    if (docType === 'denuncia_penal') {
+      return {
+        title: `Denuncia_Penal_${denuncianteNombre.replace(/\\s+/g, '_') || 'Denuncia'}`,
+        content: `CARPETA FISCAL : (Por Asignar)
+FISCAL RESPONSABLE : FISCAL PROVINCIAL PENAL CORPORATIVO
+SUMILLA            : FORMULA DENUNCIA PENAL DE PARTE POR DELITO DE ${denunciaDelito.toUpperCase()}
+
+SEÑOR FISCAL PROVINCIAL DE LA ${(denunciaFiscalia || 'FISCALÍA PROVINCIAL PENAL CORPORATIVA DE TURNO').toUpperCase()} DE ${(denunciaCiudad || 'LIMA').toUpperCase()}:
+
+I. DATOS DE IDENTIFICACIÓN DEL DENUNCIANTE:
+${denuncianteNombre || '[NOMBRES Y APELLIDOS COMPLETOS DEL DENUNCIANTE]'}, identificado(a) con DNI N° ${denuncianteDni || '[N° DE DNI]'}, con domicilio real en ${denuncianteDireccion || '[DIRECCIÓN EXACTA DEL DENUNCIANTE]'}; con teléfono de contacto ${denuncianteTelefono || '[NÚMERO TELEFÓNICO]'}, correo electrónico para notificaciones oficiales ${denuncianteCorreo || '[CORREO ELECTRÓNICO]'}${denuncianteCasilla ? ` y Casilla Electrónica SINOE N° ${denuncianteCasilla}` : ''}; ante su Despacho Fiscal, con el debido respeto me presento y expongo:
+
+II. DATOS DE INDIVIDUALIZACIÓN DEL DENUNCIADO:
+La presente denuncia penal de parte se dirige expresamente contra:
+— ${denunciadoNombre || '[NOMBRE Y APELLIDOS DEL DENUNCIADO O PERSONA JURÍDICA / LOS QUE RESULTEN RESPONSABLES]'}${denunciadoDni ? `, con DNI/RUC N° ${denunciadoDni}` : ''}, a quien deberá notificarse en su domicilio sito en ${denunciadoDireccion || '[DIRECCIÓN DEL DENUNCIADO O INDICAR QUE ES DOMICILIO IGNORADO / A DETERMINAR POR PESQUISA POLICIAL]'}.
+
+III. PETITORIO Y CALIFICACIÓN JURÍDICA PRELIMINAR:
+Al amparo del artículo 159° inciso 4 y 5 de la Constitución Política del Perú, en concordancia con los artículos 11°, 94° inciso 2 de la Ley Orgánica del Ministerio Público (D. Leg. 052) y los artículos 326°, 328° y 330° del Código Procesal Penal (D. Leg. 957), FORMULO DENUNCIA PENAL DE PARTE contra el investigado antes individualizado, por la presunta comisión del ilícito penal tipificado como:
+— ${denunciaDelito || '[TIPIFICACIÓN DEL DELITO SEGÚN CÓDIGO PENAL]'}.
+A fin de que su Despacho Fiscal disponga el INICIO DE DILIGENCIAS PRELIMINARES EN SEDE FISCAL Y/O POLICIAL (conforme a las directivas vigentes, D. Leg. 1605 y Ley 32130), recabe los elementos de convicción y en su oportunidad formalice la respectiva Investigación Preparatoria.
+
+IV. RELACIÓN CIRCUNSTANCIADA Y CRONOLÓGICA DE LOS HECHOS:
+Conforme a la exigencia del artículo 328° numeral 1 del Código Procesal Penal:
+${denunciaFechaHechos ? `Fecha / Periodo de los hechos: ${denunciaFechaHechos}\n` : ''}${denunciaLugarHechos ? `Lugar de comisión: ${denunciaLugarHechos}\n` : ''}
+4.1. CIRCUNSTANCIAS PRECEDENTES:
+Con anterioridad a los hechos incriminados, el suscrito mantenía contacto con el denunciado en el contexto de relaciones jurídicas/personales legítimas, donde se generaron las condiciones previas.
+
+4.2. CIRCUNSTANCIAS CONCOMITANTES (RELATO FÁCTICO PRINCIPAL):
+${denunciaHechos || '[DESCRIBIR DETALLADAMENTE LA CONDUCTA ANTIJURÍDICA Y TÍPICA: Modus operandi del denunciado, engaño o ardid desplegado, perjuicio económico ocasionado, actos materiales realizados, fechas y horas específicas.]'}
+
+4.3. CIRCUNSTANCIAS POSTERIORES:
+Consumado el ilícito penal, el denunciado evitó responder a las comunicaciones cursadas, no restituyó el perjuicio causado y ha evidenciado una conducta renuente a esclarecer lo sucedido, configurándose la consumación típica y la afectación al bien jurídico tutelado.
+
+V. ELEMENTOS DE CONVICCIÓN Y MEDIOS PROBATORIOS OFRECIDOS:
+Al amparo del artículo 328° numeral 1 del NCPP, ofrezco los siguientes elementos que acreditan la verosimilitud de la imputación:
+${denunciaElementosConviccion || '1. Copia simple de documentos, contratos o comunicaciones que acreditan la relación y el perjuicio.\n2. Vouchers de depósitos bancarios / transferencias financieras que demuestran el desplazamiento patrimonial.\n3. Capturas de conversaciones certificadas notarialmente o mediante constatación policial.\n4. Declaración testimonial de los testigos presenciales de los hechos.'}
+
+VI. ACTOS DE INVESTIGACIÓN Y DILIGENCIAS URGENTES SOLICITADAS:
+Solicito al señor Fiscal que, al amparo del artículo 330° y 334° del NCPP, ordene con prontitud las siguientes diligencias:
+${denunciaDiligenciasUrgentes || '1. Se reciba la declaración indagatoria del denunciado bajo apercibimiento de ley y conducción compulsiva.\n2. Se requiera a las entidades financieras y/o de telecomunicaciones el informe correspondiente para la acreditación del hecho punible.\n3. Se oficie a la Policía Nacional del Perú (PNP) para que practique las pesquisas especializadas urgentes.\n4. Se reciba la declaración ampliatoria y ratificación del suscrito denunciante.'}
+
+VII. FUNDAMENTOS DE DERECHO:
+— Artículos 2° inciso 20, 139° y 159° de la Constitución Política del Estado.
+— Artículos 1°, 11°, 94° y 95° del Decreto Legislativo N° 052 (Ley Orgánica del Ministerio Público).
+— Artículos 60°, 61°, 95°, 326°, 328°, 330° y 334° del Código Procesal Penal (D. Leg. 957).
+— Tipificación penal específica prevista en el Código Penal Peruano.
+— Acuerdo Plenario N° 02-2005/CJ-116 sobre garantías de certeza en las declaraciones y denuncias penales.
+
+POR TANTO:
+A usted, Señor Fiscal Provincial, solicito admitir a trámite la presente denuncia penal y ordenar de inmediato los actos de investigación que por ley corresponden.
+
+PRIMER OTROSÍ DIGO: Señalo mi domicilio procesal y canales electrónicos indicados en el exordio para todas las notificaciones y providencias fiscales que emanen de la presente investigación.
+
+                                                        ${denunciaCiudad || 'Lima'}, ${today}
+
+
+
+_______________________________________________________
+${denuncianteNombre || 'FIRMA DEL DENUNCIANTE'}
+DNI N°: ${denuncianteDni || '_______________'}
+Teléfono: ${denuncianteTelefono || '_______________'}
+
+┌─────────────────────────────────────────────────────┐
+│                                                     │
+│                                                     │
+│                                                     │
+│                                                     │
+│             [ HUELLA DACTILAR DIGITAL ]             │
+│            DEDO ÍNDICE DERECHO DENUNCIANTE          │
+└─────────────────────────────────────────────────────┘`,
+      }
+    }
+
     if (docType === 'carta_notarial') {
       const plazoTexto =
         cartaPlazo === '48'
@@ -885,6 +999,119 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
 
   // ─── Renderizado del Formulario según Tipo de Documento ─────────
   const renderForm = () => {
+    if (docType === 'denuncia_penal') {
+      return (
+        <div className="space-y-4">
+          <div
+            className="p-3 rounded-xl border text-[11px] flex items-start gap-2.5"
+            style={{ background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.25)', color: '#f87171' }}
+          >
+            <Scale size={18} className="flex-shrink-0 mt-0.5" />
+            <div>
+              <span className="font-semibold block mb-0.5">Estructura Oficial de Denuncia Penal ante el Ministerio Público (NCPP Art. 326-328)</span>
+              <p className="opacity-80 leading-relaxed">
+                Formato con sumilla fiscal, circunstancias precedentes, concomitantes y posteriores, elementos de convicción y diligencias urgentes para la Mesa de Partes del Ministerio Público.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <FieldInput
+              label="Fiscalía de Destino"
+              value={denunciaFiscalia}
+              onChange={setDenunciaFiscalia}
+              placeholder="Fiscalía Provincial Penal Corporativa de Turno"
+              required
+            />
+            <FieldInput
+              label="Ciudad / Distrito Fiscal"
+              value={denunciaCiudad}
+              onChange={setDenunciaCiudad}
+              placeholder="Lima / Arequipa / Trujillo"
+              required
+            />
+          </div>
+
+          <FieldInput
+            label="Delito Imputado (Calificación Jurídica)"
+            value={denunciaDelito}
+            onChange={setDenunciaDelito}
+            placeholder="Estafa Agravada (Art. 196-A CP) / Apropiación Ilícita (Art. 190 CP)"
+            required
+            hint="Indicar el nombre del delito y artículo del Código Penal si se conoce"
+          />
+
+          <div className="pt-2 border-t border-white/5">
+            <span className="text-[11px] font-semibold text-[#c9a84c] block mb-2">1. Datos del Denunciante (Agraviado / Quien presenta la denuncia)</span>
+            <div className="space-y-3">
+              <FieldInput label="Tu Nombre Completo" value={denuncianteNombre} onChange={setDenuncianteNombre} placeholder="Juan Alberto Quispe Mendoza" required />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FieldInput label="Tu DNI" value={denuncianteDni} onChange={setDenuncianteDni} placeholder="45678912" required />
+                <FieldInput label="Teléfono de Contacto" value={denuncianteTelefono} onChange={setDenuncianteTelefono} placeholder="987654321" required />
+              </div>
+              <FieldInput label="Domicilio Real Completo" value={denuncianteDireccion} onChange={setDenuncianteDireccion} placeholder="Av. Arequipa 1234, Dpto. 402, Miraflores, Lima" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FieldInput label="Correo Electrónico (Notificaciones)" value={denuncianteCorreo} onChange={setDenuncianteCorreo} placeholder="juan.quispe@gmail.com" />
+                <FieldInput label="Casilla SINOE (Opcional)" value={denuncianteCasilla} onChange={setDenuncianteCasilla} placeholder="12345" hint="Si cuentas con casilla judicial/fiscal" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/5">
+            <span className="text-[11px] font-semibold text-red-400 block mb-2">2. Datos del Denunciado (Imputado / Investigado)</span>
+            <div className="space-y-3">
+              <FieldInput
+                label="Nombre del Denunciado o Denominación"
+                value={denunciadoNombre}
+                onChange={setDenunciadoNombre}
+                placeholder="Carlos Manuel Silva Ramos (o 'Los que resulten responsables')"
+                required
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FieldInput label="DNI o RUC del Denunciado (si se conoce)" value={denunciadoDni} onChange={setDenunciadoDni} placeholder="12345678" hint="Opcional si se desconoce" />
+                <FieldInput label="Domicilio del Denunciado" value={denunciadoDireccion} onChange={setDenunciadoDireccion} placeholder="Calle Las Flores 456, San Isidro (o ignorado)" />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-white/5">
+            <span className="text-[11px] font-semibold text-white/80 block mb-2">3. Circunstancias de los Hechos</span>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <FieldInput label="Fecha o Periodo de los Hechos" value={denunciaFechaHechos} onChange={setDenunciaFechaHechos} placeholder="15 de enero de 2026 / Entre nov. 2025 y ene. 2026" />
+                <FieldInput label="Lugar de Ocurrencia" value={denunciaLugarHechos} onChange={setDenunciaLugarHechos} placeholder="Lima Cercado / Distrito de Surco" />
+              </div>
+              <FieldTextarea
+                label="Narración Circunstanciada de los Hechos"
+                value={denunciaHechos}
+                onChange={setDenunciaHechos}
+                rows={5}
+                placeholder="Describa de manera ordenada cómo ocurrieron los hechos: cuál fue el engaño o agresión, qué promesas se hicieron, qué perjuicio económico o físico sufrió, y qué pasó después..."
+                required
+                hint="Sea específico en montos, fechas, comunicaciones y personas intervinientes"
+              />
+              <FieldTextarea
+                label="Elementos de Convicción / Pruebas a Adjuntar"
+                value={denunciaElementosConviccion}
+                onChange={setDenunciaElementosConviccion}
+                rows={3}
+                placeholder="1. Capturas de chats de WhatsApp.&#10;2. Vouchers bancarios o estados de cuenta.&#10;3. Copia simple de contratos o recibos."
+                hint="Numere cada documento o prueba que adjuntará a la denuncia"
+              />
+              <FieldTextarea
+                label="Diligencias Urgentes Solicitadas al Fiscal"
+                value={denunciaDiligenciasUrgentes}
+                onChange={setDenunciaDiligenciasUrgentes}
+                rows={2}
+                placeholder="— Citación del denunciado a rendir su instructiva.&#10;— Oficiar al banco BCP para informe financiero.&#10;— Inspección técnica policial."
+                hint="Diligencias iniciales que solicita que la Fiscalía realice"
+              />
+            </div>
+          </div>
+        </div>
+      )
+    }
+
     if (docType === 'carta_notarial') {
       return (
         <div className="space-y-4">

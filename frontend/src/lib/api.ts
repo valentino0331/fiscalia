@@ -69,6 +69,86 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    sendStream: async (
+      data: {
+        agentId: string
+        messages: { role: string; content: string; timestamp: string }[]
+        conversationId?: string
+      },
+      callbacks: {
+        onChunk: (chunk: string) => void
+        onDone: (result: { conversationId?: string; transferTo?: string }) => void
+        onError: (err: any) => void
+      },
+      signal?: AbortSignal
+    ) => {
+      const token = getToken()
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+      }
+      if (token) headers['Authorization'] = `Bearer ${token}`
+
+      try {
+        const res = await fetch(`${API_URL}/chat`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ ...data, stream: true }),
+          signal,
+        })
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
+          throw new Error(errData.error || `HTTP ${res.status}`)
+        }
+
+        const reader = res.body?.getReader()
+        if (!reader) {
+          throw new Error('No se pudo establecer el canal de streaming')
+        }
+
+        const decoder = new TextDecoder()
+        let buffer = ''
+
+        while (true) {
+          if (signal?.aborted) break
+          const { done, value } = await reader.read()
+          if (done) break
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || ''
+
+          for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed || !trimmed.startsWith('data:')) continue
+            const payloadStr = trimmed.replace(/^data:\s*/, '')
+            try {
+              const payload = JSON.parse(payloadStr)
+              if (payload.error) {
+                throw new Error(payload.error)
+              }
+              if (payload.chunk) {
+                callbacks.onChunk(payload.chunk)
+              }
+              if (payload.done) {
+                callbacks.onDone({
+                  conversationId: payload.conversationId,
+                  transferTo: payload.transferTo,
+                })
+                return
+              }
+            } catch (pErr: any) {
+              if (pErr.message && !pErr.message.includes('Unexpected token')) {
+                throw pErr
+              }
+            }
+          }
+        }
+        callbacks.onDone({})
+      } catch (err: any) {
+        callbacks.onError(err)
+      }
+    },
     tts: async (data: { text: string; agentId: string }): Promise<Blob> => {
       const token = getToken()
       const headers: Record<string, string> = {

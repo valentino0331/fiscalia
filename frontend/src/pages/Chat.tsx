@@ -28,6 +28,7 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
+import SpijModal from '@/components/legal/SpijModal'
 
 const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
   sebastian: [
@@ -804,6 +805,7 @@ export default function Chat() {
   })
   const [whereToGoOpen, setWhereToGoOpen] = useState(false)
   const [liveCallOpen, setLiveCallOpen] = useState(false)
+  const [spijModalOpen, setSpijModalOpen] = useState(false)
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
@@ -1350,36 +1352,90 @@ export default function Chat() {
       textareaRef.current.style.height = 'auto'
     }
 
+    let firstChunkReceived = false
+    let accumulatedText = ''
+    const msgTimestamp = new Date().toISOString()
+
     try {
-      const res = await api.chat.send({
-        agentId: agent.id,
-        messages: newMessages,
-        conversationId,
-      })
+      await api.chat.sendStream(
+        {
+          agentId: agent.id,
+          messages: newMessages,
+          conversationId,
+        },
+        {
+          onChunk: (chunk: string) => {
+            accumulatedText += chunk
+            if (!firstChunkReceived) {
+              firstChunkReceived = true
+              const assistantMsg: Message = {
+                role: 'assistant',
+                content: accumulatedText,
+                timestamp: msgTimestamp,
+              }
+              setMessages([...newMessages, assistantMsg])
+            } else {
+              setMessages((prev) => {
+                const updated = [...prev]
+                const lastIdx = updated.length - 1
+                if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                  updated[lastIdx] = { ...updated[lastIdx], content: accumulatedText }
+                }
+                return updated
+              })
+            }
+          },
+          onDone: (result) => {
+            if (result.conversationId && !conversationId) {
+              setConversationId(result.conversationId)
+            }
+            if (result.transferTo) {
+              setMessages((prev) => {
+                const updated = [...prev]
+                const lastIdx = updated.length - 1
+                if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                  updated[lastIdx] = { ...updated[lastIdx], transferTo: result.transferTo }
+                }
+                return updated
+              })
+            }
+            loadConversations()
 
-      const assistantMsg: Message = {
-        role: 'assistant',
-        content: res.message,
-        timestamp: new Date().toISOString(),
-        transferTo: res.transferTo,
-      }
-      setMessages([...newMessages, assistantMsg])
+            if (audioRepliesEnabled && accumulatedText) {
+              speakAssistantMessage(accumulatedText, msgTimestamp)
+            }
+            sendPushNotification(agent.name)
 
-      // Save the conversationId returned by backend (on first message)
-      if (res.conversationId && !conversationId) {
-        setConversationId(res.conversationId)
-      }
-
-      loadConversations()
-
-      if (audioRepliesEnabled) {
-        speakAssistantMessage(assistantMsg.content, assistantMsg.timestamp)
-      }
-      sendPushNotification(agent.name)
-
-      if (usage && usage.limit !== null) {
-        setUsage({ ...usage, questionsUsed: usage.questionsUsed + 1 })
-      }
+            if (usage && usage.limit !== null) {
+              setUsage((prev) => prev ? { ...prev, questionsUsed: prev.questionsUsed + 1 } : null)
+            }
+            setLoading(false)
+          },
+          onError: (err: any) => {
+            const errorMsg = err.message || 'Hubo un error al procesar tu consulta. Por favor intenta de nuevo.'
+            if (!firstChunkReceived) {
+              setMessages([
+                ...newMessages,
+                {
+                  role: 'assistant',
+                  content: errorMsg,
+                  timestamp: msgTimestamp,
+                },
+              ])
+            } else {
+              setMessages((prev) => {
+                const updated = [...prev]
+                const lastIdx = updated.length - 1
+                if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
+                  updated[lastIdx] = { ...updated[lastIdx], content: accumulatedText || errorMsg }
+                }
+                return updated
+              })
+            }
+            setLoading(false)
+          },
+        }
+      )
     } catch (err: any) {
       const errorMsg = err.message || 'Hubo un error al procesar tu consulta. Por favor intenta de nuevo.'
       setMessages([
@@ -1387,10 +1443,9 @@ export default function Chat() {
         {
           role: 'assistant',
           content: errorMsg,
-          timestamp: new Date().toISOString(),
+          timestamp: msgTimestamp,
         },
       ])
-    } finally {
       setLoading(false)
     }
   }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage])
@@ -1502,6 +1557,21 @@ export default function Chat() {
         {/* Right: controls */}
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
+
+          <button
+            onClick={() => setSpijModalOpen(true)}
+            className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+            style={{
+              background: 'rgba(201,168,76,0.12)',
+              border: '1px solid rgba(201,168,76,0.30)',
+              color: '#c9a84c',
+            }}
+            title="Base Legal SPIJ (MINJUSDH) y Acuerdos Plenarios Vinculantes de la Corte Suprema"
+          >
+            <Scale size={13} className="text-[#c9a84c]" />
+            <span className="hidden sm:inline font-semibold">SPIJ & Plenos</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
+          </button>
 
           <a
             href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
@@ -2180,6 +2250,16 @@ export default function Chat() {
       </div>
 
       {/* Modals */}
+      <SpijModal
+        isOpen={spijModalOpen}
+        onClose={() => setSpijModalOpen(false)}
+        currentAgentId={agent?.id}
+        onInsertPrompt={(promptText) => {
+          setInput(promptText)
+          setTimeout(() => textareaRef.current?.focus(), 50)
+        }}
+      />
+
       <DeadlineModal
         isOpen={deadlineModal.isOpen}
         onClose={() => setDeadlineModal({ isOpen: false })}

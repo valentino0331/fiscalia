@@ -7,11 +7,12 @@ import { conversations, userMemory } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth } from '../middleware/auth';
-import { requireSubscription } from '../middleware/subscription';
+import { requireSubscription, incrementUserUsageCache } from '../middleware/subscription';
 import { SYSTEM_PROMPTS } from '../prompts/agents';
 import { suggestAgentTransfer } from './agentRouter';
 import { metrics } from '../lib/metrics';
 import { generateSpeech } from '../lib/tts';
+import { getSpijLegalGrounding, JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
 
 const audioUpload = multer({
   storage: multer.memoryStorage(),
@@ -19,6 +20,28 @@ const audioUpload = multer({
 });
 
 export const chatRouter = Router();
+
+// Endpoint público para consultar el compendio de normas SPIJ y Acuerdos Plenarios vigentes (filtrable por especialista)
+chatRouter.get('/spij/compendium', (req, res) => {
+  const agentId = (req.query.agentId as string) || '';
+  const plenaries = agentId
+    ? JURISPRUDENCE_COMPENDIUM.filter((p) => p.specialistId === agentId)
+    : JURISPRUDENCE_COMPENDIUM;
+  const reforms = agentId
+    ? NORMATIVE_REFORMS_COMPENDIUM.filter((r) => r.specialistId === agentId)
+    : NORMATIVE_REFORMS_COMPENDIUM;
+
+  res.json({
+    status: 'active',
+    source: 'Sistema Peruano de Información Jurídica (SPIJ - MINJUSDH) & Corte Suprema de Justicia del Perú',
+    updatedTo: '2026',
+    specialistFilter: agentId || 'all',
+    plenariesCount: plenaries.length,
+    plenaries,
+    reformsCount: reforms.length,
+    reforms,
+  });
+});
 
 function getAudioFormat(mime: string, originalName?: string): { mimeType: string; filename: string } {
   const m = (mime || '').toLowerCase();
@@ -227,25 +250,98 @@ function sanitizeAiErrorMessage(err: any): string {
   return 'Ocurrió una interrupción temporal al procesar tu consulta legal. Por favor, reintenta en unos instantes.';
 }
 
+// Memory cache to avoid querying userMemory from DB on every message
+const userMemoryCache = new Map<string, { memoryBlock: string; expiresAt: number }>();
+
+// Helper to stream chunks from any OpenAI-compatible API (Groq, OpenAI, DeepSeek, OpenRouter)
+async function streamOpenAICompatible(
+  response: any,
+  onChunk: (chunk: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  let fullText = '';
+  const reader = response.body?.getReader();
+  if (!reader) return fullText;
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      if (signal?.aborted) break;
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        const dataStr = trimmed.replace(/^data:\s*/, '');
+        if (dataStr === '[DONE]') return fullText;
+        try {
+          const json = JSON.parse(dataStr);
+          const delta = json.choices?.[0]?.delta?.content || '';
+          if (delta) {
+            fullText += delta;
+            onChunk(delta);
+          }
+        } catch {
+          // ignore incomplete json chunk
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock?.();
+  }
+  return fullText;
+}
+
 chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => {
   const startTime = Date.now();
+  const isStream = req.body?.stream === true || req.headers?.accept?.includes('text/event-stream');
+
+  // Si se solicita streaming, establecer encabezados SSE de inmediato
+  if (isStream) {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no');
+    res.flushHeaders?.();
+  }
+
+  const sendStreamChunk = (chunk: string) => {
+    if (isStream && chunk) {
+      res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+    }
+  };
+
   try {
     const { agentId, messages, conversationId } = req.body;
 
     if (!SYSTEM_PROMPTS[agentId]) {
+      if (isStream) {
+        res.write(`data: ${JSON.stringify({ error: 'Agente no válido' })}\n\n`);
+        return res.end();
+      }
       return res.status(400).json({ error: 'Agente no válido' });
     }
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
+      if (isStream) {
+        res.write(`data: ${JSON.stringify({ error: 'Mensajes requeridos' })}\n\n`);
+        return res.end();
+      }
       return res.status(400).json({ error: 'Mensajes requeridos' });
     }
 
-    const deepseekKey = process.env.DEEPSEEK_API_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     let assistantMessage = '';
     let transferTo: string | undefined;
@@ -254,41 +350,59 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       .reverse()
       .find((m: any) => m?.role === 'user' && typeof m.content === 'string')?.content || '';
 
-    // Load user memory to inject into system prompt
+    // Ventana deslizante para el prompt: últimos 10 mensajes para evitar latencia de tokens masivos
+    const recentMessages = messages.length > 10 ? messages.slice(-10) : messages;
+
+    // Caché en memoria para perfil/memoria de usuario (TTL 5 minutos)
     let memoryBlock = '';
-    try {
-      const mem = await db.query.userMemory.findFirst({
-        where: eq(userMemory.userId, req.userId),
-      });
-      if (mem) {
-        const parts: string[] = [];
-        if (mem.name) parts.push(`Nombre del abogado: ${mem.name}`);
-        if (mem.company) parts.push(`Estudio/empresa: ${mem.company}`);
-        if (mem.role) parts.push(`Rol: ${mem.role}`);
-        if (mem.specialties) parts.push(`Especialidades recurrentes: ${mem.specialties}`);
-        if (mem.notes) parts.push(`Notas adicionales: ${mem.notes}`);
-        if (parts.length > 0) {
-          memoryBlock = `\n\n════════════════════════════════════════\nPERFIL DEL ABOGADO (memoria de usuario)\n════════════════════════════════════════\n${parts.join('\n')}\n\nUsa esta información para personalizar tus respuestas. No la repitas textualmente a menos que sea relevante.`;
+    const cachedMemory = userMemoryCache.get(req.userId);
+    if (cachedMemory && cachedMemory.expiresAt > Date.now()) {
+      memoryBlock = cachedMemory.memoryBlock;
+    } else {
+      try {
+        const mem = await db.query.userMemory.findFirst({
+          where: eq(userMemory.userId, req.userId),
+        });
+        if (mem) {
+          const parts: string[] = [];
+          if (mem.name) parts.push(`Nombre del abogado: ${mem.name}`);
+          if (mem.company) parts.push(`Estudio/empresa: ${mem.company}`);
+          if (mem.role) parts.push(`Rol: ${mem.role}`);
+          if (mem.specialties) parts.push(`Especialidades recurrentes: ${mem.specialties}`);
+          if (mem.notes) parts.push(`Notas adicionales: ${mem.notes}`);
+          if (parts.length > 0) {
+            memoryBlock = `\n\n════════════════════════════════════════\nPERFIL DEL ABOGADO (memoria de usuario)\n════════════════════════════════════════\n${parts.join('\n')}\n\nUsa esta información para personalizar tus respuestas. No la repitas textualmente a menos que sea relevante.`;
+          }
         }
-      }
-    } catch { /* memory is optional */ }
+        userMemoryCache.set(req.userId, {
+          memoryBlock,
+          expiresAt: Date.now() + 5 * 60 * 1000,
+        });
+      } catch { /* memory is optional */ }
+    }
 
     // Check if message should be transferred to another agent
     const transferSuggestion = suggestAgentTransfer(agentId, latestUserMessage);
     if (transferSuggestion) {
       transferTo = transferSuggestion.agentId;
-      const currentAgentNames: Record<string, string> = {
-        valentina: 'Valentina', sebastian: 'Sebastián', diego: 'Diego', adriana: 'Adriana',
-        rodrigo: 'Rodrigo', camila: 'Camila', fernanda: 'Fernanda', marco: 'Marco',
-      };
-      const currentName = currentAgentNames[agentId] || 'este despacho';
       const destName = transferSuggestion.agentName;
       assistantMessage = [
         `Estimado usuario: Analizada su consulta fáctica, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
         `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de nuestro bufete.`,
         `Haga clic en el botón inferior para continuar; su consulta se cargará de manera automática en el despacho de ${destName}.`,
       ].join(' ');
+
+      sendStreamChunk(assistantMessage);
     }
+
+    // Inyección inteligente de doctrina y normas actualizadas del SPIJ y Corte Suprema
+    const legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
+    const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
+
+    const formattedMessages = [
+      { role: 'system', content: fullSystemPrompt },
+      ...recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
+    ];
 
     // Helper de timeout estricto para evitar esperas infinitas
     const withTimeout = <T>(promise: Promise<T>, ms: number, errorLabel: string): Promise<T> => {
@@ -304,37 +418,186 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     };
 
     // ─────────────────────────────────────────────────────────────
-    // 1. PRIORIDAD 1: DeepSeek API Directa (Máxima precisión jurídica y razonamiento)
+    // 1. PRIORIDAD 1: Groq LPUs (Inferencia ultra-rápida 300+ tok/s, latencia < 300ms)
     // ─────────────────────────────────────────────────────────────
-    if (!assistantMessage && deepseekKey) {
-      const deepseekModels = ['deepseek-chat', 'deepseek-reasoner'];
-      const formattedMessages = [
-        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
+    if (!assistantMessage && groqKey) {
+      const groqCandidates = [
+        'llama-3.3-70b-versatile',
+        'deepseek-r1-distill-llama-70b',
+        'llama-3.1-8b-instant',
       ];
 
-      for (const dsModel of deepseekModels) {
+      for (const groqModel of groqCandidates) {
         if (assistantMessage) break;
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout para razonamiento profundo
-          const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+          const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${deepseekKey}`,
+              'Authorization': `Bearer ${groqKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: dsModel,
+              model: groqModel,
               messages: formattedMessages,
-              temperature: dsModel === 'deepseek-reasoner' ? undefined : 0.2,
+              temperature: 0.2,
               max_tokens: 4096,
+              stream: isStream,
             }),
             signal: controller.signal,
           });
           clearTimeout(timeoutId);
 
-          if (dsRes.ok) {
+          if (groqRes.ok) {
+            if (isStream) {
+              const streamedText = await streamOpenAICompatible(groqRes, sendStreamChunk, controller.signal);
+              if (streamedText) {
+                assistantMessage = streamedText;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'groq',
+                  model: groqModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con Groq Stream (${groqModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            } else {
+              const data: any = await groqRes.json();
+              const reply = data.choices?.[0]?.message?.content || '';
+              if (reply) {
+                assistantMessage = reply;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'groq',
+                  model: groqModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con Groq (${groqModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            }
+          } else {
+            const errData = await groqRes.text().catch(() => '');
+            console.warn(`[AI Engine] Groq error on ${groqModel} (${groqRes.status}):`, errData);
+          }
+        } catch (groqErr: any) {
+          console.error(`[AI Engine] Groq error on ${groqModel}:`, groqErr?.message || groqErr);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 2. PRIORIDAD 2: OpenAI (Alta disponibilidad y concurrencia masiva)
+    // ─────────────────────────────────────────────────────────────
+    if (!assistantMessage && openaiKey) {
+      const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
+
+      for (const oaiModel of oaiModels) {
+        if (assistantMessage) break;
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+          const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openaiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: oaiModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+              max_tokens: 4096,
+              stream: isStream,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (oaiRes.ok) {
+            if (isStream) {
+              const streamedText = await streamOpenAICompatible(oaiRes, sendStreamChunk, controller.signal);
+              if (streamedText) {
+                assistantMessage = streamedText;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openai',
+                  model: oaiModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con OpenAI Stream (${oaiModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            } else {
+              const data: any = await oaiRes.json();
+              const reply = data.choices?.[0]?.message?.content || '';
+              if (reply) {
+                assistantMessage = reply;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openai',
+                  model: oaiModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con OpenAI (${oaiModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            }
+          }
+        } catch (oaiErr: any) {
+          console.warn(`[AI Engine] OpenAI error on ${oaiModel}:`, oaiErr?.message || oaiErr);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 3. PRIORIDAD 3: DeepSeek Direct (Modo rápido deepseek-chat con timeout corto de 10s)
+    // ─────────────────────────────────────────────────────────────
+    if (!assistantMessage && deepseekKey) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout estricto
+
+        const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${deepseekKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: formattedMessages,
+            temperature: 0.2,
+            max_tokens: 4096,
+            stream: isStream,
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (dsRes.ok) {
+          if (isStream) {
+            const streamedText = await streamOpenAICompatible(dsRes, sendStreamChunk, controller.signal);
+            if (streamedText) {
+              assistantMessage = streamedText;
+              metrics.recordAiCall({
+                agentId,
+                provider: 'deepseek',
+                model: 'deepseek-chat',
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              console.log(`[AI Engine] Éxito con DeepSeek Stream en ${Date.now() - startTime}ms`);
+            }
+          } else {
             const data: any = await dsRes.json();
             const reply = data.choices?.[0]?.message?.content || '';
             if (reply) {
@@ -342,45 +605,94 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
               metrics.recordAiCall({
                 agentId,
                 provider: 'deepseek',
-                model: dsModel,
+                model: 'deepseek-chat',
                 success: true,
                 durationMs: Date.now() - startTime,
               });
-              console.log(`[AI Engine] Éxito con DeepSeek (${dsModel}) en ${Date.now() - startTime}ms`);
-              break;
+              console.log(`[AI Engine] Éxito con DeepSeek en ${Date.now() - startTime}ms`);
             }
-          } else {
-            const errBody = await dsRes.text().catch(() => '');
-            console.warn(`[AI Engine] DeepSeek error (${dsModel} HTTP ${dsRes.status}):`, errBody);
           }
-        } catch (dsErr: any) {
-          console.error(`[AI Engine] DeepSeek fallo en ${dsModel}:`, dsErr?.message || dsErr);
         }
+      } catch (dsErr: any) {
+        console.warn('[AI Engine] DeepSeek error/timeout:', dsErr?.message || dsErr);
       }
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 2. PRIORIDAD 2: DeepSeek vía OpenRouter (si hay OPENROUTER_API_KEY)
+    // 4. PRIORIDAD 4: Anthropic Claude (claude-3-5-haiku)
+    // ─────────────────────────────────────────────────────────────
+    if (!assistantMessage && anthropicKey) {
+      try {
+        const anthropic = new Anthropic({ apiKey: anthropicKey });
+        const modelToUse = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+
+        if (isStream) {
+          const stream = anthropic.messages.stream({
+            model: modelToUse,
+            max_tokens: 4096,
+            system: fullSystemPrompt,
+            messages: recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
+          });
+
+          for await (const chunk of stream) {
+            if (chunk.type === 'content_block_delta' && (chunk.delta as any)?.text) {
+              const text = (chunk.delta as any).text;
+              assistantMessage += text;
+              sendStreamChunk(text);
+            }
+          }
+          if (assistantMessage) {
+            metrics.recordAiCall({
+              agentId,
+              provider: 'anthropic',
+              model: modelToUse,
+              success: true,
+              durationMs: Date.now() - startTime,
+            });
+          }
+        } else {
+          const response = await withTimeout(
+            anthropic.messages.create({
+              model: modelToUse,
+              max_tokens: 4096,
+              system: fullSystemPrompt,
+              messages: recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
+            }),
+            18000,
+            `Anthropic ${modelToUse}`
+          );
+          assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
+          if (assistantMessage) {
+            metrics.recordAiCall({
+              agentId,
+              provider: 'anthropic',
+              model: modelToUse,
+              success: true,
+              durationMs: Date.now() - startTime,
+            });
+          }
+        }
+      } catch (anthropicErr: any) {
+        console.error('[AI Engine] Anthropic Error:', anthropicErr?.message || anthropicErr);
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 5. PRIORIDAD 5: OpenRouter Fallback
     // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && openrouterKey) {
-      const deepseekOpenrouterModels = [
+      const candidateModels = [
+        'meta-llama/llama-3.3-70b-instruct',
+        'qwen/qwen-2.5-72b-instruct',
         'deepseek/deepseek-chat',
-        'deepseek/deepseek-r1',
-        'deepseek/deepseek-r1:free',
-        'deepseek/deepseek-chat:free',
-        process.env.OPENROUTER_MODEL,
-      ].filter(Boolean) as string[];
-      const uniqueOrModels = [...new Set(deepseekOpenrouterModels)];
-      const formattedMessages = [
-        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
       ];
 
-      for (const orModel of uniqueOrModels) {
+      for (const openrouterModel of candidateModels) {
         if (assistantMessage) break;
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 25000);
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -390,55 +702,64 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
               'X-Title': 'Bufete Fiscalia IA',
             },
             body: JSON.stringify({
-              model: orModel,
+              model: openrouterModel,
               messages: formattedMessages,
               temperature: 0.2,
+              stream: isStream,
             }),
             signal: controller.signal,
           });
           clearTimeout(timeoutId);
 
           if (orRes.ok) {
-            const data: any = await orRes.json();
-            const textContent = data.choices?.[0]?.message?.content || '';
-            if (textContent) {
-              assistantMessage = textContent;
-              metrics.recordAiCall({
-                agentId,
-                provider: 'openrouter',
-                model: orModel,
-                success: true,
-                durationMs: Date.now() - startTime,
-              });
-              console.log(`[AI Engine] Éxito con OpenRouter (${orModel}) en ${Date.now() - startTime}ms`);
-              break;
+            if (isStream) {
+              const streamedText = await streamOpenAICompatible(orRes, sendStreamChunk, controller.signal);
+              if (streamedText) {
+                assistantMessage = streamedText;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openrouter',
+                  model: openrouterModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                break;
+              }
+            } else {
+              const data: any = await orRes.json();
+              const textContent = data.choices?.[0]?.message?.content || '';
+              if (textContent) {
+                assistantMessage = textContent;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openrouter',
+                  model: openrouterModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                break;
+              }
             }
-          } else {
-            const errTxt = await orRes.text().catch(() => '');
-            console.warn(`[AI Engine] OpenRouter error en ${orModel} (${orRes.status}):`, errTxt);
           }
         } catch (orErr: any) {
-          console.warn(`[AI Engine] OpenRouter error en ${orModel}:`, orErr?.message || orErr);
+          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
         }
       }
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 3. PRIORIDAD 3: Google Gemini (SDK directo con timeout de 25s y modelos actualizados)
+    // 6. PRIORIDAD 6 (ÚLTIMO RECURSO): Google Gemini (Enviado al final por inestabilidad)
     // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && geminiKey) {
       const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
         'gemini-2.5-flash',
-        'gemini-3.6-flash',
-        'gemini-2.0-flash-exp',
+        'gemini-2.0-flash',
         'gemini-1.5-flash-latest',
-        'gemini-1.5-pro-latest',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
-      // Sanitize history for Gemini SDK
-      const rawHistory = messages.slice(0, -1);
+      const rawHistory = recentMessages.slice(0, -1);
       const validHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
 
       for (const m of rawHistory) {
@@ -446,9 +767,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         if (!content) continue;
         const role: 'user' | 'model' = m.role === 'assistant' ? 'model' : 'user';
 
-        if (validHistory.length === 0 && role === 'model') {
-          continue;
-        }
+        if (validHistory.length === 0 && role === 'model') continue;
 
         const prev = validHistory[validHistory.length - 1];
         if (prev && prev.role === role) {
@@ -469,17 +788,31 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
         try {
           const modelPlain = genAI.getGenerativeModel({
             model: geminiModelName,
-            systemInstruction: SYSTEM_PROMPTS[agentId] + memoryBlock,
+            systemInstruction: fullSystemPrompt,
           });
           const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
 
-          // Timeout de 25s (suficiente para respuestas jurídicas largas y detalladas)
-          const result = await withTimeout(
-            chat.sendMessage(latestUserMessage),
-            25000,
-            `Gemini ${geminiModelName}`
-          );
-          assistantMessage = result.response.text();
+          if (isStream) {
+            const streamResult = await withTimeout(
+              chat.sendMessageStream(latestUserMessage),
+              18000,
+              `Gemini Stream ${geminiModelName}`
+            );
+            for await (const chunk of streamResult.stream) {
+              const chunkText = chunk.text();
+              if (chunkText) {
+                assistantMessage += chunkText;
+                sendStreamChunk(chunkText);
+              }
+            }
+          } else {
+            const result = await withTimeout(
+              chat.sendMessage(latestUserMessage),
+              18000,
+              `Gemini ${geminiModelName}`
+            );
+            assistantMessage = result.response.text();
+          }
 
           if (assistantMessage) {
             metrics.recordAiCall({
@@ -499,211 +832,8 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 4. PRIORIDAD 4: Groq LPUs (DeepSeek-R1 Distill + Llama 3.3)
+    // 7. RESPALDO DE EMERGENCIA GARANTIZADO
     // ─────────────────────────────────────────────────────────────
-    if (!assistantMessage && groqKey) {
-      const groqCandidates = [
-        'deepseek-r1-distill-llama-70b',
-        'llama-3.3-70b-versatile',
-        'llama-3.1-8b-instant',
-      ];
-      const formattedMessages = [
-        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
-      ];
-
-      for (const groqModel of groqCandidates) {
-        if (assistantMessage) break;
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
-          const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${groqKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: groqModel,
-              messages: formattedMessages,
-              temperature: 0.2,
-              max_tokens: 4096,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (groqRes.ok) {
-            const data: any = await groqRes.json();
-            assistantMessage = data.choices?.[0]?.message?.content || '';
-            if (assistantMessage) {
-              metrics.recordAiCall({
-                agentId,
-                provider: 'groq',
-                model: groqModel,
-                success: true,
-                durationMs: Date.now() - startTime,
-              });
-              console.log(`[AI Engine] Éxito con Groq (${groqModel}) en ${Date.now() - startTime}ms`);
-              break;
-            }
-          } else {
-            const errData: any = await groqRes.json().catch(() => ({}));
-            console.warn(`[AI Engine] Groq API error on ${groqModel}:`, errData?.error?.message || errData);
-          }
-        } catch (groqErr: any) {
-          console.error(`[AI Engine] Groq error on ${groqModel}:`, groqErr?.message || groqErr);
-        }
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // 5. PRIORIDAD 5: OpenAI (gpt-4o-mini / gpt-4o)
-    // ─────────────────────────────────────────────────────────────
-    if (!assistantMessage && openaiKey) {
-      const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
-      const formattedMessages = [
-        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
-      ];
-
-      for (const oaiModel of oaiModels) {
-        if (assistantMessage) break;
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 20000);
-          const oaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openaiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: oaiModel,
-              messages: formattedMessages,
-              temperature: 0.2,
-              max_tokens: 4096,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (oaiRes.ok) {
-            const data: any = await oaiRes.json();
-            assistantMessage = data.choices?.[0]?.message?.content || '';
-            if (assistantMessage) {
-              metrics.recordAiCall({
-                agentId,
-                provider: 'openai',
-                model: oaiModel,
-                success: true,
-                durationMs: Date.now() - startTime,
-              });
-              console.log(`[AI Engine] Éxito con OpenAI (${oaiModel}) en ${Date.now() - startTime}ms`);
-              break;
-            }
-          }
-        } catch (oaiErr: any) {
-          console.warn(`[AI Engine] OpenAI error on ${oaiModel}:`, oaiErr?.message || oaiErr);
-        }
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // 6. PRIORIDAD 6: Anthropic Claude (claude-3-5-haiku / claude-3-7-sonnet)
-    // ─────────────────────────────────────────────────────────────
-    if (!assistantMessage && anthropicKey) {
-      try {
-        const anthropic = new Anthropic({ apiKey: anthropicKey });
-        const modelToUse = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
-        const response = await withTimeout(
-          anthropic.messages.create({
-            model: modelToUse,
-            max_tokens: 4096,
-            system: SYSTEM_PROMPTS[agentId] + memoryBlock,
-            messages: messages.map((m: any) => ({ role: m.role, content: m.content })),
-          }),
-          25000,
-          `Anthropic ${modelToUse}`
-        );
-        assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
-        if (assistantMessage) {
-          metrics.recordAiCall({
-            agentId,
-            provider: 'anthropic',
-            model: modelToUse,
-            success: true,
-            durationMs: Date.now() - startTime,
-          });
-          console.log(`[AI Engine] Éxito con Anthropic (${modelToUse}) en ${Date.now() - startTime}ms`);
-        }
-      } catch (anthropicErr: any) {
-        console.error('[AI Engine] Anthropic API Error:', anthropicErr?.message || anthropicErr);
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // 7. PRIORIDAD 7: OpenRouter Fallback General
-    // ─────────────────────────────────────────────────────────────
-    if (!assistantMessage && openrouterKey) {
-      const candidateModels = process.env.OPENROUTER_MODEL
-        ? [process.env.OPENROUTER_MODEL]
-        : [
-            'meta-llama/llama-3.3-70b-instruct',
-            'qwen/qwen-2.5-72b-instruct',
-            'google/gemini-2.5-flash',
-          ];
-
-      const formattedMessages = [
-        { role: 'system', content: SYSTEM_PROMPTS[agentId] + memoryBlock },
-        ...messages.map((m: any) => ({ role: m.role, content: m.content })),
-      ];
-
-      for (const openrouterModel of candidateModels) {
-        if (assistantMessage) break;
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openrouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
-              'X-Title': 'Bufete Fiscalia IA',
-            },
-            body: JSON.stringify({
-              model: openrouterModel,
-              messages: formattedMessages,
-              temperature: 0.2,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (orRes.ok) {
-            const data: any = await orRes.json();
-            const textContent = data.choices?.[0]?.message?.content || '';
-            if (textContent) {
-              assistantMessage = textContent;
-              metrics.recordAiCall({
-                agentId,
-                provider: 'openrouter',
-                model: openrouterModel,
-                success: true,
-                durationMs: Date.now() - startTime,
-              });
-              break;
-            }
-          }
-        } catch (orErr: any) {
-          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
-        }
-      }
-    }
-
-    // 5. Guaranteed Emergency Fallback (never throw 500 to user)
     if (!assistantMessage) {
       const agentNames: Record<string, { name: string; role: string }> = {
         valentina: { name: 'Valentina', role: 'Derecho Laboral' },
@@ -718,8 +848,18 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       const info = agentNames[agentId] || { name: 'Asesor Legal', role: 'Derecho Peruano' };
       assistantMessage = [
         `Estimado cliente: He recepcionado su consulta respecto a su caso en el área de **${info.role}**.`,
-        `\n\nDebido a una sobrecarga momentánea en los servidores judiciales, he registrado los hechos expuestos. Para brindarle el patrocinio inmediato y la redacción del escrito correspondiente, por favor vuelva a pulsar el botón de envío o especifique si requiere:\n\n1. **Redacción de escrito / Carta Notarial**\n2. **Cálculo de montos o liquidación**\n3. **Plan de acción procesal paso a paso**\n\nQuedo a su disposición para resolver su situación jurídica de inmediato.`,
+        `\n\nHe registrado los antecedentes fácticos. Para brindarle el patrocinio inmediato y la redacción del escrito correspondiente, por favor especifique si requiere:\n\n1. **Redacción de escrito / Carta Notarial**\n2. **Cálculo de montos o liquidación**\n3. **Plan de acción procesal paso a paso**\n\nQuedo a su disposición para resolver su situación jurídica de inmediato.`,
       ].join(' ');
+
+      sendStreamChunk(assistantMessage);
+    }
+
+    // Auto-detección: Si el mensaje del asistente contiene un enlace de derivación a otro agente, registrar transferTo
+    if (!transferTo && assistantMessage) {
+      const match = assistantMessage.match(/\/chat\/(valentina|sebastian|diego|adriana|rodrigo|camila|fernanda|marco)/i);
+      if (match && match[1].toLowerCase() !== agentId) {
+        transferTo = match[1].toLowerCase();
+      }
     }
 
     const assistantEntry = {
@@ -730,6 +870,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     };
 
     const updatedMessages = [...messages, assistantEntry];
+    let finalConvId = conversationId;
 
     if (conversationId) {
       await db
@@ -741,18 +882,26 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             eq(conversations.userId, req.userId)
           )
         );
-      res.json({ message: assistantMessage, ...(transferTo ? { transferTo } : {}) });
     } else {
-      const newConvId = uuidv4();
+      finalConvId = uuidv4();
       const title = latestUserMessage.slice(0, 60) || 'Nueva consulta';
       await db.insert(conversations).values({
-        id: newConvId,
+        id: finalConvId,
         userId: req.userId,
         agentId,
         title,
         messages: updatedMessages,
       });
-      res.json({ message: assistantMessage, conversationId: newConvId, ...(transferTo ? { transferTo } : {}) });
+    }
+
+    // Incrementar uso en caché de memoria para máxima velocidad
+    incrementUserUsageCache(req.userId);
+
+    if (isStream) {
+      res.write(`data: ${JSON.stringify({ done: true, conversationId: finalConvId, transferTo })}\n\n`);
+      return res.end();
+    } else {
+      return res.json({ message: assistantMessage, conversationId: finalConvId, ...(transferTo ? { transferTo } : {}) });
     }
   } catch (error: any) {
     console.error('Chat processing error:', error?.message || error);
@@ -764,6 +913,11 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       message: friendlyError,
       details: String(error),
     });
-    res.status(500).json({ error: friendlyError });
+
+    if (isStream) {
+      res.write(`data: ${JSON.stringify({ error: friendlyError })}\n\n`);
+      return res.end();
+    }
+    return res.status(500).json({ error: friendlyError });
   }
 });

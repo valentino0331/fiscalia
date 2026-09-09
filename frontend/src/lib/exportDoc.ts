@@ -206,8 +206,8 @@ export function classifyLine(line: string): LineKind {
   // Autoridad destinataria
   if (/^(SE[ÑN]OR\s+(JUEZ|FISCAL|PRESIDENTE|DIRECTOR|NOTARIO|SECRETARIO)|AL\s+(JUZGADO|SEÑOR|SE[ÑN]OR|DESPACHO)|A\s+LA\s+(FISCALÍA|JUNTA|AUTORIDAD|CORTE|SALA))/i.test(plain)) return 'AUTHORITY'
 
-  // Sumilla, expediente
-  if (/^(SUMILLA\s*:|EXPEDIENTE\s*N?°?\s*:|CUADERNO\s*:|ESCRITO\s*N?°?\s*:|SECRETARIO\s*:|ESPECIALISTA\s*:)/i.test(plain)) return 'SUMILLA'
+  // Sumilla, expediente, carpeta fiscal, carátula judicial / fiscal
+  if (/^(SUMILLA\s*:|EXPEDIENTE(\s+JUDICIAL)?\s*N?°?\s*:|EXP\.?\s*(NOTARIAL|JUDICIAL)?\s*N?°?\s*:|CARPETA\s+FISCAL\s*N?°?\s*:|FISCAL(\s+RESPONSABLE|\s+RESP\.?)?\s*:|CUADERNO\s*:|ESCRITO\s*N?°?\s*:|SECRETARIO(\s+JUDICIAL)?\s*:|ESPECIALISTA(\s+LEGAL)?\s*:|CASILLA\s*(SINOE|ELECTR[OÓ]NICA|F[IÍ]SICA)?\s*N?°?\s*:|KARDEX(\s+NOTARIAL)?\s*N?°?\s*:)/i.test(plain)) return 'SUMILLA'
 
   // Encabezados markdown ## ### ####
   if (/^#{2,4}\s/.test(t)) return 'HEADING_MD'
@@ -439,7 +439,12 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
         while (i < rawLines.length) {
           const next = rawLines[i].trim()
           if (!next) break
-          if (classifyLine(next) === 'SUMILLA') {
+          const nextKind = classifyLine(next)
+          if (nextKind === 'SUMILLA') {
+            sumLines.push(cleanHeading(next))
+            i++
+          } else if (nextKind === 'FIELD' && /^(DENUNCIANTE|DENUNCIADO|IMPUTADO|INVESTIGADO|AGRAVIADO|DELITO|MATERIA|DEMANDANTE|DEMANDADO)\s*:/i.test(cleanHeading(next))) {
+            // Campos de carátula judicial o fiscal que forman parte del recuadro derecho
             sumLines.push(cleanHeading(next))
             i++
           } else break
@@ -561,9 +566,11 @@ export function renderDocHtmlBody(content: string): string {
         break
 
       case 'SUMILLA':
+        htmlParts.push(`<div class="doc-sumilla-box">`)
         for (const l of block.lines) {
           htmlParts.push(`<div class="doc-sumilla">${parseInlineMarkdownToHtml(l)}</div>`)
         }
+        htmlParts.push(`</div>`)
         break
 
       case 'CLAUSE':
@@ -665,12 +672,18 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
       line-height: 1.4;
       page-break-after: avoid;
     }
-    /* ── Sumilla / Expediente ── */
+    /* ── Sumilla / Expediente / Carátula Judicial y Fiscal ── */
+    .doc-sumilla-box {
+      margin: 0 0 16pt auto;
+      max-width: 65%;
+      text-align: right;
+    }
     .doc-sumilla {
       font-weight: bold;
-      margin: 0 0 14pt;
-      line-height: 1.4;
+      margin: 0 0 3.5pt;
+      line-height: 1.35;
       text-align: right;
+      font-size: 10.5pt;
     }
     /* ── Cláusulas de contratos (PRIMERA.-, SEGUNDA.-, etc.) ── */
     .doc-clause {
@@ -974,10 +987,10 @@ export async function downloadWordDoc(
         for (const l of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.RIGHT,
-            spacing: { before: 40, after: 40, line: 280 },
+            spacing: { before: 20, after: 20, line: 240 },
             keepNext: true,
             indent: { left: 3600 },
-            children: parseInlineMarkdownToDocx(cleanHeading(l), { bold: true, size: 23 }),
+            children: parseInlineMarkdownToDocx(cleanHeading(l), { bold: true, size: 22 }),
           }))
         }
         break

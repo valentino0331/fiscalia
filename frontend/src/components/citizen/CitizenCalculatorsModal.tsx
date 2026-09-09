@@ -13,14 +13,16 @@ import {
   Check,
   MessageSquare,
   Landmark,
-  Scale
+  Scale,
+  ShieldAlert,
+  Gavel
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 interface CitizenCalculatorsModalProps {
   isOpen: boolean
   onClose: () => void
-  initialTab?: 'liquidacion' | 'alimentos' | 'prescripcion' | 'aranceles'
+  initialTab?: 'liquidacion' | 'alimentos' | 'prescripcion' | 'penal' | 'aranceles'
 }
 
 export default function CitizenCalculatorsModal({
@@ -29,7 +31,7 @@ export default function CitizenCalculatorsModal({
   initialTab = 'liquidacion',
 }: CitizenCalculatorsModalProps) {
   const navigate = useNavigate()
-  const [tab, setTab] = useState<'liquidacion' | 'alimentos' | 'prescripcion' | 'aranceles'>(initialTab)
+  const [tab, setTab] = useState<'liquidacion' | 'alimentos' | 'prescripcion' | 'penal' | 'aranceles'>(initialTab)
   const [copied, setCopied] = useState(false)
 
   // Liquidación State
@@ -48,6 +50,13 @@ export default function CitizenCalculatorsModal({
   // Prescripción State
   const [tipoDeuda, setTipoDeuda] = useState<'sat' | 'tributario' | 'banco' | 'pagare'>('sat')
   const [fechaUltimoPago, setFechaUltimoPago] = useState('2020-01-15')
+
+  // Prescripción Penal & Plazos NCPP State
+  const [delitoNombre, setDelitoNombre] = useState('Robo Agravado (Art. 189 CP)')
+  const [penaMaxima, setPenaMaxima] = useState('12')
+  const [fechaHechos, setFechaHechos] = useState('2019-03-15')
+  const [esFuncionarioPublico, setEsFuncionarioPublico] = useState(false)
+  const [complejidadPenal, setComplejidadPenal] = useState<'comun' | 'complejo' | 'crimen_organizado'>('comun')
 
   // Aranceles PJ 2026 State
   const [actoProcesal, setActoProcesal] = useState<string>('apelacion_auto')
@@ -205,9 +214,53 @@ export default function CitizenCalculatorsModal({
     }
   }
 
+  const calcularPrescripcionPenal = () => {
+    const penaMaxNum = Math.max(1, parseInt(penaMaxima, 10) || 1)
+    let plazoOrdinario = Math.min(20, Math.max(3, penaMaxNum))
+    if (esFuncionarioPublico) {
+      plazoOrdinario = Math.min(40, plazoOrdinario * 2)
+    }
+    const plazoExtraordinario = Math.floor(plazoOrdinario * 1.5)
+
+    const start = new Date(fechaHechos)
+    const now = new Date()
+    const diffTime = Math.max(0, now.getTime() - start.getTime())
+    const diffAnios = (diffTime / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1)
+    const aniosNum = parseFloat(diffAnios)
+
+    const fechaOrdinaria = new Date(start)
+    fechaOrdinaria.setFullYear(fechaOrdinaria.getFullYear() + plazoOrdinario)
+
+    const fechaExtraordinaria = new Date(start)
+    fechaExtraordinaria.setFullYear(fechaExtraordinaria.getFullYear() + plazoExtraordinario)
+
+    const estaPrescritoOrdinario = aniosNum >= plazoOrdinario
+    const estaPrescritoExtraordinario = aniosNum >= plazoExtraordinario
+
+    const plazosNCPP = {
+      diligenciasPreliminares: complejidadPenal === 'comun' ? '60 días (prorrogables a 120 días)' : complejidadPenal === 'complejo' ? '8 meses' : '36 meses',
+      investigacionPreparatoria: complejidadPenal === 'comun' ? '120 días (prorrogable 60 días)' : complejidadPenal === 'complejo' ? '8 meses' : '36 meses',
+      prisionPreventiva: complejidadPenal === 'comun' ? 'Hasta 9 meses (D. Leg. 1585)' : complejidadPenal === 'complejo' ? 'Hasta 18 meses' : 'Hasta 36 meses',
+    }
+
+    return {
+      penaMaxNum,
+      plazoOrdinario,
+      plazoExtraordinario,
+      diffAnios,
+      aniosNum,
+      fechaOrdinaria: fechaOrdinaria.toISOString().slice(0, 10),
+      fechaExtraordinaria: fechaExtraordinaria.toISOString().slice(0, 10),
+      estaPrescritoOrdinario,
+      estaPrescritoExtraordinario,
+      plazosNCPP,
+    }
+  }
+
   const resLiq = calcularLiquidacion()
   const resAli = calcularAlimentos()
   const resPres = calcularPrescripcion()
+  const resPenal = calcularPrescripcionPenal()
   const resAran = calcularAranceles()
 
   const handleCopy = async () => {
@@ -235,6 +288,18 @@ Valor URP 2026: S/ ${resAran.urp}.00 (10% UIT S/ 5,500)
 Código de Tributo Banco de la Nación: ${resAran.codigoTributo} (Tasas Judiciales PJ)
 Lugar de Pago: Págalo.pe / Agentes y ventanillas del Banco de la Nación
 Requisito: Indicar DNI/RUC del presentante, número de expediente y juzgado.`
+    } else if (tab === 'penal') {
+      summaryText = `CÁLCULO DE PRESCRIPCIÓN PENAL Y PLAZOS NCPP (PERÚ)
+Delito Imputado: ${delitoNombre} (Pena Máxima Abstracta: ${resPenal.penaMaxNum} años)
+Fecha de los Hechos: ${fechaHechos} (${resPenal.diffAnios} años transcurridos)
+${esFuncionarioPublico ? 'Duplicidad por Delito contra el Estado (Art. 41 Constitución): APLICADA\n' : ''}
+Plazo Ordinario de Prescripción (Art. 80 CP): ${resPenal.plazoOrdinario} años (Vence: ${resPenal.fechaOrdinaria})
+Plazo Extraordinario de Prescripción (Art. 83 CP + AP 5-2023): ${resPenal.plazoExtraordinario} años (Vence: ${resPenal.fechaExtraordinaria})
+Estado de la Acción Penal: ${resPenal.estaPrescritoExtraordinario ? 'ACCIÓN PENAL EXTINGUIDA POR PRESCRIPCIÓN EXTRAORDINARIA' : resPenal.estaPrescritoOrdinario ? 'PLAZO ORDINARIO CUMPLIDO (Verificar interrupción/suspensión)' : 'ACCIÓN PENAL VIGENTE'}
+Plazos NCPP aplicables (${complejidadPenal.toUpperCase()}):
+- Diligencias Preliminares: ${resPenal.plazosNCPP.diligenciasPreliminares}
+- Investigación Preparatoria: ${resPenal.plazosNCPP.investigacionPreparatoria}
+- Prisión Preventiva: ${resPenal.plazosNCPP.prisionPreventiva}`
     } else {
       summaryText = `VERIFICACIÓN DE PRESCRIPCIÓN DE DEUDA (PERÚ)
 Tipo de Deuda: ${tipoDeuda.toUpperCase()}
@@ -266,6 +331,12 @@ Base legal: ${resPres.nombreNorma}`
       navigate('/chat/diego', {
         state: {
           transferMessage: `Hola Diego, voy a presentar un acto procesal de ${resAran.label} y el arancel judicial PJ (código 07153) es de S/ ${resAran.monto}.00. ¿Me ayudas a redactar el escrito con la fundamentación jurídica completa y los Otrosí Digo de rigor?`,
+        },
+      })
+    } else if (tab === 'penal') {
+      navigate('/chat/sebastian', {
+        state: {
+          transferMessage: `Hola Sebastián, verifiqué la prescripción penal del delito ${delitoNombre} (pena máxima ${resPenal.penaMaxNum} años). Han pasado ${resPenal.diffAnios} años. El plazo extraordinario con el Acuerdo Plenario 05-2023 es de ${resPenal.plazoExtraordinario} años y figura como ${resPenal.estaPrescritoExtraordinario ? 'PRESCRITO' : 'VIGENTE'}. ¿Cómo planteamos la excepción de prescripción o defensa procesal?`,
         },
       })
     } else {
@@ -315,7 +386,7 @@ Base legal: ${resPres.nombreNorma}`
         </div>
 
         {/* Tab Selection — Responsive Mobile Scroll & Desktop Grid */}
-        <div className="flex gap-2 mb-4 flex-shrink-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-4">
+        <div className="flex gap-2 mb-4 flex-shrink-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-5">
           <button
             onClick={() => setTab('liquidacion')}
             className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
@@ -327,7 +398,7 @@ Base legal: ${resPres.nombreNorma}`
             <Briefcase size={16} className={tab === 'liquidacion' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
               <span className="font-semibold block">Liquidación</span>
-              <span className="block text-[8.5px] opacity-70">CTS y Despido</span>
+              <span className="block text-[8.5px] opacity-70">Laboral CTS</span>
             </div>
           </button>
 
@@ -339,10 +410,10 @@ Base legal: ${resPres.nombreNorma}`
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
             }`}
           >
-            <Baby size={16} className={tab === 'alimentos' ? 'text-[#34d17a]' : 'text-white/40'} />
+            <Baby size={16} className={tab === 'alimentos' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
               <span className="font-semibold block">Alimentos</span>
-              <span className="block text-[8.5px] opacity-70">Rango y % Juez</span>
+              <span className="block text-[8.5px] opacity-70">Pensión Menor</span>
             </div>
           </button>
 
@@ -354,10 +425,25 @@ Base legal: ${resPres.nombreNorma}`
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
             }`}
           >
-            <CreditCard size={16} className={tab === 'prescripcion' ? 'text-[#60a5fa]' : 'text-white/40'} />
+            <CreditCard size={16} className={tab === 'prescripcion' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
-              <span className="font-semibold block">Prescripción</span>
-              <span className="block text-[8.5px] opacity-70">SAT y Deudas</span>
+              <span className="font-semibold block">Deudas SAT</span>
+              <span className="block text-[8.5px] opacity-70">Civil/Bancos</span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setTab('penal')}
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
+              tab === 'penal'
+                ? 'border-[#ef4444] bg-[#ef4444]/14 text-[#ffffff] shadow-sm'
+                : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
+            }`}
+          >
+            <ShieldAlert size={16} className={tab === 'penal' ? 'text-[#ef4444]' : 'text-white/40'} />
+            <div>
+              <span className="font-semibold block">Penal & NCPP</span>
+              <span className="block text-[8.5px] opacity-70">Prescripción CP</span>
             </div>
           </button>
 
@@ -372,7 +458,7 @@ Base legal: ${resPres.nombreNorma}`
             <Scale size={16} className={tab === 'aranceles' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
               <span className="font-semibold block">Aranceles PJ</span>
-              <span className="block text-[8.5px] opacity-70">Tasas URP 2026</span>
+              <span className="block text-[8.5px] opacity-70">Tasas 2026</span>
             </div>
           </button>
         </div>
@@ -601,6 +687,137 @@ Base legal: ${resPres.nombreNorma}`
 
                 <div className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">
                   🛡️ Protección al sueldo: En el Perú, las cuentas de sueldo son <strong>inembargables hasta por S/ 2,575</strong> (5 URP).
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB PENAL: PRESCRIPCIÓN PENAL & PLAZOS NCPP */}
+          {tab === 'penal' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3 bg-[#111111] p-3.5 rounded-xl border border-white/5">
+                <div>
+                  <label className="block text-[9px] uppercase font-semibold text-white/40 mb-1">
+                    Delito Imputado (Código Penal)
+                  </label>
+                  <input
+                    type="text"
+                    value={delitoNombre}
+                    onChange={(e) => setDelitoNombre(e.target.value)}
+                    placeholder="Ej. Robo Agravado, Estafa, Apropiación Ilícita..."
+                    className="w-full bg-[#161616] border border-white/10 rounded-lg px-2.5 py-1.5 text-white outline-none focus:border-[#ef4444] text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[9px] uppercase font-semibold text-white/40 mb-1">
+                      Pena Máx. (Años)
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="35"
+                      value={penaMaxima}
+                      onChange={(e) => setPenaMaxima(e.target.value)}
+                      className="w-full bg-[#161616] border border-white/10 rounded-lg px-2.5 py-1.5 text-white outline-none focus:border-[#ef4444] text-xs font-semibold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[9px] uppercase font-semibold text-white/40 mb-1">
+                      Fecha de los Hechos
+                    </label>
+                    <input
+                      type="date"
+                      value={fechaHechos}
+                      onChange={(e) => setFechaHechos(e.target.value)}
+                      className="w-full bg-[#161616] border border-white/10 rounded-lg px-2 py-1.5 text-white outline-none focus:border-[#ef4444] text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[9px] uppercase font-semibold text-white/40 mb-1">
+                    Complejidad del Caso (NCPP)
+                  </label>
+                  <select
+                    value={complejidadPenal}
+                    onChange={(e) => setComplejidadPenal(e.target.value as any)}
+                    className="w-full bg-[#161616] border border-white/10 rounded-lg px-2 py-1.5 text-white outline-none focus:border-[#ef4444] text-xs"
+                  >
+                    <option value="comun">Proceso Común (Investigación 120 días / PP 9 meses)</option>
+                    <option value="complejo">Proceso Complejo (Investigación 8 meses / PP 18 meses)</option>
+                    <option value="crimen_organizado">Crimen Organizado (Investigación 36 meses / PP 36 meses)</option>
+                  </select>
+                </div>
+
+                <div className="pt-1 space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer text-[11px] text-white/70">
+                    <input
+                      type="checkbox"
+                      checked={esFuncionarioPublico}
+                      onChange={(e) => setEsFuncionarioPublico(e.target.checked)}
+                      className="rounded text-[#ef4444] focus:ring-0"
+                    />
+                    <span>¿Cometido por funcionario público contra el Estado? (Duplica plazo - Art. 41 Const.)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Resultado Prescripción Penal */}
+              <div
+                className="p-4 rounded-xl border flex flex-col justify-between"
+                style={{
+                  background: resPenal.estaPrescritoExtraordinario
+                    ? 'rgba(52,209,122,0.06)'
+                    : 'rgba(239,68,68,0.06)',
+                  borderColor: resPenal.estaPrescritoExtraordinario
+                    ? 'rgba(52,209,122,0.30)'
+                    : 'rgba(239,68,68,0.30)',
+                }}
+              >
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    {resPenal.estaPrescritoExtraordinario ? (
+                      <CheckCircle2 size={16} className="text-emerald-400" />
+                    ) : (
+                      <ShieldAlert size={16} className="text-red-400" />
+                    )}
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wider"
+                      style={{ color: resPenal.estaPrescritoExtraordinario ? '#34d17a' : '#ef4444' }}
+                    >
+                      {resPenal.estaPrescritoExtraordinario
+                        ? 'ACCIÓN PENAL EXTINGUIDA (PRESCRITO)'
+                        : 'ACCIÓN PENAL VIGENTE'}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1.5 text-[11px] text-white/85">
+                    <div className="flex justify-between border-b border-white/5 pb-1">
+                      <span className="text-white/60">Tiempo transcurrido:</span>
+                      <strong className="text-white">{resPenal.diffAnios} años</strong>
+                    </div>
+                    <div className="flex justify-between border-b border-white/5 pb-1">
+                      <span className="text-white/60">Plazo Ordinario (Art. 80 CP):</span>
+                      <strong className="text-white">{resPenal.plazoOrdinario} años ({resPenal.fechaOrdinaria})</strong>
+                    </div>
+                    <div className="flex justify-between border-b border-white/5 pb-1">
+                      <span className="text-white/60">Plazo Extraordinario (Art. 83 CP + AP 5-2023):</span>
+                      <strong className="text-[#c9a84c]">{resPenal.plazoExtraordinario} años ({resPenal.fechaExtraordinaria})</strong>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 rounded-lg bg-black/40 border border-white/5 mt-2.5 space-y-1 text-[10px] text-white/65">
+                    <span className="font-semibold text-white/90 block">Plazos Procesales NCPP:</span>
+                    <div>• Diligencias Preliminares: <span className="text-white/90">{resPenal.plazosNCPP.diligenciasPreliminares}</span></div>
+                    <div>• Inv. Preparatoria: <span className="text-white/90">{resPenal.plazosNCPP.investigacionPreparatoria}</span></div>
+                    <div>• Prisión Preventiva: <span className="text-white/90">{resPenal.plazosNCPP.prisionPreventiva}</span></div>
+                  </div>
+                </div>
+
+                <div className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">
+                  ⚖️ Doctrina Vinculante: Conforme al <strong>Acuerdo Plenario N° 05-2023/CIJ-112</strong>, la Corte Suprema declaró inaplicable por control difuso el límite de 1 año de la Ley 31751 ("Ley Soto").
                 </div>
               </div>
             </div>
