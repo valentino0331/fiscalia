@@ -18,7 +18,8 @@ interface SpijModalProps {
   isOpen: boolean
   onClose: () => void
   currentAgentId?: string
-  onInsertPrompt?: (text: string) => void
+  onInsertPrompt?: (text: string, specialistId?: string) => void
+  onSelectPromptAndAgent?: (promptText: string, specialistId: string) => void
 }
 
 interface Plenary {
@@ -475,7 +476,13 @@ const REFORMS: Reform[] = [
   },
 ]
 
-export default function SpijModal({ isOpen, onClose, currentAgentId, onInsertPrompt }: SpijModalProps) {
+export default function SpijModal({
+  isOpen,
+  onClose,
+  currentAgentId,
+  onInsertPrompt,
+  onSelectPromptAndAgent,
+}: SpijModalProps) {
   const [selectedSpecialist, setSelectedSpecialist] = useState<string>(currentAgentId || 'all')
   const [tab, setTab] = useState<'plenaries' | 'reforms' | 'guide'>('plenaries')
   const [search, setSearch] = useState('')
@@ -522,9 +529,14 @@ export default function SpijModal({ isOpen, onClose, currentAgentId, onInsertPro
     setTimeout(() => setCopiedCode(null), 2500)
   }
 
-  const handleUsePrompt = (promptText: string) => {
+  const handleUsePrompt = (promptText: string, specialistId?: string) => {
+    if (onSelectPromptAndAgent && specialistId) {
+      onSelectPromptAndAgent(promptText, specialistId)
+      onClose()
+      return
+    }
     if (onInsertPrompt) {
-      onInsertPrompt(promptText)
+      onInsertPrompt(promptText, specialistId)
       onClose()
     }
   }
@@ -772,9 +784,9 @@ export default function SpijModal({ isOpen, onClose, currentAgentId, onInsertPro
                         )}
                       </button>
 
-                      {onInsertPrompt && (
+                      {(onInsertPrompt || onSelectPromptAndAgent) && (
                         <button
-                          onClick={() => handleUsePrompt(ap.promptTemplate)}
+                          onClick={() => handleUsePrompt(ap.promptTemplate, ap.specialistId)}
                           className="px-2.5 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1 transition-all active:scale-95"
                           style={{
                             background: 'rgba(201,168,76,0.12)',
@@ -783,7 +795,7 @@ export default function SpijModal({ isOpen, onClose, currentAgentId, onInsertPro
                           }}
                         >
                           <Sparkles size={11} />
-                          <span>Redactar con este criterio →</span>
+                          <span>Consultar con especialista →</span>
                         </button>
                       )}
                     </div>
@@ -848,9 +860,9 @@ export default function SpijModal({ isOpen, onClose, currentAgentId, onInsertPro
                         )}
                       </button>
 
-                      {onInsertPrompt && (
+                      {(onInsertPrompt || onSelectPromptAndAgent) && (
                         <button
-                          onClick={() => handleUsePrompt(rf.promptTemplate)}
+                          onClick={() => handleUsePrompt(rf.promptTemplate, rf.specialistId)}
                           className="px-2.5 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1 transition-all active:scale-95"
                           style={{
                             background: 'rgba(56,189,248,0.12)',
@@ -859,7 +871,7 @@ export default function SpijModal({ isOpen, onClose, currentAgentId, onInsertPro
                           }}
                         >
                           <Sparkles size={11} />
-                          <span>Redactar bajo esta ley →</span>
+                          <span>Consultar con especialista →</span>
                         </button>
                       )}
                     </div>

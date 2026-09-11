@@ -28,7 +28,6 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
-import SpijModal from '@/components/legal/SpijModal'
 
 interface PromptModeItem {
   id: string
@@ -762,7 +761,6 @@ export default function Chat() {
   })
   const [whereToGoOpen, setWhereToGoOpen] = useState(false)
   const [liveCallOpen, setLiveCallOpen] = useState(false)
-  const [spijModalOpen, setSpijModalOpen] = useState(false)
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
@@ -1671,21 +1669,6 @@ export default function Chat() {
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
-          <button
-            onClick={() => setSpijModalOpen(true)}
-            className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
-            style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.30)',
-              color: '#c9a84c',
-            }}
-            title="Base Legal SPIJ (MINJUSDH) y Acuerdos Plenarios Vinculantes de la Corte Suprema"
-          >
-            <Scale size={13} className="text-[#c9a84c]" />
-            <span className="hidden sm:inline font-semibold">SPIJ & Plenos</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
-          </button>
-
           <a
             href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
             target="_blank"
@@ -2363,15 +2346,6 @@ export default function Chat() {
       </div>
 
       {/* Modals */}
-      <SpijModal
-        isOpen={spijModalOpen}
-        onClose={() => setSpijModalOpen(false)}
-        currentAgentId={agent?.id}
-        onInsertPrompt={(promptText) => {
-          setInput(promptText)
-          setTimeout(() => textareaRef.current?.focus(), 50)
-        }}
-      />
 
       <DeadlineModal
         isOpen={deadlineModal.isOpen}

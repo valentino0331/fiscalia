@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, Search, X, Shield, MessageSquare, Clock, FileText, Trash2, Star,
   Sparkles, Calculator, Baby, Briefcase, Home, ShieldAlert, CreditCard, ShoppingBag, MapPin, ChevronRight,
-  Edit2, Check
+  Edit2, Check, Scale
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { AGENTS, getAgent } from '@/lib/agents'
@@ -18,6 +18,7 @@ import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citize
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 import WhatsAppSupportButton from '@/components/ui/WhatsAppSupportButton'
+import SpijModal from '@/components/legal/SpijModal'
 
 const CATEGORIES = [
   { id: 'all', label: 'Todos' },
@@ -33,6 +34,7 @@ const CATEGORIES = [
 
 const SIDEBAR_MAIN = [
   { id: 'specialists', label: 'Especialistas', icon: Search },
+  { id: 'spij', label: 'SPIJ & Plenos', icon: Scale },
   { id: 'consultations', label: 'Mis consultas', icon: MessageSquare },
   { id: 'history', label: 'Historial', icon: Clock },
   { id: 'habilidades', label: 'Guardados', icon: Star },
@@ -99,6 +101,14 @@ export default function Dashboard() {
     tab: 'liquidacion',
   })
   const [whereToGoOpen, setWhereToGoOpen] = useState(false)
+  const [spijModalOpen, setSpijModalOpen] = useState(false)
+
+  const handleSpijSelect = (promptText: string, specialistId: string) => {
+    setSpijModalOpen(false)
+    navigate(`/chat/${specialistId}`, {
+      state: { transferMessage: promptText },
+    })
+  }
 
   useEffect(() => {
     api.conversations.list()
@@ -188,6 +198,21 @@ export default function Dashboard() {
         <div className="flex items-center gap-2 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
+          <button
+            onClick={() => setSpijModalOpen(true)}
+            className="h-8 px-2.5 sm:px-3 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+            style={{
+              background: 'rgba(201,168,76,0.12)',
+              border: '1px solid rgba(201,168,76,0.30)',
+              color: '#c9a84c',
+            }}
+            title="Base Legal SPIJ (MINJUSDH) y Acuerdos Plenarios Vinculantes de la Corte Suprema"
+          >
+            <Scale size={13} className="text-[#c9a84c]" />
+            <span className="hidden sm:inline font-semibold">SPIJ & Plenos</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
+          </button>
+
           <button onClick={() => navigate('/account')} className="flex items-center gap-2">
             <div
               className="w-[36px] h-[36px] rounded-full flex items-center justify-center text-[11px] font-semibold"
@@ -241,6 +266,10 @@ export default function Dashboard() {
                   <button
                     key={item.id}
                     onClick={() => {
+                      if (item.id === 'spij') {
+                        setSpijModalOpen(true)
+                        return
+                      }
                       if (item.id === 'documents') {
                         setDocGenModal({ isOpen: true, docType: 'carta_notarial' })
                         return
@@ -413,7 +442,7 @@ export default function Dashboard() {
                       </p>
 
                       {/* Quick Action Buttons Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                         <button
                           onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
@@ -427,6 +456,13 @@ export default function Dashboard() {
                         >
                           <Sparkles size={15} className="text-[#c9a84c] flex-shrink-0" />
                           <span className="text-[11px] leading-tight text-left">Escanear Cédula/PDF</span>
+                        </button>
+                        <button
+                          onClick={() => setSpijModalOpen(true)}
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                        >
+                          <Scale size={15} className="text-[#c9a84c] flex-shrink-0" />
+                          <span className="text-[11px] leading-tight text-left">SPIJ & Plenos</span>
                         </button>
                         <button
                           onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
@@ -1286,6 +1322,12 @@ export default function Dashboard() {
       <WhereToGoModal
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
+      />
+
+      <SpijModal
+        isOpen={spijModalOpen}
+        onClose={() => setSpijModalOpen(false)}
+        onSelectPromptAndAgent={handleSpijSelect}
       />
 
       <WhatsAppSupportButton />
