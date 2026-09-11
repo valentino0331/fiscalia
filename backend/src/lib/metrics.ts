@@ -23,6 +23,20 @@ export interface AiRequestMetric {
 const MAX_ERROR_LOGS = 50;
 const MAX_METRICS_LOGS = 100;
 
+/**
+ * Sanitiza cualquier texto para eliminar secretos, claves de API,
+ * tokens JWT y credenciales de bases de datos antes de registrar en memoria.
+ */
+function redactSensitiveInfo(text?: string): string | undefined {
+  if (!text) return text;
+  return String(text)
+    .replace(/postgresql:\/\/[^:]+:[^@]+@[^/]+\/[^\s?"]+/gi, 'postgresql://[REDACTED_USER]:[REDACTED_PASS]@[REDACTED_HOST]/[DB]')
+    .replace(/Bearer\s+[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*/gi, 'Bearer [REDACTED_TOKEN]')
+    .replace(/(?:sk-|gsk_|key=)[a-zA-Z0-9_-]{16,}/gi, '[REDACTED_API_KEY]')
+    .replace(/AIza[0-9A-Za-z-_]{35}/g, '[REDACTED_GOOGLE_KEY]')
+    .replace(/password(?:Hash)?[":\s=]+[^,\s}]+/gi, 'password=[REDACTED]');
+}
+
 class MetricsManager {
   private errorLogs: ErrorLogEntry[] = [];
   private aiMetrics: AiRequestMetric[] = [];
@@ -36,6 +50,8 @@ class MetricsManager {
       id: Math.random().toString(36).substring(2, 9),
       timestamp: new Date().toISOString(),
       ...entry,
+      message: redactSensitiveInfo(entry.message) || 'Error no especificado',
+      details: redactSensitiveInfo(entry.details),
     };
     this.errorLogs.unshift(fullEntry);
     if (this.errorLogs.length > MAX_ERROR_LOGS) {
@@ -49,12 +65,14 @@ class MetricsManager {
       id: Math.random().toString(36).substring(2, 9),
       timestamp: new Date().toISOString(),
       ...metric,
+      error: redactSensitiveInfo(metric.error),
     };
     this.aiMetrics.unshift(fullMetric);
     if (this.aiMetrics.length > MAX_METRICS_LOGS) {
       this.aiMetrics.pop();
     }
   }
+
 
   getStats() {
     const totalAi = this.aiMetrics.length;

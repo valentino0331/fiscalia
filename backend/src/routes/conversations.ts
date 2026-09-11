@@ -71,6 +71,11 @@ conversationsRouter.post('/:id/share', requireAuth, async (req: any, res) => {
   if (!conv) return res.status(404).json({ error: 'Conversación no encontrada' });
   const jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) throw new Error('JWT_SECRET is not set');
-  const token = jwt.sign({ conversationId: conv.id }, jwtSecret, { expiresIn: '30d' });
+  const token = jwt.sign(
+    { conversationId: conv.id, type: 'share' },
+    jwtSecret,
+    { expiresIn: '7d', algorithm: 'HS256' }
+  );
   res.json({ token });
 });
+

@@ -13,10 +13,11 @@ import { suggestAgentTransfer } from './agentRouter';
 import { metrics } from '../lib/metrics';
 import { generateSpeech } from '../lib/tts';
 import { getSpijLegalGrounding, JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
+import { chatRateLimiter, audioRateLimiter } from '../middleware/rateLimit';
 
 const audioUpload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 }, // 25 MB max audio
+  limits: { fileSize: 12 * 1024 * 1024 }, // 12 MB max audio (optimizado para memoria RAM)
 });
 
 export const chatRouter = Router();
@@ -62,7 +63,7 @@ function getAudioFormat(mime: string, originalName?: string): { mimeType: string
 }
 
 // Endpoint para transcripción de audio a texto (Speech-to-Text con IA)
-chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
+chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req: any, res: any, next: any) => {
   audioUpload.single('audio')(req, res, async (err: any) => {
     if (err) {
       return res.status(400).json({ error: 'Error al procesar archivo de audio: ' + (err.message || err) });
@@ -212,7 +213,7 @@ chatRouter.post('/stt', requireAuth, (req: any, res: any, next: any) => {
 });
 
 // Endpoint para síntesis de voz (Microsoft Edge Neural TTS / ElevenLabs)
-chatRouter.post('/tts', requireAuth, async (req: any, res) => {
+chatRouter.post('/tts', audioRateLimiter, requireAuth, requireSubscription, async (req: any, res) => {
   try {
     const { text, agentId } = req.body;
     if (!text || typeof text !== 'string') {
@@ -310,7 +311,7 @@ async function streamOpenAICompatible(
   return fullText;
 }
 
-chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => {
+chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (req: any, res) => {
   const startTime = Date.now();
   const isStream = req.body?.stream === true || req.headers?.accept?.includes('text/event-stream');
 

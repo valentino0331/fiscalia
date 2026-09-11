@@ -18,6 +18,9 @@ import { startKeepAlive, getKeepAliveStatus } from './lib/keepAlive';
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Habilitar trust proxy para que Render y proxies inversos pasen la IP real del cliente (para rate limiting)
+app.set('trust proxy', 1);
+
 // ISO/IEC 27001 Information Security & ISO/IEC 25010 Performance Headers
 app.use(
   helmet({
@@ -43,15 +46,19 @@ app.use((req, res, next) => {
 
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
-  .map((o) => o.trim());
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin) || process.env.NODE_ENV !== 'production') {
+      if (!origin) return callback(null, true);
+
+      const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+      if (allowedOrigins.includes(origin) || (process.env.NODE_ENV !== 'production' && isLocalhost)) {
         callback(null, true);
       } else {
-        callback(new Error('Origen no permitido por CORS'));
+        callback(new Error('Origen no permitido por la política CORS'));
       }
     },
     credentials: true,
@@ -71,6 +78,23 @@ app.use('/files', filesRouter);
 app.use('/shared', sharedRouter);
 app.use('/saved', savedRouter);
 app.use('/memory', memoryRouter);
+
+// Manejador global de errores para evitar fugas de stack traces o rutas internas
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    return next(err);
+  }
+  const isCorsError = err?.message?.includes('CORS');
+  const status = isCorsError ? 403 : (typeof err?.status === 'number' ? err.status : 500);
+
+  console.error('[Error de API]:', err?.message || err);
+
+  res.status(status).json({
+    error: status === 500 ? 'Ocurrió un error interno en el servidor.' : (err?.message || 'Solicitud inválida'),
+    code: isCorsError ? 'CORS_ERROR' : 'INTERNAL_SERVER_ERROR',
+  });
+});
+
 
 app.get('/health', (_, res) => {
   const mem = process.memoryUsage();

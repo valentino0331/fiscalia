@@ -610,14 +610,14 @@ export function renderDocHtmlBody(content: string): string {
         htmlParts.push(`
           <div class="doc-sig-grid">
             <div class="doc-sig-col">
-              <div class="doc-sig-line">${block.data.left.line || '_________________________________'}</div>
+              <div class="doc-sig-line">${parseInlineMarkdownToHtml(block.data.left.line || '_________________________________')}</div>
               ${block.data.left.role ? `<div class="doc-sig-role">${parseInlineMarkdownToHtml(block.data.left.role)}</div>` : ''}
               ${block.data.left.name ? `<div class="doc-sig-name">${parseInlineMarkdownToHtml(block.data.left.name)}</div>` : ''}
               ${block.data.left.docId ? `<div class="doc-sig-id">${parseInlineMarkdownToHtml(block.data.left.docId)}</div>` : ''}
               ${block.data.left.extra ? `<div class="doc-sig-extra">${parseInlineMarkdownToHtml(block.data.left.extra)}</div>` : ''}
             </div>
             <div class="doc-sig-col">
-              <div class="doc-sig-line">${block.data.right.line || '_________________________________'}</div>
+              <div class="doc-sig-line">${parseInlineMarkdownToHtml(block.data.right.line || '_________________________________')}</div>
               ${block.data.right.role ? `<div class="doc-sig-role">${parseInlineMarkdownToHtml(block.data.right.role)}</div>` : ''}
               ${block.data.right.name ? `<div class="doc-sig-name">${parseInlineMarkdownToHtml(block.data.right.name)}</div>` : ''}
               ${block.data.right.docId ? `<div class="doc-sig-id">${parseInlineMarkdownToHtml(block.data.right.docId)}</div>` : ''}
@@ -857,11 +857,18 @@ export function buildPrintHTML(
     </div>`
   }
 
+  const safeTitle = (title || 'Documento Legal Oficial')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>${title || 'Documento Legal Oficial'}</title>
+<title>${safeTitle}</title>
 <style>${css}</style>
 </head>
 <body>
