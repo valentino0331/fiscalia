@@ -107,13 +107,32 @@ function enrichTextForSpeech(text: string): string {
   return t.trim().slice(0, 3500);
 }
 
+const FEMALE_AGENTS = new Set(['valentina', 'camila', 'fernanda', 'adriana']);
+
+export function isFemaleAgent(agentId?: string): boolean {
+  if (!agentId) return false;
+  return FEMALE_AGENTS.has(agentId.toLowerCase().trim());
+}
+
+export function getEdgeVoiceForAgent(agentId?: string): string {
+  const norm = String(agentId || '').toLowerCase().trim();
+  if (EDGE_VOICE_IDS[norm]) return EDGE_VOICE_IDS[norm];
+  return isFemaleAgent(norm) ? EDGE_VOICE_IDS.valentina : EDGE_VOICE_IDS.sebastian;
+}
+
+export function getElevenLabsVoiceForAgent(agentId?: string): string {
+  const norm = String(agentId || '').toLowerCase().trim();
+  if (ELEVENLABS_VOICE_IDS[norm]) return ELEVENLABS_VOICE_IDS[norm];
+  return isFemaleAgent(norm) ? DEFAULT_FEMALE_VOICE : DEFAULT_MALE_VOICE;
+}
+
 export async function generateEdgeSpeech(text: string, agentId: string): Promise<Buffer> {
   const enrichedText = enrichTextForSpeech(text);
   if (!enrichedText) {
     throw new Error('Texto vacío para síntesis de voz');
   }
 
-  const voiceName = EDGE_VOICE_IDS[agentId] || EDGE_VOICE_IDS.sebastian;
+  const voiceName = getEdgeVoiceForAgent(agentId);
   console.log(`[Edge TTS] Generando voz HD con entonación: voice=${voiceName}, agent=${agentId}, length=${enrichedText.length}`);
 
   const tts = new MsEdgeTTS();
@@ -144,7 +163,7 @@ export async function generateElevenLabsSpeech(text: string, agentId: string): P
     throw new Error('ELEVENLABS_API_KEY no está configurada');
   }
 
-  const voiceId = ELEVENLABS_VOICE_IDS[agentId] || ELEVENLABS_VOICE_IDS.sebastian;
+  const voiceId = getElevenLabsVoiceForAgent(agentId);
   const enrichedText = enrichTextForSpeech(text);
   if (!enrichedText) {
     throw new Error('Texto vacío para síntesis de voz');

@@ -220,7 +220,8 @@ chatRouter.post('/tts', audioRateLimiter, requireAuth, requireSubscription, asyn
       return res.status(400).json({ error: 'Texto requerido para síntesis de voz' });
     }
 
-    const audioBuffer = await generateSpeech(text, agentId || 'sebastian');
+    const rawId = String(agentId || '').trim().toLowerCase();
+    const audioBuffer = await generateSpeech(text, rawId);
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': audioBuffer.length,

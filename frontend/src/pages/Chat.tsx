@@ -938,22 +938,175 @@ export default function Chat() {
     setAudioLoadingId(null)
   }
 
-  const fallbackBrowserSpeech = (clean: string, messageId: string) => {
+  // Garantizar precarga de voces del navegador
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.getVoices()
+      const handleVoicesChanged = () => {
+        window.speechSynthesis.getVoices()
+      }
+      window.speechSynthesis.addEventListener('voiceschanged', handleVoicesChanged)
+      return () => {
+        window.speechSynthesis.removeEventListener('voiceschanged', handleVoicesChanged)
+      }
+    }
+  }, [])
+
+  const FEMALE_AGENTS = new Set(['valentina', 'camila', 'fernanda', 'adriana'])
+
+  const isFemaleVoice = (v: SpeechSynthesisVoice): boolean => {
+    const name = (v.name + ' ' + (v.voiceURI || '')).toLowerCase()
+    const femaleKeywords = [
+      'sabina', 'helena', 'laura', 'monica', 'mónica', 'paulina', 'camila', 'dalia',
+      'salome', 'salomé', 'elvira', 'victoria', 'paloma', 'carmen', 'lupe', 'sofia',
+      'sofía', 'lucia', 'lucía', 'elena', 'mia', 'mía', 'penelope', 'penélope',
+      'francisca', 'jimena', 'alba', 'conchita', 'rosa', 'marta', 'hilda', 'catalina',
+      'female', 'mujer', 'woman', 'girl'
+    ]
+    const maleKeywords = [
+      'raul', 'raúl', 'pablo', 'jorge', 'gonzalo', 'alvaro', 'álvaro', 'alex',
+      'david', 'carlos', 'mateo', 'alonso', 'enrique', 'manuel', 'andres', 'andrés',
+      'diego', 'rodrigo', 'sebastian', 'sebastián', 'marco', 'marcos', 'julio',
+      'male', 'hombre', 'man'
+    ]
+    const hasFemale = femaleKeywords.some((k) => name.includes(k))
+    const hasMale = maleKeywords.some((k) => name.includes(k))
+    if (hasFemale && !hasMale) return true
+    if (hasMale && !hasFemale) return false
+    if (name.includes('google') && name.includes('español') && !name.includes('estados unidos')) return true
+    return false
+  }
+
+  const isMaleVoice = (v: SpeechSynthesisVoice): boolean => {
+    const name = (v.name + ' ' + (v.voiceURI || '')).toLowerCase()
+    const maleKeywords = [
+      'raul', 'raúl', 'pablo', 'jorge', 'gonzalo', 'alvaro', 'álvaro', 'alex',
+      'david', 'carlos', 'mateo', 'alonso', 'enrique', 'manuel', 'andres', 'andrés',
+      'diego', 'rodrigo', 'sebastian', 'sebastián', 'marco', 'marcos', 'julio',
+      'male', 'hombre', 'man'
+    ]
+    const femaleKeywords = [
+      'sabina', 'helena', 'laura', 'monica', 'mónica', 'paulina', 'camila', 'dalia',
+      'salome', 'salomé', 'elvira', 'victoria', 'paloma', 'carmen', 'lupe', 'sofia',
+      'sofía', 'lucia', 'lucía', 'elena', 'mia', 'mía', 'penelope', 'penélope',
+      'francisca', 'jimena', 'alba', 'conchita', 'rosa', 'marta', 'female', 'mujer'
+    ]
+    const hasMale = maleKeywords.some((k) => name.includes(k))
+    const hasFemale = femaleKeywords.some((k) => name.includes(k))
+    if (hasMale && !hasFemale) return true
+    if (hasFemale && !hasMale) return false
+    return false
+  }
+
+  const findBestVoice = (targetAgentId: string): SpeechSynthesisVoice | null => {
+    if (!('speechSynthesis' in window)) return null
+    const voices = window.speechSynthesis.getVoices()
+    if (!voices || voices.length === 0) return null
+
+    const wantFemale = FEMALE_AGENTS.has(targetAgentId.toLowerCase().trim())
+    const esVoices = voices.filter((v) => v.lang.toLowerCase().startsWith('es'))
+    const pool = esVoices.length > 0 ? esVoices : voices
+
+    if (wantFemale) {
+      if (targetAgentId === 'adriana') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('elvira') || n.includes('helena') || n.includes('laura') || n.includes('sabina')
+        })
+        if (m) return m
+      }
+      if (targetAgentId === 'camila') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('camila') || n.includes('dalia') || n.includes('paulina') || n.includes('sabina')
+        })
+        if (m) return m
+      }
+      if (targetAgentId === 'valentina') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('camila') || n.includes('sabina') || n.includes('helena')
+        })
+        if (m) return m
+      }
+      if (targetAgentId === 'fernanda') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('salome') || n.includes('salomé') || n.includes('sabina') || n.includes('helena')
+        })
+        if (m) return m
+      }
+      const female = pool.find((v) => isFemaleVoice(v))
+      if (female) return female
+      const nonMale = pool.find((v) => !isMaleVoice(v))
+      if (nonMale) return nonMale
+      return pool[0]
+    } else {
+      if (targetAgentId === 'sebastian') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('alex') || n.includes('raul') || n.includes('raúl') || n.includes('jorge')
+        })
+        if (m) return m
+      }
+      if (targetAgentId === 'diego') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('jorge') || n.includes('raul') || n.includes('raúl') || n.includes('pablo')
+        })
+        if (m) return m
+      }
+      if (targetAgentId === 'rodrigo') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('gonzalo') || n.includes('pablo') || n.includes('alvaro') || n.includes('raul')
+        })
+        if (m) return m
+      }
+      if (targetAgentId === 'marco') {
+        const m = pool.find((v) => {
+          const n = v.name.toLowerCase()
+          return n.includes('alvaro') || n.includes('álvaro') || n.includes('pablo') || n.includes('raul')
+        })
+        if (m) return m
+      }
+      const male = pool.find((v) => isMaleVoice(v))
+      if (male) return male
+      const nonFemale = pool.find((v) => !isFemaleVoice(v))
+      if (nonFemale) return nonFemale
+      return pool[0]
+    }
+  }
+
+  const fallbackBrowserSpeech = (clean: string, messageId: string, currentAgentId?: string) => {
     if (!('speechSynthesis' in window)) {
       setSpeakingMessageId(null)
       return
     }
+    window.speechSynthesis.cancel()
+
+    const targetId = (currentAgentId || agent?.id || '').toLowerCase().trim()
+    const wantFemale = FEMALE_AGENTS.has(targetId)
+
     const utterance = new SpeechSynthesisUtterance(clean)
     utterance.lang = 'es-PE'
-    const femaleAgents = ['valentina', 'camila', 'fernanda', 'adriana']
-    const wantFemale = femaleAgents.includes(agent?.id || '')
-    utterance.pitch = wantFemale ? 1.05 : 0.90
-    utterance.rate = 0.96
 
-    const allVoices = window.speechSynthesis.getVoices()
-    const esVoices = allVoices.filter((v) => v.lang.toLowerCase().startsWith('es'))
-    if (esVoices.length > 0) {
-      utterance.voice = esVoices[0]
+    const voice = findBestVoice(targetId)
+    if (voice) {
+      utterance.voice = voice
+      const voiceIsFemale = isFemaleVoice(voice)
+      const voiceIsMale = isMaleVoice(voice)
+
+      if (wantFemale) {
+        utterance.pitch = voiceIsMale ? 1.35 : 1.10
+        utterance.rate = 0.98
+      } else {
+        utterance.pitch = voiceIsFemale ? 0.75 : 0.88
+        utterance.rate = 0.95
+      }
+    } else {
+      utterance.pitch = wantFemale ? 1.25 : 0.85
+      utterance.rate = 0.96
     }
 
     utterance.onstart = () => setSpeakingMessageId(messageId)
@@ -970,9 +1123,13 @@ export default function Chat() {
     setSpeakingMessageId(messageId)
     setAudioLoadingId(messageId)
 
+    const targetAgentId = (agent?.id || '').toLowerCase().trim()
+    const isFemale = FEMALE_AGENTS.has(targetAgentId)
+    const effectiveAgentId = targetAgentId || (isFemale ? 'valentina' : 'sebastian')
+
     try {
-      // 1. Try realistic ElevenLabs audio from backend
-      const blob = await api.chat.tts({ text: clean, agentId: agent?.id || 'sebastian' })
+      // 1. Try realistic Edge / ElevenLabs neural audio from backend
+      const blob = await api.chat.tts({ text: clean, agentId: effectiveAgentId })
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
       currentAudioRef.current = audio
@@ -985,14 +1142,13 @@ export default function Chat() {
       }
       audio.onerror = () => {
         setAudioLoadingId(null)
-        fallbackBrowserSpeech(clean, messageId)
+        fallbackBrowserSpeech(clean, messageId, effectiveAgentId)
       }
       await audio.play()
     } catch (err) {
-      console.warn('ElevenLabs TTS error:', err)
-      // 2. Fallback smoothly to browser SpeechSynthesis
+      console.warn('TTS backend failed, using refined browser speech:', err)
       setAudioLoadingId(null)
-      fallbackBrowserSpeech(clean, messageId)
+      fallbackBrowserSpeech(clean, messageId, effectiveAgentId)
     }
   }
 
@@ -2924,232 +3080,38 @@ function MessageBubble({
   )
 }
 
-function getDynamicThinkingSteps(
-  agent: NonNullable<ReturnType<typeof getAgent>>,
-  query?: string
-): [string, string, string] {
-  const q = (query || '').toLowerCase()
-
-  // 1. Redacción de escritos / documentos formales
-  if (
-    q.includes('redact') ||
-    q.includes('escrito') ||
-    q.includes('demanda') ||
-    q.includes('denuncia') ||
-    q.includes('carta') ||
-    q.includes('contrato') ||
-    q.includes('minuta') ||
-    q.includes('apelacion') ||
-    q.includes('recurso')
-  ) {
-    if (agent.id === 'sebastian') {
-      return [
-        'Identificando tipo penal y artículo aplicable del Código Penal',
-        'Revisando presupuestos del NCPP (DL 1585) y elementos de convicción',
-        'Estructurando denuncia o escrito penal con petitorio y fundamentos fácticos',
-      ]
-    }
-    if (agent.id === 'valentina') {
-      return [
-        'Analizando régimen laboral (DL 728) y petitorio de demanda o requerimiento',
-        'Verificando precedentes NLPT (Ley 29497/32155) y criterios SUNAFIL',
-        'Estructurando escrito laboral o carta notarial con liquidación detallada',
-      ]
-    }
-    if (agent.id === 'diego') {
-      return [
-        'Determinando naturaleza contractual y causales de resolución o desalojo',
-        'Revisando Código Civil y Ley 30933 de Desalojo Notarial con Cláusula de Allanamiento',
-        'Estructurando carta notarial o demanda civil con apercibimiento formal',
-      ]
-    }
-    if (agent.id === 'camila') {
-      return [
-        'Evaluando pretensión de alimentos, tenencia compartida o régimen de visitas',
-        'Revisando Código de los Niños y Adolescentes y Ley 31590',
-        'Estructurando demanda de familia con propuesta de pensión y medidas cautelares',
-      ]
-    }
-    if (agent.id === 'adriana') {
-      return [
-        'Analizando estructura estatutaria, acuerdos de junta o contrato asociativo',
-        'Revisando Ley General de Sociedades y prevención de responsabilidad (Ley 30424)',
-        'Redactando instrumento corporativo blindado con cláusulas de gobierno y salida',
-      ]
-    }
-    if (agent.id === 'rodrigo') {
-      return [
-        'Verificando estado del derecho minero y expediente administrativo INGEMMET',
-        'Analizando TUO Ley General de Minería, REINFO y fiscalización ambiental OEFA',
-        'Estructurando recurso minero o descargo administrativo sancionador',
-      ]
-    }
-    if (agent.id === 'fernanda') {
-      return [
-        'Verificando plazos perentorios de notificación SUNAT y norma tributaria aplicable',
-        'Revisando Código Tributario, Ley 32430 y precedentes del Tribunal Fiscal (RTF)',
-        'Estructurando recurso de reclamación o apelación con fundamentación contable',
-      ]
-    }
-    if (agent.id === 'marco') {
-      return [
-        'Analizando acto administrativo impugnado y plazo perentorio de 15 días hábiles',
-        'Revisando TUO Ley 27444 (DS 006-2026-JUS) y Ley de Contrataciones 32069 (OECE/TCP)',
-        'Estructurando recurso de apelación / reconsideración o descargos PAS',
-      ]
-    }
-  }
-
-  // 2. Cálculo / Liquidación / Montos
-  if (
-    q.includes('calcul') ||
-    q.includes('monto') ||
-    q.includes('cuanto') ||
-    q.includes('liquid') ||
-    q.includes('soles') ||
-    q.includes('porcentaje')
-  ) {
-    return [
-      `Determinando base imponible y conceptos computables para ${agent.name}`,
-      'Aplicando UIT 2026 (S/ 5,500), escalas porcentuales y normativa vigente',
-      'Estructurando desglose económico exacto y liquidación detallada',
-    ]
-  }
-
-  // 3. Plazos / Notificaciones / Prescripción
-  if (
-    q.includes('plazo') ||
-    q.includes('dias') ||
-    q.includes('notific') ||
-    q.includes('prescri') ||
-    q.includes('caduc')
-  ) {
-    return [
-      'Verificando fecha de notificación y cómputo de días hábiles procesales',
-      `Contrastando causales de suspensión y jurisprudencia aplicable a ${agent.role}`,
-      'Determinando fecha exacta de vencimiento y vía procesal inmediata',
-    ]
-  }
-
-  // 4. Default dinámico adaptado a cada agente y materia
-  const agentDefaults: Record<string, [string, string, string]> = {
-    sebastian: [
-      'Analizando tipo penal, elementos de convicción y presupuestos procesales',
-      'Revisando Código Penal, NCPP (DL 1585), Acuerdos Plenarios y Casaciones',
-      'Estructurando estrategia de defensa técnica y plazos procesales peruanos',
-    ],
-    valentina: [
-      'Verificando modalidad contractual y cómputo de plazos laborales',
-      'Revisando LPCL (DL 728), criterios SUNAFIL y competencias JPLL (Ley 32155)',
-      'Estructurando fundamentación legal y liquidación de beneficios sociales',
-    ],
-    diego: [
-      'Analizando relación contractual, derechos reales y posesión',
-      'Evaluando Código Civil, Ley 30933 y Plenos Casatorios Civiles',
-      'Estructurando estrategia de tutela patrimonial y requerimiento formal',
-    ],
-    adriana: [
-      'Evaluando estructura societaria, pactos de socios y riesgos de contingencia',
-      'Revisando Ley General de Sociedades, modelo de prevención Ley 30424 y M&A',
-      'Estructurando dictamen de gobierno corporativo y protección societaria',
-    ],
-    rodrigo: [
-      'Verificando estado de derechos mineros, TUPA INGEMMET 2026 y REINFO',
-      'Analizando marco ambiental OEFA y estándares de fiscalización',
-      'Estructurando petitorio minero y estrategia ambiental aplicable',
-    ],
-    camila: [
-      'Evaluando pretensiones de alimentos, tenencia y régimen de visitas',
-      'Revisando Ley 31590 de Tenencia Compartida y Código de los Niños y Adolescentes',
-      'Estructurando fundamentación familiar y medidas cautelares urgentes',
-    ],
-    fernanda: [
-      'Verificando notificación SUNAT, gradualidad de multas y plazos perentorios',
-      'Analizando Código Tributario, Ley 32430 y Resoluciones del Tribunal Fiscal (RTF)',
-      'Estructurando estrategia de defensa tributaria y contingencia fiscal',
-    ],
-    marco: [
-      'Analizando tipicidad del acto administrativo y plazo perentorio de 15 días',
-      'Revisando TUO Ley 27444 (DS 006-2026-JUS) y Ley 32069 (OECE/TCP)',
-      'Estructurando fundamentación administrativa y agotamiento de vía previa',
-    ],
-  }
-
-  return (
-    agentDefaults[agent.id] || [
-      `Analizando marco legal peruano para ${agent.role}`,
-      'Revisando normativa y jurisprudencia aplicable al caso',
-      'Estructurando dictamen jurídico y pasos a seguir',
-    ]
-  )
-}
-
 function ThinkingIndicator({
   agent,
-  lastUserMessage,
 }: {
   agent: NonNullable<ReturnType<typeof getAgent>>
   lastUserMessage?: string
 }) {
-  const [expanded, setExpanded] = useState(true)
-  const steps = getDynamicThinkingSteps(agent, lastUserMessage)
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: -12 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="flex items-start gap-3 w-full max-w-4xl mx-auto"
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="flex items-center gap-3 w-full max-w-4xl mx-auto py-1"
     >
       <div
-        className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 mt-1"
-        style={{ border: '1px solid rgba(201,168,76,0.20)' }}
+        className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
+        style={{ border: '1px solid rgba(201,168,76,0.30)', boxShadow: '0 0 10px rgba(201,168,76,0.15)' }}
       >
         <img src={agent.image} alt={agent.name} className="w-full h-full object-cover object-top" />
       </div>
 
       <div
-        className="flex-1 max-w-[85%] rounded-xl overflow-hidden"
-        style={{ background: '#1a1a1a', border: '1px solid rgba(201,168,76,0.15)' }}
+        className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
+        style={{
+          background: 'rgba(26,26,26,0.95)',
+          border: '1px solid rgba(201,168,76,0.25)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+        }}
       >
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full px-4 py-3 flex items-center justify-between transition-all text-left"
-          style={{ background: 'rgba(201,168,76,0.05)' }}
-        >
-          <div className="flex items-center gap-2.5">
-            <RefreshCw size={13} className="animate-spin" style={{ color: '#c9a84c' }} />
-            <span className="text-[11px] font-light text-white">
-              Analizando caso con {agent.name}...
-            </span>
-          </div>
-          {expanded ? <ChevronUp size={13} style={{ color: '#c9a84c' }} /> : <ChevronDown size={13} style={{ color: '#c9a84c' }} />}
-        </button>
-
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="p-4 space-y-2 text-[11px] font-light"
-              style={{ borderTop: '1px solid #2a2a2a', color: 'rgba(255,255,255,0.70)' }}
-            >
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full dot-online flex-shrink-0" style={{ background: '#34d17a' }} />
-                <span>{steps[0]}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full dot-online flex-shrink-0" style={{ background: '#c9a84c' }} />
-                <span>{steps[1]}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#60a5fa' }} />
-                <span>{steps[2]}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <RefreshCw size={13} className="animate-spin text-[#c9a84c]" />
+        <span className="text-[12px] font-light text-white/95 tracking-wide">
+          Analizando caso con {agent.name}...
+        </span>
       </div>
     </motion.div>
   )
