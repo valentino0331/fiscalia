@@ -11,13 +11,16 @@ async function seed() {
   const oneMonthFromNow = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   const oneYearFromNow = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
 
-  // 1. Asegurar suscripción para los 2 admins existentes
-  const adminEmails = ['marca0331@outlook.es', 'rafaelortega2016@outlook.es'];
+  // 1. Asegurar suscripción para los administradores configurados
+  const adminEmails = process.env.INITIAL_ADMIN_EMAILS
+    ? process.env.INITIAL_ADMIN_EMAILS.split(',').map((e) => e.trim().toLowerCase())
+    : ['admin@hardman.pe', 'marca0331@outlook.es'];
+
   for (const email of adminEmails) {
     const adminUser = await db.query.users.findFirst({ where: eq(users.email, email) });
     if (adminUser) {
       // Set name if null
-      const adminName = email === 'marca0331@outlook.es' ? 'Administrador Principal' : 'Administrador Asociado';
+      const adminName = adminUser.name || 'Administrador Principal';
       await db.update(users).set({ name: adminName, isAdmin: true }).where(eq(users.id, adminUser.id));
 
       const existingSub = await db.query.subscriptions.findFirst({ where: eq(subscriptions.userId, adminUser.id) });

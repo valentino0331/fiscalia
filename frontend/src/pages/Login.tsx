@@ -10,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [demoLoading, setDemoLoading] = useState(false)
   const [error, setError] = useState('')
 
   const { login } = useAuth()
@@ -27,6 +28,20 @@ export default function Login() {
       setError(err instanceof Error ? err.message : 'Error al conectar con el servidor')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleDemoLogin = async () => {
+    setError('')
+    setDemoLoading(true)
+    try {
+      const res = await api.auth.demoLogin()
+      login(res.token, res.user)
+      navigate('/dashboard')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'No se pudo conectar con el servidor demo')
+    } finally {
+      setDemoLoading(false)
     }
   }
 
@@ -187,26 +202,16 @@ export default function Login() {
           {/* Demo access button for instant testing and presentation */}
           <button
             type="button"
-            onClick={() => {
-              const demoUser = {
-                id: 'demo-user-1',
-                email: 'ciudadano@ejemplo.pe',
-                name: 'Carlos Mendoza',
-                phone: '999888777',
-                role: 'user',
-                dni: '45678912',
-              }
-              login('demo-token-12345', demoUser as any)
-              navigate('/dashboard')
-            }}
-            className="w-full mt-2.5 py-2.5 rounded-lg text-[11px] font-medium transition-all text-center hover:bg-white/10"
+            disabled={demoLoading || loading}
+            onClick={handleDemoLogin}
+            className="w-full mt-2.5 py-2.5 rounded-lg text-[11px] font-medium transition-all text-center hover:bg-white/10 disabled:opacity-50"
             style={{
               background: 'rgba(255,255,255,0.04)',
               border: '1px solid rgba(255,255,255,0.10)',
               color: 'rgba(255,255,255,0.65)',
             }}
           >
-            Acceso Rápido de Demostración
+            {demoLoading ? 'Iniciando sesión demo...' : 'Acceso Rápido de Demostración'}
           </button>
         </form>
 

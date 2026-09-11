@@ -25,9 +25,15 @@ const server = http.createServer((req, res) => {
     reqPath = '/index.html';
   }
 
-  let filePath = path.join(BASE_DIR, reqPath);
+  // Sanitize path to prevent Path Traversal attacks
+  const safePath = path.normalize(path.join(BASE_DIR, path.sep, reqPath));
+  if (!safePath.startsWith(BASE_DIR)) {
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    return res.end('Acceso denegado: intento de path traversal detectado');
+  }
 
-  if (!fs.existsSync(filePath)) {
+  let filePath = safePath;
+  if (!fs.existsSync(filePath) || fs.statSync(filePath).isDirectory()) {
     // Fallback to index.html
     filePath = path.join(BASE_DIR, 'index.html');
   }

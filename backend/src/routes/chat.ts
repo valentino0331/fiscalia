@@ -7,7 +7,7 @@ import { conversations, userMemory } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { requireAuth } from '../middleware/auth';
-import { requireSubscription, incrementUserUsageCache } from '../middleware/subscription';
+import { requireSubscription, incrementUserUsageCache, recordQuestionUsage } from '../middleware/subscription';
 import { SYSTEM_PROMPTS } from '../prompts/agents';
 import { suggestAgentTransfer } from './agentRouter';
 import { metrics } from '../lib/metrics';
@@ -250,8 +250,20 @@ function sanitizeAiErrorMessage(err: any): string {
   return 'Ocurrió una interrupción temporal al procesar tu consulta legal. Por favor, reintenta en unos instantes.';
 }
 
-// Memory cache to avoid querying userMemory from DB on every message
+// Memory cache to avoid querying userMemory from DB on every message (bounded to prevent leaks)
+const MAX_MEMORY_CACHE = 500;
 const userMemoryCache = new Map<string, { memoryBlock: string; expiresAt: number }>();
+
+function pruneUserMemoryCache() {
+  const now = Date.now();
+  for (const [k, v] of userMemoryCache.entries()) {
+    if (v.expiresAt <= now) userMemoryCache.delete(k);
+  }
+  if (userMemoryCache.size > MAX_MEMORY_CACHE) {
+    const keys = Array.from(userMemoryCache.keys()).slice(0, userMemoryCache.size - MAX_MEMORY_CACHE);
+    for (const k of keys) userMemoryCache.delete(k);
+  }
+}
 
 // Helper to stream chunks from any OpenAI-compatible API (Groq, OpenAI, DeepSeek, OpenRouter)
 async function streamOpenAICompatible(
@@ -311,10 +323,25 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     res.flushHeaders?.();
   }
 
+  let hasStartedStreaming = false;
+  let assistantMessage = '';
+  let transferTo: string | undefined;
+
   const sendStreamChunk = (chunk: string) => {
     if (isStream && chunk) {
+      hasStartedStreaming = true;
       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
     }
+  };
+
+  const abortIfStreamCorrupted = (): boolean => {
+    if (isStream && hasStartedStreaming && !assistantMessage) {
+      console.warn('[AI Engine] Streaming SSE interrumpido a mitad de camino. Finalizando stream para evitar respuestas mezcladas.');
+      res.write(`data: ${JSON.stringify({ error: 'La respuesta fue interrumpida temporalmente. Por favor reintente su consulta.' })}\n\n`);
+      res.end();
+      return true;
+    }
+    return false;
   };
 
   try {
@@ -342,9 +369,6 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-
-    let assistantMessage = '';
-    let transferTo: string | undefined;
 
     const latestUserMessage = [...messages]
       .reverse()
@@ -374,6 +398,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
             memoryBlock = `\n\n════════════════════════════════════════\nPERFIL DEL ABOGADO (memoria de usuario)\n════════════════════════════════════════\n${parts.join('\n')}\n\nUsa esta información para personalizar tus respuestas. No la repitas textualmente a menos que sea relevante.`;
           }
         }
+        pruneUserMemoryCache();
         userMemoryCache.set(req.userId, {
           memoryBlock,
           expiresAt: Date.now() + 5 * 60 * 1000,
@@ -494,6 +519,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // ─────────────────────────────────────────────────────────────
     // 2. PRIORIDAD 2: OpenAI (Alta disponibilidad y concurrencia masiva)
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openaiKey) {
       const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
 
@@ -561,6 +587,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // ─────────────────────────────────────────────────────────────
     // 3. PRIORIDAD 3: DeepSeek Direct (Modo rápido deepseek-chat con timeout corto de 10s)
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && deepseekKey) {
       try {
         const controller = new AbortController();
@@ -621,6 +648,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // ─────────────────────────────────────────────────────────────
     // 4. PRIORIDAD 4: Anthropic Claude (claude-3-5-haiku)
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && anthropicKey) {
       try {
         const anthropic = new Anthropic({ apiKey: anthropicKey });
@@ -680,6 +708,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // ─────────────────────────────────────────────────────────────
     // 5. PRIORIDAD 5: OpenRouter Fallback
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openrouterKey) {
       const candidateModels = [
         'meta-llama/llama-3.3-70b-instruct',
@@ -750,6 +779,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // ─────────────────────────────────────────────────────────────
     // 6. PRIORIDAD 6 (ÚLTIMO RECURSO): Google Gemini (Enviado al final por inestabilidad)
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && geminiKey) {
       const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
@@ -834,6 +864,7 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
     // ─────────────────────────────────────────────────────────────
     // 7. RESPALDO DE EMERGENCIA GARANTIZADO
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage) {
       const agentNames: Record<string, { name: string; role: string }> = {
         valentina: { name: 'Valentina', role: 'Derecho Laboral' },
@@ -894,8 +925,8 @@ chatRouter.post('/', requireAuth, requireSubscription, async (req: any, res) => 
       });
     }
 
-    // Incrementar uso en caché de memoria para máxima velocidad
-    incrementUserUsageCache(req.userId);
+    // Incrementar uso en caché de memoria y registrar en tabla inmutable de consumo
+    await recordQuestionUsage(req.userId);
 
     if (isStream) {
       res.write(`data: ${JSON.stringify({ done: true, conversationId: finalConvId, transferTo })}\n\n`);

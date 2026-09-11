@@ -57,6 +57,11 @@ export const api = {
         '/auth/login',
         { method: 'POST', body: JSON.stringify(data) }
       ),
+    demoLogin: () =>
+      request<{ token: string; user: UserResponse }>(
+        '/auth/demo-login',
+        { method: 'POST' }
+      ),
   },
 
   chat: {

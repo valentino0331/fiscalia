@@ -84,3 +84,18 @@ export const userMemory = pgTable('user_memory', {
   notes: text('notes'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
+
+export const questionUsageLogs = pgTable(
+  'question_usage_logs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    monthKey: text('month_key').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    userMonthIdx: index('idx_question_usage_user_month').on(table.userId, table.monthKey),
+  })
+);

@@ -87,6 +87,18 @@ export async function initNewTables() {
     )
   `;
 
+  // 6. Question Usage Logs (Immutable usage tracking)
+  await sql`
+    CREATE TABLE IF NOT EXISTS question_usage_logs (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      month_key TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT now()
+    )
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_question_usage_user_month ON question_usage_logs(user_id, month_key)
+  `;
+
   console.log('[DB] Todas las tablas e índices de Neon PostgreSQL verificados correctamente.');
 }
-

@@ -80,16 +80,23 @@ export default function CitizenCalculatorsModal({
     // Regimen factor: General (1.0), Pequeña (0.5), Micro (0)
     const factorRegimen = regimen === 'general' ? 1.0 : regimen === 'pequena' ? 0.5 : 0.0
 
+    // En la legislación laboral peruana (D.Leg 650, Ley 27735, D.Leg 713):
+    // Se requiere haber laborado al menos un mes completo para tener derecho a beneficios truncos.
+    const mesesSemestre = totalMeses < 1 ? 0 : (totalMeses % 6 === 0 ? 6 : totalMeses % 6)
+    const mesesAnioVac = totalMeses < 1 ? 0 : (totalMeses % 12 === 0 ? 12 : totalMeses % 12)
+
     // CTS trunca (rem computable + 1/6 gratificación)
     const baseCTS = remComputable + remComputable / 6
-    const cts = factorRegimen > 0 ? (baseCTS / 12) * Math.min(6, totalMeses % 6 || 6) * factorRegimen : 0
+    const cts = factorRegimen > 0 && totalMeses >= 1 ? (baseCTS / 12) * Math.min(6, mesesSemestre) * factorRegimen : 0
 
     // Gratificación trunca + Bonificación 9% Essalud
-    const gratificacion = factorRegimen > 0 ? (remComputable / 6) * Math.min(6, totalMeses % 6 || 6) * factorRegimen : 0
+    const gratificacion = factorRegimen > 0 && totalMeses >= 1 ? (remComputable / 6) * Math.min(6, mesesSemestre) * factorRegimen : 0
     const bonifEssalud = gratificacion * 0.09
 
     // Vacaciones truncas
-    const vacaciones = factorRegimen > 0 ? (remComputable / 12) * Math.min(12, totalMeses % 12 || 12) * factorRegimen : (remComputable / 24) * Math.min(12, totalMeses % 12 || 12)
+    const vacaciones = totalMeses >= 1
+      ? (factorRegimen > 0 ? (remComputable / 12) * Math.min(12, mesesAnioVac) * factorRegimen : (remComputable / 24) * Math.min(12, mesesAnioVac))
+      : 0
 
     // Indemnización por despido arbitrario (1.5 sueldos por año trabajado en general, 20 días en pequeña, 10 días en micro, tope 12 sueldos)
     let indemnizacion = 0

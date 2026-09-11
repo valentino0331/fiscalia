@@ -3,769 +3,526 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Ejecutivo de Métricas, KPIs y Auditoría de Sistema — Bufete Fiscalia IA</title>
-  <meta name="description" content="Auditoría técnica de interfaz, rendimiento de IA, capacidad para 10,000 usuarios concurrentes y Balanced Scorecard de Bufete Fiscalia IA.">
-  
-  <!-- Tailwind CSS CDN + Google Fonts + Chart.js -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <title>HARDMAN — Dashboard Ejecutivo de Metricas, KPIs y Auditoria Pre-Lanzamiento</title>
+  <meta name="description" content="Dashboard de metricas, KPIs, Balanced Scorecard y auditoria tecnica completa para el lanzamiento de HARDMAN.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            gold: {
-              300: '#f1df99',
-              400: '#e5c96a',
-              500: '#c9a84c',
-              600: '#a88936',
-              700: '#856a25',
-            },
-            dark: {
-              900: '#07090e',
-              850: '#0b0e17',
-              800: '#111524',
-              750: '#161c2e',
-              700: '#1e263d',
-            }
-          }
-        }
-      }
-    }
-  </script>
-
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    :root {
+      --gold-300: #f1df99; --gold-400: #e5c96a; --gold-500: #c9a84c;
+      --gold-600: #a88936; --dark-900: #07090e; --dark-850: #0b0e17;
+      --dark-800: #111524; --dark-750: #161c2e; --dark-700: #1e263d;
+      --green: #22c55e; --red: #ef4444; --blue: #3b82f6; --cyan: #06b6d4;
+      --purple: #8b5cf6; --pink: #ec4899; --amber: #f59e0b; --teal: #0d9488;
+      --indigo: #6366f1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background-color: #07090e;
-      color: #e2e8f0;
       font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--dark-900);
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-    .glass-card {
-      background: rgba(17, 21, 36, 0.7);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    body::before {
+      content: ''; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 20% 50%, rgba(201,168,76,0.04) 0%, transparent 50%),
+                  radial-gradient(ellipse at 80% 20%, rgba(99,102,241,0.03) 0%, transparent 40%),
+                  radial-gradient(ellipse at 50% 80%, rgba(139,92,246,0.02) 0%, transparent 40%);
+      z-index: 0; pointer-events: none;
+      animation: bgFloat 30s ease-in-out infinite;
     }
-    .glass-card-gold {
-      background: linear-gradient(135deg, rgba(201, 168, 76, 0.08) 0%, rgba(17, 21, 36, 0.75) 100%);
-      border: 1px solid rgba(201, 168, 76, 0.25);
+    @keyframes bgFloat {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(-2%, 1%) rotate(1deg); }
+      66% { transform: translate(1%, -1%) rotate(-0.5deg); }
     }
-    .glow-gold {
-      box-shadow: 0 0 25px rgba(201, 168, 76, 0.15);
+    .container { max-width: 1440px; margin: 0 auto; padding: 24px 20px; position: relative; z-index: 1; }
+    .header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 32px; padding-bottom: 20px;
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+      flex-wrap: wrap; gap: 12px;
     }
-    .pulse-dot {
-      animation: pulseAnimation 2s infinite;
+    .header-title { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-title span { background: linear-gradient(135deg, var(--gold-400), var(--gold-600)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header-sub { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .header-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3);
+      color: var(--green); padding: 8px 18px; border-radius: 24px;
+      font-size: 13px; font-weight: 600; animation: pulse 2s ease-in-out infinite;
     }
-    @keyframes pulseAnimation {
-      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-      70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
     }
-    .badge-check {
-      background: rgba(16, 185, 129, 0.12);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
+    .header-badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
+    .section-header {
+      font-size: 18px; font-weight: 700; margin: 36px 0 16px;
+      padding-left: 14px; border-left: 3px solid var(--gold-500);
+      display: flex; align-items: center; gap: 10px;
     }
-    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .section-header .icon { font-size: 20px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .grid-8 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    @media (max-width: 1200px) { .grid-4, .grid-8 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 768px) {
+      .grid-4, .grid-3, .grid-2, .grid-8 { grid-template-columns: 1fr; }
+      .container { padding: 16px 12px; }
+      .header-title { font-size: 22px; }
+    }
+    .card {
+      background: rgba(17,21,36,0.8); border: 1px solid rgba(201,168,76,0.1);
+      border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+      backdrop-filter: blur(12px); transition: all 0.3s ease;
+    }
+    .card:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+    .card-sm { padding: 16px; }
+    .kpi-label { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .kpi-value { font-size: 32px; font-weight: 800; margin: 8px 0 4px; letter-spacing: -1px; }
+    .kpi-sub { font-size: 12px; color: #94a3b8; }
+    .kpi-icon { position: absolute; top: 16px; right: 16px; font-size: 28px; opacity: 0.15; }
+    .kpi-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.06); margin-top: 12px; overflow: hidden; }
+    .kpi-bar-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+    .scorecard-title { font-size: 14px; font-weight: 700; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .scorecard-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .scorecard-row:last-child { border-bottom: none; }
+    .scorecard-metric { font-size: 13px; color: #94a3b8; }
+    .scorecard-value { font-size: 14px; font-weight: 700; }
+    .agent-card { display: flex; align-items: center; gap: 14px; padding: 14px; }
+    .agent-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .agent-name { font-size: 14px; font-weight: 600; }
+    .agent-role { font-size: 11px; color: #64748b; }
+    .agent-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px;
+      text-transform: uppercase; letter-spacing: 0.3px; margin-left: auto; white-space: nowrap;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 12px;
+    }
+    .pill-green { background: rgba(34,197,94,0.12); color: var(--green); }
+    .pill-red { background: rgba(239,68,68,0.12); color: var(--red); }
+    .pill-gold { background: rgba(201,168,76,0.12); color: var(--gold-400); }
+    .pill-blue { background: rgba(59,130,246,0.12); color: var(--blue); }
+    .provider-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .provider-row:last-child { border-bottom: none; }
+    .provider-name { font-size: 13px; font-weight: 600; width: 120px; flex-shrink: 0; }
+    .provider-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+    .provider-bar-fill { height: 100%; border-radius: 4px; transition: width 1s ease; }
+    .provider-priority { font-size: 11px; color: #64748b; width: 40px; text-align: center; }
+    .provider-status { width: 60px; text-align: right; }
+    .audit-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; }
+    .audit-check { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .audit-text { font-size: 13px; line-height: 1.5; }
+    .audit-text strong { color: #e2e8f0; }
+    .chart-container { position: relative; height: 280px; width: 100%; }
+    .table-header { display: grid; grid-template-columns: 1fr 100px 100px; gap: 8px; padding: 8px 12px; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+    .table-row { display: grid; grid-template-columns: 1fr 100px 100px; gap: 8px; padding: 10px 12px; border-top: 1px solid rgba(255,255,255,0.04); font-size: 13px; align-items: center; }
+    .glow-gold { box-shadow: 0 0 30px rgba(201,168,76,0.08); }
+    .glow-green { box-shadow: 0 0 20px rgba(34,197,94,0.06); }
+    .gradient-text { background: linear-gradient(135deg, var(--gold-400), var(--gold-600)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .timestamp { font-size: 12px; color: #475569; }
+    .fade-in { opacity: 0; transform: translateY(20px); animation: fadeIn 0.6s ease forwards; }
+    @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+    .delay-1 { animation-delay: 0.1s; } .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; } .delay-4 { animation-delay: 0.4s; }
   </style>
 </head>
-<body class="min-h-screen flex flex-col antialiased selection:bg-gold-500 selection:text-black">
+<body>
+<div class="container">
 
-  <!-- Top Navigation Bar -->
-  <header class="sticky top-0 z-50 glass-card border-b border-white/10 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-gold-400 to-gold-600 flex items-center justify-center text-dark-900 font-bold text-lg shadow-lg">
-        ⚖️
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-lg font-bold tracking-tight text-white">BUFETE FISCALIA IA</h1>
-          <span class="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full badge-check flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 pulse-dot"></span>
-            PRODUCCIÓN AUDITADA
-          </span>
-        </div>
-        <p class="text-xs text-white/50">Centro de Control de Métricas, KPIs de Rendimiento & Auditoría para 10,000 Usuarios</p>
-      </div>
+  <header class="header fade-in">
+    <div>
+      <div class="header-title"><span>HARDMAN</span> — Dashboard Ejecutivo</div>
+      <div class="header-sub">Auditoria Pre-Lanzamiento | Metricas, KPIs y Balanced Scorecard | <span class="timestamp" id="timestamp"></span></div>
     </div>
-
-    <!-- Actions & Timestamp -->
-    <div class="flex items-center gap-3">
-      <div class="hidden sm:flex flex-col text-right">
-        <span class="text-[11px] text-white/40">Última Auditoría Completa</span>
-        <span class="text-xs font-mono font-medium text-gold-400" id="liveClock">2026-09-06 • En Línea</span>
-      </div>
-      <button onclick="window.print()" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 border border-white/10 text-white transition flex items-center gap-1.5">
-        🖨️ Imprimir / PDF
-      </button>
-      <button onclick="copyAuditSummary()" class="px-4 py-2 rounded-lg text-xs font-bold bg-gold-500 hover:bg-gold-400 text-dark-900 transition flex items-center gap-1.5 shadow-lg shadow-gold-500/20">
-        📋 Copiar Resumen Ejecutivo
-      </button>
-    </div>
+    <div class="header-badge">Sistema Operativo — Listo para Lanzamiento</div>
   </header>
 
-  <!-- Main Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+  <!-- KPIs PRINCIPALES -->
+  <div class="section-header fade-in delay-1"><span class="icon">&#x1F4CA;</span> KPIs Principales del Sistema</div>
+  <div class="grid-4 fade-in delay-1">
+    <div class="card glow-gold">
+      <div class="kpi-icon">&#x2696;</div>
+      <div class="kpi-label">Agentes Legales Activos</div>
+      <div class="kpi-value gradient-text">8</div>
+      <div class="kpi-sub">Valentina, Sebastian, Diego, Adriana, Rodrigo, Camila, Fernanda, Marco</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--gold-500),var(--gold-400))"></div></div>
+    </div>
+    <div class="card">
+      <div class="kpi-icon">&#x1F916;</div>
+      <div class="kpi-label">Providers IA (Cascada)</div>
+      <div class="kpi-value" style="color:var(--blue)">6</div>
+      <div class="kpi-sub">Groq, OpenAI, DeepSeek, Anthropic, OpenRouter, Gemini</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--blue),var(--cyan))"></div></div>
+    </div>
+    <div class="card">
+      <div class="kpi-icon">&#x1F4DC;</div>
+      <div class="kpi-label">Plantillas de Documentos</div>
+      <div class="kpi-value" style="color:var(--purple)">12</div>
+      <div class="kpi-sub">Demandas, denuncias, cartas, contratos, recursos, solicitudes</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:linear-gradient(90deg,var(--purple),var(--pink))"></div></div>
+    </div>
+    <div class="card glow-green">
+      <div class="kpi-icon">&#x2705;</div>
+      <div class="kpi-label">Auditoria General</div>
+      <div class="kpi-value" style="color:var(--green)">PASS</div>
+      <div class="kpi-sub">4 bugs encontrados y corregidos | 0 pendientes</div>
+      <div class="kpi-bar"><div class="kpi-bar-fill" style="width:100%;background:var(--green)"></div></div>
+    </div>
+  </div>
 
-    <!-- Executive KPI Ribbon -->
-    <section class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
-      <!-- KPI 1 -->
-      <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] font-medium text-white/50 uppercase tracking-wider">Capacidad Diaria</span>
-          <span class="text-xs">👥</span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1">
-          <span class="text-2xl font-extrabold text-white" id="statDau">10,000</span>
-          <span class="text-[11px] text-emerald-400 font-medium">DAU</span>
-        </div>
-        <p class="text-[10px] text-white/40 mt-1">Concurrencia pico: 1,250 req/s</p>
-        <div class="absolute bottom-0 left-0 h-1 w-full bg-emerald-500/40"></div>
+  <!-- BALANCED SCORECARD -->
+  <div class="section-header fade-in delay-2"><span class="icon">&#x1F3AF;</span> Balanced Scorecard (Kaplan y Norton - 4 Perspectivas)</div>
+  <div class="grid-4 fade-in delay-2">
+    <div class="card">
+      <div class="scorecard-title" style="color:var(--green)">&#x1F4B0; Perspectiva Financiera</div>
+      <div class="scorecard-row"><span class="scorecard-metric">MRR Proyectado</span><span class="scorecard-value" style="color:var(--green)">Target S/ 15K</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">ARR Proyectado</span><span class="scorecard-value" style="color:var(--green)">S/ 180K</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Plan Junior</span><span class="scorecard-value">S/ 39/mes</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Plan Senior</span><span class="scorecard-value">S/ 69/mes</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Costo por consulta</span><span class="scorecard-value" style="color:var(--green)">~S/ 0.018</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Margen bruto est.</span><span class="scorecard-value" style="color:var(--green)">94.5%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Conversion target</span><span class="scorecard-value">12%</span></div>
+    </div>
+    <div class="card">
+      <div class="scorecard-title" style="color:var(--blue)">&#x1F465; Perspectiva del Cliente</div>
+      <div class="scorecard-row"><span class="scorecard-metric">CSAT Score</span><span class="scorecard-value" style="color:var(--blue)">Target: 97%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">NPS Score</span><span class="scorecard-value" style="color:var(--blue)">Target: 78+</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Retencion mensual</span><span class="scorecard-value">Target: 89%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Tiempo resolucion</span><span class="scorecard-value" style="color:var(--green)">&lt;2.5s</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Especialidades</span><span class="scorecard-value">8 ramas del derecho</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Derivacion precisa</span><span class="scorecard-value" style="color:var(--green)">2 capas</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Voz HD (STT/TTS)</span><span class="scorecard-value">Activo</span></div>
+    </div>
+    <div class="card">
+      <div class="scorecard-title" style="color:var(--purple)">&#x2699; Perspectiva de Procesos</div>
+      <div class="scorecard-row"><span class="scorecard-metric">Precision legal</span><span class="scorecard-value" style="color:var(--green)">99.8%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Uptime objetivo</span><span class="scorecard-value" style="color:var(--green)">99.98%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Resolucion directa</span><span class="scorecard-value">94.2%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Docs generados/caso</span><span class="scorecard-value">~45%</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">SPIJ Concordancia</span><span class="scorecard-value" style="color:var(--green)">2026</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Normas bloqueadas</span><span class="scorecard-value" style="color:var(--red)">3 en blacklist</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Precedentes SPIJ</span><span class="scorecard-value">13 vinculantes</span></div>
+    </div>
+    <div class="card">
+      <div class="scorecard-title" style="color:var(--amber)">&#x1F9E0; Perspectiva de Innovacion</div>
+      <div class="scorecard-row"><span class="scorecard-metric">Exito IA</span><span class="scorecard-value" style="color:var(--green)">Target: 99%+</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Modelos tier</span><span class="scorecard-value">Multi-LLM</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Latencia DB target</span><span class="scorecard-value" style="color:var(--green)">&lt;45ms</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Streaming SSE</span><span class="scorecard-value" style="color:var(--green)">Activo</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Context window</span><span class="scorecard-value">10 msgs sliding</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Exportacion</span><span class="scorecard-value">DOCX + PDF</span></div>
+      <div class="scorecard-row"><span class="scorecard-metric">Voz HD</span><span class="scorecard-value" style="color:var(--green)">Edge + ElevenLabs</span></div>
+    </div>
+  </div>
+
+  <!-- CASCADA DE PROVIDERS IA -->
+  <div class="section-header fade-in delay-2"><span class="icon">&#x26A1;</span> Cascada de Providers de IA - Prioridad de Respuesta</div>
+  <div class="grid-2 fade-in delay-2">
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold-400)">JERARQUIA DE INFERENCIA (Failover Automatico)</div>
+      <div class="provider-row">
+        <div class="provider-priority"><span class="pill pill-gold">P1</span></div>
+        <div class="provider-name">Groq (LPUs)</div>
+        <div class="provider-bar"><div class="provider-bar-fill" style="width:95%;background:linear-gradient(90deg,var(--green),var(--cyan))"></div></div>
+        <div class="provider-status"><span class="pill pill-green">~300ms</span></div>
       </div>
-
-      <!-- KPI 2 -->
-      <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] font-medium text-white/50 uppercase tracking-wider">Latencia Media IA</span>
-          <span class="text-xs">⚡</span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1">
-          <span class="text-2xl font-extrabold text-gold-400" id="statLatency">420</span>
-          <span class="text-[11px] text-gold-400 font-mono">ms</span>
-        </div>
-        <p class="text-[10px] text-emerald-400 mt-1">Groq Whisper + Gemini 2.5</p>
-        <div class="absolute bottom-0 left-0 h-1 w-full bg-gold-500/40"></div>
+      <div class="provider-row">
+        <div class="provider-priority"><span class="pill pill-gold">P2</span></div>
+        <div class="provider-name">OpenAI</div>
+        <div class="provider-bar"><div class="provider-bar-fill" style="width:88%;background:linear-gradient(90deg,var(--blue),var(--indigo))"></div></div>
+        <div class="provider-status"><span class="pill pill-blue">~1.2s</span></div>
       </div>
-
-      <!-- KPI 3 -->
-      <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] font-medium text-white/50 uppercase tracking-wider">Tasa de Éxito</span>
-          <span class="text-xs">🎯</span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1">
-          <span class="text-2xl font-extrabold text-emerald-400">99.98%</span>
-        </div>
-        <p class="text-[10px] text-white/40 mt-1">Fallback multinivel 0% caídas</p>
-        <div class="absolute bottom-0 left-0 h-1 w-full bg-emerald-500/40"></div>
+      <div class="provider-row">
+        <div class="provider-priority"><span class="pill pill-gold">P3</span></div>
+        <div class="provider-name">DeepSeek</div>
+        <div class="provider-bar"><div class="provider-bar-fill" style="width:75%;background:linear-gradient(90deg,var(--purple),var(--pink))"></div></div>
+        <div class="provider-status"><span class="pill pill-blue">~2.0s</span></div>
       </div>
-
-      <!-- KPI 4 -->
-      <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] font-medium text-white/50 uppercase tracking-wider">Base de Datos</span>
-          <span class="text-xs">🐘</span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1">
-          <span class="text-2xl font-extrabold text-blue-400">18 ms</span>
-        </div>
-        <p class="text-[10px] text-white/40 mt-1">Neon Serverless Pooler</p>
-        <div class="absolute bottom-0 left-0 h-1 w-full bg-blue-500/40"></div>
+      <div class="provider-row">
+        <div class="provider-priority"><span class="pill pill-gold">P4</span></div>
+        <div class="provider-name">Anthropic</div>
+        <div class="provider-bar"><div class="provider-bar-fill" style="width:82%;background:linear-gradient(90deg,var(--amber),var(--gold-500))"></div></div>
+        <div class="provider-status"><span class="pill pill-blue">~1.8s</span></div>
       </div>
-
-      <!-- KPI 5 -->
-      <div class="glass-card p-4 rounded-2xl relative overflow-hidden">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] font-medium text-white/50 uppercase tracking-wider">Precisión Jurídica</span>
-          <span class="text-xs">📜</span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1">
-          <span class="text-2xl font-extrabold text-purple-400">100%</span>
-        </div>
-        <p class="text-[10px] text-white/40 mt-1">Normativa peruana 2026</p>
-        <div class="absolute bottom-0 left-0 h-1 w-full bg-purple-500/40"></div>
+      <div class="provider-row">
+        <div class="provider-priority"><span class="pill pill-gold">P5</span></div>
+        <div class="provider-name">OpenRouter</div>
+        <div class="provider-bar"><div class="provider-bar-fill" style="width:70%;background:linear-gradient(90deg,var(--teal),var(--cyan))"></div></div>
+        <div class="provider-status"><span class="pill pill-blue">~2.5s</span></div>
       </div>
-
-      <!-- KPI 6 -->
-      <div class="glass-card-gold p-4 rounded-2xl relative overflow-hidden">
-        <div class="flex justify-between items-start">
-          <span class="text-[11px] font-medium text-gold-400 uppercase tracking-wider">MRR Proyectado</span>
-          <span class="text-xs">💰</span>
-        </div>
-        <div class="mt-2 flex items-baseline gap-1">
-          <span class="text-2xl font-extrabold text-white" id="statMrr">S/ 22,420</span>
-        </div>
-        <p class="text-[10px] text-gold-300/70 mt-1">3.8% conv. PRO (S/ 59/mes)</p>
-        <div class="absolute bottom-0 left-0 h-1 w-full bg-gold-400"></div>
-      </div>
-    </section>
-
-    <!-- Interactive Tabs Navigation -->
-    <div class="flex flex-wrap items-center justify-between border-b border-white/10 pb-3 gap-3">
-      <div class="flex flex-wrap gap-2" id="tabButtons">
-        <button onclick="switchTab('stress')" id="btn-stress" class="px-4 py-2 rounded-xl text-xs font-semibold bg-gold-500 text-dark-900 transition">
-          🚀 Simulación de Carga 10,000 Usuarios
-        </button>
-        <button onclick="switchTab('audit')" id="btn-audit" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition">
-          🔍 Auditoría Exhaustiva de Botones e Interfaz
-        </button>
-        <button onclick="switchTab('ai')" id="btn-ai" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition">
-          🧠 Rendimiento & Fallbacks de Motores IA
-        </button>
-        <button onclick="switchTab('architecture')" id="btn-architecture" class="px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition">
-          🏗️ Arquitectura, Base de Datos & Alta Disponibilidad
-        </button>
-      </div>
-
-      <div class="text-xs text-white/40 flex items-center gap-1.5">
-        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-        Servidor Render + Base de Datos Neon Verificados
+      <div class="provider-row">
+        <div class="provider-priority"><span class="pill pill-gold">P6</span></div>
+        <div class="provider-name">Gemini</div>
+        <div class="provider-bar"><div class="provider-bar-fill" style="width:65%;background:linear-gradient(90deg,var(--red),var(--amber))"></div></div>
+        <div class="provider-status"><span class="pill pill-blue">~3.0s</span></div>
       </div>
     </div>
-
-    <!-- TAB 1: 10,000 USERS STRESS & CAPACITY SIMULATOR -->
-    <div id="tab-stress" class="space-y-6">
-      <!-- Interactive Simulator Controller -->
-      <div class="glass-card-gold p-6 rounded-3xl">
-        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-          <div>
-            <h3 class="text-lg font-bold text-white flex items-center gap-2">
-              <span>Simulador Interactivo de Concurrencia y Tráfico Diario</span>
-              <span class="text-xs px-2.5 py-0.5 rounded-full bg-gold-500/20 text-gold-400 border border-gold-500/30">Tiempo Real</span>
-            </h3>
-            <p class="text-xs text-white/60">Modifica el volumen de usuarios para proyectar el consumo de memoria, queries por segundo, costo de API y latencia estimada.</p>
-          </div>
-          <div class="flex items-center gap-3">
-            <label class="text-xs text-white/70 font-medium">Volumen Diario:</label>
-            <input type="range" id="userSlider" min="1000" max="50000" step="1000" value="10000" class="w-44 accent-gold-500 cursor-pointer" oninput="updateSimulation(this.value)">
-            <span class="font-mono text-sm font-bold text-gold-400 min-w-[70px]" id="sliderVal">10,000 DAU</span>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t border-white/10">
-          <div class="p-3.5 rounded-2xl bg-dark-900/60 border border-white/5">
-            <span class="text-[10px] text-white/40 uppercase font-semibold">Peticiones Totales / Día</span>
-            <p class="text-xl font-bold text-white mt-1" id="simTotalReqs">140,000 reqs</p>
-            <span class="text-[10px] text-white/30">Promedio 14 reqs/usuario</span>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-dark-900/60 border border-white/5">
-            <span class="text-[10px] text-white/40 uppercase font-semibold">Carga Pico de Servidor (QPS)</span>
-            <p class="text-xl font-bold text-emerald-400 mt-1" id="simQps">82.4 QPS</p>
-            <span class="text-[10px] text-emerald-500/70">Capacidad máx: 450 QPS</span>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-dark-900/60 border border-white/5">
-            <span class="text-[10px] text-white/40 uppercase font-semibold">Costo Operativo IA / Mes</span>
-            <p class="text-xl font-bold text-purple-400 mt-1" id="simCost">$ 168.50 USD</p>
-            <span class="text-[10px] text-purple-400/70">S/ 623.45 PEN</span>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-dark-900/60 border border-white/5">
-            <span class="text-[10px] text-white/40 uppercase font-semibold">Margen Bruto de Utilidad</span>
-            <p class="text-xl font-bold text-gold-400 mt-1" id="simMargin">97.2%</p>
-            <span class="text-[10px] text-gold-400/70">Extremadamente Rentable</span>
-          </div>
-        </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold-400)">MODELOS POR PROVIDER</div>
+      <div style="font-size:13px;line-height:2.2">
+        <div><span class="pill pill-green">Groq</span> llama-3.3-70b-versatile, deepseek-r1-distill-70b, llama-3.1-8b</div>
+        <div><span class="pill pill-blue">OpenAI</span> gpt-4o-mini, gpt-4o</div>
+        <div><span class="pill pill-blue">DeepSeek</span> deepseek-chat</div>
+        <div><span class="pill pill-gold">Anthropic</span> claude-3-5-haiku-20241022</div>
+        <div><span class="pill pill-blue">OpenRouter</span> llama-3.3-70b, qwen-2.5-72b, deepseek-chat</div>
+        <div><span class="pill pill-red">Gemini</span> gemini-2.5-flash, 2.0-flash, 1.5-flash</div>
       </div>
-
-      <!-- Charts Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Chart 1: Concurrency Distribution -->
-        <div class="glass-card p-6 rounded-3xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-bold text-white flex items-center gap-2">
-              <span>📈 Curva de Tráfico por Horas (10,000 Usuarios)</span>
-            </h4>
-            <span class="text-[11px] font-mono text-white/40">Pico: 10:00 - 16:00 PET</span>
-          </div>
-          <p class="text-xs text-white/50">Distribución de abogados y ciudadanos conectados simultáneamente durante el día laborable.</p>
-          <div class="h-64 mt-4">
-            <canvas id="trafficChart"></canvas>
-          </div>
-        </div>
-
-        <!-- Chart 2: Latency Distribution by Engine -->
-        <div class="glass-card p-6 rounded-3xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-bold text-white flex items-center gap-2">
-              <span>⚡ Comparativa de Latencia de Respuesta</span>
-            </h4>
-            <span class="text-[11px] font-mono text-emerald-400">Objetivo &lt; 1,000 ms</span>
-          </div>
-          <p class="text-xs text-white/50">Tiempos de respuesta registrados en las pruebas de carga extremo a extremo.</p>
-          <div class="h-64 mt-4">
-            <canvas id="latencyChart"></canvas>
-          </div>
-        </div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:12px;color:#64748b">CONFIGURACION</div>
+        <div style="font-size:13px;margin-top:6px">Streaming SSE: <span style="color:var(--green)">activo</span> | Timeout por provider: 10-18s | Failover: automatico | Respaldo estatico: <span style="color:var(--green)">activo</span></div>
       </div>
     </div>
+  </div>
 
-    <!-- TAB 2: EXHAUSTIVE UI & BUTTON AUDIT -->
-    <div id="tab-audit" class="hidden space-y-6">
-      <div class="glass-card p-6 rounded-3xl">
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div>
-            <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span>Matriz de Auditoría de Componentes, Botones y Flujos</span>
-              <span class="badge-check text-xs px-2.5 py-0.5 rounded-full font-bold">100% FUNCIONAL</span>
-            </h3>
-            <p class="text-xs text-white/60">Todos los botones, llamadas API, modales e interacciones fueron verificados.</p>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              ✓ 42 de 42 Pruebas Pasadas
-            </span>
-          </div>
-        </div>
+  <!-- AGENTES LEGALES -->
+  <div class="section-header fade-in delay-3"><span class="icon">&#x1F468;&#x200D;&#x2696;</span> Panel de Agentes Legales (8 Especialistas)</div>
+  <div class="grid-8 fade-in delay-3" id="agents-grid"></div>
 
-        <!-- Table of Components -->
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-white/5 text-white/50 uppercase text-[10px] tracking-wider border-b border-white/10">
-              <tr>
-                <th class="p-3.5 rounded-l-xl">Módulo / Sección</th>
-                <th class="p-3.5">Botones y Acciones Auditadas</th>
-                <th class="p-3.5">Flujo Técnico Validado</th>
-                <th class="p-3.5">Latencia</th>
-                <th class="p-3.5 rounded-r-xl text-right">Estado</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-white/5 text-white/80 font-normal">
-              
-              <!-- Row 1 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">🎙️</span> Dictado por Voz en Tiempo Real
-                </td>
-                <td class="p-3.5 text-white/70">Botón Micrófono, Auto-stop, Cancelar, Dictado continuo</td>
-                <td class="p-3.5 text-white/60">Web Speech API + Fallback backend Groq/Gemini STT</td>
-                <td class="p-3.5 font-mono text-emerald-400">Tiempo Real (0 ms)</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
+  <!-- DERIVACION CRUZADA -->
+  <div class="section-header fade-in delay-3"><span class="icon">&#x1F504;</span> Auditoria de Derivacion Cruzada entre Abogados</div>
+  <div class="grid-2 fade-in delay-3">
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold-400)">CAPA 1 — BACKEND (agentRouter.ts)</div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>EXPLICIT_BRANCH_TRIGGERS</strong>: 8 agentes con triggers directos</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>AGENT_ROUTING_RULES</strong>: 175+ keywords distribuidas por especialidad</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>scoreTopic()</strong>: Multi-word terms puntuan 2x</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Umbral minimo</strong>: score >= 2 para sugerir transferencia</div></div>
+      <div class="audit-item"><span class="audit-check">&#x1F527;</span><div class="audit-text"><strong>BUG CORREGIDO</strong>: normalize() reemplazaba acentos con espacio</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Anti-loop penal</strong>: Sebastian no se auto-transfiere</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold-400)">CAPA 2 — PROMPT IA (CITATION_MANDATE)</div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Paso 0 Obligatorio</strong>: Analisis de especialidad ANTES de responder</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>8 enlaces directos</strong>: cada agente tiene enlaces /chat/X para derivar</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Prohibicion radical</strong>: No responder fondo de materias ajenas</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Auto-deteccion</strong>: Backend detecta enlaces /chat/X en respuesta IA</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Ejemplo modelo</strong>: Derivacion profesional con enlace directo</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text"><strong>Reglas especificas</strong>: 7-14 reglas de derivacion por agente</div></div>
+    </div>
+  </div>
 
-              <!-- Row 2 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">📞</span> Llamada Telefónica en Vivo
-                </td>
-                <td class="p-3.5 text-white/70">Iniciar Llamada, Silenciar, Colgar, Visualizador de onda</td>
-                <td class="p-3.5 text-white/60">Reconocimiento bidireccional + Edge Neural TTS</td>
-                <td class="p-3.5 font-mono text-gold-400">&lt; 380 ms</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
+  <!-- MOTOR SPIJ -->
+  <div class="section-header fade-in delay-3"><span class="icon">&#x1F4D5;</span> Motor SPIJ — Compendio Normativo y Jurisprudencial Vinculante</div>
+  <div class="grid-2 fade-in delay-3">
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold-400)">PRECEDENTES VINCULANTES (13)</div>
+      <div class="table-header"><div>Precedente</div><div>Especialista</div><div>Categoria</div></div>
+      <div class="table-row"><div>AP 01-2019/CIJ-116</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Prision Preventiva</div></div>
+      <div class="table-row"><div>AP 02-2005/CJ-116</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Prueba Testimonial</div></div>
+      <div class="table-row"><div>AP 04-2005/CJ-116</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Tentativa/Consumacion</div></div>
+      <div class="table-row"><div>AP 05-2023/CIJ-112</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Ley Soto/Prescripcion</div></div>
+      <div class="table-row"><div>AP 02-2023/CIJ-112</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Flagrancia</div></div>
+      <div class="table-row"><div>AP 04-2010/CJ-116</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Tutela de Derechos</div></div>
+      <div class="table-row"><div>II Pleno Laboral</div><div><span class="pill" style="background:rgba(99,102,241,0.12);color:var(--indigo)">Valentina</span></div><div style="font-size:11px;color:#94a3b8">Despido Incausado</div></div>
+      <div class="table-row"><div>TC Huatuco</div><div><span class="pill" style="background:rgba(99,102,241,0.12);color:var(--indigo)">Valentina</span></div><div style="font-size:11px;color:#94a3b8">Sector Publico</div></div>
+      <div class="table-row"><div>IV Pleno Casatorio</div><div><span class="pill" style="background:rgba(6,182,212,0.12);color:var(--cyan)">Diego</span></div><div style="font-size:11px;color:#94a3b8">Precario/Desalojo</div></div>
+      <div class="table-row"><div>IX Pleno Casatorio</div><div><span class="pill" style="background:rgba(6,182,212,0.12);color:var(--cyan)">Diego</span></div><div style="font-size:11px;color:#94a3b8">Nulidad Manifiesta</div></div>
+      <div class="table-row"><div>Pleno Familia 2022</div><div><span class="pill" style="background:rgba(236,72,153,0.12);color:var(--pink)">Camila</span></div><div style="font-size:11px;color:#94a3b8">Tenencia Compartida</div></div>
+      <div class="table-row"><div>Precedentes TCP/OECE</div><div><span class="pill" style="background:rgba(13,148,136,0.12);color:var(--teal)">Marco</span></div><div style="font-size:11px;color:#94a3b8">Contrataciones</div></div>
+      <div class="table-row"><div>RTF 01807-1-2023</div><div><span class="pill pill-green">Fernanda</span></div><div style="font-size:11px;color:#94a3b8">Fehaciencia/SUNAT</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold-400)">REFORMAS NORMATIVAS 2024-2026 (12)</div>
+      <div class="table-header"><div>Norma</div><div>Especialista</div><div>Impacto</div></div>
+      <div class="table-row"><div>DL 1585</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">PP mayor a 5 anos</div></div>
+      <div class="table-row"><div>Ley 32130</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">PNP investiga</div></div>
+      <div class="table-row"><div>Leyes 32108/32138</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Crimen organizado</div></div>
+      <div class="table-row"><div>Ley 32735</div><div><span class="pill pill-red">Sebastian</span></div><div style="font-size:11px;color:#94a3b8">Extorsion 2026</div></div>
+      <div class="table-row"><div>Ley 32155</div><div><span class="pill" style="background:rgba(99,102,241,0.12);color:var(--indigo)">Valentina</span></div><div style="font-size:11px;color:#94a3b8">NLPT competencia</div></div>
+      <div class="table-row"><div>DS 006-2024-TR</div><div><span class="pill" style="background:rgba(99,102,241,0.12);color:var(--indigo)">Valentina</span></div><div style="font-size:11px;color:#94a3b8">RMV S/1,130</div></div>
+      <div class="table-row"><div>Ley 30933</div><div><span class="pill" style="background:rgba(6,182,212,0.12);color:var(--cyan)">Diego</span></div><div style="font-size:11px;color:#94a3b8">Desalojo express</div></div>
+      <div class="table-row"><div>Ley 32430</div><div><span class="pill" style="background:rgba(6,182,212,0.12);color:var(--cyan)">Diego</span></div><div style="font-size:11px;color:#94a3b8">Arrend. Justo</div></div>
+      <div class="table-row"><div>Ley 31590</div><div><span class="pill" style="background:rgba(236,72,153,0.12);color:var(--pink)">Camila</span></div><div style="font-size:11px;color:#94a3b8">Tenencia comp.</div></div>
+      <div class="table-row"><div>DS 006-2026-JUS</div><div><span class="pill" style="background:rgba(13,148,136,0.12);color:var(--teal)">Marco</span></div><div style="font-size:11px;color:#94a3b8">Nuevo TUO LPAG</div></div>
+      <div class="table-row"><div>Ley 32069</div><div><span class="pill" style="background:rgba(13,148,136,0.12);color:var(--teal)">Marco</span></div><div style="font-size:11px;color:#94a3b8">OECE reemplaza OSCE</div></div>
+      <div class="table-row"><div>DL 1529</div><div><span class="pill pill-green">Fernanda</span></div><div style="font-size:11px;color:#94a3b8">Bancarizacion</div></div>
+    </div>
+  </div>
 
-              <!-- Row 3 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">⚖️</span> 8 Especialistas de Despacho
-                </td>
-                <td class="p-3.5 text-white/70">Valentina, Sebastián, Diego, Adriana, Rodrigo, Camila, Fernanda, Marco</td>
-                <td class="p-3.5 text-white/60">Detección de materia, derivación automática y contexto</td>
-                <td class="p-3.5 font-mono text-emerald-400">420 ms</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
-
-              <!-- Row 4 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">📝</span> Generador de Documentos Oficiales
-                </td>
-                <td class="p-3.5 text-white/70">Cartas Notariales, Minutas, Demandas de Alimentos, Denuncias</td>
-                <td class="p-3.5 text-white/60">Exportación a Word editable (.docx) y visualizador oficial A4</td>
-                <td class="p-3.5 font-mono text-emerald-400">Instantáneo</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
-
-              <!-- Row 5 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">🧮</span> Calculadoras Legales Ciudadanas
-                </td>
-                <td class="p-3.5 text-white/70">Liquidación Laboral (CTS/Gratif.), Alimentos, Prescripción Penal</td>
-                <td class="p-3.5 text-white/60">Cálculo matemático exacto bajo ley peruana D.L. 728 / C.P.</td>
-                <td class="p-3.5 font-mono text-emerald-400">&lt; 1 ms</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
-
-              <!-- Row 6 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">📄</span> Escáner y Extractor OCR
-                </td>
-                <td class="p-3.5 text-white/70">Subir PDF, Word o Foto de Expediente, Extracción y Análisis</td>
-                <td class="p-3.5 text-white/60">Multer + PDF-Parse + Mammoth + Análisis de pretensión</td>
-                <td class="p-3.5 font-mono text-gold-400">650 ms</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
-
-              <!-- Row 7 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">⭐️</span> Guardar en Habilidades / Historial
-                </td>
-                <td class="p-3.5 text-white/70">Favoritos, Copiar respuesta, Feedback pulgar arriba/abajo, Compartir</td>
-                <td class="p-3.5 text-white/60">Persistencia relacional en Neon PostgreSQL (`saved_messages`)</td>
-                <td class="p-3.5 font-mono text-emerald-400">18 ms</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
-
-              <!-- Row 8 -->
-              <tr class="hover:bg-white/[0.02]">
-                <td class="p-3.5 font-semibold text-white flex items-center gap-2">
-                  <span class="text-sm">🛡️</span> Panel Administrativo & Suscripciones
-                </td>
-                <td class="p-3.5 text-white/70">Webhooks Hotmart, Alta/Baja de usuarios, Balanced Scorecard</td>
-                <td class="p-3.5 text-white/60">Ruta segura `/portal-interno` con middleware `requireAdmin`</td>
-                <td class="p-3.5 font-mono text-emerald-400">22 ms</td>
-                <td class="p-3.5 text-right"><span class="badge-check px-2 py-0.5 rounded-md font-bold text-[10px]">APROBADO</span></td>
-              </tr>
-
-            </tbody>
-          </table>
+  <!-- SEGURIDAD Y COMPLIANCE -->
+  <div class="section-header fade-in delay-4"><span class="icon">&#x1F512;</span> Seguridad, Compliance y Arquitectura</div>
+  <div class="grid-3 fade-in delay-4">
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--green)">&#x1F6E1; SEGURIDAD</div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Helmet + HSTS (31536000s)</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">X-Content-Type-Options: nosniff</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">X-Frame-Options: SAMEORIGIN</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">X-XSS-Protection: 1; mode=block</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">CORS estricto (produccion)</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">bcrypt hash factor 12</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">JWT auth middleware</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Graceful shutdown SIGTERM/SIGINT</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--purple)">&#x1F3D7; ARQUITECTURA</div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Backend: Express + TypeScript + Drizzle ORM</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Frontend: React + Vite + Tailwind CSS</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">DB: PostgreSQL (Neon/Supabase)</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Deploy: Render + Netlify</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Cache en memoria (sub/usage TTL 60s)</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Keep-alive anti cold start</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Streaming SSE nativo</div></div>
+      <div class="audit-item"><span class="audit-check">&#x2705;</span><div class="audit-text">Body limit 10MB (archivos de audio)</div></div>
+    </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--amber)">&#x1F4CB; NORMAS EN LISTA NEGRA</div>
+      <div class="audit-item"><span class="audit-check">&#x26D4;</span><div class="audit-text"><strong>Ley 30225</strong> — Derogada. Rige Ley 32069</div></div>
+      <div class="audit-item"><span class="audit-check">&#x26D4;</span><div class="audit-text"><strong>OSCE</strong> — Extinto. Rige OECE / TCP</div></div>
+      <div class="audit-item"><span class="audit-check">&#x26D4;</span><div class="audit-text"><strong>D.S. 004-2019-JUS</strong> — Derogado. Rige D.S. 006-2026-JUS</div></div>
+      <div class="audit-item"><span class="audit-check">&#x26D4;</span><div class="audit-text"><strong>Ley 26636</strong> — No aplicar. Rige NLPT Ley 29497 + Ley 32155</div></div>
+      <div class="audit-item"><span class="audit-check">&#x26D4;</span><div class="audit-text"><strong>Tenencia exclusiva materna</strong> — Rige Ley 31590</div></div>
+      <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06)">
+        <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--green)">&#x1F4CC; INDICADORES 2026</div>
+        <div style="font-size:13px;line-height:2">
+          UIT: <strong style="color:var(--gold-400)">S/ 5,500</strong> | URP: <strong style="color:var(--gold-400)">S/ 550</strong> | RMV: <strong style="color:var(--gold-400)">S/ 1,130</strong>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- TAB 3: AI PERFORMANCE & MULTI-TIER FALLBACK -->
-    <div id="tab-ai" class="hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <!-- Engine Card 1 -->
-        <div class="glass-card p-6 rounded-3xl space-y-4 border-t-4 border-emerald-500">
-          <div class="flex items-center justify-between">
-            <span class="text-xs uppercase font-bold text-emerald-400">Prioridad 1: Ultra Rápido</span>
-            <span class="text-xs bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded">Activo</span>
-          </div>
-          <h4 class="text-lg font-bold text-white">Groq Llama-3.3 70B & Whisper</h4>
-          <p class="text-xs text-white/60">Motor principal para latencias ultra bajas. Transcribe y responde en menos de 400 milisegundos con fluidez conversacional.</p>
-          <div class="pt-4 border-t border-white/10 space-y-2 text-xs">
-            <div class="flex justify-between">
-              <span class="text-white/40">Latencia media:</span>
-              <span class="font-mono text-emerald-400 font-bold">320 ms</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-white/40">Velocidad:</span>
-              <span class="font-mono text-white">~140 tokens/seg</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-white/40">Disponibilidad:</span>
-              <span class="font-mono text-white">99.95%</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Engine Card 2 -->
-        <div class="glass-card p-6 rounded-3xl space-y-4 border-t-4 border-gold-500">
-          <div class="flex items-center justify-between">
-            <span class="text-xs uppercase font-bold text-gold-400">Prioridad 2: Precisión Jurídica</span>
-            <span class="text-xs bg-gold-500/20 text-gold-300 px-2 py-0.5 rounded">Activo</span>
-          </div>
-          <h4 class="text-lg font-bold text-white">Google Gemini 2.5 Flash</h4>
-          <p class="text-xs text-white/60">Especialista en estructuración legal compleja, jurisprudencia peruana y transcripción multimodal de audio directo.</p>
-          <div class="pt-4 border-t border-white/10 space-y-2 text-xs">
-            <div class="flex justify-between">
-              <span class="text-white/40">Latencia media:</span>
-              <span class="font-mono text-gold-400 font-bold">680 ms</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-white/40">Ventana de Contexto:</span>
-              <span class="font-mono text-white">1,000,000 tokens</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-white/40">Materia:</span>
-              <span class="font-mono text-white">Todas las especialidades</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Engine Card 3 -->
-        <div class="glass-card p-6 rounded-3xl space-y-4 border-t-4 border-purple-500">
-          <div class="flex items-center justify-between">
-            <span class="text-xs uppercase font-bold text-purple-400">Prioridad 3: Garantía 0% Caídas</span>
-            <span class="text-xs bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded">Respaldo</span>
-          </div>
-          <h4 class="text-lg font-bold text-white">Claude 3.5 & Respaldo Local</h4>
-          <p class="text-xs text-white/60">Si un proveedor externo reporta lentitud o cuota excedida, el sistema conmuta instantáneamente sin que el usuario note ninguna interrupción.</p>
-          <div class="pt-4 border-t border-white/10 space-y-2 text-xs">
-            <div class="flex justify-between">
-              <span class="text-white/40">Tolerancia a fallos:</span>
-              <span class="font-mono text-purple-400 font-bold">100% Sin error 500</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-white/40">Conmutación:</span>
-              <span class="font-mono text-white">&lt; 50 ms automática</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-white/40">Almacenamiento:</span>
-              <span class="font-mono text-white">Memoria + Neon DB</span>
-            </div>
-          </div>
-        </div>
-
+  <!-- BUGS CORREGIDOS -->
+  <div class="section-header fade-in delay-4"><span class="icon">&#x1F527;</span> Bugs Encontrados y Corregidos (Auditoria)</div>
+  <div class="card fade-in delay-4">
+    <div class="grid-4" style="gap:12px">
+      <div style="padding:12px;background:rgba(239,68,68,0.06);border-radius:10px;border:1px solid rgba(239,68,68,0.15)">
+        <div style="font-size:12px;color:var(--red);font-weight:700;margin-bottom:6px">BUG CRITICO #1</div>
+        <div style="font-size:12px;color:#94a3b8"><strong style="color:#e2e8f0">agentRouter.ts</strong> — normalize() reemplazaba acentos con espacio en vez de eliminarlos. Rompia la derivacion con texto acentuado.</div>
+        <div style="margin-top:8px"><span class="pill pill-green">CORREGIDO</span></div>
+      </div>
+      <div style="padding:12px;background:rgba(245,158,11,0.06);border-radius:10px;border:1px solid rgba(245,158,11,0.15)">
+        <div style="font-size:12px;color:var(--amber);font-weight:700;margin-bottom:6px">BUG #2</div>
+        <div style="font-size:12px;color:#94a3b8"><strong style="color:#e2e8f0">types/index.ts</strong> — AdminAiMetrics faltaban groqCount, openaiCount, openrouterCount y keys de providers.</div>
+        <div style="margin-top:8px"><span class="pill pill-green">CORREGIDO</span></div>
+      </div>
+      <div style="padding:12px;background:rgba(245,158,11,0.06);border-radius:10px;border:1px solid rgba(245,158,11,0.15)">
+        <div style="font-size:12px;color:var(--amber);font-weight:700;margin-bottom:6px">BUG #3</div>
+        <div style="font-size:12px;color:#94a3b8"><strong style="color:#e2e8f0">types/index.ts</strong> — Provider union type solo incluia 'gemini' | 'anthropic', faltaban 4 providers.</div>
+        <div style="margin-top:8px"><span class="pill pill-green">CORREGIDO</span></div>
+      </div>
+      <div style="padding:12px;background:rgba(245,158,11,0.06);border-radius:10px;border:1px solid rgba(245,158,11,0.15)">
+        <div style="font-size:12px;color:var(--amber);font-weight:700;margin-bottom:6px">BUG #4</div>
+        <div style="font-size:12px;color:#94a3b8"><strong style="color:#e2e8f0">metrics.ts</strong> — openaiCount no se calculaba ni se retornaba en getStats(). Provider P2 sin metricas.</div>
+        <div style="margin-top:8px"><span class="pill pill-green">CORREGIDO</span></div>
       </div>
     </div>
+  </div>
 
-    <!-- TAB 4: ARCHITECTURE & HIGH AVAILABILITY -->
-    <div id="tab-architecture" class="hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Architecture overview -->
-        <div class="lg:col-span-2 glass-card p-6 rounded-3xl space-y-4">
-          <h3 class="text-base font-bold text-white flex items-center gap-2">
-            <span>🏛️ Arquitectura de Producción Preparada para Alta Escala</span>
-          </h3>
-          <p class="text-xs text-white/60 leading-relaxed">
-            La plataforma utiliza una arquitectura desacoplada y sin estado (stateless) que permite escalar vertical y horizontalmente sin puntos únicos de fallo.
-          </p>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2">
-              <div class="flex items-center gap-2 text-emerald-400 text-xs font-bold">
-                <span>⚡</span> Backend Node.js / Express
-              </div>
-              <p class="text-xs text-white/60 leading-normal">
-                Servidor optimizado en Render con control de memoria (RSS &lt; 280MB), compresión gzip, streaming SSE y manejo de señales SIGTERM/SIGINT para cero caídas.
-              </p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2">
-              <div class="flex items-center gap-2 text-blue-400 text-xs font-bold">
-                <span>🐘</span> Neon Serverless PostgreSQL
-              </div>
-              <p class="text-xs text-white/60 leading-normal">
-                Pool de conexiones HTTP elástico. Soporta más de 10,000 conexiones concurrentes sin saturar hilos tradicionales ni bloquear el event loop.
-              </p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2">
-              <div class="flex items-center gap-2 text-gold-400 text-xs font-bold">
-                <span>🔒</span> Seguridad Jurídica y Normas ISO
-              </div>
-              <p class="text-xs text-white/60 leading-normal">
-                Cumplimiento estricto de <strong>ISO/IEC 27001</strong> (Seguridad de la Información), <strong>ISO/IEC 25010</strong> (Eficiencia & Calidad) y <strong>ISO/IEC 27701</strong> (Privacidad y Secreto Profesional).
-              </p>
-            </div>
-
-            <div class="p-4 rounded-2xl bg-white/[0.03] border border-white/5 space-y-2">
-              <div class="flex items-center gap-2 text-purple-400 text-xs font-bold">
-                <span>⚖️</span> Prompts Legales de Clase Mundial
-              </div>
-              <p class="text-xs text-white/60 leading-normal">
-                8 Despachos con rigor de socio senior: diagnóstico táctico, fundamentación casatoria peruana, cálculo exacto de plazos y redacción formal de escritos.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Health Checklist -->
-        <div class="glass-card p-6 rounded-3xl space-y-4">
-          <h4 class="text-sm font-bold text-white flex items-center gap-2">
-            <span>✅ Checklist de Entrega Oficial</span>
-          </h4>
-          <div class="space-y-3 text-xs">
-            <div class="flex items-start gap-2.5">
-              <span class="text-emerald-400 mt-0.5">✓</span>
-              <div>
-                <p class="text-white font-medium">Prioridad de IA de Alta Velocidad (&lt;400ms)</p>
-                <p class="text-[11px] text-white/40">Groq LPUs + Gemini 2.5 Flash directo</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <span class="text-emerald-400 mt-0.5">✓</span>
-              <div>
-                <p class="text-white font-medium">Dictado por Voz en Tiempo Real</p>
-                <p class="text-[11px] text-white/40">Sin retraso, escritura directa y fallback</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <span class="text-emerald-400 mt-0.5">✓</span>
-              <div>
-                <p class="text-white font-medium">Síntesis de Voz Asistente (TTS)</p>
-                <p class="text-[11px] text-white/40">Voz neural masculina y femenina peruana</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <span class="text-emerald-400 mt-0.5">✓</span>
-              <div>
-                <p class="text-white font-medium">Generación de Minutas y Demandas</p>
-                <p class="text-[11px] text-white/40">Descarga directa en .docx y vista previa A4</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <span class="text-emerald-400 mt-0.5">✓</span>
-              <div>
-                <p class="text-white font-medium">Normas ISO/IEC 27001, 25010, 27701</p>
-                <p class="text-[11px] text-white/40">Headers de seguridad y confidencialidad</p>
-              </div>
-            </div>
-            <div class="flex items-start gap-2.5">
-              <span class="text-emerald-400 mt-0.5">✓</span>
-              <div>
-                <p class="text-white font-medium">Base de Datos PostgreSQL Inicializada</p>
-                <p class="text-[11px] text-white/40">Esquema y 5 tablas con índices B-Tree</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="pt-4 border-t border-white/10">
-            <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-xs text-center font-bold">
-              🚀 SISTEMA LISTO PARA ENTREGA Y PRODUCCIÓN
-            </div>
-          </div>
-        </div>
-
-      </div>
+  <!-- CHARTS -->
+  <div class="section-header fade-in delay-4"><span class="icon">&#x1F4C8;</span> Visualizacion de Datos</div>
+  <div class="grid-2 fade-in delay-4">
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--gold-400)">Distribucion de Keywords por Agente</div>
+      <div class="chart-container"><canvas id="keywordsChart"></canvas></div>
     </div>
+    <div class="card">
+      <div style="font-size:14px;font-weight:700;margin-bottom:12px;color:var(--gold-400)">Precedentes y Reformas por Especialista</div>
+      <div class="chart-container"><canvas id="spijChart"></canvas></div>
+    </div>
+  </div>
 
-  </main>
+  <div style="text-align:center;margin-top:48px;padding:24px 0;border-top:1px solid rgba(201,168,76,0.1);font-size:12px;color:#475569">
+    HARDMAN — Plataforma de IA Legal Peruana | Dashboard generado el <span id="footer-date"></span> | Auditoria por Antigravity AI
+  </div>
 
-  <!-- Footer -->
-  <footer class="border-t border-white/10 p-6 text-center text-xs text-white/40 mt-12">
-    <p>Bufete Fiscalia IA © 2026 — Plataforma de Inteligencia Artificial Jurídica para el Perú.</p>
-    <p class="text-[11px] text-white/25 mt-1">Auditoría Técnica y Operacional para Concurrencia de 10,000 Usuarios.</p>
-  </footer>
+</div>
 
-  <!-- Scripts for Tabs & Chart.js -->
-  <script>
-    // Tab switching
-    function switchTab(tabId) {
-      ['stress', 'audit', 'ai', 'architecture'].forEach(t => {
-        const el = document.getElementById('tab-' + t);
-        const btn = document.getElementById('btn-' + t);
-        if (t === tabId) {
-          el.classList.remove('hidden');
-          btn.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-gold-500 text-dark-900 transition";
-        } else {
-          el.classList.add('hidden');
-          btn.className = "px-4 py-2 rounded-xl text-xs font-semibold bg-white/5 hover:bg-white/10 text-white/70 hover:text-white transition";
-        }
-      });
+<script>
+var now = new Date();
+document.getElementById('timestamp').textContent = now.toLocaleString('es-PE', { dateStyle: 'full', timeStyle: 'short' });
+document.getElementById('footer-date').textContent = now.toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' });
+
+var agents = [
+  { id: 'valentina', name: 'Valentina', role: 'Derecho Laboral', color: '#6366F1', badge: 'LABORAL', keywords: 20 },
+  { id: 'sebastian', name: 'Sebastian', role: 'Derecho Penal', color: '#EF4444', badge: 'PENAL', keywords: 30 },
+  { id: 'diego', name: 'Diego', role: 'Derecho Civil', color: '#06B6D4', badge: 'CIVIL', keywords: 21 },
+  { id: 'adriana', name: 'Adriana', role: 'Derecho Corporativo', color: '#8B5CF6', badge: 'CORPORATIVO', keywords: 21 },
+  { id: 'rodrigo', name: 'Rodrigo', role: 'Derecho Minero', color: '#F59E0B', badge: 'MINERO', keywords: 17 },
+  { id: 'camila', name: 'Camila', role: 'Derecho de Familia', color: '#EC4899', badge: 'FAMILIA', keywords: 22 },
+  { id: 'fernanda', name: 'Fernanda', role: 'Derecho Tributario', color: '#10B981', badge: 'TRIBUTARIO', keywords: 22 },
+  { id: 'marco', name: 'Marco', role: 'Derecho Administrativo', color: '#0D9488', badge: 'ADMINISTRATIVO', keywords: 22 },
+];
+
+var agentsGrid = document.getElementById('agents-grid');
+agents.forEach(function(a) {
+  var div = document.createElement('div');
+  div.className = 'card card-sm agent-card';
+  div.innerHTML = '<div class="agent-dot" style="background:' + a.color + '"></div>' +
+    '<div><div class="agent-name">' + a.name + '</div>' +
+    '<div class="agent-role">' + a.role + ' | ' + a.keywords + ' kw</div></div>' +
+    '<div class="agent-badge" style="background:' + a.color + '20;color:' + a.color + '">' + a.badge + '</div>';
+  agentsGrid.appendChild(div);
+});
+
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+Chart.defaults.font.size = 11;
+
+new Chart(document.getElementById('keywordsChart'), {
+  type: 'bar',
+  data: {
+    labels: agents.map(function(a) { return a.name; }),
+    datasets: [{
+      label: 'Keywords de Derivacion',
+      data: agents.map(function(a) { return a.keywords; }),
+      backgroundColor: agents.map(function(a) { return a.color + '88'; }),
+      borderColor: agents.map(function(a) { return a.color; }),
+      borderWidth: 1,
+      borderRadius: 6,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { stepSize: 5 } },
+      x: { grid: { display: false } }
     }
+  }
+});
 
-    // Interactive Slider updates
-    function updateSimulation(val) {
-      const dau = parseInt(val, 10);
-      document.getElementById('sliderVal').textContent = dau.toLocaleString() + ' DAU';
-      document.getElementById('statDau').textContent = dau.toLocaleString();
-
-      const totalReqs = Math.round(dau * 14);
-      document.getElementById('simTotalReqs').textContent = totalReqs.toLocaleString() + ' reqs';
-
-      const qps = (totalReqs / (12 * 3600) * 2.5).toFixed(1);
-      document.getElementById('simQps').textContent = qps + ' QPS';
-
-      const usdCost = (dau * 0.01685).toFixed(2);
-      const penCost = (usdCost * 3.70).toFixed(2);
-      document.getElementById('simCost').textContent = '$ ' + usdCost + ' USD';
-
-      const payingUsers = Math.round(dau * 0.038);
-      const mrr = payingUsers * 59;
-      document.getElementById('statMrr').textContent = 'S/ ' + mrr.toLocaleString();
-
-      const margin = (100 - (penCost / mrr * 100)).toFixed(1);
-      document.getElementById('simMargin').textContent = (margin > 0 ? margin : '94.5') + '%';
-
-      updateTrafficChart(dau);
+new Chart(document.getElementById('spijChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Sebastian', 'Valentina', 'Diego', 'Camila', 'Marco', 'Fernanda', 'Adriana', 'Rodrigo'],
+    datasets: [
+      {
+        label: 'Precedentes Vinculantes',
+        data: [6, 2, 2, 1, 1, 1, 0, 0],
+        backgroundColor: 'rgba(201,168,76,0.6)',
+        borderColor: '#c9a84c',
+        borderWidth: 1,
+        borderRadius: 6,
+      },
+      {
+        label: 'Reformas Normativas',
+        data: [4, 2, 2, 2, 2, 1, 1, 1],
+        backgroundColor: 'rgba(99,102,241,0.6)',
+        borderColor: '#6366f1',
+        borderWidth: 1,
+        borderRadius: 6,
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { boxWidth: 12, padding: 16 } } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { stepSize: 1 } },
+      x: { grid: { display: false } }
     }
-
-    // Copy audit summary
-    function copyAuditSummary() {
-      const text = `════════════════════════════════════════════════════════
-BUFETE FISCALIA IA — REPORTE DE AUDITORÍA Y ESCALA (10,000 DAU)
-════════════════════════════════════════════════════════
-• Estado General: PRODUCCIÓN VERIFICADA Y LISTA PARA ENTREGA
-• Capacidad de Concurrencia: 10,000 Usuarios Diarios (1,250 pico)
-• Latencia Promedio de IA: 420 ms (Groq Whisper + Gemini 2.5)
-• Disponibilidad (Uptime SLA): 99.98%
-• Fallback de Emergencia: Activo (0% de errores 500)
-• Base de Datos: Neon PostgreSQL Serverless (18 ms de latencia)
-• Módulos Verificados: 8 Especialistas, Dictado en Tiempo Real, Llamada Telefónica en Vivo, Generador Word (.docx), Calculadoras Laborales y Penales, Escáner OCR y Panel Admin.
-• MRR Proyectado: S/ 22,420 / mes con margen de utilidad > 94%
-════════════════════════════════════════════════════════`;
-      navigator.clipboard.writeText(text);
-      alert('¡Resumen ejecutivo copiado al portapapeles!');
-    }
-
-    // Chart.js initialization
-    let trafficChartInstance;
-    function initCharts() {
-      // 1. Traffic Chart
-      const ctxTraffic = document.getElementById('trafficChart').getContext('2d');
-      const hours = ['00:00','02:00','04:00','06:00','08:00','10:00','12:00','14:00','16:00','18:00','20:00','22:00'];
-      const baseValues = [80, 45, 30, 150, 620, 1250, 1180, 1220, 1050, 780, 520, 240];
-
-      trafficChartInstance = new Chart(ctxTraffic, {
-        type: 'line',
-        data: {
-          labels: hours,
-          datasets: [{
-            label: 'Usuarios Concurrentes',
-            data: baseValues,
-            borderColor: '#c9a84c',
-            backgroundColor: 'rgba(201, 168, 76, 0.12)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2,
-            pointBackgroundColor: '#c9a84c',
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } } }
-          }
-        }
-      });
-
-      // 2. Latency Chart
-      const ctxLatency = document.getElementById('latencyChart').getContext('2d');
-      new Chart(ctxLatency, {
-        type: 'bar',
-        data: {
-          labels: ['Groq Llama 3.3', 'Groq Whisper STT', 'Gemini 2.5 Flash', 'Edge Neural TTS', 'Neon DB Query', 'Generador DOCX'],
-          datasets: [{
-            label: 'Latencia (ms)',
-            data: [320, 240, 680, 390, 18, 45],
-            backgroundColor: [
-              'rgba(16, 185, 129, 0.8)',
-              'rgba(16, 185, 129, 0.8)',
-              'rgba(201, 168, 76, 0.8)',
-              'rgba(59, 130, 246, 0.8)',
-              'rgba(139, 92, 246, 0.8)',
-              'rgba(236, 72, 153, 0.8)'
-            ],
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 10 } } },
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', font: { size: 10 } } }
-          }
-        }
-      });
-    }
-
-    function updateTrafficChart(dau) {
-      if (!trafficChartInstance) return;
-      const factor = dau / 10000;
-      const baseValues = [80, 45, 30, 150, 620, 1250, 1180, 1220, 1050, 780, 520, 240];
-      trafficChartInstance.data.datasets[0].data = baseValues.map(v => Math.round(v * factor));
-      trafficChartInstance.update();
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-      initCharts();
-      // Live clock
-      setInterval(() => {
-        const d = new Date();
-        document.getElementById('liveClock').textContent = d.toLocaleDateString('es-PE') + ' ' + d.toLocaleTimeString('es-PE');
-      }, 1000);
-    });
-  </script>
+  }
+});
+</script>
 </body>
 </html>

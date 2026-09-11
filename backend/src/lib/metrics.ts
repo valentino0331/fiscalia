@@ -69,6 +69,7 @@ class MetricsManager {
     const anthropicCount = this.aiMetrics.filter((m) => m.provider === 'anthropic').length;
     const openrouterCount = this.aiMetrics.filter((m) => m.provider === 'openrouter').length;
     const groqCount = this.aiMetrics.filter((m) => m.provider === 'groq').length;
+    const openaiCount = this.aiMetrics.filter((m) => m.provider === 'openai').length;
 
     return {
       uptimeSeconds: Math.floor((Date.now() - this.startTime) / 1000),
@@ -85,6 +86,7 @@ class MetricsManager {
         anthropicCount,
         openrouterCount,
         groqCount,
+        openaiCount,
       },
       recentErrors: this.errorLogs.slice(0, 20),
       recentAiCalls: this.aiMetrics.slice(0, 15),

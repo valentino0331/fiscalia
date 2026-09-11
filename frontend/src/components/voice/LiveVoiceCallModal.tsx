@@ -47,6 +47,12 @@ export default function LiveVoiceCallModal({
   const currentAudioUrlRef = useRef<string | null>(null)
   const conversationHistoryRef = useRef<{ role: 'user' | 'assistant'; content: string }[]>([])
   const isComponentMounted = useRef(true)
+  const currentConvIdRef = useRef<string | null>(conversationId || null)
+
+  // Sync currentConvIdRef when conversationId or isOpen changes
+  useEffect(() => {
+    currentConvIdRef.current = conversationId || null
+  }, [conversationId, isOpen])
 
   // Initialize Speech Recognition
   useEffect(() => {
@@ -249,8 +255,12 @@ export default function LiveVoiceCallModal({
       const res = await api.chat.send({
         agentId: agent.id,
         messages: messagesPayload,
-        conversationId: conversationId || undefined,
+        conversationId: currentConvIdRef.current || undefined,
       })
+
+      if (res?.conversationId && !currentConvIdRef.current) {
+        currentConvIdRef.current = res.conversationId
+      }
 
       const assistantReply = typeof res.message === 'string' ? res.message : (res.message as any)?.content || 'Comprendo la situación fáctica planteada. Permítame exponerle el análisis de fondo y la vía procesal correspondiente.'
       conversationHistoryRef.current.push({ role: 'assistant', content: assistantReply })

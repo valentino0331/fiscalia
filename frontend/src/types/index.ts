@@ -105,6 +105,9 @@ export interface AdminAiMetrics {
   deepseekCount?: number
   geminiCount: number
   anthropicCount: number
+  groqCount?: number
+  openaiCount?: number
+  openrouterCount?: number
   trialUsers: number
   paidUsers: number
   freeLimit: number
@@ -113,6 +116,8 @@ export interface AdminAiMetrics {
   hasDeepseekKey?: boolean
   hasGeminiKey: boolean
   hasAnthropicKey: boolean
+  hasGroqKey?: boolean
+  hasOpenrouterKey?: boolean
   hasElevenLabsKey: boolean
 }
 
@@ -173,7 +178,7 @@ export interface AdminStats {
     id: string
     timestamp: string
     agentId: string
-    provider: 'gemini' | 'anthropic'
+    provider: 'gemini' | 'anthropic' | 'groq' | 'openai' | 'deepseek' | 'openrouter'
     model: string
     success: boolean
     durationMs: number

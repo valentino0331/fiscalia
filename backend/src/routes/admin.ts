@@ -3,7 +3,7 @@ import { sql, eq, desc } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
-import { users, subscriptions, conversations } from '../db/schema';
+import { users, subscriptions, conversations, questionUsageLogs } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { metrics } from '../lib/metrics';
 
@@ -107,6 +107,7 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
       hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
       hasOpenrouterKey: Boolean(process.env.OPENROUTER_API_KEY),
       hasGroqKey: Boolean(process.env.GROQ_API_KEY),
+      hasOpenaiKey: Boolean(process.env.OPENAI_API_KEY),
       hasElevenLabsKey: Boolean(process.env.ELEVENLABS_API_KEY),
     };
 
@@ -184,71 +185,86 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (_, res) => {
     });
 
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
 
-    const userList = await Promise.all(
-      allUsers.map(async (u) => {
-        const sub = await db.query.subscriptions.findFirst({
-          where: eq(subscriptions.userId, u.id),
-          orderBy: [desc(subscriptions.createdAt)],
-        });
+    // Obtener en lote todas las suscripciones, conteos de conversaciones y uso del mes en 3 consultas paralelas
+    const [allSubs, convCounts, usageCounts] = await Promise.all([
+      db.query.subscriptions.findMany({
+        orderBy: [desc(subscriptions.createdAt)],
+      }),
+      db
+        .select({
+          userId: conversations.userId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(conversations)
+        .groupBy(conversations.userId),
+      db
+        .select({
+          userId: questionUsageLogs.userId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(questionUsageLogs)
+        .where(eq(questionUsageLogs.monthKey, monthKey))
+        .groupBy(questionUsageLogs.userId),
+    ]);
 
-        // Contar consultas enviadas este mes
-        const userConvs = await db.query.conversations.findMany({
-          where: eq(conversations.userId, u.id),
-        });
+    const subMap = new Map<string, (typeof allSubs)[0]>();
+    for (const s of allSubs) {
+      if (!subMap.has(s.userId)) {
+        subMap.set(s.userId, s);
+      }
+    }
 
-        let questionsThisMonth = 0;
-        for (const conv of userConvs) {
-          if (Array.isArray(conv.messages)) {
-            for (const m of conv.messages as any[]) {
-              if (m.role === 'user') {
-                const msgDate = m.timestamp ? new Date(m.timestamp) : null;
-                if (msgDate) {
-                  if (msgDate >= startOfMonth) questionsThisMonth++;
-                } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
-                  questionsThisMonth++;
-                }
-              }
+    const convCountMap = new Map<string, number>();
+    for (const c of convCounts) {
+      convCountMap.set(c.userId, Number(c.count) || 0);
+    }
+
+    const usageCountMap = new Map<string, number>();
+    for (const u of usageCounts) {
+      usageCountMap.set(u.userId, Number(u.count) || 0);
+    }
+
+    const userList = allUsers.map((u) => {
+      const sub = subMap.get(u.id) || null;
+      const questionsThisMonth = usageCountMap.get(u.id) || 0;
+      const convCount = convCountMap.get(u.id) || 0;
+
+      const currentPeriodEnd = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null;
+      const isExpired = currentPeriodEnd ? currentPeriodEnd < now : false;
+      const daysRemaining = currentPeriodEnd
+        ? Math.max(0, Math.ceil((currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+        : 0;
+
+      const effectivePlan = sub ? sub.plan : (u.isAdmin ? 'pro' : 'normal');
+      const effectiveStatus = sub ? sub.status : (u.isAdmin ? 'active' : 'inactive');
+      const expiresAtIso = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toISOString() : null;
+
+      return {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        isAdmin: u.isAdmin,
+        createdAt: u.createdAt,
+        conversationsCount: convCount,
+        questionsThisMonth,
+        plan: effectivePlan,
+        status: effectiveStatus,
+        expiresAt: expiresAtIso,
+        daysRemaining: sub ? daysRemaining : (u.isAdmin ? 999 : null),
+        subscription: sub
+          ? {
+              id: sub.id,
+              status: sub.status,
+              plan: sub.plan, // 'pro' | 'normal' | 'junior'
+              currentPeriodEnd: sub.currentPeriodEnd,
+              isExpired,
+              daysRemaining,
             }
-          }
-        }
-
-        const currentPeriodEnd = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd) : null;
-        const isExpired = currentPeriodEnd ? currentPeriodEnd < now : false;
-        const daysRemaining = currentPeriodEnd
-          ? Math.max(0, Math.ceil((currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
-          : 0;
-
-        const effectivePlan = sub ? sub.plan : (u.isAdmin ? 'pro' : 'normal');
-        const effectiveStatus = sub ? sub.status : (u.isAdmin ? 'active' : 'inactive');
-        const expiresAtIso = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toISOString() : null;
-
-        return {
-          id: u.id,
-          email: u.email,
-          name: u.name,
-          isAdmin: u.isAdmin,
-          createdAt: u.createdAt,
-          conversationsCount: userConvs.length,
-          questionsThisMonth,
-          plan: effectivePlan,
-          status: effectiveStatus,
-          expiresAt: expiresAtIso,
-          daysRemaining: sub ? daysRemaining : (u.isAdmin ? 999 : null),
-          subscription: sub
-            ? {
-                id: sub.id,
-                status: sub.status,
-                plan: sub.plan, // 'pro' | 'normal' | 'junior'
-                currentPeriodEnd: sub.currentPeriodEnd,
-                isExpired,
-                daysRemaining,
-              }
-            : null,
-        };
-      })
-    );
+          : null,
+      };
+    });
 
     res.json({ users: userList });
   } catch (error: any) {

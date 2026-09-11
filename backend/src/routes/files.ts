@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
 
-const MAX_SIZE_MB = 50;
+const MAX_SIZE_MB = 25;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -64,8 +64,7 @@ filesRouter.post(
       const rawCandidates = [
         process.env.GEMINI_MODEL,
         'gemini-2.5-flash',
-        'gemini-3.6-flash',
-        'gemini-2.0-flash-exp',
+        'gemini-2.0-flash',
         'gemini-1.5-flash-latest',
         'gemini-1.5-pro-latest',
       ].filter(Boolean) as string[];
@@ -118,9 +117,7 @@ filesRouter.post(
         }
       } else if (
         mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        mime === 'application/msword' ||
-        file.originalname.toLowerCase().endsWith('.docx') ||
-        file.originalname.toLowerCase().endsWith('.doc')
+        file.originalname.toLowerCase().endsWith('.docx')
       ) {
         const mammoth = await import('mammoth');
         const result = await mammoth.extractRawText({ buffer: file.buffer });
@@ -128,6 +125,13 @@ filesRouter.post(
         if (extractedText.length > 80000) {
           extractedText = extractedText.slice(0, 80000) + '\n\n[Documento muy extenso — texto truncado]';
         }
+      } else if (
+        mime === 'application/msword' ||
+        file.originalname.toLowerCase().endsWith('.doc')
+      ) {
+        return res.status(400).json({
+          error: 'El formato de archivo Word 97-2003 (.doc) no es compatible directamente. Por favor guárdalo o conviértelo a formato moderno (.docx) o PDF para que nuestros especialistas legales puedan procesarlo.',
+        });
       } else if (mime.startsWith('image/')) {
         if (!geminiKey) {
           return res.status(500).json({ error: 'Se requiere GEMINI_API_KEY para analizar imágenes.' });

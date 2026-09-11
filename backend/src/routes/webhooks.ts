@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import { subscriptions, users } from '../db/schema';
@@ -11,7 +12,16 @@ webhooksRouter.post('/hotmart', async (req, res) => {
   try {
     const { event, data } = req.body;
     const hottok = req.headers['x-hotmart-hottok'];
-    if (hottok !== process.env.HOTMART_SECRET) {
+    const secret = process.env.HOTMART_SECRET;
+
+    if (!secret || typeof hottok !== 'string') {
+      return res.status(401).json({ error: 'Webhook no autorizado o no configurado' });
+    }
+
+    const trusted = Buffer.from(secret);
+    const untrusted = Buffer.from(hottok);
+
+    if (trusted.length !== untrusted.length || !crypto.timingSafeEqual(trusted, untrusted)) {
       return res.status(401).json({ error: 'Token inválido' });
     }
 

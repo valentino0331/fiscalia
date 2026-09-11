@@ -24,31 +24,7 @@ authRouter.post('/register', async (req, res) => {
     const exists = await db.query.users.findFirst({ where: eq(users.email, normalizedEmail) });
 
     if (exists) {
-      const sub = await db.query.subscriptions.findFirst({
-        where: eq(subscriptions.userId, exists.id),
-      });
-      if (sub?.hotmartTransaction) {
-        const passwordHash = await bcrypt.hash(password, 12);
-        await db
-          .update(users)
-          .set({ passwordHash, name: name || exists.name })
-          .where(eq(users.id, exists.id));
-        const token = jwt.sign(
-          { userId: exists.id, isAdmin: exists.isAdmin },
-          jwtSecret,
-          { expiresIn: jwtExpiresIn }
-        );
-        return res.json({
-          token,
-          user: {
-            id: exists.id,
-            email: exists.email,
-            name: name || exists.name,
-            isAdmin: exists.isAdmin,
-          },
-        });
-      }
-      return res.status(409).json({ error: 'El email ya está registrado' });
+      return res.status(409).json({ error: 'El email ya está registrado. Por favor inicie sesión o recupere su contraseña.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -93,5 +69,63 @@ authRouter.post('/login', async (req, res) => {
     res.json({ token, user: { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin } });
   } catch {
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+authRouter.post('/demo-login', async (_req, res) => {
+  try {
+    const demoEmail = 'ciudadano@ejemplo.pe';
+    let user = await db.query.users.findFirst({ where: eq(users.email, demoEmail) });
+
+    if (!user) {
+      const demoId = uuidv4();
+      const defaultHash = await bcrypt.hash('Demo12345!', 10);
+      await db.insert(users).values({
+        id: demoId,
+        email: demoEmail,
+        passwordHash: defaultHash,
+        name: 'Carlos Mendoza',
+        isAdmin: false,
+      });
+
+      const periodEnd = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+      await db.insert(subscriptions).values({
+        id: uuidv4(),
+        userId: demoId,
+        status: 'active',
+        plan: 'pro',
+        currentPeriodEnd: periodEnd,
+      });
+
+      user = {
+        id: demoId,
+        email: demoEmail,
+        passwordHash: defaultHash,
+        name: 'Carlos Mendoza',
+        isAdmin: false,
+        createdAt: new Date(),
+      };
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, isAdmin: user.isAdmin },
+      jwtSecret,
+      { expiresIn: jwtExpiresIn }
+    );
+
+    return res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: 'user',
+        dni: '45678912',
+        isAdmin: user.isAdmin,
+      },
+    });
+  } catch (err) {
+    console.error('[Auth] Error en /demo-login:', err);
+    res.status(500).json({ error: 'Error interno al iniciar sesión de demostración' });
   }
 });

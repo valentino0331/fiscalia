@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { db } from '../db';
-import { subscriptions, conversations } from '../db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { subscriptions, conversations, questionUsageLogs } from '../db/schema';
+import { eq, and, gt, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthRequest } from './auth';
 
@@ -17,8 +17,24 @@ interface CachedUsage {
   expiresAt: number;
 }
 
+const MAX_CACHE_SIZE = 500;
 const subCache = new Map<string, CachedSubscription>();
 const usageCache = new Map<string, CachedUsage>();
+
+function pruneCache<T extends { expiresAt: number }>(cache: Map<string, T>) {
+  const now = Date.now();
+  for (const [key, val] of cache.entries()) {
+    if (val.expiresAt <= now) {
+      cache.delete(key);
+    }
+  }
+  if (cache.size > MAX_CACHE_SIZE) {
+    const keysToDelete = Array.from(cache.keys()).slice(0, cache.size - MAX_CACHE_SIZE);
+    for (const k of keysToDelete) {
+      cache.delete(k);
+    }
+  }
+}
 
 export function invalidateUserSubscriptionCache(userId: string) {
   subCache.delete(userId);
@@ -30,6 +46,21 @@ export function incrementUserUsageCache(userId: string) {
   if (cached) {
     cached.count += 1;
   }
+}
+
+export async function recordQuestionUsage(userId: string) {
+  const nowDate = new Date();
+  const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
+  try {
+    await db.insert(questionUsageLogs).values({
+      id: uuidv4(),
+      userId,
+      monthKey,
+    });
+  } catch (err) {
+    console.error('[Usage] Error grabando log inmutable de pregunta:', err);
+  }
+  incrementUserUsageCache(userId);
 }
 
 export const requireSubscription = async (
@@ -93,6 +124,7 @@ export const requireSubscription = async (
     }
 
     plan = sub?.plan || 'junior';
+    pruneCache(subCache);
     subCache.set(userId, {
       plan,
       status: sub?.status || 'active',
@@ -118,27 +150,46 @@ export const requireSubscription = async (
     if (cachedUsage && cachedUsage.monthKey === monthKey && cachedUsage.expiresAt > nowMs) {
       monthlyQuestions = cachedUsage.count;
     } else {
-      const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
-      const userConversations = await db.query.conversations.findMany({
-        where: eq(conversations.userId, userId),
-      });
+      // 1. Consultar conteo desde la tabla de logs inmutables (O(1) en RAM)
+      const logCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(questionUsageLogs)
+        .where(
+          and(
+            eq(questionUsageLogs.userId, userId),
+            eq(questionUsageLogs.monthKey, monthKey)
+          )
+        );
 
-      monthlyQuestions = 0;
-      for (const conv of userConversations) {
-        if (Array.isArray(conv.messages)) {
-          for (const m of conv.messages as any[]) {
-            if (m.role === 'user') {
-              const msgDate = m.timestamp ? new Date(m.timestamp) : null;
-              if (msgDate) {
-                if (msgDate >= startOfMonth) monthlyQuestions++;
-              } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
-                monthlyQuestions++;
+      let loggedCount = Number(logCountResult[0]?.count || 0);
+
+      if (loggedCount > 0) {
+        monthlyQuestions = loggedCount;
+      } else {
+        // Fallback: conteo histórico de conversaciones si aún no hay logs registrados para este mes
+        const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+        const userConversations = await db.query.conversations.findMany({
+          where: eq(conversations.userId, userId),
+        });
+
+        monthlyQuestions = 0;
+        for (const conv of userConversations) {
+          if (Array.isArray(conv.messages)) {
+            for (const m of conv.messages as any[]) {
+              if (m.role === 'user') {
+                const msgDate = m.timestamp ? new Date(m.timestamp) : null;
+                if (msgDate) {
+                  if (msgDate >= startOfMonth) monthlyQuestions++;
+                } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
+                  monthlyQuestions++;
+                }
               }
             }
           }
         }
       }
 
+      pruneCache(usageCache);
       usageCache.set(userId, {
         count: monthlyQuestions,
         monthKey,
