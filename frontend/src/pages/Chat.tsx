@@ -30,49 +30,6 @@ import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 import SpijModal from '@/components/legal/SpijModal'
 
-const AGENT_THINKING_STEPS: Record<string, [string, string, string]> = {
-  sebastian: [
-    'Analizando tipo penal, elementos de convicción y presupuestos (DL 1585)',
-    'Revisando Código Penal, NCPP, Acuerdos Plenarios y Casaciones penales',
-    'Estructurando estrategia de defensa técnica y plazos procesales',
-  ],
-  valentina: [
-    'Verificando modalidad contractual y cómputo de plazos (30 días hábiles)',
-    'Revisando LPCL (DL 728), criterios SUNAFIL y competencias JPLL (Ley 32155)',
-    'Liquidando beneficios sociales y fundamentando petitorio laboral',
-  ],
-  diego: [
-    'Analizando relación contractual, cláusulas patrimoniales o derechos reales',
-    'Evaluando Código Civil, Ley 30933 de Desalojo Notarial y Plenos Casatorios',
-    'Estructurando requerimiento formal y vías de tutela ejecutiva',
-  ],
-  adriana: [
-    'Evaluando estructura societaria, pactos de socios y riesgos de contingencia',
-    'Revisando Ley General de Sociedades, modelo de prevención (Ley 30424) y M&A',
-    'Redactando cláusulas de protección patrimonial y gobierno corporativo',
-  ],
-  rodrigo: [
-    'Verificando estado de derechos mineros, TUPA INGEMMET 2026 y REINFO',
-    'Analizando fiscalización ambiental OEFA y planes de manejo',
-    'Estructurando petitorio minero y descargo técnico-sancionador',
-  ],
-  camila: [
-    'Evaluando pretensiones de alimentos, tenencia y régimen de visitas',
-    'Revisando Ley 31590 (Tenencia compartida obligatoria) y Código de los Niños',
-    'Estructurando demanda con asignación anticipada y medidas de protección',
-  ],
-  fernanda: [
-    'Verificando plazos perentorios de notificación y gradualidad de multas',
-    'Analizando Código Tributario, Ley 32430 y Resoluciones del Tribunal Fiscal (RTF)',
-    'Fundamentando recurso de reclamación / apelación y contingencia fiscal',
-  ],
-  marco: [
-    'Analizando tipicidad del acto administrativo y plazos fatales (15 días)',
-    'Revisando Ley 32069 (OECE/TCP) y TUO Ley 27444 (DS 006-2026-JUS)',
-    'Estructurando recurso de apelación / nulidad y agotamiento de vía administrativa',
-  ],
-}
-
 interface PromptModeItem {
   id: string
   label: string
