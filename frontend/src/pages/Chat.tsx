@@ -27,6 +27,7 @@ import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
+import SpijModal from '@/components/legal/SpijModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 
 interface PromptModeItem {
@@ -761,6 +762,7 @@ export default function Chat() {
   })
   const [whereToGoOpen, setWhereToGoOpen] = useState(false)
   const [liveCallOpen, setLiveCallOpen] = useState(false)
+  const [spijModalOpen, setSpijModalOpen] = useState(false)
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
 
   const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
@@ -1669,6 +1671,21 @@ export default function Chat() {
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
+          <button
+            onClick={() => setSpijModalOpen(true)}
+            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+            style={{
+              background: 'rgba(201,168,76,0.12)',
+              border: '1px solid rgba(201,168,76,0.30)',
+              color: '#c9a84c',
+            }}
+            title="Base Legal SPIJ (MINJUSDH) y Acuerdos Plenarios Vinculantes de la Corte Suprema"
+          >
+            <Scale size={13} className="text-[#c9a84c]" />
+            <span className="hidden sm:inline font-semibold">SPIJ & Plenos</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
+          </button>
+
           <a
             href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
             target="_blank"
@@ -2224,6 +2241,21 @@ export default function Chat() {
                       <span className="hidden sm:inline">IMAGEN</span>
                     </button>
 
+                    {/* SPIJ & Acuerdos Plenarios quick button */}
+                    <button
+                      type="button"
+                      onClick={() => setSpijModalOpen(true)}
+                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-2 py-1 rounded-md"
+                      style={{
+                        color: spijModalOpen ? '#c9a84c' : 'rgba(201,168,76,0.85)',
+                        background: spijModalOpen ? 'rgba(201,168,76,0.12)' : 'transparent',
+                      }}
+                      title="Consultar o insertar Acuerdos Plenarios de la Corte Suprema y Leyes SPIJ"
+                    >
+                      <Scale size={12} className="text-[#c9a84c]" />
+                      <span className="font-medium">SPIJ / PLENOS</span>
+                    </button>
+
                     {/* Specialist Document Templates (Desktop & Mobile) */}
                     <div ref={templatesRef} className="relative">
                       <button
@@ -2374,6 +2406,21 @@ export default function Chat() {
       <WhereToGoModal
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
+      />
+
+      <SpijModal
+        isOpen={spijModalOpen}
+        onClose={() => setSpijModalOpen(false)}
+        currentAgentId={agent.id}
+        onInsertPrompt={(promptText) => {
+          setInput((prev) => {
+            const space = prev && !prev.endsWith('\n') ? '\n\n' : ''
+            return prev + space + promptText
+          })
+          if (textareaRef.current) {
+            textareaRef.current.focus()
+          }
+        }}
       />
     </div>
   )

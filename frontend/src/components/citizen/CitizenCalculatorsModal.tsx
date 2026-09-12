@@ -565,6 +565,18 @@ Base legal: ${resPres.nombreNorma}`
                   </div>
                 </div>
 
+                <div className="p-2.5 rounded-xl bg-black/40 border border-[#c9a84c]/20 mt-2.5 space-y-1 text-[10px]">
+                  <div className="flex items-center gap-1.5 text-[#c9a84c] font-semibold">
+                    <Scale size={12} />
+                    <span>Base Normativa SPIJ & Plenos Laborales:</span>
+                  </div>
+                  <div className="text-white/75 space-y-0.5 font-light">
+                    <div>• <strong>CTS:</strong> D. Leg. 650 y D.S. 001-97-TR (Pago obligatorio dentro de 48h tras el cese).</div>
+                    <div>• <strong>Gratificaciones:</strong> Ley 27735 y Ley 30334 (Exoneración 9% EsSalud permanente).</div>
+                    <div>• <strong>Despido Arbitrario:</strong> Art. 38 LPCL y II Pleno Jurisdiccional Supremo Laboral.</div>
+                  </div>
+                </div>
+
                 <p className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">
                   ⚖️ Tu empleador tiene un <strong>plazo fatal de 48 horas</strong> tras tu cese para pagarte la liquidación. Si no te pagan, procede denuncia ante SUNAFIL.
                 </p>
@@ -619,6 +631,18 @@ Base legal: ${resPres.nombreNorma}`
                   <p className="text-[10px] text-white/70 leading-relaxed">
                     Corresponde a un <strong>{resAli.pctMin}% al {resAli.pctMax}%</strong> de los ingresos totales del demandado (incluyendo gratificaciones de julio y diciembre).
                   </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-black/40 border border-[#34d17a]/20 mt-2.5 space-y-1 text-[10px]">
+                  <div className="flex items-center gap-1.5 text-[#34d17a] font-semibold">
+                    <Scale size={12} />
+                    <span>Base Normativa SPIJ & Tenencia Compartida:</span>
+                  </div>
+                  <div className="text-white/75 space-y-0.5 font-light">
+                    <div>• <strong>Proporcionalidad:</strong> Arts. 472 y 481 del Código Civil según necesidad y capacidad.</div>
+                    <div>• <strong>Tenencia Compartida:</strong> Ley N° 31590 y Pleno Nacional de Familia 2022.</div>
+                    <div>• <strong>Celeridad Procesal:</strong> Ley N° 31464 (Proceso gratuito simplificado).</div>
+                  </div>
                 </div>
 
                 <p className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">
@@ -690,6 +714,18 @@ Base legal: ${resPres.nombreNorma}`
                   <p className="text-[10px] text-white/50 mt-1.5 leading-relaxed">
                     {resPres.explicacion}
                   </p>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-black/40 border border-white/10 mt-2.5 space-y-1 text-[10px]">
+                  <div className="flex items-center gap-1.5 text-[#c9a84c] font-semibold">
+                    <Scale size={12} />
+                    <span>Base Legal Oficial SPIJ:</span>
+                  </div>
+                  <div className="text-white/75 space-y-0.5 font-light">
+                    <div>• <strong>Tributos y Papeletas SAT:</strong> Art. 43 Código Tributario (Prescribe a los 4 años).</div>
+                    <div>• <strong>Deudas Bancarias y Contratos:</strong> Art. 2001 Inc. 1 Código Civil (10 años).</div>
+                    <div>• <strong>Pagaré / Títulos Valores:</strong> Art. 96 Ley 27287 (Prescribe a los 3 años).</div>
+                  </div>
                 </div>
 
                 <div className="text-[9px] text-white/40 mt-3 pt-2 border-t border-white/5">

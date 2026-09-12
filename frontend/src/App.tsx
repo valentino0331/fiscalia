@@ -1,12 +1,26 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
-import Login from '@/pages/Login'
-import Dashboard from '@/pages/Dashboard'
-import Chat from '@/pages/Chat'
-import Account from '@/pages/Account'
-import AdminDashboard from '@/pages/AdminDashboard'
-import SharedConversation from '@/pages/SharedConversation'
+import { Loader2 } from 'lucide-react'
+
+const Login = lazy(() => import('@/pages/Login'))
+const Dashboard = lazy(() => import('@/pages/Dashboard'))
+const Chat = lazy(() => import('@/pages/Chat'))
+const Account = lazy(() => import('@/pages/Account'))
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'))
+const SharedConversation = lazy(() => import('@/pages/SharedConversation'))
+
+function PageFallback() {
+  return (
+    <div className="min-h-screen bg-[#111111] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="w-7 h-7 text-[#c9a84c] animate-spin" />
+        <span className="text-[11px] font-medium text-white/50 tracking-wider uppercase">Cargando...</span>
+      </div>
+    </div>
+  )
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth()
@@ -28,51 +42,53 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AnimatePresence mode="wait">
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chat/:agentId"
-          element={
-            <ProtectedRoute>
-              <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/account"
-          element={
-            <ProtectedRoute>
-              <Account />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/portal-interno"
-          element={
-            <AdminRoute>
-              <AdminDashboard />
-            </AdminRoute>
-          }
-        />
-        <Route path="/shared/:token" element={<SharedConversation />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+      <Suspense fallback={<PageFallback />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chat/:agentId"
+            element={
+              <ProtectedRoute>
+                <Chat />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <Account />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portal-interno"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route path="/shared/:token" element={<SharedConversation />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Suspense>
     </AnimatePresence>
   )
 }

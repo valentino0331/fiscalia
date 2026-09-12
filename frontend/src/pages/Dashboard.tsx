@@ -459,10 +459,15 @@ export default function Dashboard() {
                         </button>
                         <button
                           onClick={() => setSpijModalOpen(true)}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15 group"
                         >
-                          <Scale size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="text-[11px] leading-tight text-left">SPIJ & Plenos</span>
+                          <div className="w-6 h-6 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center flex-shrink-0">
+                            <Scale size={13} className="text-[#c9a84c]" />
+                          </div>
+                          <div className="text-left leading-tight min-w-0">
+                            <span className="block text-[11px] font-semibold text-white group-hover:text-[#c9a84c] transition-colors truncate">SPIJ & Plenos</span>
+                            <span className="block text-[8px] text-[#34d17a] font-mono">16 Plenos · Vig. 2026</span>
+                          </div>
                         </button>
                         <button
                           onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
