@@ -2412,6 +2412,7 @@ export default function Chat() {
         isOpen={spijModalOpen}
         onClose={() => setSpijModalOpen(false)}
         currentAgentId={agent.id}
+        lockSpecialist={true}
         onInsertPrompt={(promptText) => {
           setInput((prev) => {
             const space = prev && !prev.endsWith('\n') ? '\n\n' : ''

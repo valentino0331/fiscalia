@@ -24,12 +24,14 @@ import {
   MessageSquareQuote,
   ShieldAlert,
   Info,
+  Lock,
 } from 'lucide-react'
 
 export interface SpijModalProps {
   isOpen: boolean
   onClose: () => void
   currentAgentId?: string
+  lockSpecialist?: boolean
   onInsertPrompt?: (text: string, specialistId?: string) => void
   onSelectPromptAndAgent?: (promptText: string, specialistId: string) => void
 }
@@ -69,6 +71,8 @@ interface SpecialistMeta {
   color: string
   bgColor: string
   accentColor: string
+  primaryCourt: string
+  governingLaws: string[]
 }
 
 export const SPECIALISTS: SpecialistMeta[] = [
@@ -81,86 +85,156 @@ export const SPECIALISTS: SpecialistMeta[] = [
     color: '#c9a84c',
     bgColor: 'rgba(201,168,76,0.12)',
     accentColor: '#c9a84c',
+    primaryCourt: 'Poder Judicial & Tribunales del Perú',
+    governingLaws: ['SPIJ - MINJUSDH', 'Corte Suprema de Justicia'],
   },
   {
     id: 'sebastian',
     name: 'Sebastián',
-    role: 'Derecho Penal',
+    role: 'Derecho Penal & Procesal Penal',
     badge: 'PENAL',
     image: '/agents/sebastian.jpg',
     color: '#EF4444',
     bgColor: 'rgba(239,68,68,0.12)',
     accentColor: '#f87171',
+    primaryCourt: 'Salas Penales de la Corte Suprema de Justicia de la República',
+    governingLaws: [
+      'Código Penal (D. Leg. 635)',
+      'Código Procesal Penal (D. Leg. 957)',
+      'D. Leg. 1585 (Reforma Prisión Preventiva & Vigilancia)',
+      'Ley 32130 (Investigación Preliminar PNP/Fiscalía)',
+      'Leyes 32108 y 32138 (Crimen Organizado & Allanamiento)',
+      'Ley 32735 (Extorsión Agravada)',
+    ],
   },
   {
     id: 'valentina',
     name: 'Valentina',
-    role: 'Derecho Laboral',
+    role: 'Derecho Laboral & Seguridad Social',
     badge: 'LABORAL',
     image: '/agents/valentina.jpg',
     color: '#6366F1',
     bgColor: 'rgba(99,102,241,0.12)',
     accentColor: '#818cf8',
+    primaryCourt: 'Salas de Derecho Constitucional y Social de la Corte Suprema & TC',
+    governingLaws: [
+      'TUO D. Leg. 728 (LPCL D.S. 003-97-TR)',
+      'Nueva Ley Procesal del Trabajo (Ley 29497 / Ley 32155)',
+      'D. Leg. 650 & D.S. 001-97-TR (Compensación por Tiempo de Servicios)',
+      'Ley 27735 & Ley 30334 (Gratificaciones & Bonificación 9% EsSalud)',
+      'D.S. 006-2024-TR (Remuneración Mínima Vital S/ 1,130)',
+      'Ley 28806 (Ley General de Inspección del Trabajo - SUNAFIL)',
+    ],
   },
   {
     id: 'diego',
     name: 'Diego',
-    role: 'Derecho Civil e Inm.',
+    role: 'Derecho Civil, Contratos e Inmobiliario',
     badge: 'CIVIL',
     image: '/agents/diego.jpg',
     color: '#06B6D4',
     bgColor: 'rgba(6,182,212,0.12)',
     accentColor: '#22d3ee',
+    primaryCourt: 'Salas Civiles de la Corte Suprema de Justicia de la República',
+    governingLaws: [
+      'Código Civil de 1984 (D. Leg. 295)',
+      'Código Procesal Civil (D. Leg. 768 / Art. 594 Allanamiento)',
+      'Ley 30933 & D.S. 013-2019-JUS (Desalojo Notarial Express)',
+      'Ley 32430 (Ley de Arrendamiento Justo / Renta Percibida)',
+      'Ley 27287 (Ley de Títulos Valores - Pagarés & Letras)',
+      'Ley del Notariado (D. Leg. 1049)',
+    ],
   },
   {
     id: 'camila',
     name: 'Camila',
-    role: 'Derecho de Familia',
+    role: 'Derecho de Familia & Niñez',
     badge: 'FAMILIA',
     image: '/agents/camila.jpg',
     color: '#EC4899',
     bgColor: 'rgba(236,72,153,0.12)',
     accentColor: '#f472b6',
+    primaryCourt: 'Juzgados Especializados de Familia del Poder Judicial',
+    governingLaws: [
+      'Código de los Niños y Adolescentes (Ley 27337)',
+      'Código Civil (Libro III: Derecho de Familia)',
+      'Ley 31590 (Tenencia Compartida Obligatoria & Coparentalidad)',
+      'Ley 30364 & D.S. 009-2019-MIMP (Protección ante Violencia Familiar en 24-48h)',
+      'Ley 31464 (Celeridad y Oralidad en Juicios de Alimentos)',
+      'Ley 28970 (Registro de Deudores Alimentarios Morosos - REDAM)',
+    ],
   },
   {
     id: 'marco',
     name: 'Marco',
-    role: 'Administrativo & OECE',
+    role: 'Administrativo & Contrataciones del Estado',
     badge: 'ADMIN',
     image: '/agents/marco.jpg',
     color: '#0D9488',
     bgColor: 'rgba(13,148,136,0.12)',
     accentColor: '#2dd4bf',
+    primaryCourt: 'Tribunal de Contrataciones Públicas (TCP / OECE) & PJ Contencioso',
+    governingLaws: [
+      'TUO LPAG aprobado por D.S. 006-2026-JUS (Derogó formalmente al DS 004-2019-JUS)',
+      'Ley 32069 (Nueva Ley General de Contrataciones Públicas)',
+      'D.S. 001-2026-EF (Reglamento de la Ley 32069)',
+      'Marco de Creación del OECE (Organismo de Contrataciones Eficientes)',
+      'TUO Ley 27584 (Proceso Contencioso Administrativo)',
+    ],
   },
   {
     id: 'fernanda',
     name: 'Fernanda',
-    role: 'Derecho Tributario',
+    role: 'Derecho Tributario & Fiscal',
     badge: 'TRIBUTARIO',
     image: '/agents/fernanda.jpg',
     color: '#10B981',
     bgColor: 'rgba(16,185,129,0.12)',
     accentColor: '#34d399',
+    primaryCourt: 'Tribunal Fiscal del Perú (MEF) & SUNAT',
+    governingLaws: [
+      'TUO del Código Tributario (D.S. 133-2013-EF / Art. 154 RTF Vinculante)',
+      'TUO de la Ley del Impuesto a la Renta (D.S. 179-2004-EF / Art. 37 Fehaciencia)',
+      'D. Leg. 1529 (Ley de Bancarización Obligatoria desde S/ 2,000 o US$ 500)',
+      'TUO de la Ley del IGV e ISC (D.S. 055-99-EF)',
+      'Régimen de Gradualidad de Sanciones SUNAT (R.S. 063-2007/SUNAT)',
+    ],
   },
   {
     id: 'adriana',
     name: 'Adriana',
-    role: 'Corporativo & M&A',
+    role: 'Corporativo, M&A y Compliance',
     badge: 'CORPORATIVO',
     image: '/agents/adriana.jpg',
     color: '#8B5CF6',
     bgColor: 'rgba(139,92,246,0.12)',
     accentColor: '#a78bfa',
+    primaryCourt: 'Superintendencia del Mercado de Valores (SMV) & MINJUSDH',
+    governingLaws: [
+      'Ley General de Sociedades (Ley 26887)',
+      'Ley 30424 (Responsabilidad Administrativa y Penal de Personas Jurídicas)',
+      'D.S. 002-2019-JUS (Reglamento de la Ley 30424)',
+      'Guía Oficial MINJUSDH de Modelos de Prevención de Delitos',
+      'Código de Buen Gobierno Corporativo para Sociedades Peruanas (SMV)',
+    ],
   },
   {
     id: 'rodrigo',
     name: 'Rodrigo',
-    role: 'Minero & Ambiental',
+    role: 'Minero, Ambiental & Recursos Naturales',
     badge: 'MINERO',
     image: '/agents/rodrigo.jpg',
     color: '#F59E0B',
     bgColor: 'rgba(245,158,11,0.12)',
     accentColor: '#fbbf24',
+    primaryCourt: 'Tribunal de Fiscalización Ambiental (TFA - OEFA) & Consejo de Minería',
+    governingLaws: [
+      'TUO de la Ley General de Minería (D.S. 014-92-EM)',
+      'Ley General del Ambiente (Ley 28611)',
+      'TUPA INGEMMET 2026 (Procedimientos de Concesión Minera)',
+      'RCD N° 00020-2023-OEFA/CD (Reglamento de Fiscalización Ambiental)',
+      'Marco Legal REINFO (Registro Integral de Formalización Minera)',
+    ],
   },
 ]
 
@@ -632,10 +706,17 @@ export default function SpijModal({
   isOpen,
   onClose,
   currentAgentId,
+  lockSpecialist = false,
   onInsertPrompt,
   onSelectPromptAndAgent,
 }: SpijModalProps) {
-  const [selectedSpecialist, setSelectedSpecialist] = useState<string>(currentAgentId || 'all')
+  // If lockSpecialist is true or currentAgentId points to a specific lawyer, strictly lock to that specialist!
+  const isLocked = Boolean(lockSpecialist || (currentAgentId && currentAgentId !== 'all'))
+  const lockedSpecialistId = currentAgentId && currentAgentId !== 'all' ? currentAgentId : 'all'
+
+  const [selectedSpecialist, setSelectedSpecialist] = useState<string>(
+    isLocked ? lockedSpecialistId : currentAgentId || 'all'
+  )
   const [tab, setTab] = useState<'plenaries' | 'reforms' | 'favorites' | 'guide'>('plenaries')
   const [search, setSearch] = useState('')
   const [selectedTag, setSelectedTag] = useState<string | null>(null)
@@ -650,11 +731,23 @@ export default function SpijModal({
     }
   })
 
+  // Whenever modal opens or agent changes, sync selectedSpecialist
   useEffect(() => {
-    if (currentAgentId && SPECIALISTS.some((s) => s.id === currentAgentId)) {
+    if (isLocked) {
+      setSelectedSpecialist(lockedSpecialistId)
+      setSelectedTag(null)
+    } else if (currentAgentId && SPECIALISTS.some((s) => s.id === currentAgentId)) {
       setSelectedSpecialist(currentAgentId)
     }
-  }, [currentAgentId, isOpen])
+  }, [currentAgentId, isOpen, isLocked, lockedSpecialistId])
+
+  // The active specialist target (in locked mode, strictly forced to lockedSpecialistId)
+  const activeSpecialistId = isLocked ? lockedSpecialistId : selectedSpecialist
+
+  const currentSpecialistInfo = useMemo(
+    () => SPECIALISTS.find((s) => s.id === activeSpecialistId) || SPECIALISTS[0],
+    [activeSpecialistId]
+  )
 
   // Save favorites to localStorage
   const toggleFavorite = (id: string) => {
@@ -670,28 +763,23 @@ export default function SpijModal({
     })
   }
 
-  const currentSpecialistInfo = useMemo(
-    () => SPECIALISTS.find((s) => s.id === selectedSpecialist) || SPECIALISTS[0],
-    [selectedSpecialist]
-  )
-
   const normSearch = search.toLowerCase().trim()
 
-  // Collect available topic tags for the active specialist
+  // Collect available topic tags strictly for the active specialist
   const availableTags = useMemo(() => {
     const set = new Set<string>()
     PLENARIES.forEach((p) => {
-      if (selectedSpecialist === 'all' || p.specialistId === selectedSpecialist) {
+      if (activeSpecialistId === 'all' || p.specialistId === activeSpecialistId) {
         p.tags.forEach((t) => set.add(t))
       }
     })
     REFORMS.forEach((r) => {
-      if (selectedSpecialist === 'all' || r.specialistId === selectedSpecialist) {
+      if (activeSpecialistId === 'all' || r.specialistId === activeSpecialistId) {
         r.tags.forEach((t) => set.add(t))
       }
     })
     return Array.from(set)
-  }, [selectedSpecialist])
+  }, [activeSpecialistId])
 
   // Reset tag if it does not belong to the current specialist
   useEffect(() => {
@@ -700,10 +788,11 @@ export default function SpijModal({
     }
   }, [availableTags, selectedTag])
 
-  // Filtered Plenaries
+  // Filtered Plenaries (Strictly filtered when in locked specialist mode)
   const filteredPlenaries = useMemo(() => {
     return PLENARIES.filter((p) => {
-      const matchSpecialist = selectedSpecialist === 'all' || p.specialistId === selectedSpecialist
+      const matchSpecialist =
+        activeSpecialistId === 'all' ? true : p.specialistId === activeSpecialistId
       const matchTag = !selectedTag || p.tags.includes(selectedTag)
       const matchSearch =
         !normSearch ||
@@ -715,12 +804,13 @@ export default function SpijModal({
         p.keyPoints.some((kp) => kp.toLowerCase().includes(normSearch))
       return matchSpecialist && matchTag && matchSearch
     })
-  }, [selectedSpecialist, selectedTag, normSearch])
+  }, [activeSpecialistId, selectedTag, normSearch])
 
-  // Filtered Reforms
+  // Filtered Reforms (Strictly filtered when in locked specialist mode)
   const filteredReforms = useMemo(() => {
     return REFORMS.filter((r) => {
-      const matchSpecialist = selectedSpecialist === 'all' || r.specialistId === selectedSpecialist
+      const matchSpecialist =
+        activeSpecialistId === 'all' ? true : r.specialistId === activeSpecialistId
       const matchTag = !selectedTag || r.tags.includes(selectedTag)
       const matchSearch =
         !normSearch ||
@@ -731,16 +821,24 @@ export default function SpijModal({
         r.articles.toLowerCase().includes(normSearch)
       return matchSpecialist && matchTag && matchSearch
     })
-  }, [selectedSpecialist, selectedTag, normSearch])
+  }, [activeSpecialistId, selectedTag, normSearch])
 
-  // Favorite Items (both Plenaries and Reforms)
+  // Favorite Items (Filtered to active specialist when in locked mode)
   const favoritePlenaries = useMemo(() => {
-    return PLENARIES.filter((p) => favorites.includes(p.code))
-  }, [favorites])
+    return PLENARIES.filter((p) => {
+      const isFav = favorites.includes(p.code)
+      const matchSpec = activeSpecialistId === 'all' ? true : p.specialistId === activeSpecialistId
+      return isFav && matchSpec
+    })
+  }, [favorites, activeSpecialistId])
 
   const favoriteReforms = useMemo(() => {
-    return REFORMS.filter((r) => favorites.includes(r.lawCode))
-  }, [favorites])
+    return REFORMS.filter((r) => {
+      const isFav = favorites.includes(r.lawCode)
+      const matchSpec = activeSpecialistId === 'all' ? true : r.specialistId === activeSpecialistId
+      return isFav && matchSpec
+    })
+  }, [favorites, activeSpecialistId])
 
   if (!isOpen) return null
 
@@ -789,9 +887,11 @@ export default function SpijModal({
         className="w-full max-w-5xl max-h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border"
         style={{
           background: 'linear-gradient(180deg, #181818 0%, #121212 100%)',
-          borderColor: 'rgba(201,168,76,0.30)',
+          borderColor: isLocked ? `${currentSpecialistInfo.color}55` : 'rgba(201,168,76,0.30)',
           color: '#ffffff',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(201,168,76,0.15)',
+          boxShadow: isLocked
+            ? `0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 35px -10px ${currentSpecialistInfo.color}33`
+            : '0 25px 60px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(201,168,76,0.15)',
         }}
       >
         {/* Top Luxury Header */}
@@ -799,16 +899,20 @@ export default function SpijModal({
           className="px-4 sm:px-6 py-3.5 flex items-center justify-between border-b flex-shrink-0"
           style={{
             borderColor: 'rgba(255,255,255,0.08)',
-            background: 'linear-gradient(90deg, #1c1a14 0%, #171717 100%)',
+            background: isLocked
+              ? `linear-gradient(90deg, ${currentSpecialistInfo.bgColor} 0%, #171717 100%)`
+              : 'linear-gradient(90deg, #1c1a14 0%, #171717 100%)',
           }}
         >
           <div className="flex items-center gap-3 min-w-0">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 relative shadow-inner"
               style={{
-                background: 'linear-gradient(135deg, rgba(201,168,76,0.25) 0%, rgba(201,168,76,0.08) 100%)',
-                border: '1px solid rgba(201,168,76,0.40)',
-                color: '#c9a84c',
+                background: isLocked
+                  ? `linear-gradient(135deg, ${currentSpecialistInfo.color}33 0%, rgba(20,20,20,0.6) 100%)`
+                  : 'linear-gradient(135deg, rgba(201,168,76,0.25) 0%, rgba(201,168,76,0.08) 100%)',
+                border: `1px solid ${isLocked ? currentSpecialistInfo.color : 'rgba(201,168,76,0.40)'}`,
+                color: isLocked ? currentSpecialistInfo.accentColor : '#c9a84c',
               }}
             >
               <Scale size={20} className="drop-shadow" />
@@ -818,22 +922,33 @@ export default function SpijModal({
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-[14px] sm:text-[16px] font-bold text-white tracking-tight flex items-center gap-1.5">
-                  Base Jurídica SPIJ & Acuerdos Plenarios
+                  {isLocked ? (
+                    <>
+                      Base Jurídica SPIJ · Despacho de{' '}
+                      <span style={{ color: currentSpecialistInfo.accentColor }}>
+                        {currentSpecialistInfo.name}
+                      </span>
+                    </>
+                  ) : (
+                    'Base Jurídica SPIJ & Acuerdos Plenarios'
+                  )}
                 </h2>
                 <span
                   className="px-2 py-0.5 rounded-full text-[9px] font-semibold flex items-center gap-1 flex-shrink-0 uppercase tracking-wider"
                   style={{
-                    background: 'rgba(52,209,122,0.12)',
-                    border: '1px solid rgba(52,209,122,0.30)',
-                    color: '#34d17a',
+                    background: isLocked ? `${currentSpecialistInfo.color}22` : 'rgba(52,209,122,0.12)',
+                    border: `1px solid ${isLocked ? currentSpecialistInfo.color + '44' : 'rgba(52,209,122,0.30)'}`,
+                    color: isLocked ? currentSpecialistInfo.accentColor : '#34d17a',
                   }}
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
-                  Vigencia 2026 Oficial
+                  {isLocked ? `${currentSpecialistInfo.badge} · VIGENCIA 2026` : 'VIGENCIA 2026 OFICIAL'}
                 </span>
               </div>
               <p className="text-[10px] sm:text-[11px] text-white/60 font-light truncate">
-                Doctrina Vinculante de la Corte Suprema del Perú · Leyes Actualizadas del MINJUSDH · Citas Procesales
+                {isLocked
+                  ? `Doctrina Vinculante de la Corte Suprema y Leyes Oficiales exclusivas de ${currentSpecialistInfo.role}`
+                  : 'Doctrina Vinculante de la Corte Suprema del Perú · Leyes Actualizadas del MINJUSDH · Citas Procesales'}
               </p>
             </div>
           </div>
@@ -847,73 +962,119 @@ export default function SpijModal({
           </button>
         </div>
 
-        {/* Visual Specialist Carousel Bar */}
-        <div
-          className="px-4 sm:px-6 py-2.5 border-b overflow-x-auto custom-scrollbar flex items-center gap-2 flex-shrink-0"
-          style={{ borderColor: 'rgba(255,255,255,0.06)', background: '#141414' }}
-        >
-          <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-1 flex-shrink-0 mr-1">
-            <UserCheck size={11} className="text-[#c9a84c]" />
-            Especialista:
-          </span>
+        {/* Specialist Bar: LOCKED vs GENERAL EXPLORER */}
+        {isLocked ? (
+          /* Locked specialist single banner */
+          <div
+            className="px-4 sm:px-6 py-2.5 border-b flex items-center justify-between flex-shrink-0"
+            style={{
+              background: `linear-gradient(90deg, ${currentSpecialistInfo.bgColor} 0%, #151515 100%)`,
+              borderColor: `${currentSpecialistInfo.color}33`,
+            }}
+          >
+            <div className="flex items-center gap-3">
+              {currentSpecialistInfo.image && (
+                <img
+                  src={currentSpecialistInfo.image}
+                  alt={currentSpecialistInfo.name}
+                  className="w-7 h-7 rounded-full object-cover border shadow-sm flex-shrink-0"
+                  style={{ borderColor: currentSpecialistInfo.color }}
+                />
+              )}
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[12px] font-bold text-white">
+                  Despacho de {currentSpecialistInfo.name}
+                </span>
+                <span
+                  className="px-2 py-0.2 rounded text-[9px] font-bold uppercase tracking-wider"
+                  style={{
+                    background: `${currentSpecialistInfo.color}25`,
+                    color: currentSpecialistInfo.color,
+                    border: `1px solid ${currentSpecialistInfo.color}45`,
+                  }}
+                >
+                  {currentSpecialistInfo.badge}
+                </span>
+                <span className="text-[11px] text-white/60 font-light hidden md:inline">
+                  — {currentSpecialistInfo.role}
+                </span>
+              </div>
+            </div>
 
-          {SPECIALISTS.map((sp) => {
-            const isSelected = selectedSpecialist === sp.id
-            const isCurrentInChat = currentAgentId === sp.id
-            return (
-              <button
-                key={sp.id}
-                onClick={() => {
-                  setSelectedSpecialist(sp.id)
-                  setSelectedTag(null)
-                }}
-                className={`px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-all whitespace-nowrap flex items-center gap-2 flex-shrink-0 group ${
-                  isSelected
-                    ? 'shadow-md scale-[1.02]'
-                    : 'bg-white/[0.03] border border-white/5 text-white/60 hover:text-white hover:border-white/15'
-                }`}
-                style={{
-                  background: isSelected
-                    ? sp.id === 'all'
-                      ? 'linear-gradient(135deg, #c9a84c 0%, #a68434 100%)'
-                      : sp.color
-                    : undefined,
-                  color: isSelected ? '#ffffff' : undefined,
-                  borderColor: isSelected ? 'rgba(255,255,255,0.3)' : undefined,
-                }}
-              >
-                {sp.image ? (
-                  <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 flex-shrink-0 bg-black/40">
-                    <img
-                      src={sp.image}
-                      alt={sp.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
+            <div className="flex items-center gap-1.5 text-[10px] text-white/60 font-light">
+              <Lock size={11} className="text-[#c9a84c]" />
+              <span className="hidden sm:inline">Filtrado exclusivamente para este abogado</span>
+            </div>
+          </div>
+        ) : (
+          /* General Explorer: All specialists carousel */
+          <div
+            className="px-4 sm:px-6 py-2.5 border-b overflow-x-auto custom-scrollbar flex items-center gap-2 flex-shrink-0"
+            style={{ borderColor: 'rgba(255,255,255,0.06)', background: '#141414' }}
+          >
+            <span className="text-[9px] font-bold uppercase tracking-wider text-white/40 flex items-center gap-1 flex-shrink-0 mr-1">
+              <UserCheck size={11} className="text-[#c9a84c]" />
+              Especialista:
+            </span>
+
+            {SPECIALISTS.map((sp) => {
+              const isSelected = selectedSpecialist === sp.id
+              const isCurrentInChat = currentAgentId === sp.id
+              return (
+                <button
+                  key={sp.id}
+                  onClick={() => {
+                    setSelectedSpecialist(sp.id)
+                    setSelectedTag(null)
+                  }}
+                  className={`px-2.5 py-1.5 rounded-xl text-[11px] font-medium transition-all whitespace-nowrap flex items-center gap-2 flex-shrink-0 group ${
+                    isSelected
+                      ? 'shadow-md scale-[1.02]'
+                      : 'bg-white/[0.03] border border-white/5 text-white/60 hover:text-white hover:border-white/15'
+                  }`}
+                  style={{
+                    background: isSelected
+                      ? sp.id === 'all'
+                        ? 'linear-gradient(135deg, #c9a84c 0%, #a68434 100%)'
+                        : sp.color
+                      : undefined,
+                    color: isSelected ? '#ffffff' : undefined,
+                    borderColor: isSelected ? 'rgba(255,255,255,0.3)' : undefined,
+                  }}
+                >
+                  {sp.image ? (
+                    <div className="w-5 h-5 rounded-full overflow-hidden border border-white/20 flex-shrink-0 bg-black/40">
+                      <img
+                        src={sp.image}
+                        alt={sp.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
+                      style={{ background: 'rgba(255,255,255,0.15)' }}
+                    >
+                      ★
+                    </div>
+                  )}
+
+                  <span className={isSelected ? 'font-bold' : 'font-normal'}>{sp.name}</span>
+
+                  {isCurrentInChat && sp.id !== 'all' && (
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-[#34d17a]'}`}
+                      title="Abogado activo en el chat"
                     />
-                  </div>
-                ) : (
-                  <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold flex-shrink-0"
-                    style={{ background: 'rgba(255,255,255,0.15)' }}
-                  >
-                    ★
-                  </div>
-                )}
-
-                <span className={isSelected ? 'font-bold' : 'font-normal'}>{sp.name}</span>
-
-                {isCurrentInChat && sp.id !== 'all' && (
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-white' : 'bg-[#34d17a]'}`}
-                    title="Abogado activo en el chat"
-                  />
-                )}
-              </button>
-            )
-          })}
-        </div>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        )}
 
         {/* Search, Tabs & Quick Tag Filters Bar */}
         <div
@@ -978,7 +1139,7 @@ export default function SpijModal({
                       tab === 'favorites' ? 'bg-black/20 text-black' : 'bg-[#f59e0b]/20 text-[#f59e0b]'
                     }`}
                   >
-                    {favorites.length}
+                    {favoritePlenaries.length + favoriteReforms.length}
                   </span>
                 )}
               </button>
@@ -992,7 +1153,7 @@ export default function SpijModal({
                 }`}
               >
                 <ShieldCheck size={12} className="text-[#34d17a]" />
-                <span>Rigor SPIJ 2026</span>
+                <span>{isLocked ? 'Rigor del Despacho' : 'Rigor SPIJ 2026'}</span>
               </button>
             </div>
 
@@ -1004,7 +1165,11 @@ export default function SpijModal({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por artículo, pleno, delito o ley..."
+                  placeholder={
+                    isLocked
+                      ? `Buscar en despacho de ${currentSpecialistInfo.name}...`
+                      : 'Buscar por artículo, pleno, delito o ley...'
+                  }
                   className="w-full pl-8 pr-7 py-1.5 rounded-xl text-[11px] bg-black/60 border border-white/10 text-white placeholder-white/30 focus:outline-none focus:border-[#c9a84c] transition-all"
                 />
                 {search && (
@@ -1060,8 +1225,8 @@ export default function SpijModal({
 
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3.5 custom-scrollbar">
-          {/* Active Specialist Banner */}
-          {selectedSpecialist !== 'all' && currentSpecialistInfo && (
+          {/* Active Specialist Banner (ONLY in general explorer, not when locked in specialist chat) */}
+          {!isLocked && selectedSpecialist !== 'all' && currentSpecialistInfo && (
             <div
               className="p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-sm"
               style={{
@@ -1121,7 +1286,9 @@ export default function SpijModal({
                   <Gavel size={32} className="mx-auto text-white/20 mb-2" />
                   <p className="text-white/60 text-[13px] font-medium">No se encontraron Acuerdos Plenarios</p>
                   <p className="text-white/40 text-[11px] mt-1 max-w-md mx-auto font-light">
-                    Prueba cambiando los términos de búsqueda, eliminando el filtro de tema o seleccionando otro especialista.
+                    {isLocked
+                      ? `No hay acuerdos que coincidan con la búsqueda dentro del despacho de ${currentSpecialistInfo.name}.`
+                      : 'Prueba cambiando los términos de búsqueda o seleccionando otro especialista.'}
                   </p>
                   {(search || selectedTag) && (
                     <button
@@ -1160,7 +1327,7 @@ export default function SpijModal({
                             {ap.code}
                           </span>
                           <span className="text-[11px] font-medium text-white/50">{ap.category}</span>
-                          {specialist && (
+                          {!isLocked && specialist && (
                             <span
                               className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase"
                               style={{
@@ -1296,7 +1463,9 @@ export default function SpijModal({
                   <BookOpen size={32} className="mx-auto text-white/20 mb-2" />
                   <p className="text-white/60 text-[13px] font-medium">No se encontraron Leyes SPIJ para este filtro</p>
                   <p className="text-white/40 text-[11px] mt-1 max-w-md mx-auto font-light">
-                    Intenta seleccionando "Todos los temas" o borrando la búsqueda.
+                    {isLocked
+                      ? `No hay leyes registradas bajo los términos actuales en el despacho de ${currentSpecialistInfo.name}.`
+                      : 'Intenta seleccionando "Todos los temas" o borrando la búsqueda.'}
                   </p>
                 </div>
               ) : (
@@ -1323,7 +1492,7 @@ export default function SpijModal({
                             {rf.badge}
                           </span>
                           <h3 className="text-[13px] sm:text-[14px] font-bold text-white">{rf.lawCode}</h3>
-                          {specialist && (
+                          {!isLocked && specialist && (
                             <span
                               className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase"
                               style={{
@@ -1407,12 +1576,16 @@ export default function SpijModal({
           {/* TAB 3: FAVORITOS */}
           {tab === 'favorites' && (
             <div className="space-y-4">
-              {favorites.length === 0 ? (
+              {favoritePlenaries.length === 0 && favoriteReforms.length === 0 ? (
                 <div className="py-14 px-4 text-center rounded-2xl border border-dashed border-white/10 bg-white/[0.01]">
                   <BookmarkCheck size={36} className="mx-auto text-white/20 mb-2" />
-                  <h3 className="text-white/70 text-[14px] font-semibold">Aún no tienes favoritos guardados</h3>
+                  <h3 className="text-white/70 text-[14px] font-semibold">
+                    {isLocked
+                      ? `No tienes favoritos en el despacho de ${currentSpecialistInfo.name}`
+                      : 'Aún no tienes favoritos guardados'}
+                  </h3>
                   <p className="text-white/40 text-[11px] mt-1 max-w-sm mx-auto font-light leading-relaxed">
-                    Haz clic en el icono de estrella (★) en cualquier Acuerdo Plenario o Ley SPIJ para fijarlo aquí y tener acceso inmediato en tus audiencias y redacciones.
+                    Haz clic en el icono de estrella (★) en cualquier Acuerdo Plenario o Ley SPIJ de este despacho para fijarlo aquí y tener acceso inmediato en tus audiencias y escritos.
                   </p>
                 </div>
               ) : (
@@ -1513,116 +1686,169 @@ export default function SpijModal({
             </div>
           )}
 
-          {/* TAB 4: GARANTÍA DE RIGOR Y CRONOGRAMA 2026 */}
+          {/* TAB 4: GARANTÍA DE RIGOR */}
           {tab === 'guide' && (
             <div className="space-y-4 text-[12px] font-light text-white/80 leading-relaxed">
               {/* Trust Seals Banner */}
               <div
                 className="p-5 rounded-2xl border relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(20,20,20,0.95) 100%)',
-                  borderColor: 'rgba(201,168,76,0.35)',
+                  background: isLocked
+                    ? `linear-gradient(135deg, ${currentSpecialistInfo.bgColor} 0%, rgba(20,20,20,0.95) 100%)`
+                    : 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(20,20,20,0.95) 100%)',
+                  borderColor: isLocked ? `${currentSpecialistInfo.color}44` : 'rgba(201,168,76,0.35)',
                 }}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1.5">
-                      <ShieldCheck size={20} className="text-[#c9a84c]" />
+                      <ShieldCheck
+                        size={20}
+                        style={{ color: isLocked ? currentSpecialistInfo.accentColor : '#c9a84c' }}
+                      />
                       <h3 className="text-[15px] font-bold text-white tracking-tight">
-                        Compendio Oficial Concordado al 100%
+                        {isLocked
+                          ? `Compendio Oficial Concordado — Despacho de ${currentSpecialistInfo.name}`
+                          : 'Compendio Oficial Concordado al 100%'}
                       </h3>
                     </div>
                     <p className="text-[11px] text-white/70 max-w-xl">
-                      Cada respuesta procesal, cálculo numérico y modelo de escrito emitido por el bufete de Inteligencia Artificial está anclado a fuentes jurídicas primarias y vigentes en el Perú.
+                      {isLocked
+                        ? `Todas las consultas y escritos redactados por ${currentSpecialistInfo.name} se sustentan estrictamente en la jurisprudencia vinculante del Poder Judicial y las normas vigentes del SPIJ en materia de ${currentSpecialistInfo.role}.`
+                        : 'Cada respuesta procesal, cálculo numérico y modelo de escrito emitido por el bufete de Inteligencia Artificial está anclado a fuentes jurídicas primarias y vigentes en el Perú.'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-3 py-1 rounded-lg bg-black/40 border border-[#c9a84c]/30 text-[10px] font-bold text-[#c9a84c]">
+                    <span className="px-3 py-1 rounded-lg bg-black/40 border border-white/15 text-[10px] font-bold text-[#c9a84c]">
                       MINJUSDH / SPIJ
                     </span>
-                    <span className="px-3 py-1 rounded-lg bg-black/40 border border-[#34d17a]/30 text-[10px] font-bold text-[#34d17a]">
+                    <span className="px-3 py-1 rounded-lg bg-black/40 border border-white/15 text-[10px] font-bold text-[#34d17a]">
                       CORTE SUPREMA
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* 2024-2026 Legal Timeline */}
-              <div className="p-5 rounded-2xl border bg-[#181818] border-white/10 space-y-3">
-                <h4 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Calendar size={14} className="text-[#34d17a]" />
-                  Cronología de Reformas Legislativas Vigentes 2024 – 2026
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[9px] font-bold text-[#f87171] uppercase font-mono">D. LEG. 1585</span>
-                    <p className="text-[11px] font-semibold text-white">Reforma de Prisión Preventiva y Vigilancia Electrónica</p>
-                    <p className="text-[10px] text-white/60">Eleva el umbral a más de 5 años y prioriza la vigilancia electrónica en penas hasta 7 años.</p>
+              {/* Specialist Specific Framework (if locked) OR 2024-2026 Timeline (if general) */}
+              {isLocked ? (
+                <div className="p-5 rounded-2xl border bg-[#181818] border-white/10 space-y-3.5">
+                  <div className="flex items-center gap-2 text-white">
+                    <Building2 size={16} style={{ color: currentSpecialistInfo.accentColor }} />
+                    <h4 className="text-[13px] font-bold uppercase tracking-wider">
+                      Órgano Jurisdiccional Rector & Fuentes de Este Despacho
+                    </h4>
+                  </div>
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                    <p className="text-[12px] font-semibold text-white flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full" style={{ background: currentSpecialistInfo.color }} />
+                      {currentSpecialistInfo.primaryCourt}
+                    </p>
+                    <p className="text-[11px] text-white/60 font-light">
+                      Los Acuerdos Plenarios y sentencias casatorias vinculantes emitidas por esta instancia son de observancia obligatoria para todos los jueces del territorio nacional.
+                    </p>
                   </div>
 
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[9px] font-bold text-[#f87171] uppercase font-mono">LEY 32130 & LEY 32108/32138</span>
-                    <p className="text-[11px] font-semibold text-white">Investigación Preliminar PNP y Crimen Organizado</p>
-                    <p className="text-[10px] text-white/60">Restituye investigación a PNP y exige abogado defensor obligatorio en allanamientos fiscales.</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[9px] font-bold text-[#2dd4bf] uppercase font-mono">D.S. 006-2026-JUS (TUO LPAG)</span>
-                    <p className="text-[11px] font-semibold text-white">Nuevo Texto Único Ordenado Ley 27444</p>
-                    <p className="text-[10px] text-white/60">Derogación formal del D.S. 004-2019-JUS. Prohibido citar la norma derogada ante entidades.</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[9px] font-bold text-[#2dd4bf] uppercase font-mono">LEY 32069 & D.S. 001-2026-EF</span>
-                    <p className="text-[11px] font-semibold text-white">Nueva Ley de Contrataciones Públicas</p>
-                    <p className="text-[10px] text-white/60">Extinción formal del OSCE. Creación del OECE y obligatoriedad de la Junta de Disputas (JPRD).</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[9px] font-bold text-[#22d3ee] uppercase font-mono">LEY 32430</span>
-                    <p className="text-[11px] font-semibold text-white">Ley de Arrendamiento Justo</p>
-                    <p className="text-[10px] text-white/60">Rentas de primera categoría tributan bajo criterio de lo percibido (solo sobre cobros efectivos).</p>
-                  </div>
-
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[9px] font-bold text-[#f472b6] uppercase font-mono">LEY 31590</span>
-                    <p className="text-[11px] font-semibold text-white">Tenencia Compartida Obligatoria</p>
-                    <p className="text-[10px] text-white/60">Regla legal preferente de coparentalidad igualitaria en el Código de Niños y Adolescentes.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Specialist Roster Reference */}
-              <div className="p-5 rounded-2xl border bg-[#181818] border-white/10 space-y-3">
-                <h4 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <UserCheck size={14} className="text-[#c9a84c]" />
-                  Distribución de Especialistas y Fuentes
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1">
-                  {SPECIALISTS.filter((s) => s.id !== 'all').map((sp) => (
-                    <div
-                      key={sp.id}
-                      className="p-2.5 rounded-xl border bg-black/30 flex items-center gap-2.5"
-                      style={{ borderColor: `${sp.color}25` }}
-                    >
-                      {sp.image && (
-                        <img
-                          src={sp.image}
-                          alt={sp.name}
-                          className="w-8 h-8 rounded-full object-cover border flex-shrink-0"
-                          style={{ borderColor: sp.color }}
-                        />
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-bold text-white leading-tight">{sp.name}</p>
-                        <p className="text-[9px] truncate" style={{ color: sp.color }}>
-                          {sp.role}
-                        </p>
-                      </div>
+                  <div>
+                    <h5 className="text-[11px] font-bold uppercase tracking-wider text-white/60 mb-2 flex items-center gap-1.5">
+                      <BookOpen size={12} />
+                      Normativa Primaria y Códigos Aplicados por {currentSpecialistInfo.name}:
+                    </h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {currentSpecialistInfo.governingLaws.map((law, idx) => (
+                        <div
+                          key={idx}
+                          className="p-2.5 rounded-xl bg-black/30 border border-white/5 text-[11px] text-white/80 font-light flex items-center gap-2"
+                        >
+                          <span
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ background: currentSpecialistInfo.color }}
+                          />
+                          <span>{law}</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* General timeline when in full explorer */
+                <div className="p-5 rounded-2xl border bg-[#181818] border-white/10 space-y-3">
+                  <h4 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Calendar size={14} className="text-[#34d17a]" />
+                    Cronología de Reformas Legislativas Vigentes 2024 – 2026
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                      <span className="text-[9px] font-bold text-[#f87171] uppercase font-mono">D. LEG. 1585</span>
+                      <p className="text-[11px] font-semibold text-white">Reforma de Prisión Preventiva y Vigilancia Electrónica</p>
+                      <p className="text-[10px] text-white/60">Eleva el umbral a más de 5 años y prioriza la vigilancia electrónica en penas hasta 7 años.</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                      <span className="text-[9px] font-bold text-[#f87171] uppercase font-mono">LEY 32130 & LEY 32108/32138</span>
+                      <p className="text-[11px] font-semibold text-white">Investigación Preliminar PNP y Crimen Organizado</p>
+                      <p className="text-[10px] text-white/60">Restituye investigación a PNP y exige abogado defensor obligatorio en allanamientos fiscales.</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                      <span className="text-[9px] font-bold text-[#2dd4bf] uppercase font-mono">D.S. 006-2026-JUS (TUO LPAG)</span>
+                      <p className="text-[11px] font-semibold text-white">Nuevo Texto Único Ordenado Ley 27444</p>
+                      <p className="text-[10px] text-white/60">Derogación formal del D.S. 004-2019-JUS. Prohibido citar la norma derogada ante entidades.</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                      <span className="text-[9px] font-bold text-[#2dd4bf] uppercase font-mono">LEY 32069 & D.S. 001-2026-EF</span>
+                      <p className="text-[11px] font-semibold text-white">Nueva Ley de Contrataciones Públicas</p>
+                      <p className="text-[10px] text-white/60">Extinción formal del OSCE. Creación del OECE y obligatoriedad de la Junta de Disputas (JPRD).</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                      <span className="text-[9px] font-bold text-[#22d3ee] uppercase font-mono">LEY 32430</span>
+                      <p className="text-[11px] font-semibold text-white">Ley de Arrendamiento Justo</p>
+                      <p className="text-[10px] text-white/60">Rentas de primera categoría tributan bajo criterio de lo percibido (solo sobre cobros efectivos).</p>
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
+                      <span className="text-[9px] font-bold text-[#f472b6] uppercase font-mono">LEY 31590</span>
+                      <p className="text-[11px] font-semibold text-white">Tenencia Compartida Obligatoria</p>
+                      <p className="text-[10px] text-white/60">Regla legal preferente de coparentalidad igualitaria en el Código de Niños y Adolescentes.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Specialist Roster Reference (ONLY in general explorer) */}
+              {!isLocked && (
+                <div className="p-5 rounded-2xl border bg-[#181818] border-white/10 space-y-3">
+                  <h4 className="text-[12px] font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <UserCheck size={14} className="text-[#c9a84c]" />
+                    Distribución de Especialistas y Fuentes
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 pt-1">
+                    {SPECIALISTS.filter((s) => s.id !== 'all').map((sp) => (
+                      <div
+                        key={sp.id}
+                        className="p-2.5 rounded-xl border bg-black/30 flex items-center gap-2.5"
+                        style={{ borderColor: `${sp.color}25` }}
+                      >
+                        {sp.image && (
+                          <img
+                            src={sp.image}
+                            alt={sp.name}
+                            className="w-8 h-8 rounded-full object-cover border flex-shrink-0"
+                            style={{ borderColor: sp.color }}
+                          />
+                        )}
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-bold text-white leading-tight">{sp.name}</p>
+                          <p className="text-[9px] truncate" style={{ color: sp.color }}>
+                            {sp.role}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -1634,7 +1860,11 @@ export default function SpijModal({
         >
           <div className="flex items-center gap-2">
             <Scale size={13} className="text-[#c9a84c]" />
-            <span>Fuentes Oficiales: SPIJ (MINJUSDH) · Corte Suprema de Justicia · El Peruano</span>
+            <span>
+              {isLocked
+                ? `Fuentes Oficiales: SPIJ (MINJUSDH) · ${currentSpecialistInfo.primaryCourt}`
+                : 'Fuentes Oficiales: SPIJ (MINJUSDH) · Corte Suprema de Justicia · El Peruano'}
+            </span>
           </div>
 
           <button
