@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { jsPDF } from 'jspdf'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -27,8 +27,9 @@ import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
-import SpijModal from '@/components/legal/SpijModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
+
+const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
 
 interface PromptModeItem {
   id: string
@@ -836,9 +837,33 @@ export default function Chat() {
       setTimeout(autoResize, 80)
       window.history.replaceState({}, document.title)
     } else {
-      setInput('')
+      try {
+        const savedDraft = localStorage.getItem(`hardman_draft_${agentId || 'general'}_new`)
+        if (savedDraft) {
+          setInput(savedDraft)
+          setTimeout(autoResize, 80)
+        } else {
+          setInput('')
+        }
+      } catch {
+        setInput('')
+      }
     }
   }, [agentId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-guardado de borrador (Draft Saving)
+  useEffect(() => {
+    try {
+      const key = `hardman_draft_${agentId || 'general'}_${conversationId || 'new'}`
+      if (input && input.trim()) {
+        localStorage.setItem(key, input)
+      } else {
+        localStorage.removeItem(key)
+      }
+    } catch {
+      // Ignorar errores de storage restringido
+    }
+  }, [input, agentId, conversationId])
 
   useEffect(() => {
     scrollToBottom()
@@ -1364,6 +1389,17 @@ export default function Chat() {
       setConversationId(id)
       setSidebarOpen(false)
       stopSpeaking()
+      try {
+        const savedDraft = localStorage.getItem(`hardman_draft_${agentId || 'general'}_${id}`)
+        if (savedDraft) {
+          setInput(savedDraft)
+          setTimeout(autoResize, 80)
+        } else {
+          setInput('')
+        }
+      } catch {
+        setInput('')
+      }
     } catch {
     }
   }
@@ -1371,7 +1407,17 @@ export default function Chat() {
   const newConversation = () => {
     setMessages([])
     setConversationId(undefined)
-    setInput('')
+    try {
+      const savedDraft = localStorage.getItem(`hardman_draft_${agentId || 'general'}_new`)
+      if (savedDraft) {
+        setInput(savedDraft)
+        setTimeout(autoResize, 80)
+      } else {
+        setInput('')
+      }
+    } catch {
+      setInput('')
+    }
     setActiveMode(null)
     setSidebarOpen(false)
     clearAttachment()
@@ -1400,10 +1446,10 @@ export default function Chat() {
   }
 
   const handleFileSelect = async (file: File) => {
-    const MAX_MB = 50
+    const MAX_MB = 25
     if (file.size > MAX_MB * 1024 * 1024) {
       setAttachedFile(file)
-      setExtractError(`El archivo supera ${MAX_MB}MB. Comprime el PDF o divídelo en partes.`)
+      setExtractError(`El archivo supera el límite de ${MAX_MB}MB. Se recomienda comprimir el PDF o subirlo por cuadernos procesales.`)
       setExtractedText(null)
       setExtracting(false)
       return
@@ -1456,6 +1502,9 @@ export default function Chat() {
     const newMessages = [...messages, userMessage]
     setMessages(newMessages)
     setInput('')
+    try {
+      localStorage.removeItem(`hardman_draft_${agent?.id || 'general'}_${conversationId || 'new'}`)
+    } catch {}
     setIsVoiceMessage(false)
     clearAttachment()
     setLoading(true)
@@ -1533,6 +1582,8 @@ export default function Chat() {
                   role: 'assistant',
                   content: errorMsg,
                   timestamp: msgTimestamp,
+                  isError: true,
+                  lastUserPrompt: fullContent,
                 },
               ])
             } else {
@@ -1540,7 +1591,12 @@ export default function Chat() {
                 const updated = [...prev]
                 const lastIdx = updated.length - 1
                 if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
-                  updated[lastIdx] = { ...updated[lastIdx], content: accumulatedText || errorMsg }
+                  updated[lastIdx] = {
+                    ...updated[lastIdx],
+                    content: accumulatedText || errorMsg,
+                    isError: true,
+                    lastUserPrompt: fullContent,
+                  }
                 }
                 return updated
               })
@@ -1557,11 +1613,30 @@ export default function Chat() {
           role: 'assistant',
           content: errorMsg,
           timestamp: msgTimestamp,
+          isError: true,
+          lastUserPrompt: fullContent,
         },
       ])
       setLoading(false)
     }
   }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage])
+
+  const handleRetryPrompt = (promptToRetry: string) => {
+    if (!promptToRetry) return
+    setInput(promptToRetry)
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+      setTimeout(autoResize, 60)
+    }
+  }
+
+  const handleContinueWriting = () => {
+    setInput('Por favor continúa con la redacción legal exactamente desde el último punto donde te quedaste, respetando el formato procesal y la numeración.')
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+      setTimeout(autoResize, 60)
+    }
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -2014,6 +2089,8 @@ export default function Chat() {
                     onSpeak={(text, id) => speakAssistantMessage(text, id)}
                     onStopSpeak={stopSpeaking}
                     onOpenDeadline={(text) => setDeadlineModal({ isOpen: true, deadlineText: text })}
+                    onRetry={handleRetryPrompt}
+                    onContinue={handleContinueWriting}
                     lastUserMessage={
                       messages
                         .slice(0, i)
@@ -2077,7 +2154,8 @@ export default function Chat() {
                             const sizeMB = attachedFile.size / (1024 * 1024)
                             const sizeStr = sizeMB >= 1 ? `${sizeMB.toFixed(1)} MB` : `${(attachedFile.size / 1024).toFixed(0)} KB`
                             const pageStr = pageCount ? ` · ${pageCount} pág.` : ''
-                            return `${sizeStr}${pageStr} · Listo`
+                            const recNotice = sizeMB > 15 ? ' · (Se recomienda <15MB para máxima agilidad)' : ''
+                            return `${sizeStr}${pageStr} · Listo${recNotice}`
                           })()}
                     </p>
                   </div>
@@ -2224,7 +2302,7 @@ export default function Chat() {
                       style={{ color: 'rgba(255,255,255,0.25)' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
-                      title="Adjuntar PDF o Word"
+                      title="Adjuntar PDF o Word (Máx. 25MB · Recomendado hasta 15MB para máxima agilidad)"
                     >
                       <Paperclip size={12} />
                       <span className="hidden sm:inline">PDF / WORD</span>
@@ -2408,21 +2486,25 @@ export default function Chat() {
         onClose={() => setWhereToGoOpen(false)}
       />
 
-      <SpijModal
-        isOpen={spijModalOpen}
-        onClose={() => setSpijModalOpen(false)}
-        currentAgentId={agent.id}
-        lockSpecialist={true}
-        onInsertPrompt={(promptText) => {
-          setInput((prev) => {
-            const space = prev && !prev.endsWith('\n') ? '\n\n' : ''
-            return prev + space + promptText
-          })
-          if (textareaRef.current) {
-            textareaRef.current.focus()
-          }
-        }}
-      />
+      <Suspense fallback={null}>
+        {spijModalOpen && (
+          <SpijModal
+            isOpen={spijModalOpen}
+            onClose={() => setSpijModalOpen(false)}
+            currentAgentId={agent.id}
+            lockSpecialist={true}
+            onInsertPrompt={(promptText) => {
+              setInput((prev) => {
+                const space = prev && !prev.endsWith('\n') ? '\n\n' : ''
+                return prev + space + promptText
+              })
+              if (textareaRef.current) {
+                textareaRef.current.focus()
+              }
+            }}
+          />
+        )}
+      </Suspense>
     </div>
   )
 }
@@ -2595,6 +2677,8 @@ function MessageBubble({
   onStopSpeak,
   onOpenDeadline,
   lastUserMessage,
+  onRetry,
+  onContinue,
 }: {
   message: Message
   agent: NonNullable<ReturnType<typeof getAgent>>
@@ -2605,6 +2689,8 @@ function MessageBubble({
   onStopSpeak: () => void
   onOpenDeadline: (text: string) => void
   lastUserMessage?: string
+  onRetry?: (prompt: string) => void
+  onContinue?: () => void
 }) {
   const navigate = useNavigate()
   const isUser = message.role === 'user'
@@ -2888,6 +2974,41 @@ function MessageBubble({
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              )}
+              {/* Resiliencia ante error / streaming interrumpido */}
+              {!isUser && message.isError && (
+                <div
+                  className="mt-3 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2.5 border select-none"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.08)',
+                    borderColor: 'rgba(239, 68, 68, 0.25)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 text-[11px] text-red-300">
+                    <AlertTriangle size={14} className="text-red-400 flex-shrink-0" />
+                    <span>La respuesta se interrumpió o experimentó un problema de conexión.</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {onRetry && (message.lastUserPrompt || lastUserMessage) && (
+                      <button
+                        onClick={() => onRetry(message.lastUserPrompt || lastUserMessage || '')}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition hover:opacity-90"
+                        style={{ background: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', border: '1px solid rgba(239, 68, 68, 0.4)' }}
+                      >
+                        <RefreshCw size={11} /> Reintentar consulta
+                      </button>
+                    )}
+                    {onContinue && (
+                      <button
+                        onClick={onContinue}
+                        className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition hover:opacity-90"
+                        style={{ background: 'rgba(201, 168, 76, 0.2)', color: '#e5c96a', border: '1px solid rgba(201, 168, 76, 0.4)' }}
+                      >
+                        <ArrowRight size={11} /> Continuar redacción
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

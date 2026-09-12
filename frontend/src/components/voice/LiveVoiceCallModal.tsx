@@ -118,8 +118,13 @@ export default function LiveVoiceCallModal({
 
       rec.onerror = (e: any) => {
         console.warn('SpeechRecognition error:', e.error)
+        const isAppleDevice = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
         if (e.error === 'not-allowed') {
-          setErrorMessage('Acceso al micrófono denegado. Haz clic en el ícono de candado en tu navegador para permitir el micrófono.')
+          if (isAppleDevice) {
+            setErrorMessage('Micrófono bloqueado en iOS/Safari. Ve a Ajustes > Safari > Micrófono > Permitir, o toca el icono de ajustes en la barra.')
+          } else {
+            setErrorMessage('Acceso al micrófono denegado. Haz clic en el ícono de candado en tu navegador para permitir el micrófono.')
+          }
         } else if (e.error === 'no-speech') {
           // No speech detected, silently keep listening
         }
@@ -147,7 +152,12 @@ export default function LiveVoiceCallModal({
             stream.getTracks().forEach(track => track.stop())
           })
           .catch(() => {
-            setErrorMessage('Por favor concede permiso de micrófono en tu navegador para hablar.')
+            const isAppleDevice = typeof navigator !== 'undefined' && (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+            if (isAppleDevice) {
+              setErrorMessage('Se requiere acceso al micrófono. En iPhone/iPad activa: Ajustes > Safari > Micrófono > Permitir.')
+            } else {
+              setErrorMessage('Por favor concede permiso de micrófono en tu navegador para hablar.')
+            }
           })
       }
 

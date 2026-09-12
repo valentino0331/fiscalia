@@ -184,6 +184,10 @@ filesRouter.post(
       res.status(500).json({
         error: 'Error al procesar el archivo. Intenta con un archivo más pequeño o en otro formato.',
       });
+    } finally {
+      if (req.file) {
+        req.file.buffer = Buffer.alloc(0);
+      }
     }
   }
 );

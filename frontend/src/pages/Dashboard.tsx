@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback, type MouseEvent } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense, type MouseEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -18,7 +18,8 @@ import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citize
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 import WhatsAppSupportButton from '@/components/ui/WhatsAppSupportButton'
-import SpijModal from '@/components/legal/SpijModal'
+
+const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
 
 const CATEGORIES = [
   { id: 'all', label: 'Todos' },
@@ -1329,11 +1330,15 @@ export default function Dashboard() {
         onClose={() => setWhereToGoOpen(false)}
       />
 
-      <SpijModal
-        isOpen={spijModalOpen}
-        onClose={() => setSpijModalOpen(false)}
-        onSelectPromptAndAgent={handleSpijSelect}
-      />
+      <Suspense fallback={null}>
+        {spijModalOpen && (
+          <SpijModal
+            isOpen={spijModalOpen}
+            onClose={() => setSpijModalOpen(false)}
+            onSelectPromptAndAgent={handleSpijSelect}
+          />
+        )}
+      </Suspense>
 
       <WhatsAppSupportButton />
     </div>

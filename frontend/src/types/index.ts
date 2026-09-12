@@ -26,6 +26,8 @@ export interface Message {
   timestamp: string
   transferTo?: string
   isVoice?: boolean
+  isError?: boolean
+  lastUserPrompt?: string
 }
 
 export interface Conversation {
