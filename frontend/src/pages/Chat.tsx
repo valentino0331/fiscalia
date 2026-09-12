@@ -1746,21 +1746,6 @@ export default function Chat() {
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
-          <button
-            onClick={() => setSpijModalOpen(true)}
-            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
-            style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.30)',
-              color: '#c9a84c',
-            }}
-            title="Base Legal SPIJ (MINJUSDH) y Acuerdos Plenarios Vinculantes de la Corte Suprema"
-          >
-            <Scale size={13} className="text-[#c9a84c]" />
-            <span className="hidden sm:inline font-semibold">SPIJ & Plenos</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
-          </button>
-
           <a
             href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
             target="_blank"
