@@ -374,7 +374,7 @@ export default function Account() {
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span className="font-semibold text-white">Soporte por WhatsApp prioritario (929 727 274)</span>
+                        <span className="font-semibold text-white">Soporte por WhatsApp prioritario (929 725 274)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />

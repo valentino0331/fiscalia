@@ -1839,7 +1839,7 @@ export default function Chat() {
           )}
 
           <a
-            href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
+            href="https://wa.me/51929725274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
             target="_blank"
             rel="noreferrer"
             className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
@@ -1848,7 +1848,7 @@ export default function Chat() {
               border: '1px solid rgba(37,211,102,0.30)',
               color: '#25D366',
             }}
-            title="Soporte directo por WhatsApp (929 727 274)"
+            title="Soporte directo por WhatsApp (929 725 274)"
           >
             <MessageCircle size={14} className="fill-[#25D366]" />
             <span className="hidden sm:inline font-semibold">WhatsApp</span>

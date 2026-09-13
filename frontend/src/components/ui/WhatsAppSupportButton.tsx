@@ -19,7 +19,7 @@ export default function WhatsAppSupportButton() {
     ? encodeURIComponent('Hola Hardman IA, soy miembro del Plan Senior y requiero soporte prioritario con mi consulta legal.')
     : encodeURIComponent('Hola Hardman IA, tengo una consulta sobre mi cuenta y los planes disponibles.')
 
-  const whatsappUrl = `https://wa.me/51929727274?text=${message}`
+  const whatsappUrl = `https://wa.me/51929725274?text=${message}`
 
   return (
     <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end group pointer-events-auto">
@@ -33,7 +33,7 @@ export default function WhatsAppSupportButton() {
           boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
         }}
       >
-        <span>Soporte WhatsApp {isSenior ? 'VIP' : ''} (929 727 274)</span>
+        <span>Soporte WhatsApp {isSenior ? 'VIP' : ''} (929 725 274)</span>
         {isSenior && (
           <span className="text-[8px] bg-[#c9a84c]/20 text-[#c9a84c] px-1.5 py-0.5 rounded font-bold uppercase">
             VIP
@@ -50,7 +50,7 @@ export default function WhatsAppSupportButton() {
           background: '#25D366',
           boxShadow: '0 4px 18px rgba(37,211,102,0.40)',
         }}
-        title="Soporte directo por WhatsApp (929 727 274)"
+        title="Soporte directo por WhatsApp (929 725 274)"
       >
         <MessageCircle size={22} className="text-white fill-white" />
         {isSenior && (

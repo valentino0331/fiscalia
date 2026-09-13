@@ -73,13 +73,13 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={13} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Soporte prioritario por WhatsApp: <strong>929 727 274</strong></span>
+                    <span>Soporte prioritario por WhatsApp: <strong>929 725 274</strong></span>
                   </li>
                 </ul>
               </div>
 
               <a
-                href="https://wa.me/51929727274?text=Hola%20Hardman%20IA,%20soy%20miembro%20Senior%20y%20necesito%20asistencia%20legal%20prioritaria."
+                href="https://wa.me/51929725274?text=Hola%20Hardman%20IA,%20soy%20miembro%20Senior%20y%20necesito%20asistencia%20legal%20prioritaria."
                 target="_blank"
                 rel="noreferrer"
                 className="w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg shadow-[#25D366]/20"
@@ -153,12 +153,12 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Soporte prioritario por WhatsApp directo (929 727 274)</span>
+                    <span>Soporte prioritario por WhatsApp directo (929 725 274)</span>
                   </li>
                 </ul>
 
                 <a
-                  href="https://wa.me/51929727274?text=Hola%20Hardman%20IA,%20quiero%20actualizar%20mi%20cuenta%20al%20Plan%20Senior%20Ilimitado%20(S/%2069/mes)."
+                  href="https://wa.me/51929725274?text=Hola%20Hardman%20IA,%20quiero%20actualizar%20mi%20cuenta%20al%20Plan%20Senior%20Ilimitado%20(S/%2069/mes)."
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:opacity-90 shadow-md"
