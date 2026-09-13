@@ -914,14 +914,31 @@ export default function Chat() {
     }
   }, [])
 
-  const cleanTextForSpeech = (text: string) =>
-    text
+  const cleanTextForSpeech = (text: string) => {
+    let t = text
       .replace(/```[\s\S]*?```/g, ' ')
       .replace(/`([^`]+)`/g, '$1')
       .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
       .replace(/[>#*_~|═━─•]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
+
+    if (t.length > 1200) {
+      const sub = t.slice(0, 1200)
+      const lastPunc = Math.max(
+        sub.lastIndexOf('. '),
+        sub.lastIndexOf('? '),
+        sub.lastIndexOf('! '),
+        sub.lastIndexOf('.\n')
+      )
+      if (lastPunc > 300) {
+        t = sub.slice(0, lastPunc + 1)
+      } else {
+        t = sub
+      }
+    }
+    return t.trim()
+  }
 
   const stopSpeaking = () => {
     if (currentAudioRef.current) {
@@ -1125,9 +1142,15 @@ export default function Chat() {
     const isFemale = FEMALE_AGENTS.has(targetAgentId)
     const effectiveAgentId = targetAgentId || (isFemale ? 'valentina' : 'sebastian')
 
+    const abortCtrl = new AbortController()
+    const timer = setTimeout(() => {
+      try { abortCtrl.abort() } catch {}
+    }, 12000)
+
     try {
       // 1. Try realistic Edge / ElevenLabs neural audio from backend
-      const blob = await api.chat.tts({ text: clean, agentId: effectiveAgentId })
+      const blob = await api.chat.tts({ text: clean, agentId: effectiveAgentId }, abortCtrl.signal)
+      clearTimeout(timer)
       const url = URL.createObjectURL(blob)
       const audio = new Audio(url)
       currentAudioRef.current = audio
@@ -1144,6 +1167,7 @@ export default function Chat() {
       }
       await audio.play()
     } catch (err) {
+      clearTimeout(timer)
       console.warn('TTS backend failed, using refined browser speech:', err)
       setAudioLoadingId(null)
       fallbackBrowserSpeech(clean, messageId, effectiveAgentId)

@@ -104,7 +104,24 @@ function enrichTextForSpeech(text: string): string {
   t = t.replace(/,\s*,/g, ',');
   t = t.replace(/\s*([,.;:?!])/g, '$1'); // Pegar signos a la palabra previa
 
-  return t.trim().slice(0, 3500);
+  const cleaned = t.trim();
+  const MAX_CHARS = 1200;
+  if (cleaned.length <= MAX_CHARS) {
+    return cleaned;
+  }
+  // Cortar en el último punto o signo de interrogación antes de MAX_CHARS
+  const sub = cleaned.slice(0, MAX_CHARS);
+  const lastPunctuation = Math.max(
+    sub.lastIndexOf('. '),
+    sub.lastIndexOf('? '),
+    sub.lastIndexOf('! '),
+    sub.lastIndexOf('.\n'),
+    sub.lastIndexOf('\n')
+  );
+  if (lastPunctuation > 300) {
+    return sub.slice(0, lastPunctuation + 1).trim();
+  }
+  return sub.trim();
 }
 
 const FEMALE_AGENTS = new Set(['valentina', 'camila', 'fernanda', 'adriana']);
@@ -135,26 +152,63 @@ export async function generateEdgeSpeech(text: string, agentId: string): Promise
   const voiceName = getEdgeVoiceForAgent(agentId);
   console.log(`[Edge TTS] Generando voz HD con entonación: voice=${voiceName}, agent=${agentId}, length=${enrichedText.length}`);
 
-  const tts = new MsEdgeTTS();
-  // Calidad máxima de audio
-  await tts.setMetadata(voiceName, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
+  const runSynthesis = async (voice: string, payload: string): Promise<Buffer> => {
+    const tts = new MsEdgeTTS();
+    await tts.setMetadata(voice, OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3);
 
-  return new Promise((resolve, reject) => {
-    // Cadencia calmada y natural para que respete entonaciones de preguntas y comas
-    const { audioStream } = tts.toStream(enrichedText, {
-      rate: '-2%',
-      pitch: '+0Hz',
-      volume: '+0%',
-    });
+    return new Promise((resolve, reject) => {
+      let resolved = false;
+      const chunks: Buffer[] = [];
 
-    const chunks: Buffer[] = [];
-    audioStream.on('data', (chunk: Buffer) => chunks.push(chunk));
-    audioStream.on('end', () => resolve(Buffer.concat(chunks)));
-    audioStream.on('error', (err: any) => {
-      console.error('[Edge TTS Error]:', err);
-      reject(err);
+      const { audioStream } = tts.toStream(payload, {
+        rate: '-2%',
+        pitch: '+0Hz',
+        volume: '+0%',
+      });
+
+      const finishWithAudio = () => {
+        if (resolved) return;
+        if (chunks.length > 0) {
+          const totalBuffer = Buffer.concat(chunks);
+          if (totalBuffer.length >= 500) {
+            resolved = true;
+            return resolve(totalBuffer);
+          }
+        }
+        resolved = true;
+        reject(new Error('No se recibieron datos de audio válidos del motor TTS'));
+      };
+
+      audioStream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      audioStream.on('end', finishWithAudio);
+      audioStream.on('error', (err: any) => {
+        const msg = String(err?.message || err);
+        console.warn(`[Edge TTS Stream Info]: ${msg}`);
+        // Si el stream se cerró prematuramente por el servidor (ej. 'no turn.end received'),
+        // pero ya se recibieron bytes de audio MP3, el archivo es válido y perfectamente reproducible
+        if (chunks.length > 0) {
+          const totalBuffer = Buffer.concat(chunks);
+          if (totalBuffer.length >= 500) {
+            console.log(`[Edge TTS] Audio rescatado exitosamente (${totalBuffer.length} bytes) tras cierre del stream.`);
+            resolved = true;
+            return resolve(totalBuffer);
+          }
+        }
+        if (!resolved) {
+          resolved = true;
+          reject(err);
+        }
+      });
     });
-  });
+  };
+
+  try {
+    return await runSynthesis(voiceName, enrichedText);
+  } catch (firstErr: any) {
+    console.warn('[Edge TTS] Intento inicial falló, reintentando con payload compacto...', firstErr?.message || firstErr);
+    const compactText = enrichedText.slice(0, 500);
+    return await runSynthesis(voiceName, compactText);
+  }
 }
 
 export async function generateElevenLabsSpeech(text: string, agentId: string): Promise<Buffer> {

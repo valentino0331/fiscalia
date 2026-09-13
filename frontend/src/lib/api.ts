@@ -159,7 +159,7 @@ export const api = {
         callbacks.onError(err)
       }
     },
-    tts: async (data: { text: string; agentId: string }): Promise<Blob> => {
+    tts: async (data: { text: string; agentId: string }, signal?: AbortSignal): Promise<Blob> => {
       const token = getToken()
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -169,6 +169,7 @@ export const api = {
         method: 'POST',
         headers,
         body: JSON.stringify(data),
+        signal,
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: 'Error de audio TTS' }))
