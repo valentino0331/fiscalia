@@ -181,6 +181,7 @@ export type LineKind =
   | 'SECTION_ROMAN'
   | 'SECTION_TEXT'
   | 'SECTION_NUM'
+  | 'NUMBERED_ITEM'
   | 'HEADING_MD'
   | 'BULLET'
   | 'SEPARATOR'
@@ -216,14 +217,17 @@ export function classifyLine(line: string): LineKind {
   // Encabezados markdown ## ### ####
   if (/^#{2,4}\s/.test(t)) return 'HEADING_MD'
 
-  // Secciones romanas: I. II. III. IV. ...
-  if (/^[IVXLCDM]+\.\s+[A-ZÁÉÍÓÚÑ].{2,}/i.test(plain)) return 'SECTION_ROMAN'
+  // Secciones y subsecciones romanas: I. II. III. IV. o III.1. III.2. ...
+  if (/^[IVXLCDM]+(?:\.\d+)*\.?\s+[A-ZÁÉÍÓÚÑ].{2,}/i.test(plain)) return 'SECTION_ROMAN'
 
   // Secciones texto: PRIMERO, SEGUNDO, POR TANTO, OTROSI...
   if (/^((PRIMER|SEGUNDO|TERCER|CUARTO|QUINTO|SEXTO)\s+)?OTROS[IÍ](\s+DIGO)?(\.-|\s*:|\s*-)/i.test(plain) || /^(PRIMERO|SEGUNDO|TERCERO|CUARTO|QUINTO|SEXTO|S[EÉ]PTIMO|OCTAVO|NOVENO|D[EÉ]CIMO|POR\s+TANTO|OTROSI\s+DIGO|OTROSI|PETITORIO|FUNDAMENTOS?(\s+DE)?\s+(HECHO|DERECHO)|MEDIOS?\s+PROBATORIOS?|ANEXOS?|POR\s+LO\s+EXPUESTO)\s*:?\s*$/i.test(plain)) return 'SECTION_TEXT'
 
-  // Numeración de sección: 1. texto 2. texto
-  if (/^\d{1,2}\.\s+[A-ZÁÉÍÓÚÑ].{3,}/.test(plain) && plain.length < 80) return 'SECTION_NUM'
+  // Numeración de sección principal en mayúsculas (ej. 1. OBJETO DEL CONTRATO)
+  if (/^\d{1,2}\.\s+[A-ZÁÉÍÓÚÑ\s]{4,}$/.test(plain) && plain.length < 60) return 'SECTION_NUM'
+
+  // Ítems numerados de hechos, pretensiones, pruebas y anexos (ej. 1. Hecho..., 1-A Copia..., – Subítem...)
+  if (/^(?:\d{1,2}\.|\d{1,2}-[A-Z]\.?|\d{1,2}\)|[–—\-])\s+/i.test(t)) return 'NUMBERED_ITEM'
 
   // Etiqueta de firma
   if (/^(FIRMA|DNI\s*N?°|RUC\s*N?°|CAL\s*N?°|CIP\s*N?°|ABOGADO\s*:|COLEGIO DE ABOGADOS|N?°\s*COLEGIATURA|LUGAR\s+Y\s+FECHA|FECHA\s*:)\s*[:\s]/i.test(plain)) return 'SIGNATURE_LABEL'
@@ -232,7 +236,7 @@ export function classifyLine(line: string): LineKind {
   if (/^(NOMBRE\s*:|DNI\s*(?:N°)?\s*:|DOMICILIO\s*(REAL|PROCESAL|ELECTRÓNICO)?\s*:|DIRECCIÓN\s*:|CORREO\s*:|TELÉFONO\s*:|REPRESENTANTE\s*:|ESTADO CIVIL\s*:|OCUPACIÓN\s*:|CASILLA\s*(JUDICIAL|ELECTRÓNICA)?\s*:|RUC\s*(?:N°)?\s*:)/i.test(plain)) return 'FIELD'
 
   // Viñetas / listas
-  if (/^[•\-\*·]\s+/.test(t)) return 'BULLET'
+  if (/^[•\*·]\s+/.test(t)) return 'BULLET'
 
   return 'PLAIN'
 }
@@ -257,6 +261,7 @@ export type DocBlock =
   | { kind: 'SUMILLA'; lines: string[] }
   | { kind: 'CLAUSE'; text: string }
   | { kind: 'SECTION'; text: string; sublines: string[] }
+  | { kind: 'NUMBERED_ITEM'; text: string }
   | { kind: 'BULLET'; items: string[] }
   | { kind: 'FIELD'; lines: string[] }
   | { kind: 'SEPARATOR'; text: string }
@@ -488,6 +493,24 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
           } else break
         }
         blocks.push({ kind: 'SECTION', text: titleText, sublines })
+        break
+      }
+
+      case 'NUMBERED_ITEM': {
+        const itemLines = [trimmed]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (isClauseHeading(next)) break
+          if (/^_{4,}/.test(next)) break
+          const nKind = classifyLine(next)
+          if (nKind === 'PLAIN') {
+            itemLines.push(next)
+            i++
+          } else break
+        }
+        blocks.push({ kind: 'NUMBERED_ITEM', text: itemLines.join(' ') })
         break
       }
 
@@ -921,6 +944,10 @@ export function renderDocHtmlBody(content: string, letterhead?: LawFirmLetterhea
         break
       }
 
+      case 'NUMBERED_ITEM':
+        htmlParts.push(`<p class="doc-paragraph doc-numbered-item">${parseInlineMarkdownToHtml(block.text)}</p>`)
+        break
+
       case 'PLAIN':
         htmlParts.push(`<p class="doc-paragraph">${parseInlineMarkdownToHtml(block.text)}</p>`)
         break
@@ -1205,65 +1232,80 @@ export async function downloadWordDoc(
   const docChildren: any[] = []
 
   const letterhead = getSavedLetterhead()
-  if (letterhead) {
-    if (letterhead.firmName) {
-      docChildren.push(new Paragraph({
-        alignment: AlignmentType.LEFT,
-        spacing: { before: 0, after: 40, line: 240 },
+  const headerFirstChildren: Paragraph[] = []
+
+  if (letterhead && (letterhead.firmName || letterhead.attorneyInfo || letterhead.contactInfo || letterhead.attorneyName)) {
+    const details = parseLetterheadDetails(letterhead)
+
+    if (details.firmName) {
+      headerFirstChildren.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0, line: 360 },
         children: [
           new TextRun({
-            text: letterhead.firmName.toUpperCase(),
+            text: details.firmName.toUpperCase(),
             font: 'Times New Roman',
-            size: 24, // 12pt
+            size: 22, // 11pt
             bold: true,
-            color: '1A1A1A',
           }),
         ],
       }))
     }
-    if (letterhead.attorneyInfo) {
-      docChildren.push(new Paragraph({
-        alignment: AlignmentType.LEFT,
-        spacing: { before: 0, after: 40, line: 220 },
+
+    const attLine = details.attorneyName
+      ? (details.cal ? `${details.attorneyName} — Reg. C.A.L. N° ${details.cal}` : details.attorneyName)
+      : (letterhead.attorneyInfo || '')
+
+    if (attLine) {
+      headerFirstChildren.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0, line: 360 },
         children: [
           new TextRun({
-            text: letterhead.attorneyInfo,
+            text: attLine,
             font: 'Times New Roman',
-            size: 19, // 9.5pt
-            italics: true,
-            color: '444444',
+            size: 20, // 10pt
           }),
         ],
       }))
     }
-    if (letterhead.contactInfo) {
-      const contactLines = letterhead.contactInfo.split('\n').map(c => c.trim()).filter(Boolean)
-      for (const cl of contactLines) {
-        docChildren.push(new Paragraph({
-          alignment: AlignmentType.LEFT,
-          spacing: { before: 0, after: 30, line: 200 },
-          children: [
-            new TextRun({
-              text: cl,
-              font: 'Times New Roman',
-              size: 18, // 9pt
-              color: '555555',
-            }),
-          ],
-        }))
-      }
+
+    const contactParts: string[] = []
+    if (details.address) contactParts.push(details.address)
+    if (details.phone) contactParts.push(`Cel. ${details.phone}`)
+    if (details.sinoe) contactParts.push(`SINOE N° ${details.sinoe}`)
+    if (details.email) contactParts.push(details.email)
+
+    const contactLine = contactParts.length > 0
+      ? contactParts.join('   |   ')
+      : (letterhead.contactInfo ? letterhead.contactInfo.replace(/\n+/g, '   |   ') : '')
+
+    if (contactLine) {
+      headerFirstChildren.push(new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 60, line: 360 },
+        children: [
+          new TextRun({
+            text: contactLine,
+            font: 'Times New Roman',
+            size: 18, // 9pt
+          }),
+        ],
+      }))
     }
-    docChildren.push(new Paragraph({
+
+    // Línea divisoria inferior
+    headerFirstChildren.push(new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 40, after: 200, line: 200 },
-      children: [
-        new TextRun({
-          text: '____________________________________________________________________',
-          font: 'Times New Roman',
-          size: 18,
-          color: '333333',
-        }),
-      ],
+      spacing: { before: 0, after: 80 },
+      border: {
+        bottom: {
+          style: BorderStyle.SINGLE,
+          size: 6,
+          color: '444444',
+        },
+      },
+      children: [],
     }))
   }
 
@@ -1275,7 +1317,7 @@ export async function downloadWordDoc(
       case 'MAIN_TITLE':
         docChildren.push(new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 280, after: 220, line: 360 },
+          spacing: { before: 240, after: 180, line: 360 },
           keepNext: true,
           children: [new TextRun({
             text: cleanHeading(block.text).toUpperCase(),
@@ -1290,12 +1332,12 @@ export async function downloadWordDoc(
         for (const l of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.LEFT,
-            spacing: { before: 60, after: 40, line: 320 },
+            spacing: { before: 120, after: 160, line: 360 },
             keepNext: true,
             children: [new TextRun({
               text: cleanHeading(l),
               font: 'Times New Roman',
-              size: 24,
+              size: 24, // 12pt
               bold: true,
             })],
           }))
@@ -1303,13 +1345,14 @@ export async function downloadWordDoc(
         break
 
       case 'SUMILLA':
-        for (const l of block.lines) {
+        for (let sIdx = 0; sIdx < block.lines.length; sIdx++) {
+          const l = block.lines[sIdx]
+          const isLast = sIdx === block.lines.length - 1
           docChildren.push(new Paragraph({
-            alignment: AlignmentType.RIGHT,
-            spacing: { before: 20, after: 20, line: 240 },
+            alignment: AlignmentType.LEFT,
+            spacing: { before: 0, after: isLast ? 200 : 40, line: 360 },
             keepNext: true,
-            indent: { left: 3600 },
-            children: parseInlineMarkdownToDocx(cleanHeading(l), { bold: true, size: 22 }),
+            children: parseInlineMarkdownToDocx(cleanHeading(l), { bold: true, size: 24 }),
           }))
         }
         break
@@ -1317,7 +1360,7 @@ export async function downloadWordDoc(
       case 'CLAUSE':
         docChildren.push(new Paragraph({
           alignment: AlignmentType.LEFT,
-          spacing: { before: 260, after: 120, line: 276 },
+          spacing: { before: 240, after: 100, line: 360 },
           keepNext: true,
           children: [new TextRun({
             text: cleanHeading(block.text),
@@ -1328,33 +1371,70 @@ export async function downloadWordDoc(
         }))
         break
 
-      case 'SECTION':
-        docChildren.push(new Paragraph({
-          alignment: AlignmentType.LEFT,
-          spacing: { before: 260, after: 100, line: 320 },
-          keepNext: true,
-          children: [new TextRun({
-            text: cleanHeading(block.text).toUpperCase(),
-            font: 'Times New Roman',
-            size: 24,
-            bold: true,
-          })],
-        }))
-        for (const sl of block.sublines) {
+      case 'SECTION': {
+        const isSubSection = /^[IVXLCDM]+(?:\.\d+)+/i.test(block.text)
+        const isOtrosi = /^((PRIMER|SEGUNDO|TERCER|CUARTO)\s+)?OTROS[IÍ]/i.test(block.text)
+
+        if (isOtrosi) {
+          const fullText = block.sublines.length > 0
+            ? `${cleanHeading(block.text)} ${block.sublines.join(' ')}`
+            : cleanHeading(block.text)
           docChildren.push(new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 40, after: 120, line: 320 },
-            children: parseInlineMarkdownToDocx(sl, { size: 24 }),
+            spacing: { before: 0, after: 300, line: 360 },
+            children: parseInlineMarkdownToDocx(fullText, { bold: true, size: 24 }),
           }))
+        } else {
+          docChildren.push(new Paragraph({
+            alignment: isSubSection ? AlignmentType.JUSTIFIED : AlignmentType.LEFT,
+            spacing: {
+              before: isSubSection ? 0 : 240,
+              after: isSubSection ? 100 : 120,
+              line: 360,
+            },
+            keepNext: true,
+            children: [new TextRun({
+              text: isSubSection ? cleanHeading(block.text) : cleanHeading(block.text).toUpperCase(),
+              font: 'Times New Roman',
+              size: 24,
+              bold: true,
+            })],
+          }))
+          for (const sl of block.sublines) {
+            docChildren.push(new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { before: 0, after: 120, line: 360 },
+              children: parseInlineMarkdownToDocx(sl, { size: 24 }),
+            }))
+          }
         }
         break
+      }
+
+      case 'NUMBERED_ITEM': {
+        const isSubItem = /^(?:[–—\-•·]|\d{1,2}\))\s+/.test(block.text)
+        const isAnnex = /^\d{1,2}-[A-Z]\.?\s+/i.test(block.text)
+        const isPetitorioItem = /^\d{1,2}\.\s+Pago\s+de/i.test(block.text)
+
+        docChildren.push(new Paragraph({
+          alignment: AlignmentType.JUSTIFIED,
+          spacing: {
+            before: 0,
+            after: isAnnex ? 40 : (isSubItem ? 40 : 80),
+            line: 360,
+          },
+          indent: (isSubItem || isPetitorioItem) ? { left: 720 } : undefined,
+          children: parseInlineMarkdownToDocx(block.text, { size: 24 }),
+        }))
+        break
+      }
 
       case 'BULLET':
         for (const item of block.items) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.JUSTIFIED,
-            indent: { left: convertMillimetersToTwip(12), hanging: convertMillimetersToTwip(6) },
-            spacing: { before: 40, after: 60, line: 320 },
+            indent: { left: 720, hanging: 360 },
+            spacing: { before: 0, after: 60, line: 360 },
             children: [
               new TextRun({ text: '•  ', font: 'Times New Roman', size: 24, bold: true }),
               ...parseInlineMarkdownToDocx(item, { size: 24 }),
@@ -1367,8 +1447,8 @@ export async function downloadWordDoc(
         for (const f of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.LEFT,
-            indent: { left: convertMillimetersToTwip(10) },
-            spacing: { before: 40, after: 40, line: 300 },
+            indent: { left: 720 },
+            spacing: { before: 0, after: 40, line: 360 },
             children: parseInlineMarkdownToDocx(f, { size: 24 }),
           }))
         }
@@ -1377,9 +1457,9 @@ export async function downloadWordDoc(
       case 'SEPARATOR':
         docChildren.push(new Paragraph({
           alignment: AlignmentType.CENTER,
-          spacing: { before: 600, after: 100, line: 260 },
+          spacing: { before: 300, after: 100, line: 360 },
           children: [new TextRun({
-            text: '______________________________',
+            text: '_______________________________',
             font: 'Times New Roman',
             size: 24,
           })],
@@ -1390,16 +1470,15 @@ export async function downloadWordDoc(
         for (const sl of block.lines) {
           docChildren.push(new Paragraph({
             alignment: AlignmentType.CENTER,
-            spacing: { before: 40, after: 40, line: 260 },
+            spacing: { before: 0, after: 40, line: 360 },
             children: parseInlineMarkdownToDocx(sl, { bold: true, size: 24 }),
           }))
         }
         break
 
       case 'DOUBLE_SIGNATURE':
-        // ── Renderizado de firmas paralelas mediante Tabla Word invisible (estándar notarial peruano) ──
         docChildren.push(new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
+          width: { size: 8640, type: WidthType.DXA },
           borders: {
             top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
             bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -1412,7 +1491,7 @@ export async function downloadWordDoc(
             new TableRow({
               children: [
                 new TableCell({
-                  width: { size: 50, type: WidthType.PERCENTAGE },
+                  width: { size: 4320, type: WidthType.DXA },
                   borders: {
                     top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
                     bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -1422,33 +1501,33 @@ export async function downloadWordDoc(
                   children: [
                     new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 680, after: 60, line: 240 },
-                      children: [new TextRun({ text: block.data.left.line || '_________________________________', font: 'Times New Roman', size: 22 })],
+                      spacing: { before: 0, after: 40, line: 360 },
+                      children: [new TextRun({ text: block.data.left.line || '_______________________________', font: 'Times New Roman', size: 24 })],
                     }),
                     ...(block.data.left.name ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.left.name, font: 'Times New Roman', size: 22, bold: true })],
+                      spacing: { before: 0, after: 20, line: 360 },
+                      children: [new TextRun({ text: block.data.left.name.toUpperCase(), font: 'Times New Roman', size: 24, bold: true })],
                     })] : []),
                     ...(block.data.left.docId ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.left.docId, font: 'Times New Roman', size: 22 })],
+                      spacing: { before: 0, after: 20, line: 360 },
+                      children: [new TextRun({ text: block.data.left.docId, font: 'Times New Roman', size: 24 })],
                     })] : []),
                     ...(block.data.left.role ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.left.role, font: 'Times New Roman', size: 22 })],
+                      spacing: { before: 0, after: 0, line: 360 },
+                      children: [new TextRun({ text: block.data.left.role, font: 'Times New Roman', size: 24 })],
                     })] : []),
                     ...(block.data.left.extra ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
+                      spacing: { before: 0, after: 0, line: 360 },
                       children: [new TextRun({ text: block.data.left.extra, font: 'Times New Roman', size: 20, italics: true })],
                     })] : []),
                   ],
                 }),
                 new TableCell({
-                  width: { size: 50, type: WidthType.PERCENTAGE },
+                  width: { size: 4320, type: WidthType.DXA },
                   borders: {
                     top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
                     bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
@@ -1458,27 +1537,27 @@ export async function downloadWordDoc(
                   children: [
                     new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 680, after: 60, line: 240 },
-                      children: [new TextRun({ text: block.data.right.line || '_________________________________', font: 'Times New Roman', size: 22 })],
+                      spacing: { before: 0, after: 40, line: 360 },
+                      children: [new TextRun({ text: block.data.right.line || '_______________________________', font: 'Times New Roman', size: 24 })],
                     }),
                     ...(block.data.right.name ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.right.name, font: 'Times New Roman', size: 22, bold: true })],
+                      spacing: { before: 0, after: 20, line: 360 },
+                      children: [new TextRun({ text: block.data.right.name, font: 'Times New Roman', size: 24, bold: true })],
                     })] : []),
                     ...(block.data.right.docId ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.right.docId, font: 'Times New Roman', size: 22 })],
+                      spacing: { before: 0, after: 20, line: 360 },
+                      children: [new TextRun({ text: block.data.right.docId, font: 'Times New Roman', size: 24 })],
                     })] : []),
                     ...(block.data.right.role ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.right.role, font: 'Times New Roman', size: 22 })],
+                      spacing: { before: 0, after: 0, line: 360 },
+                      children: [new TextRun({ text: block.data.right.role, font: 'Times New Roman', size: 24 })],
                     })] : []),
                     ...(block.data.right.extra ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
+                      spacing: { before: 0, after: 0, line: 360 },
                       children: [new TextRun({ text: block.data.right.extra, font: 'Times New Roman', size: 20, italics: true })],
                     })] : []),
                   ],
@@ -1490,18 +1569,94 @@ export async function downloadWordDoc(
         break
 
       case 'TABLE': {
+        const isSigTable = block.rows.some(r => r.some(c => /^_{4,}/.test(c.trim()))) ||
+          block.headers.some(h => /^_{4,}/.test(h.trim()))
+        if (isSigTable) {
+          const allRows = block.headers.length > 0 ? [block.headers, ...block.rows] : block.rows
+          const leftLines: string[] = []
+          const rightLines: string[] = []
+          for (const r of allRows) {
+            if (r.length >= 2) {
+              leftLines.push(r[0])
+              rightLines.push(r[1])
+            }
+          }
+          docChildren.push(new Table({
+            width: { size: 8640, type: WidthType.DXA },
+            borders: {
+              top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+              bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+              left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+              right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+              insideHorizontal: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+              insideVertical: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+            },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    width: { size: 4320, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                      left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                      right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    },
+                    children: leftLines.map((txt, idx) => new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 0, after: idx === 0 ? 40 : (idx === leftLines.length - 1 ? 0 : 20), line: 360 },
+                      children: [new TextRun({
+                        text: idx === 1 ? txt.toUpperCase() : txt,
+                        font: 'Times New Roman',
+                        size: 24,
+                        bold: idx === 1,
+                      })],
+                    })),
+                  }),
+                  new TableCell({
+                    width: { size: 4320, type: WidthType.DXA },
+                    borders: {
+                      top: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                      bottom: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                      left: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                      right: { style: BorderStyle.NONE, size: 0, color: 'auto' },
+                    },
+                    children: rightLines.map((txt, idx) => new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 0, after: idx === 0 ? 40 : (idx === rightLines.length - 1 ? 0 : 20), line: 360 },
+                      children: [new TextRun({
+                        text: idx === 1 ? txt.toUpperCase() : txt,
+                        font: 'Times New Roman',
+                        size: 24,
+                        bold: idx === 1,
+                      })],
+                    })),
+                  }),
+                ],
+              }),
+            ],
+          }))
+          break
+        }
+
         const numCols = Math.max(block.headers.length, ...block.rows.map(r => r.length), 1)
         const is2Col = numCols === 2
-        const isCalcTable = is2Col && (
-          block.headers.some(h => /CONCEPTO/i.test(h)) ||
-          block.rows.some(r => r.some(c => /^(?:S\/?\.?|\$)\s*[\d,.]+/i.test(c)))
-        )
-        const isDataTable = is2Col && !isCalcTable
 
-        const tableBorder = { style: BorderStyle.SINGLE, size: 4, color: '444444' }
+        const hasConceptoHeader = block.headers.some(h => /CONCEPTO/i.test(h)) ||
+          block.rows.some(r => r.some(c => /^CONCEPTO$/i.test(c.trim())))
+        const hasDataHeader = block.headers.some(h => /^(?:DATO|DETALLE|CAMPO|PARÁMETRO)/i.test(h))
+        const isKnownDataTable = block.rows.some(r => r.some(c => /^(?:Fecha de ingreso|Fecha de cese|Cargo desempeñado|Tipo de contrato)/i.test(c)))
+
+        const isDataTable = is2Col && (isKnownDataTable || hasDataHeader || (!hasConceptoHeader && !block.headers.some(h => /MONTO/i.test(h))))
+        const isCalcTable = is2Col && !isDataTable
+
+        const tableBorder = { style: BorderStyle.SINGLE, size: 4, color: 'auto' }
         const docxRows: TableRow[] = []
 
-        if (block.headers.length > 0) {
+        // If it's a data table and headers are just DATO / DETALLE, omit header row
+        const omitHeader = isDataTable && (block.headers.length === 0 || block.headers.every(h => /^(?:DATO|DETALLE|CAMPO|PARÁMETRO)?$/i.test(h.trim())))
+
+        if (block.headers.length > 0 && !omitHeader) {
           const headerCells = block.headers.map((h, colIdx) => {
             const widthDxa = isCalcTable
               ? (colIdx === 0 ? 5760 : 2880)
@@ -1519,12 +1674,12 @@ export async function downloadWordDoc(
               children: [
                 new Paragraph({
                   alignment: isMoney ? AlignmentType.RIGHT : AlignmentType.LEFT,
-                  spacing: { before: 80, after: 80, line: 240 },
+                  spacing: { before: 80, after: 80, line: 360 },
                   children: [
                     new TextRun({
                       text: cleanHeading(h).toUpperCase(),
                       font: 'Times New Roman',
-                      size: 22,
+                      size: 24, // 12pt
                       bold: true,
                       color: '111111',
                     }),
@@ -1537,6 +1692,10 @@ export async function downloadWordDoc(
         }
 
         for (const row of block.rows) {
+          if (omitHeader && row.every(c => /^(?:DATO|DETALLE|CAMPO|PARÁMETRO)?$/i.test(c.trim()))) {
+            continue
+          }
+
           const isTotalRow = row.some(cell => /TOTAL/i.test(cell))
           const cells = row.map((cell, colIdx) => {
             const widthDxa = isCalcTable
@@ -1561,10 +1720,10 @@ export async function downloadWordDoc(
               children: [
                 new Paragraph({
                   alignment: isMoney ? AlignmentType.RIGHT : AlignmentType.LEFT,
-                  spacing: { before: 60, after: 60, line: 240 },
+                  spacing: { before: 60, after: 60, line: 360 },
                   children: parseInlineMarkdownToDocx(cellText, {
                     bold: isBold,
-                    size: 22,
+                    size: 24, // 12pt
                   }),
                 }),
               ],
@@ -1588,19 +1747,25 @@ export async function downloadWordDoc(
         }))
 
         docChildren.push(new Paragraph({
-          spacing: { before: 80, after: 120, line: 240 },
+          spacing: { before: 0, after: 140, line: 360 },
           children: [new TextRun({ text: '' })],
         }))
         break
       }
 
-      case 'PLAIN':
+      case 'PLAIN': {
+        const isDate = /^(?:[A-ZÁÉÍÓÚÑa-záéíóúñ]+,\s+\d{1,2}\s+de\s+[a-z]+\s+de\s+\d{4}\.?)$/i.test(block.text.trim())
         docChildren.push(new Paragraph({
-          alignment: AlignmentType.JUSTIFIED,
-          spacing: { before: 40, after: 140, line: 300 },
+          alignment: isDate ? AlignmentType.LEFT : AlignmentType.JUSTIFIED,
+          spacing: {
+            before: 0,
+            after: isDate ? 500 : 120,
+            line: 360,
+          },
           children: parseInlineMarkdownToDocx(block.text, { size: 24 }),
         }))
         break
+      }
     }
   }
 
@@ -1618,26 +1783,31 @@ export async function downloadWordDoc(
               bottom: convertMillimetersToTwip(fmt.marginBottomCm * 10),
               left: convertMillimetersToTwip(fmt.marginLeftCm * 10),
               right: convertMillimetersToTwip(fmt.marginRightCm * 10),
+              header: 708,
+              footer: 708,
             },
           },
+          titlePage: true,
+        },
+        headers: {
+          first: new Header({
+            children: headerFirstChildren,
+          }),
+          default: new Header({
+            children: [],
+          }),
         },
         footers: {
           default: new Footer({
             children: [
               new Paragraph({
                 alignment: AlignmentType.CENTER,
-                spacing: { before: 140, after: 0 },
+                spacing: { before: 0, after: 0, line: 360 },
                 children: [
                   new TextRun({
-                    text: letterhead?.firmName ? `${letterhead.firmName}  |  ` : 'Estudio Jurídico  |  ',
+                    text: letterhead?.firmName ? `${letterhead.firmName}   |   Página ` : 'Estudio Jurídico   |   Página ',
                     font: 'Times New Roman',
-                    size: 20, // 10pt (20 half-points)
-                    color: '555555',
-                  }),
-                  new TextRun({
-                    text: 'Página ',
-                    font: 'Times New Roman',
-                    size: 20,
+                    size: 20, // 10pt
                     color: '555555',
                   }),
                   new TextRun({
@@ -1862,6 +2032,23 @@ export async function downloadPdfDoc(
           })
           currentY += 1
         }
+        break
+      }
+
+      case 'NUMBERED_ITEM': {
+        pdf.setFont('times', 'normal')
+        pdf.setFontSize(10.5)
+        pdf.setTextColor(30, 30, 30)
+        if (currentY > pageHeight - marginBottom - 10) {
+          pdf.addPage()
+          currentY = letterhead?.firmName ? 27 : marginTop
+        }
+        const wrapped = pdf.splitTextToSize(cleanHeading(block.text), contentWidth)
+        wrapped.forEach((wl: string) => {
+          pdf.text(wl, marginLeft, currentY)
+          currentY += 4.9
+        })
+        currentY += 1
         break
       }
 
