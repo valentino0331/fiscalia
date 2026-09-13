@@ -347,7 +347,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
   };
 
   try {
-    const { agentId, messages, conversationId } = req.body;
+    const { agentId, messages, conversationId, letterhead } = req.body;
 
     if (!SYSTEM_PROMPTS[agentId]) {
       if (isStream) {
@@ -422,9 +422,58 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       sendStreamChunk(assistantMessage);
     }
 
+    // Inyección inteligente de datos del estudio y abogado patrocinante (membrete)
+    let studioBlock = '';
+    if (letterhead && typeof letterhead === 'object') {
+      const p = {
+        firmName: String(letterhead.firmName || '').trim(),
+        attorneyName: String(letterhead.attorneyName || '').trim(),
+        cal: String(letterhead.cal || letterhead.colegiatura || '').trim(),
+        sinoe: String(letterhead.sinoe || '').trim(),
+        email: String(letterhead.email || '').trim(),
+        phone: String(letterhead.phone || '').trim(),
+        address: String(letterhead.address || '').trim(),
+      };
+      if (letterhead.attorneyInfo && (!p.attorneyName || !p.cal)) {
+        const attParts = String(letterhead.attorneyInfo).split(/\s*[-—|]\s*|\s+(?:Reg\.?|C\.?A\.?L\.?)\b/i);
+        if (!p.attorneyName && attParts[0]) p.attorneyName = attParts[0].trim();
+        if (!p.cal) {
+          const m = String(letterhead.attorneyInfo).match(/(?:CAL|C\.?A\.?L\.?|Reg\.?)\s*(?:N°|N|#)?\s*[:.]?\s*([0-9A-Za-z-]+)/i) || String(letterhead.attorneyInfo).match(/\b([0-9]{4,6})\b/);
+          if (m) p.cal = m[1] || m[0];
+        }
+      }
+      if (letterhead.contactInfo && (!p.sinoe || !p.email || !p.phone)) {
+        if (!p.sinoe) {
+          const sm = String(letterhead.contactInfo).match(/(?:Casilla\s*(?:Electr[oó]nica)?\s*(?:SINOE)?|SINOE)\s*(?:N°|N|#)?\s*[:.]?\s*([0-9A-Za-z-]+)/i);
+          if (sm) p.sinoe = sm[1];
+        }
+        if (!p.email) {
+          const em = String(letterhead.contactInfo).match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+          if (em) p.email = em[0];
+        }
+        if (!p.phone) {
+          const pm = String(letterhead.contactInfo).match(/(?:Cel(?:ular)?|Tel(?:[eé]fono)?)\.?\s*[:.]?\s*([0-9\s-]{7,15})/i) || String(letterhead.contactInfo).match(/\b(9\d{2}[\s.-]?\d{3}[\s.-]?\d{3})\b/);
+          if (pm) p.phone = pm[1].trim();
+        }
+      }
+
+      const studioLines: string[] = [];
+      if (p.firmName) studioLines.push(`- Estudio Jurídico / Razón Social: ${p.firmName}`);
+      if (p.attorneyName) studioLines.push(`- Abogado Patrocinante: ${p.attorneyName}`);
+      if (p.cal) studioLines.push(`- Registro de Colegiatura (CAL): ${p.cal}`);
+      if (p.sinoe) studioLines.push(`- Casilla Electrónica SINOE: ${p.sinoe}`);
+      if (p.email) studioLines.push(`- Correo Electrónico Procesal: ${p.email}`);
+      if (p.phone) studioLines.push(`- Teléfono / Celular de Contacto: ${p.phone}`);
+      if (p.address) studioLines.push(`- Domicilio Procesal: ${p.address}`);
+
+      if (studioLines.length > 0) {
+        studioBlock = `\n\n════════════════════════════════════════\nDATOS DEL ESTUDIO JURÍDICO Y ABOGADO PATROCINANTE\n════════════════════════════════════════\n${studioLines.join('\n')}\n\nINSTRUCCIÓN CRÍTICA DE REDACCIÓN DE ESCRITOS:\nAl redactar cualquier documento, demanda, recurso, contestación, otrosí o contrato (en el bloque \`\`\`document):\n1. Utiliza DIRECTAMENTE los datos reales del abogado patrocinante indicados arriba en la comparecencia, en los Otrosíes Digo (casilla SINOE, correo, teléfono) y en la tabla de firmas al pie del documento.\n2. NUNCA coloques placeholders genéricos como [NOMBRE DEL ABOGADO], [REGISTRO CAL], [CASILLA SINOE], [CORREO] o [NUMERO]; reemplázalos siempre con la información real de arriba.`;
+      }
+    }
+
     // Inyección inteligente de doctrina y normas actualizadas del SPIJ y Corte Suprema
     const legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
-    const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
+    const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
 
     const formattedMessages = [
       { role: 'system', content: fullSystemPrompt },

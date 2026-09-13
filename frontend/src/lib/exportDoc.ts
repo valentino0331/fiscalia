@@ -548,9 +548,206 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
   return blocks
 }
 
+// ─── MEMBRETE DE ESTUDIO JURÍDICO & REEMPLAZO DE PLACEHOLDERS ──────────────────
+export interface LawFirmLetterhead {
+  firmName?: string
+  attorneyInfo?: string
+  contactInfo?: string
+  attorneyName?: string
+  cal?: string
+  colegiatura?: string
+  sinoe?: string
+  email?: string
+  phone?: string
+  address?: string
+}
+
+export function getSavedLetterhead(): LawFirmLetterhead | null {
+  try {
+    const raw = localStorage.getItem('hardman_letterhead')
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (
+        parsed.firmName ||
+        parsed.attorneyInfo ||
+        parsed.contactInfo ||
+        parsed.attorneyName ||
+        parsed.cal ||
+        parsed.sinoe
+      ) {
+        return parsed
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null
+}
+
+export function parseLetterheadDetails(letterhead?: LawFirmLetterhead | null): {
+  firmName: string
+  attorneyName: string
+  cal: string
+  sinoe: string
+  email: string
+  phone: string
+  address: string
+} {
+  if (!letterhead) {
+    return { firmName: '', attorneyName: '', cal: '', sinoe: '', email: '', phone: '', address: '' }
+  }
+
+  const res = {
+    firmName: (letterhead.firmName || '').trim(),
+    attorneyName: (letterhead.attorneyName || '').trim(),
+    cal: (letterhead.cal || letterhead.colegiatura || '').trim(),
+    sinoe: (letterhead.sinoe || '').trim(),
+    email: (letterhead.email || '').trim(),
+    phone: (letterhead.phone || '').trim(),
+    address: (letterhead.address || '').trim(),
+  }
+
+  // 1. Extraer nombre y colegiatura de attorneyInfo si no están definidos explícitamente
+  const att = (letterhead.attorneyInfo || '').trim()
+  if (att) {
+    if (!res.attorneyName) {
+      const parts = att.split(/\s*[-—|]\s*|\s+(?:Reg\.?|C\.?A\.?L\.?|Colegiatura)\b/i)
+      if (parts[0] && parts[0].trim()) {
+        res.attorneyName = parts[0].trim()
+      }
+    }
+    if (!res.cal) {
+      const calMatch = att.match(/(?:Reg\.?\s*C\.?A\.?L\.?|C\.?A\.?L\.?|Colegiatura|Reg\.?)\s*(?:N°|N|#)?\s*[:.]?\s*([0-9A-Za-z-]+)/i)
+        || att.match(/\bCAL\s*[:.]?\s*([0-9A-Za-z-]+)/i)
+        || att.match(/\b([0-9]{4,6})\b/)
+      if (calMatch) {
+        res.cal = calMatch[1] || calMatch[0]
+      }
+    }
+  }
+
+  // 2. Extraer datos de contacto (SINOE, email, celular, dirección) si no están definidos explícitamente
+  const contact = (letterhead.contactInfo || '').trim()
+  if (contact) {
+    if (!res.sinoe) {
+      const sinoeMatch = contact.match(/(?:Casilla\s*(?:Electr[oó]nica)?\s*(?:SINOE)?|SINOE)\s*(?:N°|N|#)?\s*[:.]?\s*([0-9A-Za-z-]+)/i)
+        || contact.match(/\bSINOE\s*[:.]?\s*([0-9A-Za-z-]+)/i)
+      if (sinoeMatch) {
+        res.sinoe = sinoeMatch[1]
+      }
+    }
+    if (!res.email) {
+      const emailMatch = contact.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)
+      if (emailMatch) {
+        res.email = emailMatch[0]
+      }
+    }
+    if (!res.phone) {
+      const phoneMatch = contact.match(/(?:Cel(?:ular)?|Tel(?:[eé]fono)?|Movil|Móvil)\.?\s*[:.]?\s*([0-9\s-]{7,15})/i)
+        || contact.match(/\b(9\d{2}[\s.-]?\d{3}[\s.-]?\d{3})\b/)
+      if (phoneMatch) {
+        res.phone = phoneMatch[1].trim()
+      }
+    }
+    if (!res.address) {
+      const segments = contact.split(/[\n|]/).map(s => s.trim()).filter(Boolean)
+      for (const seg of segments) {
+        if (!/(?:Cel|SINOE|Casilla|@|Tel)/i.test(seg) && seg.length > 5) {
+          res.address = seg
+          break
+        }
+      }
+    }
+  }
+
+  return res
+}
+
+export function replaceLetterheadPlaceholders(
+  text: string,
+  letterhead?: LawFirmLetterhead | null
+): string {
+  if (!text) return text
+  const lhead = letterhead ?? getSavedLetterhead()
+  if (!lhead) return text
+  const p = parseLetterheadDetails(lhead)
+
+  let res = text
+
+  // 1. Nombre del Abogado
+  if (p.attorneyName) {
+    res = res.replace(
+      /\[\s*(?:NOMBRE\s+DEL\s+ABOGADO(?:\s+(?:DEFENSOR|PATROCINANTE|QUE\s+SUSCRIBE))?|NOMBRE\s+DEL\s+ABOGADO\s*\/\s*ESTUDIO|NOMBRE\s+DEL\s+ABOGADO\s+DEFENSOR\s*\/\s*IMPUTADO|ABOGADO\s+(?:DEFENSOR|PATROCINANTE)|ABOGADO)\s*\]/gi,
+      p.attorneyName
+    )
+  }
+
+  // 2. Registro CAL / Colegiatura
+  if (p.cal) {
+    res = res.replace(
+      /\[\s*(?:REGISTRO\s+CAL(?:\s*N°)?|REGISTRO\s+C\.?A\.?L\.?|CAL\s*N°|CAL|COLEGIATURA|N°\s+DE\s+COLEGIATURA|N°\s+COLEGIATURA|REGISTRO\s+DE\s+COLEGIATURA)\s*\]/gi,
+      p.cal
+    )
+  }
+
+  // 3. Casilla SINOE
+  if (p.sinoe) {
+    res = res.replace(
+      /\[\s*(?:CASILLA\s+SINOE(?:\s*N°)?|CASILLA\s+ELECTR[OÓ]NICA\s+SINOE|CASILLA\s+ELECTR[OÓ]NICA|CASILLA\s+ELECTRONICA|CASILLA)\s*\]/gi,
+      p.sinoe
+    )
+  }
+
+  // 4. Correo electrónico procesal
+  if (p.email) {
+    res = res.replace(
+      /\[\s*(?:CORREO\s+ELECTR[OÓ]NICO\s+PROCESAL|CORREO\s+ELECTRONICO\s+PROCESAL|CORREO\s+ELECTR[OÓ]NICO|CORREO\s+ELECTRONICO|CORREO|EMAIL)\s*\]/gi,
+      p.email
+    )
+  }
+
+  // 5. Teléfono / Celular
+  if (p.phone) {
+    res = res.replace(
+      /\[\s*(?:TEL[EÉ]FONO\s+DE\s+CONTACTO|TELEFONO\s+DE\s+CONTACTO|N[UÚ]MERO\s+DE\s+CONTACTO|NUMERO\s+DE\s+CONTACTO|TEL[EÉ]FONO|TELEFONO|CELULAR|NUMERO|N[UÚ]MERO)\s*\]/gi,
+      p.phone
+    )
+  }
+
+  // 6. Domicilio Procesal / Dirección
+  if (p.address) {
+    res = res.replace(
+      /\[\s*(?:DIRECCI[OÓ]N\s+PROCESAL|DIRECCION\s+PROCESAL|DOMICILIO\s+PROCESAL(?:\s*\/\s*ESTUDIO)?|DIRECCI[OÓ]N\s+DEL\s+ESTUDIO|DIRECCI[OÓ]N\s+COMPLETA|DIRECCION\s+COMPLETA|DOMICILIO\s+LEGAL|DIRECCI[OÓ]N\s+LEGAL)\s*\]/gi,
+      p.address
+    )
+  }
+
+  // 7. Nombre del Estudio / Razón Social
+  if (p.firmName) {
+    res = res.replace(
+      /\[\s*(?:NOMBRE\s+DEL\s+ESTUDIO|ESTUDIO\s+JUR[IÍ]DICO|ESTUDIO\s+JURIDICO|RAZ[OÓ]N\s+SOCIAL|RAZON\s+SOCIAL)\s*\]/gi,
+      p.firmName
+    )
+  }
+
+  // 8. Casilla Física (asigna número SINOE o valor registrado)
+  if (p.sinoe) {
+    res = res.replace(/\[\s*(?:CASILLA\s+F[IÍ]SICA(?:\s*N°)?|CASILLA\s+FISICA)\s*\]/gi, p.sinoe)
+  }
+
+  // 9. Fecha procesal (sustituye [fecha completa] o [FECHA] por fecha actual en español)
+  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre']
+  const now = new Date()
+  const formattedDate = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`
+  res = res.replace(/\[\s*(?:FECHA\s+COMPLETA|FECHA\s+ACTUAL|FECHA)\s*\]/gi, formattedDate)
+
+  return res
+}
+
 // ─── GENERADOR DE CUERPO HTML PARA PREVIEW EN CHAT Y MODALES ───────────────────
-export function renderDocHtmlBody(content: string): string {
-  const blocks = parseDocumentBlocks(content)
+export function renderDocHtmlBody(content: string, letterhead?: LawFirmLetterhead | null): string {
+  const cleanContent = replaceLetterheadPlaceholders(content, letterhead)
+  const blocks = parseDocumentBlocks(cleanContent)
   const htmlParts: string[] = []
 
   for (const block of blocks) {
@@ -812,36 +1009,16 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
 }
 
 // ─── CONSTRUCTOR HTML OFICIAL PARA IMPRESIÓN Y PDF ────────────────────────────
-export interface LawFirmLetterhead {
-  firmName?: string
-  attorneyInfo?: string
-  contactInfo?: string
-}
-
-export function getSavedLetterhead(): LawFirmLetterhead | null {
-  try {
-    const raw = localStorage.getItem('hardman_letterhead')
-    if (raw) {
-      const parsed = JSON.parse(raw)
-      if (parsed.firmName || parsed.attorneyInfo || parsed.contactInfo) {
-        return parsed
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return null
-}
-
 export function buildPrintHTML(
   title: string,
   content: string,
   options?: DocFormatOptions
 ): string {
   const fmt = { ...DEFAULT_LEGAL_FORMAT, ...options } as Required<DocFormatOptions>
-  const bodyHtml = renderDocHtmlBody(content)
-  const css = buildDocCSS(fmt)
   const letterhead = getSavedLetterhead()
+  const cleanContent = replaceLetterheadPlaceholders(content, letterhead)
+  const bodyHtml = renderDocHtmlBody(cleanContent, letterhead)
+  const css = buildDocCSS(fmt)
 
   let letterheadHtml = ''
   if (letterhead) {
@@ -956,7 +1133,8 @@ export async function downloadWordDoc(
     }))
   }
 
-  const blocks = parseDocumentBlocks(content)
+  const cleanContent = replaceLetterheadPlaceholders(content, letterhead)
+  const blocks = parseDocumentBlocks(cleanContent)
 
   for (const block of blocks) {
     switch (block.kind) {
@@ -1332,7 +1510,8 @@ export async function downloadPdfDoc(
     currentY = 27
   }
 
-  const blocks = parseDocumentBlocks(content)
+  const cleanContent = replaceLetterheadPlaceholders(content, letterhead)
+  const blocks = parseDocumentBlocks(cleanContent)
 
   for (const block of blocks) {
     switch (block.kind) {
@@ -1678,7 +1857,7 @@ export function extractDocumentFromMessage(rawContent: string): {
     const conversationalText = rawContent.replace(docBlockRegex, '').trim()
     return {
       conversationalText,
-      document: { title, type: docType, content: docBody || blockContent },
+      document: { title, type: docType, content: replaceLetterheadPlaceholders(docBody || blockContent) },
     }
   }
 
@@ -1716,7 +1895,7 @@ export function extractDocumentFromMessage(rawContent: string): {
       const conversationalText = rawContent.replace(m[1], '').trim()
       return {
         conversationalText,
-        document: { title, type: 'DOCUMENTO OFICIAL', content: docBody },
+        document: { title, type: 'DOCUMENTO OFICIAL', content: replaceLetterheadPlaceholders(docBody) },
       }
     }
   }

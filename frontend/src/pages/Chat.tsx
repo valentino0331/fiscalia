@@ -12,7 +12,7 @@ import {
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2, MessageCircle,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
-  Scale, Shield, Gavel, Building2, Search, Edit2, type LucideIcon
+  Scale, Shield, Gavel, Building2, Search, Edit2, RotateCcw, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -20,7 +20,7 @@ import { useAuth } from '@/context/AuthContext'
 import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
-import { downloadWordDoc, downloadPdfDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody } from '@/lib/exportDoc'
+import { downloadWordDoc, downloadPdfDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody, getSavedLetterhead } from '@/lib/exportDoc'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
@@ -801,6 +801,10 @@ export default function Chat() {
   }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const isUserScrolledUpRef = useRef<boolean>(false)
+  const [showScrollBottom, setShowScrollBottom] = useState(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
@@ -1367,9 +1371,41 @@ export default function Chat() {
     }
   }
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const handleScroll = useCallback(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight
+    const isUp = distanceFromBottom > 100
+    isUserScrolledUpRef.current = isUp
+    setShowScrollBottom(isUp)
+  }, [])
+
+  const scrollToBottom = useCallback((force = false) => {
+    if (!force && isUserScrolledUpRef.current) {
+      return
+    }
+    if (force) {
+      isUserScrolledUpRef.current = false
+      setShowScrollBottom(false)
+    }
+    const el = scrollContainerRef.current
+    if (el) {
+      el.scrollTo({
+        top: el.scrollHeight,
+        behavior: force ? 'smooth' : 'auto',
+      })
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: force ? 'smooth' : 'auto' })
+    }
+  }, [])
+
+  const cancelConsultation = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    setLoading(false)
+  }, [])
 
   const loadConversations = async () => {
     setLoadingConvs(true)
@@ -1405,8 +1441,11 @@ export default function Chat() {
   }
 
   const newConversation = () => {
+    cancelConsultation()
     setMessages([])
     setConversationId(undefined)
+    isUserScrolledUpRef.current = false
+    setShowScrollBottom(false)
     try {
       const savedDraft = localStorage.getItem(`hardman_draft_${agentId || 'general'}_new`)
       if (savedDraft) {
@@ -1510,6 +1549,11 @@ export default function Chat() {
     setLoading(true)
     requestPushPermission()
 
+    // Reset user scroll lock and force scroll down to user's question
+    isUserScrolledUpRef.current = false
+    setShowScrollBottom(false)
+    setTimeout(() => scrollToBottom(true), 40)
+
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
     }
@@ -1518,12 +1562,16 @@ export default function Chat() {
     let accumulatedText = ''
     const msgTimestamp = new Date().toISOString()
 
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     try {
       await api.chat.sendStream(
         {
           agentId: agent.id,
           messages: newMessages,
           conversationId,
+          letterhead: getSavedLetterhead(),
         },
         {
           onChunk: (chunk: string) => {
@@ -1548,6 +1596,7 @@ export default function Chat() {
             }
           },
           onDone: (result) => {
+            abortControllerRef.current = null
             if (result.conversationId && !conversationId) {
               setConversationId(result.conversationId)
             }
@@ -1574,6 +1623,11 @@ export default function Chat() {
             setLoading(false)
           },
           onError: (err: any) => {
+            abortControllerRef.current = null
+            if (err?.name === 'AbortError' || controller.signal.aborted) {
+              setLoading(false)
+              return
+            }
             const errorMsg = err.message || 'Hubo un error al procesar tu consulta. Por favor intenta de nuevo.'
             if (!firstChunkReceived) {
               setMessages([
@@ -1603,9 +1657,15 @@ export default function Chat() {
             }
             setLoading(false)
           },
-        }
+        },
+        controller.signal
       )
     } catch (err: any) {
+      abortControllerRef.current = null
+      if (err?.name === 'AbortError' || controller.signal.aborted) {
+        setLoading(false)
+        return
+      }
       const errorMsg = err.message || 'Hubo un error al procesar tu consulta. Por favor intenta de nuevo.'
       setMessages([
         ...newMessages,
@@ -1619,7 +1679,7 @@ export default function Chat() {
       ])
       setLoading(false)
     }
-  }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage])
+  }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage, scrollToBottom])
 
   const handleRetryPrompt = (promptToRetry: string) => {
     if (!promptToRetry) return
@@ -1745,6 +1805,26 @@ export default function Chat() {
         {/* Right: controls */}
         <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
+
+          {messages.length > 0 && (
+            <button
+              onClick={() => {
+                if (window.confirm('¿Deseas cancelar la consulta actual y comenzar una nueva?')) {
+                  newConversation()
+                }
+              }}
+              className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+              style={{
+                background: 'rgba(239,68,68,0.10)',
+                border: '1px solid rgba(239,68,68,0.25)',
+                color: '#f87171',
+              }}
+              title="Cancelar la consulta actual y reiniciar el chat"
+            >
+              <RotateCcw size={13} />
+              <span className="hidden sm:inline font-normal">Cancelar consulta</span>
+            </button>
+          )}
 
           <a
             href="https://wa.me/51929727274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
@@ -2055,7 +2135,11 @@ export default function Chat() {
           )}
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-4 md:py-6 space-y-5 md:space-y-6">
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-4 md:py-6 space-y-5 md:space-y-6"
+          >
             {messages.length === 0 ? (
               <WelcomeScreen
                 agent={agent}
@@ -2088,12 +2172,46 @@ export default function Chat() {
                   <ThinkingIndicator
                     agent={agent}
                     lastUserMessage={messages.filter((m) => m.role === 'user').slice(-1)[0]?.content}
+                    onCancel={cancelConsultation}
                   />
                 )}
               </>
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* Floating Scroll Bottom Button */}
+          <AnimatePresence>
+            {showScrollBottom && (
+              <motion.button
+                initial={{ opacity: 0, y: 12, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 12, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => scrollToBottom(true)}
+                className="absolute right-4 md:right-8 bottom-24 z-30 flex items-center gap-2 px-3 py-1.5 rounded-full shadow-2xl backdrop-blur-md transition-all border group"
+                style={{
+                  background: 'rgba(20, 20, 20, 0.94)',
+                  borderColor: 'rgba(201, 168, 76, 0.35)',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                }}
+                title="Bajar al último mensaje"
+              >
+                {loading ? (
+                  <>
+                    <span className="w-2 h-2 rounded-full bg-[#c9a84c] animate-ping" />
+                    <span className="text-[11px] font-medium text-white/90">Respuesta en curso</span>
+                    <ChevronDown size={14} className="text-[#c9a84c] group-hover:translate-y-0.5 transition-transform" />
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[11px] font-medium text-white/90">Bajar al final</span>
+                    <ChevronDown size={14} className="text-[#c9a84c] group-hover:translate-y-0.5 transition-transform" />
+                  </>
+                )}
+              </motion.button>
+            )}
+          </AnimatePresence>
 
           {/* Input area */}
           <div className="flex-shrink-0 p-3 sm:p-4 md:px-8 md:pb-6 relative z-20">
@@ -2417,21 +2535,41 @@ export default function Chat() {
                       )}
                     </button>
 
-                    {/* Send button */}
-                    <motion.button
-                      onClick={sendMessage}
-                      disabled={(!input.trim() && !extractedText) || loading || extracting || isRecording || isTranscribing}
-                      whileHover={{ scale: (input.trim() || extractedText) && !loading ? 1.05 : 1 }}
-                      whileTap={{ scale: (input.trim() || extractedText) && !loading ? 0.95 : 1 }}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                      style={{
-                        background: (input.trim() || extractedText) && !loading && !extracting ? '#c9a84c' : 'rgba(255,255,255,0.07)',
-                        color: (input.trim() || extractedText) && !loading && !extracting ? '#111111' : 'rgba(255,255,255,0.25)',
-                        cursor: (!input.trim() && !extractedText) || loading || extracting ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      <ArrowUp size={15} />
-                    </motion.button>
+                    {/* Send / Cancel button */}
+                    {loading ? (
+                      <motion.button
+                        type="button"
+                        onClick={cancelConsultation}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 text-[11px] font-medium shadow-md"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.18)',
+                          border: '1px solid rgba(239, 68, 68, 0.45)',
+                          color: '#f87171',
+                        }}
+                        title="Cancelar consulta en curso"
+                      >
+                        <Square size={11} fill="currentColor" />
+                        <span>Cancelar</span>
+                      </motion.button>
+                    ) : (
+                      <motion.button
+                        onClick={sendMessage}
+                        disabled={(!input.trim() && !extractedText) || extracting || isRecording || isTranscribing}
+                        whileHover={{ scale: (input.trim() || extractedText) ? 1.05 : 1 }}
+                        whileTap={{ scale: (input.trim() || extractedText) ? 0.95 : 1 }}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+                        style={{
+                          background: (input.trim() || extractedText) && !extracting ? '#c9a84c' : 'rgba(255,255,255,0.07)',
+                          color: (input.trim() || extractedText) && !extracting ? '#111111' : 'rgba(255,255,255,0.25)',
+                          cursor: (!input.trim() && !extractedText) || extracting ? 'not-allowed' : 'pointer',
+                        }}
+                        title="Enviar consulta al abogado"
+                      >
+                        <ArrowUp size={15} />
+                      </motion.button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -3167,37 +3305,58 @@ function MessageBubble({
 
 function ThinkingIndicator({
   agent,
+  onCancel,
 }: {
   agent: NonNullable<ReturnType<typeof getAgent>>
   lastUserMessage?: string
+  onCancel?: () => void
 }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="flex items-center gap-3 w-full max-w-4xl mx-auto py-1"
+      className="flex flex-wrap items-center justify-between gap-2 w-full max-w-4xl mx-auto py-1"
     >
-      <div
-        className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
-        style={{ border: '1px solid rgba(201,168,76,0.30)', boxShadow: '0 0 10px rgba(201,168,76,0.15)' }}
-      >
-        <img src={agent.image} alt={agent.name} className="w-full h-full object-cover object-top" />
+      <div className="flex items-center gap-3">
+        <div
+          className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"
+          style={{ border: '1px solid rgba(201,168,76,0.30)', boxShadow: '0 0 10px rgba(201,168,76,0.15)' }}
+        >
+          <img src={agent.image} alt={agent.name} className="w-full h-full object-cover object-top" />
+        </div>
+
+        <div
+          className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
+          style={{
+            background: 'rgba(26,26,26,0.95)',
+            border: '1px solid rgba(201,168,76,0.25)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+          }}
+        >
+          <RefreshCw size={13} className="animate-spin text-[#c9a84c]" />
+          <span className="text-[12px] font-light text-white/95 tracking-wide">
+            Analizando caso con {agent.name}...
+          </span>
+        </div>
       </div>
 
-      <div
-        className="inline-flex items-center gap-2.5 px-3.5 py-2 rounded-xl"
-        style={{
-          background: 'rgba(26,26,26,0.95)',
-          border: '1px solid rgba(201,168,76,0.25)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
-        }}
-      >
-        <RefreshCw size={13} className="animate-spin text-[#c9a84c]" />
-        <span className="text-[12px] font-light text-white/95 tracking-wide">
-          Analizando caso con {agent.name}...
-        </span>
-      </div>
+      {onCancel && (
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-medium transition-all hover:opacity-90 active:scale-95 shadow-sm"
+          style={{
+            background: 'rgba(239,68,68,0.12)',
+            border: '1px solid rgba(239,68,68,0.35)',
+            color: '#f87171',
+          }}
+          title="Cancelar consulta en curso"
+        >
+          <Square size={10} fill="currentColor" />
+          <span>Cancelar consulta</span>
+        </button>
+      )}
     </motion.div>
   )
 }

@@ -500,6 +500,202 @@ export const PLENARIES: Plenary[] = [
     practicalUse: 'Descargos y recursos de reconsideración/apelación en Procedimientos Administrativos Sancionadores del OEFA.',
     promptTemplate: 'Redacta un escrito de descargo en un PAS ambiental ante el OEFA solicitando la atenuante del 50% por subsanación voluntaria conforme al precedente del TFA.',
   },
+
+  // ── SEBASTIÁN: PENAL ADICIONALES ──
+  {
+    code: 'Acuerdo Plenario N° 03-2010/CJ-116',
+    specialistId: 'sebastian',
+    plenum: 'VI Pleno Jurisdiccional Penal',
+    officialCourt: 'Salas Penales de la Corte Suprema de Justicia',
+    title: 'Plazo razonable en diligencias preliminares y audiencia de control de plazos',
+    category: 'Procesal Penal / Plazos',
+    tags: ['Control de Plazos', 'Diligencias Preliminares', 'Plazo Razonable', 'Fiscalía'],
+    keyPoints: [
+      'Plazo ordinario de diligencias preliminares es de 60 días, prorrogable excepcionalmente hasta 120 días.',
+      'Vencido el plazo sin pronunciamiento fiscal, el imputado solicita al Juez de Garantías Audiencia de Control de Plazos.',
+      'El juez conmina al fiscal a concluir la investigación preliminar en un plazo improrrogable de 10 días.',
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 14 al 21 (estándar de tutela del plazo razonable bajo el Art. 334.2 NCPP).',
+    practicalUse: 'Solicitudes y audiencias de control de plazos para frenar investigaciones fiscales arbitrariamente dilatadas.',
+    promptTemplate: 'Redacta una solicitud de Audiencia de Control de Plazos al amparo del Art. 334° numeral 2 del NCPP y el Acuerdo Plenario N° 03-2010/CJ-116 por vencimiento del plazo razonable en diligencias preliminares.',
+  },
+  {
+    code: 'Acuerdo Plenario N° 02-2012/CJ-116',
+    specialistId: 'sebastian',
+    plenum: 'VIII Pleno Jurisdiccional Penal',
+    officialCourt: 'Salas Penales de la Corte Suprema de Justicia',
+    title: 'Control formal y sustancial de la acusación fiscal en etapa intermedia',
+    category: 'Procesal Penal / Etapa Intermedia',
+    tags: ['Control de Acusación', 'Sobreseimiento', 'Etapa Intermedia', 'Atipicidad'],
+    keyPoints: [
+      'Control formal previo: devolución de acusación defectuosa para subsanación fiscal en plazo de 5 días.',
+      'Control sustancial directo: el juez dicta sobreseimiento de oficio o a pedido de parte por atipicidad o falta de antijuridicidad.',
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 8 al 15 (alcances del control judicial de la acusación penal).',
+    practicalUse: 'Absolución de traslado de acusación fiscal, deducción de excepciones y solicitudes de sobreseimiento.',
+    promptTemplate: 'Redacta el escrito de absolución del traslado de la acusación fiscal solicitando el sobreseimiento por atipicidad conforme a los Arts. 350° y 344° del NCPP y el Acuerdo Plenario N° 02-2012/CJ-116.',
+  },
+
+  // ── VALENTINA: LABORAL ADICIONALES ──
+  {
+    code: 'VII Pleno Jurisdiccional Supremo Laboral',
+    specialistId: 'valentina',
+    plenum: 'VII Pleno Supremo Laboral y Previsional',
+    officialCourt: 'Salas de Derecho Constitucional y Social de la Corte Suprema',
+    title: 'Indemnización por accidentes de trabajo, daño moral y lucro cesante',
+    category: 'Derecho Laboral / Daños y Perjuicios',
+    tags: ['Accidente de Trabajo', 'Ley 29783', 'Daño Moral', 'Lucro Cesante', 'SUNAFIL'],
+    keyPoints: [
+      'Responsabilidad objetiva del empleador por incumplimiento de medidas de seguridad y salud en el trabajo.',
+      'Presunción de culpa inexcusable del empleador ante lesión o infortunio laboral.',
+      'Cuantificación autónoma de daño emergente, lucro cesante proyectado y daño moral.',
+    ],
+    bindingGrounds: 'Tema N° 1 del VII Pleno Jurisdiccional Supremo Laboral (criterios de reparación integral).',
+    practicalUse: 'Demandas laborales de indemnización por daños y perjuicios derivados de accidentes de trabajo.',
+    promptTemplate: 'Redacta una demanda laboral de indemnización por daños y perjuicios por accidente de trabajo bajo la Ley N° 29783 y el VII Pleno Jurisdiccional Supremo Laboral, cuantificando daño moral y lucro cesante.',
+  },
+  {
+    code: 'IX Pleno Jurisdiccional Supremo Laboral',
+    specialistId: 'valentina',
+    plenum: 'IX Pleno Supremo Laboral y Previsional',
+    officialCourt: 'Salas de Derecho Constitucional y Social de la Corte Suprema',
+    title: 'Desnaturalización de contratos modales y tercerización sin autonomía',
+    category: 'Derecho Laboral / Contratación',
+    tags: ['Desnaturalización', 'Contratos Modales', 'Tercerización', 'Planilla'],
+    keyPoints: [
+      'Exigencia estricta de causa objetiva determinante: la falta de precisión desnaturaliza el contrato temporal (Art. 77 D.S. 003-97-TR).',
+      'En tercerización, la subordinación directa con la empresa principal determina el ingreso inmediato a su planilla.',
+    ],
+    bindingGrounds: 'Conclusiones plenarias N° 2 y 3 del IX Pleno Supremo Laboral.',
+    practicalUse: 'Demandas de desnaturalización de contratos, reposición e inclusión en planilla a plazo indeterminado.',
+    promptTemplate: 'Prepara una demanda laboral de desnaturalización de contrato sujeto a modalidad y reconocimiento de contrato a plazo indeterminado aplicando el Art. 77° del D.S. 003-97-TR y el IX Pleno Supremo Laboral.',
+  },
+
+  // ── DIEGO: CIVIL ADICIONALES ──
+  {
+    code: 'VII Pleno Casatorio Civil (Casación 3671-2014 Lima)',
+    specialistId: 'diego',
+    plenum: 'VII Pleno Casatorio Civil Vinculante',
+    officialCourt: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Tercería de propiedad: propiedad no inscrita frente a embargo judicial inscrito',
+    category: 'Derecho Civil / Derechos Reales',
+    tags: ['Tercería de Propiedad', 'Embargo Inscrito', 'Fecha Cierta', 'Art. 2022 CC'],
+    keyPoints: [
+      'Prevalece la propiedad no inscrita sobre el embargo inscrito siempre que conste en documento de fecha cierta anterior.',
+      'El juez debe verificar de oficio la legalidad de la fecha cierta para descartar fraudes procesales.',
+    ],
+    bindingGrounds: 'Doctrina Vinculante - Reglas 1 y 2 (segundo párrafo del Art. 2022 del Código Civil).',
+    practicalUse: 'Demandas de tercería de propiedad para desafectar embargos trabados sobre inmuebles adquiridos pero no inscritos.',
+    promptTemplate: 'Redacta una demanda de tercería de propiedad para levantar un embargo judicial inscrito invocando el segundo párrafo del Art. 2022° del Código Civil y las reglas vinculantes del VII Pleno Casatorio Civil.',
+  },
+  {
+    code: 'X Pleno Casatorio Civil (Casación 1242-2017 Lima Este)',
+    specialistId: 'diego',
+    plenum: 'X Pleno Casatorio Civil Vinculante',
+    officialCourt: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Límites, excepcionalidad y contradictorio previo en la prueba de oficio',
+    category: 'Derecho Procesal Civil / Prueba',
+    tags: ['Prueba de Oficio', 'Art. 194 CPC', 'Contradictorio', 'Debido Proceso'],
+    keyPoints: [
+      'La prueba de oficio es excepcional y subsidiaria; no sustituye la inercia probatoria de las partes procesales.',
+      'Deber judicial de motivar la excepcionalidad y garantizar el contradictorio previo de ambas partes.',
+    ],
+    bindingGrounds: 'Reglas vinculantes 1 a 12 del X Pleno Casatorio Civil sobre el ejercicio del Art. 194 del CPC.',
+    practicalUse: 'Impugnación de autos judiciales que ordenan pruebas de oficio sin correr traslado previo ni fundamentar necesidad.',
+    promptTemplate: 'Redacta un recurso de apelación contra una resolución judicial que dispone prueba de oficio sin contradictorio, invocando la violación de las reglas vinculantes del X Pleno Casatorio Civil.',
+  },
+
+  // ── CAMILA: FAMILIA ADICIONALES ──
+  {
+    code: 'Casación N° 3784-2019 Lima (Doctrina de Alimentos)',
+    specialistId: 'camila',
+    plenum: 'Doctrina Jurisprudencial Sala Civil Permanente',
+    officialCourt: 'Corte Suprema de Justicia de la República',
+    title: 'Presunción de necesidades del menor, capacidad productiva laboral y asignación anticipada',
+    category: 'Derecho de Familia / Alimentos',
+    tags: ['Alimentos', 'Asignación Anticipada', 'Presunción de Ingresos', 'Ley 31464'],
+    keyPoints: [
+      'Las necesidades de los hijos menores de edad se presumen iuris tantum y no requieren prueba exhaustiva de cada gasto.',
+      'Alegar falta de empleo formal no exime de la obligación alimentaria: rige la presunción de capacidad productiva laboral.',
+      'La asignación anticipada procede inaudita parte sin necesidad de fianza ni contracautela.',
+    ],
+    bindingGrounds: 'Fundamento Jurídico 6 (estándar probatorio y primacía del interés superior del niño).',
+    practicalUse: 'Demandas de pensión de alimentos y solicitudes cautelares de asignación anticipada de pago inmediato.',
+    promptTemplate: 'Redacta una demanda de pensión de alimentos y medida cautelar de asignación anticipada con descuento por planilla al amparo de la Ley N° 31464 y la Casación N° 3784-2019 Lima.',
+  },
+
+  // ── MARCO: ADMINISTRATIVO ADICIONALES ──
+  {
+    code: 'Casación Vinculante N° 8453-2014 Lima',
+    specialistId: 'marco',
+    plenum: 'Doctrina Jurisprudencial Sala Constitucional y Social',
+    officialCourt: 'Corte Suprema de Justicia de la República',
+    title: 'Caducidad perentoria de 9 meses del PAS y prescripción de 4 años de la potestad sancionadora',
+    category: 'Derecho Administrativo / Sancionador',
+    tags: ['Caducidad PAS', 'Prescripción Sancionadora', 'D.S. 006-2026-JUS', 'Archivo'],
+    keyPoints: [
+      'El plazo de caducidad del Procedimiento Administrativo Sancionador (PAS) es de 9 meses desde la imputación de cargos.',
+      'Operada la caducidad, el procedimiento fenece de pleno derecho y cualquier sanción posterior adolece de nulidad insubsanable.',
+      'La prescripción de la potestad sancionadora opera indefectiblemente a los 4 años de cometida la infracción.',
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 11 al 18 (plazo razonable del ius puniendi conforme al TUO LPAG D.S. 006-2026-JUS).',
+    practicalUse: 'Solicitudes de caducidad y prescripción de procedimientos sancionadores iniciados por ministerios, municipalidades u organismos reguladores.',
+    promptTemplate: 'Redacta un escrito solicitando la declaración de caducidad del Procedimiento Administrativo Sancionador (PAS) y archivo definitivo conforme al Art. 257° del TUO de la LPAG (D.S. 006-2026-JUS) y la Casación N° 8453-2014 Lima.',
+  },
+
+  // ── FERNANDA: TRIBUTARIO ADICIONALES ──
+  {
+    code: 'Sentencia TC Exp. N° 03525-2021-PA/TC (Caso Maxus)',
+    specialistId: 'fernanda',
+    plenum: 'Precedente Constitucional Vinculante',
+    officialCourt: 'Tribunal Constitucional del Perú',
+    title: 'Inexigibilidad de intereses moratorios generados fuera del plazo legal de SUNAT o Tribunal Fiscal',
+    category: 'Derecho Tributario / Intereses Moratorios',
+    tags: ['Intereses Moratorios', 'SUNAT', 'Tribunal Fiscal', 'Precedente TC', 'Queja'],
+    keyPoints: [
+      'Es inconstitucional el cobro de intereses moratorios por el tiempo en que la autoridad tributaria excedió los plazos legales para resolver.',
+      'El contribuyente solo responde por los intereses generados dentro del plazo fijado en el Código Tributario.',
+    ],
+    bindingGrounds: 'Precedente de observancia obligatoria emitido bajo el Nuevo Código Procesal Constitucional.',
+    practicalUse: 'Recursos de queja ante el Tribunal Fiscal y demandas de amparo tributario para extinguir deudas por intereses moratorios abusivos.',
+    promptTemplate: 'Elabora un recurso de queja tributaria invocando el precedente constitucional vinculante del TC (Exp. 03525-2021-PA/TC) para dejar sin efecto el cómputo de intereses moratorios generados en exceso del plazo legal.',
+  },
+
+  // ── ADRIANA: CORPORATIVO ADICIONALES ──
+  {
+    code: 'Resolución SUNARP N° 120-2022-SUNARP-TR',
+    specialistId: 'adriana',
+    plenum: 'Precedente Registral de Observancia Obligatoria',
+    officialCourt: 'Tribunal Registral de la SUNARP',
+    title: 'Validez, quórum y formalidades de Juntas Generales no presenciales y acuerdos en S.A.C.',
+    category: 'Corporativo / Societario Registral',
+    tags: ['Junta No Presencial', 'SAC', 'Quórum Societario', 'SUNARP', 'Aumento de Capital'],
+    keyPoints: [
+      'Las juntas generales no presenciales o telemáticas gozan de plena validez inscribible cuando se asegura el derecho de voz y voto (Art. 246 LGS).',
+      'El derecho de preferencia en la transferencia de acciones es de orden público estatutario en la SAC y no puede ser omitido.',
+    ],
+    bindingGrounds: 'Precedente registral vinculante publicado en El Peruano.',
+    practicalUse: 'Estructuración y redacción de actas de junta general de accionistas para inscripción registral expedita sin tachas.',
+    promptTemplate: 'Redacta un acta de Junta General de Accionistas no presencial de una Sociedad Anónima Cerrada (S.A.C.) que aprueba un aumento de capital por nuevos aportes dinerarios y modificación estatutaria conforme al Art. 246° de la LGS.',
+  },
+
+  // ── RODRIGO: MINERO ADICIONALES ──
+  {
+    code: 'Precedente del Consejo de Minería N° 045-2023-MINEM/CM',
+    specialistId: 'rodrigo',
+    plenum: 'Criterio Vinculante Consejo de Minería',
+    officialCourt: 'Consejo de Minería - Ministerio de Energía y Minas',
+    title: 'Superposición de petitorios mineros, áreas de exclusión urbana y prelación registral en cuadrículas WGS84',
+    category: 'Derecho Minero / Concesiones',
+    tags: ['Petitorio Minero', 'Superposición', 'Cuadrículas WGS84', 'INGEMMET', 'Revisión'],
+    keyPoints: [
+      'Rige el principio de prelación temporal estricta ("primero en el tiempo, primero en el derecho") sobre la cuadrícula del SIDEMCAT.',
+      'Los petitorios sobre áreas urbanas o naturales protegidas sin autorización previa son nulos de pleno derecho y objeto de cancelación liminar.',
+    ],
+    bindingGrounds: 'Criterio uniforme de observancia administrativa en resoluciones del Consejo de Minería.',
+    practicalUse: 'Oposición a petitorios mineros superpuestos y recursos de revisión ante el Consejo de Minería.',
+    promptTemplate: 'Elabora un escrito de oposición a un petitorio minero ante el INGEMMET por superposición indebida en cuadrículas catastrales preexistentes bajo el TUO de la Ley General de Minería y el precedente del Consejo de Minería.',
+  },
 ]
 
 export const REFORMS: Reform[] = [
@@ -699,6 +895,118 @@ export const REFORMS: Reform[] = [
     summary:
       'Regula la tramitación electrónica de petitorios mineros, plazos de fiscalización ambiental y causales de exclusión de REINFO.',
     promptTemplate: 'Redacta un descargo técnico ante una imputación de infracción ambiental minera del OEFA al amparo del RCD de fiscalización.',
+  },
+
+  // ── SEBASTIÁN (PENAL REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Código de Ejecución Penal (D. Leg. 654 y D. Leg. 1585)',
+    specialistId: 'sebastian',
+    affectedNorm: 'Beneficios Penitenciarios y Redención de Pena',
+    date: 'Vigente 2026',
+    badge: 'BENEFICIOS PENITENCIARIOS',
+    tags: ['Semilibertad', 'Liberación Condicional', 'Redención 2x1', 'D. Leg. 1585'],
+    articles: 'Arts. 44-57 CEP / D. Leg. 1585',
+    summary:
+      'Semilibertad al cumplir 1/3 o 1/2 de pena según el tipo delictivo, y liberación condicional a los 2/3. Redención por trabajo o estudio a razón de 2x1 o 3x1.',
+    promptTemplate: 'Elabora una solicitud de beneficio penitenciario de semilibertad o redención de pena por trabajo y educación conforme al Código de Ejecución Penal y el D. Leg. 1585.',
+  },
+
+  // ── VALENTINA (LABORAL REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Leyes N° 27735 y 30334 & Ley N° 31572',
+    specialistId: 'valentina',
+    affectedNorm: 'Gratificaciones Inafectas & Ley de Teletrabajo',
+    date: 'Vigente 2026',
+    badge: 'BENEFICIOS & TELETRABAJO',
+    tags: ['Gratificaciones', 'Bono 9% Essalud', 'Teletrabajo', 'Desconexión Digital'],
+    articles: 'Ley 27735 / Ley 30334 / Ley 31572 / D.S. 002-2023-TR',
+    summary:
+      'Gratificaciones de julio y diciembre libres de aportes previsionales con bonificación extraordinaria del 9% (Essalud) o 6.75% (EPS). En teletrabajo: desconexión digital de 12 horas continuas y compensación económica de internet y energía.',
+    promptTemplate: 'Liquida las gratificaciones truncas con bonificación extraordinaria del 9% (Ley 30334) y reclama reintegros de gastos de teletrabajo bajo la Ley N° 31572.',
+  },
+
+  // ── DIEGO (CIVIL REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Ley N° 27157 & Arts. 1428-1430 Código Civil',
+    specialistId: 'diego',
+    affectedNorm: 'Propiedad Horizontal & Resolución Contractual',
+    date: 'Vigente 2026',
+    badge: 'PROPIEDAD HORIZONTAL & RESOLUCIÓN',
+    tags: ['Propiedad Horizontal', 'Junta de Propietarios', 'Resolución de Pleno Derecho', 'Cláusula Resolutoria'],
+    articles: 'Ley 27157 / D.S. 035-2006-VIVIENDA / Arts. 1428, 1429, 1430 CC',
+    summary:
+      'Mérito ejecutivo judicial de liquidaciones de cuotas de mantenimiento emitidas por la Junta de Propietarios. Cláusula resolutoria expresa (Art. 1430 CC) para resolver contratos de pleno derecho sin requerir 15 días.',
+    promptTemplate: 'Redacta una carta notarial comunicando la resolución de pleno derecho del contrato de compraventa al amparo del Art. 1430° del Código Civil por incumplimiento de pago de cuotas.',
+  },
+
+  // ── CAMILA (FAMILIA REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Ley N° 28970 (REDAM) & Ley N° 29227 (Divorcio Rápido)',
+    specialistId: 'camila',
+    affectedNorm: 'Registro de Deudores Alimentarios & Divorcio Notarial/Municipal',
+    date: 'Vigente 2026',
+    badge: 'REDAM & DIVORCIO NOTARIAL',
+    tags: ['REDAM', 'Deudor Moroso', 'Divorcio Rápido', 'Separación Convencional'],
+    articles: 'Ley 28970 / Ley 30795 / Ley 29227 / D.S. 009-2008-JUS',
+    summary:
+      'Inscripción de oficio en el REDAM ante 3 cuotas alimentarias impagas, generando reporte a centrales de riesgo y retención en cuentas. En divorcio rápido: disolución en menos de 90 días con separación convencional y cese de convivencia.',
+    promptTemplate: 'Solicita al Juez de Paz Letrado la inscripción del demandado en el Registro de Deudores Alimentarios Morosos (REDAM) y la retención judicial de sus cuentas bancarias bajo la Ley N° 28970.',
+  },
+
+  // ── MARCO (ADMINISTRATIVO REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Ley N° 27584 (TUO Proceso Contencioso D.S. 011-2019-JUS)',
+    specialistId: 'marco',
+    affectedNorm: 'Impugnación Judicial de Resoluciones Administrativas',
+    date: 'Vigente 2026',
+    badge: 'CONTENCIOSO ADMINISTRATIVO',
+    tags: ['Contencioso Administrativo', 'Plazo 3 Meses', 'Nulidad de Resolución', 'Agotamiento de Vía'],
+    articles: 'Arts. 4, 18, 28 D.S. 011-2019-JUS / TUO Ley 27584',
+    summary:
+      'Plazo perentorio de caducidad de 3 meses para demandar la nulidad de resoluciones administrativas firmes que agotan la vía gubernativa, exigiendo restablecimiento del derecho conculcado.',
+    promptTemplate: 'Redacta una demanda contencioso-administrativa al amparo del TUO de la Ley N° 27584 (D.S. 011-2019-JUS) solicitando la nulidad total de una resolución administrativa sancionadora.',
+  },
+
+  // ── FERNANDA (TRIBUTARIO REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Arts. 43-44 TUO Código Tributario & D. Leg. 1535',
+    specialistId: 'fernanda',
+    affectedNorm: 'Prescripción de Deudas Tributarias & Perfil de Cumplimiento',
+    date: 'Vigente 2026',
+    badge: 'PRESCRIPCIÓN & PERFIL SUNAT',
+    tags: ['Prescripción 4 Años', 'No Declarantes 6 Años', 'Perfil de Cumplimiento', 'Extinción'],
+    articles: 'Arts. 43, 44, 45 Código Tributario / D. Leg. 1535',
+    summary:
+      'Prescripción de la facultad de SUNAT para determinar y exigir el pago a los 4 años (declarantes) o 6 años (no declarantes). Se prohíbe el inicio o prosecución de cobranza coactiva de periodos tributarios prescritos.',
+    promptTemplate: 'Redacta una solicitud de prescripción de deuda tributaria ante SUNAT al amparo de los Arts. 43° y 44° del TUO del Código Tributario para extinguir valores emitidos fuera del plazo legal.',
+  },
+
+  // ── ADRIANA (CORPORATIVO REFORMA ADICIONAL) ──
+  {
+    lawCode: 'Arts. 234-248 LGS Ley 26887 & Ley N° 31112 (M&A)',
+    specialistId: 'adriana',
+    affectedNorm: 'Régimen de S.A.C. & Control Previo Antitrust INDECOPI',
+    date: 'Vigente 2026',
+    badge: 'SAC & CONTROL DE FUSIONES',
+    tags: ['SAC', 'Derecho de Preferencia', 'Pactos Parasocietarios', 'M&A Antitrust'],
+    articles: 'Arts. 234-248 LGS / Art. 8 LGS / Ley 31112',
+    summary:
+      'Régimen especial de Sociedad Anónima Cerrada (sin directorio estatutario obligatorio, juntas no presenciales y derecho de adquisición preferente). Notificación previa a INDECOPI si transacciones M&A superan 118,000 UIT.',
+    promptTemplate: 'Elabora un convenio de accionistas (pacto de socios) al amparo del Art. 8° y 237° de la Ley General de Sociedades con cláusulas de tag along, drag along y derecho de preferencia en S.A.C.',
+  },
+
+  // ── RODRIGO (MINERO REFORMA ADICIONAL) ──
+  {
+    lawCode: 'D.S. 020-2020-EM & Ley del SEIA (Ley 27446)',
+    specialistId: 'rodrigo',
+    affectedNorm: 'Procedimientos Mineros & Certificación Ambiental SENACE',
+    date: 'Vigente 2026',
+    badge: 'PROCEDIMIENTOS & SEIA',
+    tags: ['Procedimientos Mineros', 'SENACE', 'DIA', 'EIA-sd', 'EIA-d', 'Certificación'],
+    articles: 'Arts. 12-30 D.S. 020-2020-EM / Ley 27446 / D.S. 019-2009-MINAM',
+    summary:
+      'Secuencia obligatoria de autorizaciones mineras: Instrumento de Gestión Ambiental aprobado (DIA, EIA-sd o EIA-d), autorización superficial, licencia de agua ANA y Autorización de Inicio de Actividades.',
+    promptTemplate: 'Prepara un informe de viabilidad legal ambiental y ruta crítica de autorizaciones mineras ante el INGEMMET, SENACE y MINEM bajo el D.S. 020-2020-EM y la Ley del SEIA.',
   },
 ]
 

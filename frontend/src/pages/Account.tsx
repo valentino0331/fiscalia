@@ -9,6 +9,8 @@ import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 
+import { parseLetterheadDetails } from '@/lib/exportDoc'
+
 interface AccountData {
   user: { id: string; email: string; name: string | null; isAdmin: boolean }
   subscription: {
@@ -25,6 +27,12 @@ export default function Account() {
   const [loading, setLoading] = useState(true)
 
   const [firmName, setFirmName] = useState('')
+  const [attorneyName, setAttorneyName] = useState('')
+  const [cal, setCal] = useState('')
+  const [sinoe, setSinoe] = useState('')
+  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
+  const [address, setAddress] = useState('')
   const [attorneyInfo, setAttorneyInfo] = useState('')
   const [contactInfo, setContactInfo] = useState('')
   const [savedLetterheadMsg, setSavedLetterheadMsg] = useState(false)
@@ -52,7 +60,14 @@ export default function Account() {
       const raw = localStorage.getItem('hardman_letterhead')
       if (raw) {
         const parsed = JSON.parse(raw)
-        if (parsed.firmName) setFirmName(parsed.firmName)
+        const details = parseLetterheadDetails(parsed)
+        if (details.firmName) setFirmName(details.firmName)
+        if (details.attorneyName) setAttorneyName(details.attorneyName)
+        if (details.cal) setCal(details.cal)
+        if (details.sinoe) setSinoe(details.sinoe)
+        if (details.email) setEmail(details.email)
+        if (details.phone) setPhone(details.phone)
+        if (details.address) setAddress(details.address)
         if (parsed.attorneyInfo) setAttorneyInfo(parsed.attorneyInfo)
         if (parsed.contactInfo) setContactInfo(parsed.contactInfo)
       }
@@ -62,10 +77,30 @@ export default function Account() {
   }, [])
 
   const handleSaveLetterhead = () => {
-    localStorage.setItem(
-      'hardman_letterhead',
-      JSON.stringify({ firmName, attorneyInfo, contactInfo })
-    )
+    const resolvedAttorney = attorneyName ? (cal ? `${attorneyName} — Reg. C.A.L. N° ${cal}` : attorneyName) : attorneyInfo
+    const contactParts = []
+    if (address) contactParts.push(address)
+    if (phone) contactParts.push(`Cel. ${phone}`)
+    if (sinoe) contactParts.push(`Casilla Electrónica SINOE N° ${sinoe}`)
+    if (email) contactParts.push(email)
+    const resolvedContact = contactParts.length > 0 ? contactParts.join(' | ') : contactInfo
+
+    const payload = {
+      firmName: firmName.trim(),
+      attorneyName: attorneyName.trim(),
+      cal: cal.trim(),
+      colegiatura: cal.trim(),
+      sinoe: sinoe.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+      attorneyInfo: resolvedAttorney.trim(),
+      contactInfo: resolvedContact.trim(),
+    }
+
+    localStorage.setItem('hardman_letterhead', JSON.stringify(payload))
+    setAttorneyInfo(resolvedAttorney)
+    setContactInfo(resolvedContact)
     setSavedLetterheadMsg(true)
     setTimeout(() => setSavedLetterheadMsg(false), 3000)
   }
@@ -373,62 +408,127 @@ export default function Account() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
-                      Nombre del Estudio o Razón Social
+                      Nombre del Estudio Jurídico o Razón Social
                     </label>
                     <input
                       type="text"
                       value={firmName}
                       onChange={(e) => setFirmName(e.target.value)}
-                      placeholder="Ej: ESTUDIO JURÍDICO VALDIVIA & ASOCIADOS"
+                      placeholder="Ej: ESTUDIO JURÍDICO ORTEGA & ASOCIADOS"
                       className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
-                      Abogado(s) y Registro Colegio de Abogados (CAL / CAJ / otros)
-                    </label>
-                    <input
-                      type="text"
-                      value={attorneyInfo}
-                      onChange={(e) => setAttorneyInfo(e.target.value)}
-                      placeholder="Ej: Dr. Carlos Valdivia R. — Reg. C.A.L. N° 45892"
-                      className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Nombre del Abogado(a) Patrocinante
+                      </label>
+                      <input
+                        type="text"
+                        value={attorneyName}
+                        onChange={(e) => setAttorneyName(e.target.value)}
+                        placeholder="Ej: Dr. Rafael Ortega"
+                        className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        N° Registro Colegiatura (CAL / CAJ / otros)
+                      </label>
+                      <input
+                        type="text"
+                        value={cal}
+                        onChange={(e) => setCal(e.target.value)}
+                        placeholder="Ej: 87432"
+                        className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
-                      Datos de Contacto, Dirección y Casilla SINOE
-                    </label>
-                    <textarea
-                      rows={2}
-                      value={contactInfo}
-                      onChange={(e) => setContactInfo(e.target.value)}
-                      placeholder="Ej: Av. Nicolás de Piérola 1220 Of. 402, Cercado de Lima | Cel: 929 727 274&#10;Casilla Electrónica SINOE N° 18452 | contacto@estudiovaldivia.pe"
-                      className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors resize-none"
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Casilla Electrónica SINOE
+                      </label>
+                      <input
+                        type="text"
+                        value={sinoe}
+                        onChange={(e) => setSinoe(e.target.value)}
+                        placeholder="Ej: 24891"
+                        className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Celular / Teléfono de Contacto
+                      </label>
+                      <input
+                        type="text"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="Ej: 987 654 321"
+                        className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Correo Electrónico Procesal
+                      </label>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Ej: contacto@ortegalegal.pe"
+                        className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Domicilio Procesal / Dirección
+                      </label>
+                      <input
+                        type="text"
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Ej: Av. Grau 450 Of. 302, Piura"
+                        className="w-full px-3 py-2 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Visual preview notice */}
+                  <div className="p-3 rounded-lg bg-[#1a1a1a] border border-[#2a2a2a] text-[11px] space-y-1">
+                    <p className="text-[#c9a84c] font-medium flex items-center gap-1.5">
+                      <CheckCircle2 size={12} /> Reemplazo automático en documentos
+                    </p>
+                    <p className="text-white/50 text-[10px] leading-relaxed">
+                      Estos datos reemplazarán automáticamente la cabecera, los campos en el cuerpo del escrito (como <code className="text-white/70">[NOMBRE DEL ABOGADO]</code>, <code className="text-white/70">[REGISTRO CAL]</code>, <code className="text-white/70">[CASILLA SINOE]</code>, <code className="text-white/70">[CORREO]</code>) y la sección de firmas al pie de página al exportar a Word (.docx) o imprimir a PDF.
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[10px] text-white/40">
                       {savedLetterheadMsg && (
                         <span className="text-emerald-400 font-medium flex items-center gap-1">
-                          <Check size={12} /> ¡Membrete guardado con éxito!
+                          <Check size={12} /> ¡Datos y membrete guardados con éxito!
                         </span>
                       )}
                     </span>
                     <button
                       type="button"
                       onClick={handleSaveLetterhead}
-                      className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+                      className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-all hover:brightness-110 active:scale-95"
                       style={{
                         background: '#c9a84c',
                         color: '#111',
                       }}
                     >
                       <Check size={13} />
-                      Guardar Membrete
+                      Guardar Datos del Estudio
                     </button>
                   </div>
                 </div>

@@ -79,6 +79,7 @@ export const api = {
         agentId: string
         messages: { role: string; content: string; timestamp: string }[]
         conversationId?: string
+        letterhead?: any
       },
       callbacks: {
         onChunk: (chunk: string) => void
@@ -151,6 +152,10 @@ export const api = {
         }
         callbacks.onDone({})
       } catch (err: any) {
+        if (err.name === 'AbortError' || signal?.aborted) {
+          callbacks.onDone({})
+          return
+        }
         callbacks.onError(err)
       }
     },
