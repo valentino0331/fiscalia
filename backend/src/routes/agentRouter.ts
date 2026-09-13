@@ -27,6 +27,9 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'comparecencia con restricciones', 'comparecencia simple', 'prescripcion penal',
       'inculpado', 'agraviado', 'ministerio publico', 'dl 1585', 'acuerdo plenario 1-2019',
       'medidas de coercion', 'requerimiento fiscal', 'apelacion de auto',
+      'apelacion de prision preventiva', 'apelacion contra auto de prision preventiva',
+      'peligro de fuga', 'peligro de obstaculizacion', 'arraigo domiciliario', 'arraigo laboral',
+      'arraigo familiar', 'casacion 626-2013', 'acuerdo plenario 01-2017',
     ],
   },
   diego: {
@@ -38,6 +41,8 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'indemnizacion', 'responsabilidad civil', 'carta notarial', 'resolucion contractual',
       'deuda', 'prestamo', 'garantia hipotecaria', 'derechos reales', 'propiedad',
       'codigo civil', 'ley 30933', 'allanamiento futuro', 'cpc', 'codigo procesal civil',
+      'ocupacion precaria', 'precario', 'desalojo por ocupacion precaria', 'cuarto pleno casatorio',
+      'iv pleno casatorio', 'restitucion de inmueble', 'frutos devengados',
     ],
   },
   adriana: {

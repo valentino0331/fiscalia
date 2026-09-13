@@ -230,7 +230,7 @@ export function classifyLine(line: string): LineKind {
   if (/^(?:\d{1,2}\.|\d{1,2}-[A-Z]\.?|\d{1,2}\)|[–—\-])\s+/i.test(t)) return 'NUMBERED_ITEM'
 
   // Etiqueta de firma
-  if (/^(FIRMA|DNI\s*N?°|RUC\s*N?°|CAL\s*N?°|CIP\s*N?°|ABOGADO\s*:|COLEGIO DE ABOGADOS|N?°\s*COLEGIATURA|LUGAR\s+Y\s+FECHA|FECHA\s*:)\s*[:\s]/i.test(plain)) return 'SIGNATURE_LABEL'
+  if (/^(FIRMA|DNI\s*N?°|RUC\s*N?°|CAL\s*N?°|CIP\s*N?°|REG\.?\s*C\.?A\.?L\.?|REG\.?\s*C\.?A\.?P\.?|ABOGADO\s*:|ABOGADO\s+DEFENSOR|ABOGADO\s+PATROCINANTE|ABOGAD[OA]\b|DEMANDANTE\b|COLEGIO DE ABOGADOS|N?°\s*COLEGIATURA|LUGAR\s+Y\s+FECHA|FECHA\s*:)\b/i.test(plain)) return 'SIGNATURE_LABEL'
 
   // Campo de datos: Nombre: / Domicilio: / DNI:
   if (/^(NOMBRE\s*:|DNI\s*(?:N°)?\s*:|DOMICILIO\s*(REAL|PROCESAL|ELECTRÓNICO)?\s*:|DIRECCIÓN\s*:|CORREO\s*:|TELÉFONO\s*:|REPRESENTANTE\s*:|ESTADO CIVIL\s*:|OCUPACIÓN\s*:|CASILLA\s*(JUDICIAL|ELECTRÓNICA)?\s*:|RUC\s*(?:N°)?\s*:)/i.test(plain)) return 'FIELD'
@@ -446,7 +446,7 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
         while (i < rawLines.length) {
           const next = rawLines[i].trim()
           if (!next) break
-          if (classifyLine(next) === 'AUTHORITY') {
+          if (classifyLine(next) === 'AUTHORITY' || /^\([A-Za-zÁÉÍÓÚÑ]/.test(cleanHeading(next))) {
             authLines.push(cleanHeading(next))
             i++
           } else break
@@ -544,10 +544,28 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
         break
       }
 
-      case 'SEPARATOR':
+      case 'SEPARATOR': {
         blocks.push({ kind: 'SEPARATOR', text: '_______________________________' })
         i++
+        const sigLines: string[] = []
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) {
+            i++
+            continue
+          }
+          const nKind = classifyLine(next)
+          if (nKind === 'SEPARATOR' || nKind === 'MAIN_TITLE' || nKind === 'CLAUSE' || nKind === 'SECTION_ROMAN' || nKind === 'SECTION_TEXT' || nKind === 'TABLE_ROW') {
+            break
+          }
+          sigLines.push(cleanHeading(next))
+          i++
+        }
+        if (sigLines.length > 0) {
+          blocks.push({ kind: 'SIGNATURE_LABEL', lines: sigLines })
+        }
         break
+      }
 
       case 'SIGNATURE_LABEL': {
         const sigLines = [cleanHeading(trimmed)]
@@ -853,7 +871,8 @@ export function renderDocHtmlBody(content: string, letterhead?: LawFirmLetterhea
 
       case 'AUTHORITY':
         for (const l of block.lines) {
-          htmlParts.push(`<div class="doc-authority">${parseInlineMarkdownToHtml(l)}</div>`)
+          const isSub = l.trim().startsWith('(')
+          htmlParts.push(`<div class="doc-authority" style="${isSub ? 'font-weight:normal;font-style:italic;margin-top:-6px;' : ''}">${parseInlineMarkdownToHtml(l)}</div>`)
         }
         break
 
@@ -1330,15 +1349,17 @@ export async function downloadWordDoc(
 
       case 'AUTHORITY':
         for (const l of block.lines) {
+          const isSubDirection = l.trim().startsWith('(')
           docChildren.push(new Paragraph({
             alignment: AlignmentType.LEFT,
-            spacing: { before: 120, after: 160, line: 360 },
+            spacing: { before: isSubDirection ? 0 : 120, after: isSubDirection ? 160 : 60, line: 360 },
             keepNext: true,
             children: [new TextRun({
               text: cleanHeading(l),
               font: 'Times New Roman',
               size: 24, // 12pt
-              bold: true,
+              bold: !isSubDirection,
+              italics: isSubDirection,
             })],
           }))
         }
@@ -1373,17 +1394,27 @@ export async function downloadWordDoc(
 
       case 'SECTION': {
         const isSubSection = /^[IVXLCDM]+(?:\.\d+)+/i.test(block.text)
-        const isOtrosi = /^((PRIMER|SEGUNDO|TERCER|CUARTO)\s+)?OTROS[IÍ]/i.test(block.text)
+        const isMainRoman = /^[IVXLCDM]+\.?\s+/i.test(block.text) && !isSubSection
 
-        if (isOtrosi) {
-          const fullText = block.sublines.length > 0
-            ? `${cleanHeading(block.text)} ${block.sublines.join(' ')}`
-            : cleanHeading(block.text)
+        if (isMainRoman) {
           docChildren.push(new Paragraph({
-            alignment: AlignmentType.JUSTIFIED,
-            spacing: { before: 0, after: 300, line: 360 },
-            children: parseInlineMarkdownToDocx(fullText, { bold: true, size: 24 }),
+            alignment: AlignmentType.LEFT,
+            spacing: { before: 240, after: 120, line: 360 },
+            keepNext: true,
+            children: [new TextRun({
+              text: cleanHeading(block.text).toUpperCase(),
+              font: 'Times New Roman',
+              size: 24,
+              bold: true,
+            })],
           }))
+          for (const sl of block.sublines) {
+            docChildren.push(new Paragraph({
+              alignment: AlignmentType.JUSTIFIED,
+              spacing: { before: 0, after: 120, line: 360 },
+              children: parseInlineMarkdownToDocx(sl, { size: 24 }),
+            }))
+          }
         } else {
           docChildren.push(new Paragraph({
             alignment: isSubSection ? AlignmentType.JUSTIFIED : AlignmentType.LEFT,
@@ -1468,10 +1499,11 @@ export async function downloadWordDoc(
 
       case 'SIGNATURE_LABEL':
         for (const sl of block.lines) {
+          const isBold = /^(?:Dr\.|Dra\.|Abog\.|[A-ZÁÉÍÓÚÑ\s]{4,})/i.test(cleanHeading(sl)) && !/^(?:Reg\.|DNI|RUC|CAL|Casilla)/i.test(cleanHeading(sl))
           docChildren.push(new Paragraph({
             alignment: AlignmentType.CENTER,
             spacing: { before: 0, after: 40, line: 360 },
-            children: parseInlineMarkdownToDocx(sl, { bold: true, size: 24 }),
+            children: parseInlineMarkdownToDocx(sl, { bold: isBold, size: 24 }),
           }))
         }
         break
@@ -1971,11 +2003,13 @@ export async function downloadPdfDoc(
 
       case 'AUTHORITY': {
         currentY += 2.5
-        pdf.setFont('times', 'bold')
-        pdf.setFontSize(10.5)
-        pdf.setTextColor(10, 10, 10)
         for (const l of block.lines) {
-          const wrapped = pdf.splitTextToSize(cleanHeading(l).toUpperCase(), contentWidth)
+          const isSub = l.trim().startsWith('(')
+          pdf.setFont('times', isSub ? 'italic' : 'bold')
+          pdf.setFontSize(10.5)
+          pdf.setTextColor(10, 10, 10)
+          const textToPrint = isSub ? cleanHeading(l) : cleanHeading(l).toUpperCase()
+          const wrapped = pdf.splitTextToSize(textToPrint, contentWidth)
           wrapped.forEach((wl: string) => {
             if (currentY > pageHeight - marginBottom - 10) {
               pdf.addPage()

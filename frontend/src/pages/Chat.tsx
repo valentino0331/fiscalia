@@ -115,6 +115,12 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       prompt: 'Redacta un recurso formal de apelación contra el auto que declaró fundada la prisión preventiva, conforme al Art. 278 numeral 1 del NCPP (plazo de 3 días) y D. Leg. 1585. Debe contener: Fundamentos de hecho y derecho, agravio producido, cuestionamiento de graves y fundados elementos de convicción, prognosis de pena, acreditación de arraigo familiar/laboral/domiciliario de calidad, ausencia de peligro de fuga y obstaculización, y pretensión concreta de revocatoria e imposición de comparecencia con restricciones. Incluye Otrosí Digo de Casilla SINOE y facultades Arts. 74 y 80 CPC.',
     },
     {
+      label: 'Apelación de Prisión Preventiva (Art. 278 CPP / Cas. 626-2013)',
+      icon: Scale,
+      badgeColor: '#EF4444',
+      prompt: 'Redacta un recurso de apelación contra auto de prisión preventiva al amparo del Art. 278 del NCPP, Casación 626-2013-Moquegua y Acuerdo Plenario 01-2017, dirigido al Juez de Investigación Preparatoria para elevación a Sala, acreditando arraigo integral (domiciliario, laboral y familiar), ausencia de peligro procesal y reserva de sustentación oral (Art. 420 CPP): [imputado, delito, juzgado, plazo en meses, fecha notificación]',
+    },
+    {
       label: 'Excepción de Improcedencia de Acción (Art. 6.1.b NCPP)',
       icon: Shield,
       badgeColor: '#EF4444',
@@ -152,6 +158,12 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
     },
   ],
   diego: [
+    {
+      label: 'Demanda de Desalojo por Ocupación Precaria (Art. 911 CC / IV Pleno Casatorio)',
+      icon: Home,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una demanda de desalojo por ocupación precaria en proceso sumarísimo (Art. 546 inc. 4 CPC) conforme al Art. 911 del Código Civil y la doctrina vinculante del IV Pleno Casatorio Civil (Cas. 2195-2011-Ucayali), solicitando la restitución de inmueble inscrito en SUNARP, frutos devengados a liquidarse en ejecución, costas y costos: [demandante, demandado, dirección del inmueble, partida electrónica SUNARP, fecha carta notarial]',
+    },
     {
       label: 'Recurso de Apelación contra Sentencia Civil (Arts. 364 y 366 CPC)',
       icon: Scale,

@@ -1753,18 +1753,81 @@ OPOSICIÓN A PRISIÓN PREVENTIVA:
 - Argumentos obligatorios: (A) Fumus comissi delicti insuficiente, (B) Peligro de fuga inexistente — arraigo domiciliario + laboral + familiar, (C) Peligro de obstaculización inexistente, (D) Proporcionalidad — medida menos gravosa suficiente
 
 RECURSO DE APELACIÓN DE PRISIÓN PREVENTIVA:
-- Sumilla: APELACIÓN CONTRA AUTO DE PRISIÓN PREVENTIVA
+- Sumilla: RECURSO DE APELACIÓN CONTRA AUTO DE PRISIÓN PREVENTIVA
 - Cuaderno: CAUTELAR
-- Destinatario: Señor Juez del JIP [ciudad] (Para elevación a la Sala Penal de Apelaciones)
-- Plazo: 3 días hábiles desde notificación (art. 278° CPP)
-- Norma: Arts. 268°, 278°, 416° CPP
-- Jurisprudencia: Cas. 626-2013-Moquegua
-- Estructura de agravios: 
-  (A) Primer presupuesto: graves y fundados elementos,
-  (B) Segundo presupuesto: prognosis de pena > 5 años (reforma DL 1585),
-  (C) Tercer presupuesto: peligro procesal,
-  (D) Proporcionalidad y razonabilidad
-- Incluir siempre PRIMER OTROSI de reserva oral
+- Destinatario: SEÑOR JUEZ DEL [N°] JUZGADO DE INVESTIGACIÓN PREPARATORIA DE [CIUDAD]:
+  (Para elevación a la Sala Penal de Apelaciones de [Ciudad])
+- Plazo: TRES (03) días hábiles desde notificación (art. 278° inc. 1 CPP D.Leg. 957)
+- Norma: Arts. 268°, 269°, 270°, 253°, 278°, 416° y 420° CPP
+- Jurisprudencia vinculante obligatoria: Casación N° 626-2013-Moquegua (motivación reforzada de peligro procesal) + Acuerdo Plenario Extraordinario N° 01-2017/CIJ-116
+- Estructura obligatoria de 5 secciones:
+  I. AUTO APELADO: auto específico, fecha, juzgado, plazo de prisión y delito imputado
+  II. PLAZO: cómputo explícito de 3 días hábiles desde notificación hasta vencimiento
+  III. FUNDAMENTOS DE HECHO:
+       1. Arraigo domiciliario acreditado (recibos, contrato)
+       2. Arraigo laboral estable (cargo, empresa, remuneración, boletas)
+       3. Arraigo familiar (hijos menores dependientes, cónyuge)
+       4. Insuficiencia de graves y fundados elementos de convicción (art. 268° inc. a CPP)
+       5. Inexistencia de peligro de obstaculización (art. 270° CPP, diligencias ya actuadas)
+  IV. FUNDAMENTOS DE DERECHO: arts. 2° inc. 24 lit. f y 139° inc. 3 Const., arts. 268°, 269°, 270°, 253°, 278° CPP, Cas. 626-2013-Moquegua y Ac. Plen. Ext. 01-2017/CIJ-116
+  V. MEDIOS PROBATORIOS PARA LA VISTA ORAL: arraigo domiciliario, laboral, familiar y pericia de descargo
+- Cierre: "POR TANTO: A Ud. pido elevar el presente recurso a la Sala Penal de Apelaciones..."
+- PRIMER OTROSI DIGO: reserva expresa de sustentación oral en audiencia conforme al art. 420° CPP
+- Bloque de firmas: abogado defensor con número de colegiatura CAL
+
+── PROTOCOLO OFICIAL Y MODELO CANÓNICO DE REDACCIÓN (FEW-SHOT: sebastian_modelo_penal.docx) ──
+Cuando redactes una apelación de prisión preventiva, reproduces con absoluta fidelidad este estándar oficial:
+
+EXPEDIENTE  :  Exp. N° 01234-2026-0-1801-JR-PE-01
+CUADERNO    :  CAUTELAR
+ESCRITO     :  N° 01-2026
+SUMILLA     :  RECURSO DE APELACIÓN CONTRA AUTO DE PRISIÓN PREVENTIVA
+
+SEÑOR JUEZ DEL SEGUNDO JUZGADO DE INVESTIGACIÓN PREPARATORIA DE LIMA:
+(Para elevación a la Sala Penal de Apelaciones de Lima)
+
+Carlos Ramos Quispe, abogado defensor del imputado Juan Alberto Mendoza Torres, identificado con DNI N° 12345678, con CAL N° 54321, señalando domicilio procesal en Jr. Ucayali 456 Of. 201, Lima, Casilla Electrónica SINOE N° 18765; a Ud. digo:
+
+I.   AUTO APELADO
+Mediante el presente recurso apelo el AUTO de fecha 10 de septiembre de 2026, emitido por el Segundo Juzgado de Investigación Preparatoria de Lima, que declaró FUNDADO el requerimiento de PRISIÓN PREVENTIVA formulado por el Ministerio Público contra mi patrocinado Juan Alberto Mendoza Torres, fijando un plazo de nueve (9) meses, en el proceso seguido por la presunta comisión del delito de Estafa Agravada tipificado en el artículo 196°-A del Código Penal.
+
+II.  PLAZO
+El presente recurso se interpone dentro del plazo legal de TRES (03) días hábiles desde la notificación del auto, conforme al artículo 278° inciso 1 del Código Procesal Penal (D.Leg. 957). El auto fue notificado el 11 de septiembre de 2026, por lo que el plazo vence el 16 de septiembre de 2026.
+
+III. FUNDAMENTOS DE HECHO
+1.   Juan Alberto Mendoza Torres tiene arraigo domiciliario acreditado en Jr. Los Pinos 234, Surco, Lima, donde reside con su cónyuge e hijos menores desde hace ocho (8) años, conforme a los recibos de servicios y contrato de arrendamiento que se adjuntan.
+2.   El imputado tiene arraigo laboral estable: se desempeña como contador en la empresa Servicios Contables SAC desde el año 2019, percibiendo una remuneración mensual de S/ 4,500.00, según contrato de trabajo y boletas de pago que se adjuntan.
+3.   El imputado tiene arraigo familiar: es padre de tres hijos menores de edad (10, 7 y 4 años) que dependen económicamente de él, y cónyuge de doña Rosa Elena Torres Sánchez, quien no trabaja por dedicarse al cuidado de los menores.
+4.   Los elementos de convicción presentados por el Ministerio Público se limitan a la declaración referencial de la agraviada y a correos electrónicos de contenido ambiguo, insuficientes para satisfacer el estándar del artículo 268° inciso a) del CPP que exige graves y fundados elementos de convicción.
+5.   Las diligencias de investigación esenciales ya fueron actuadas (declaraciones, pericias contables, levantamiento del secreto bancario), por lo que no existe riesgo real de obstaculización de la investigación.
+
+IV.  FUNDAMENTOS DE DERECHO
+1.   Constitución Política del Perú, artículos 2° inc. 24 literal f) y 139° inc. 3: que garantizan la libertad personal y la presunción de inocencia como derechos fundamentales.
+2.   Decreto Legislativo N° 957 — Código Procesal Penal:
+–   Artículo 268°: establece los tres presupuestos materiales copulativos de la prisión preventiva: (a) graves y fundados elementos de convicción, (b) prognosis de pena superior a cuatro años, y (c) peligro procesal.
+–   Artículo 269°: criterios para evaluar el peligro de fuga (arraigo domiciliario, laboral, familiar, comportamiento procesal).
+–   Artículo 270°: criterios para evaluar el peligro de obstaculización.
+–   Artículo 253°: principio de proporcionalidad — la medida debe ser idónea, necesaria y proporcional al fin que persigue.
+–   Artículo 278°: recurso de apelación contra el auto de prisión preventiva, conocido por la Sala Penal de Apelaciones.
+3.   Casación N° 626-2013-Moquegua: doctrina jurisprudencial vinculante que establece los presupuestos materiales de la prisión preventiva y exige motivación reforzada respecto del peligro procesal.
+4.   Acuerdo Plenario Extraordinario N° 01-2017/CIJ-116: sobre la motivación del peligro procesal y los criterios objetivos que deben concurrir para dictar la medida.
+
+V.   MEDIOS PROBATORIOS PARA LA VISTA ORAL
+1.   Recibos de servicios (luz, agua, cable) a nombre del imputado, con el objeto de acreditar el arraigo domiciliario en Jr. Los Pinos 234, Surco.
+2.   Contrato de trabajo y boletas de pago de Servicios Contables SAC, con el objeto de acreditar el arraigo laboral estable.
+3.   Partidas de nacimiento de los tres hijos menores, con el objeto de acreditar el arraigo familiar y las cargas que dependen del imputado.
+4.   Escrito pericial contable privado que desvirtúa la participación del imputado en los hechos imputados, con el objeto de cuestionar el primer presupuesto material.
+
+POR TANTO: A Ud. pido elevar el presente recurso a la Sala Penal de Apelaciones de Lima y, en su oportunidad, declarar FUNDADA la apelación, REVOCANDO el auto de prisión preventiva y, en su lugar, dictar comparecencia con restricciones a favor de Juan Alberto Mendoza Torres.
+
+PRIMER OTROSI DIGO: Me reservo el derecho de sustentar oralmente el presente recurso en la audiencia de apelación ante la Sala Penal de Apelaciones de Lima, conforme al artículo 420° del Código Procesal Penal.
+
+Lima, 13 de septiembre de 2026.
+
+_______________________________
+Dr. CARLOS RAMOS QUISPE
+Reg. C.A.L. N° 54321
+Abogado Defensor
 
 CESACIÓN DE PRISIÓN PREVENTIVA:
 - Sumilla: SOLICITUD DE CESACIÓN DE PRISIÓN PREVENTIVA
@@ -2573,10 +2636,81 @@ DESALOJO POR OCUPACIÓN PRECARIA:
 - Sumilla: DEMANDA DE DESALOJO POR OCUPACIÓN PRECARIA
 - Cuaderno: PRINCIPAL
 - Vía: Proceso Sumarísimo (Art. 546° inc. 4 CPC)
-- Norma: Art. 911° CC + IV Pleno Casatorio 
-  (Cas. 2195-2011-Ucayali)
-- Pretensión: restitución del inmueble + pago de frutos
-- Datos adicionales: partida SUNARP + dirección exacta
+- Norma sustantiva: Arts. 911°, 923°, 947° del Código Civil + Art. 70° Constitución Política
+- Jurisprudencia vinculante obligatoria: IV Pleno Casatorio Civil — Casación N° 2195-2011-Ucayali (doctrina jurisprudencial vinculante sobre posesión precaria y título fenecido o ausente)
+- Pretensión principal: Restitución inmediata del inmueble con indicación precisa de la Partida Electrónica de SUNARP
+- Pretensiones accesorias: (1) Pago de frutos devengados durante la ocupación precaria a liquidarse en ejecución de sentencia conforme a renta de mercado; (2) Costas y costos del proceso
+- Monto del petitorio: No cuantificable la restitución; frutos a liquidarse en ejecución de sentencia
+- Medios probatorios: Copia literal de SUNARP, Escritura Pública de compraventa, Carta Notarial de requerimiento de desocupación con plazo de 30 días, Constancia de recepción de la carta e Informe de valorización de renta de mercado
+- Anexos: 1-A a 1-G incluyendo tasa judicial
+- Cierre: "POR LO EXPUESTO: A Ud. pido admitir a trámite la presente demanda y, en su oportunidad, declararla FUNDADA en todos sus extremos..."
+- Bloque de firmas obligatorio: Tabla de 2 columnas (Demandante a la izquierda | Abogada a la derecha con Reg. C.A.L.)
+
+── PROTOCOLO OFICIAL Y MODELO CANÓNICO DE REDACCIÓN (FEW-SHOT: diego_modelo_civil.docx) ──
+Cuando redactes una demanda de desalojo por ocupación precaria, reproduces con absoluta fidelidad este estándar oficial:
+
+EXPEDIENTE  :  NUEVO
+CUADERNO    :  PRINCIPAL
+ESCRITO     :  N° 01
+SUMILLA     :  DEMANDA DE DESALOJO POR OCUPACIÓN PRECARIA
+
+SEÑOR JUEZ DEL TERCER JUZGADO ESPECIALIZADO EN LO CIVIL DE LIMA:
+
+Rosa Elena Paredes Cárdenas, identificada con DNI N° 09876543, con domicilio real en Av. Brasil 567 Dpto. 302, Jesús María, Lima; señalando domicilio procesal en Av. Arequipa 1234 Of. 501, Miraflores, Lima (Estudio Jurídico Flores & Asociados), Casilla Electrónica SINOE N° 32109; a Ud. digo:
+
+I.   PETITORIO
+Interpongo demanda de DESALOJO POR OCUPACIÓN PRECARIA contra Jorge Luis Huamán Quispe, identificado con DNI N° 45612378, con domicilio en Jr. Las Magnolias 890, San Miguel, Lima, a fin de que el Juzgado ordene:
+1.   La restitución inmediata del inmueble ubicado en Jr. Las Magnolias 890, San Miguel, Lima, inscrito en la Partida Electrónica N° 12345678 del Registro de Propiedad Inmueble de Lima, del cual soy propietaria.
+2.   El pago de los frutos devengados durante la ocupación precaria, a liquidarse en ejecución de sentencia.
+3.   El pago de costas y costos del proceso.
+
+II.  VÍA PROCEDIMENTAL
+La presente demanda se tramita en la VÍA DEL PROCESO SUMARÍSIMO, conforme al artículo 546° inciso 4 del Código Procesal Civil, por tratarse de una pretensión de desalojo.
+
+III. FUNDAMENTOS DE HECHO
+1.   La demandante Rosa Elena Paredes Cárdenas es propietaria del inmueble ubicado en Jr. Las Magnolias 890, San Miguel, Lima, adquirido mediante compraventa celebrada el 15 de marzo de 2018, inscrita en la Partida Electrónica N° 12345678 del Registro de Propiedad Inmueble de Lima a su nombre.
+2.   Con fecha 1 de enero de 2023, la propietaria permitió el ingreso del demandado Jorge Luis Huamán Quispe al inmueble de manera temporal y a título de precario, sin que mediara contrato de arrendamiento ni obligación de pago, en consideración a la relación de amistad que los unía.
+3.   Con fecha 10 de junio de 2026, la demandante requirió al demandado la desocupación del inmueble mediante carta notarial debidamente recibida, otorgándole un plazo de treinta (30) días calendarios para restituir el bien.
+4.   Vencido el plazo otorgado, el demandado se niega a restituir el inmueble sin expresar causa alguna que justifique su permanencia, careciendo por ello de título que ampare su posesión, configurándose la ocupación precaria prevista en el artículo 911° del Código Civil.
+5.   La negativa del demandado a desocupar el inmueble impide a la demandante ejercer plenamente su derecho de propiedad y le genera perjuicios económicos cuantificables en el valor de la renta de mercado del inmueble.
+
+IV.  FUNDAMENTOS DE DERECHO
+1.   Constitución Política del Perú, artículo 70°: que garantiza el derecho de propiedad y establece que nadie puede ser privado de su propiedad sino por causa de seguridad nacional o necesidad pública.
+2.   Código Civil:
+–   Artículo 911°: define la posesión precaria como aquella que se ejerce sin título alguno o cuando el que se tenía ha fenecido.
+–   Artículo 923°: el propietario tiene el derecho de usar, disfrutar, disponer y reivindicar el bien.
+–   Artículo 947°: la transferencia de propiedad de un bien inmueble se produce con el solo consentimiento de las partes.
+3.   Código Procesal Civil, artículo 546° inciso 4: establece que el desalojo se tramita en proceso sumarísimo.
+4.   IV Pleno Casatorio Civil — Casación N° 2195-2011-Ucayali: establece la doctrina jurisprudencial vinculante sobre el desalojo por ocupación precaria, señalando que es poseedor precario quien ocupa un bien sin título o cuyo título ha fenecido, incluyendo al ocupante que ingresó con autorización del propietario pero que ha sido requerido de restitución.
+
+V.   MONTO DEL PETITORIO
+La pretensión principal de restitución del inmueble no es cuantificable en dinero. En cuanto a los frutos devengados, estos se liquidarán en ejecución de sentencia conforme al valor de renta de mercado del inmueble durante el período de ocupación precaria.
+
+VI.  MEDIOS PROBATORIOS
+Ofrezco como medios probatorios:
+1.   Copia literal de la Partida Electrónica N° 12345678, con el objeto de acreditar la titularidad de la demandante sobre el inmueble materia de litis.
+2.   Escritura pública de compraventa de fecha 15 de marzo de 2018, con el objeto de acreditar la adquisición del inmueble por parte de la demandante.
+3.   Carta notarial de requerimiento de desocupación de fecha 10 de junio de 2026, con el objeto de acreditar que el demandado fue debidamente requerido de restituir el bien y se negó a hacerlo.
+4.   Constancia de cargo de recepción de la carta notarial, con el objeto de acreditar la fecha de recepción y el vencimiento del plazo otorgado.
+5.   Informe de valorización de renta de mercado del inmueble, con el objeto de acreditar los frutos devengados durante la ocupación precaria.
+
+VII. ANEXOS
+1-A   Copia del DNI de la demandante.
+1-B   Copia literal de la Partida Electrónica N° 12345678.
+1-C   Escritura pública de compraventa de fecha 15 de marzo de 2018.
+1-D   Carta notarial de requerimiento de desocupación de fecha 10 de junio de 2026.
+1-E   Constancia de recepción de la carta notarial.
+1-F   Informe de valorización de renta de mercado del inmueble.
+1-G   Tasa judicial por ofrecimiento de pruebas.
+
+POR LO EXPUESTO: A Ud. pido admitir a trámite la presente demanda y, en su oportunidad, declararla FUNDADA en todos sus extremos, ordenando al demandado la restitución inmediata del inmueble materia de litis, con pago de frutos devengados, costas y costos del proceso.
+
+Lima, 13 de septiembre de 2026.
+
+_______________________________          _______________________________
+ROSA ELENA PAREDES CÁRDENAS              Dra. MARÍA FLORES VEGA
+DNI N° 09876543                          Reg. C.A.L. N° 76543
+Demandante                               Abogada
 
 DESALOJO POR FALTA DE PAGO:
 - Sumilla: DEMANDA DE DESALOJO POR FALTA DE PAGO
