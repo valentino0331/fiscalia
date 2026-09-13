@@ -83,28 +83,46 @@ interface DocumentTemplateItem {
 const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
   valentina: [
     {
+      label: 'Demanda Laboral por Despido Arbitrario (Estructura 1 - NLPT)',
+      icon: Scale,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta una demanda laboral por indemnización por despido arbitrario conforme a la Estructura 1, Ley 29497 (NLPT) y D.L. 728, incluyendo SECRETARIO primero en encabezado, tabla de situación laboral, fundamentos de hecho, tabla de liquidación por conceptos y exoneración de tasa (art. 24 NLPT): [trabajador, DNI, empleador, RUC, fecha de ingreso, fecha de cese, sueldo mensual, cargo]',
+    },
+    {
+      label: 'Contestación de Demanda Laboral (Estructura 2 - Empleador)',
+      icon: Shield,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta una contestación de demanda laboral conforme a la Estructura 2 y Art. 19 de la NLPT, con apersonamiento, deducción de excepciones procesales, pronunciamiento categórico hecho por hecho (NEGAMOS/AFIRMAMOS) y ofrecimiento de pruebas con tasa judicial de empleador: [expediente, especialista, empresa demandada, trabajador demandante, hechos contestados]',
+    },
+    {
+      label: 'Recurso de Apelación de Sentencia Laboral (Estructura 3 - Plazo 5 días)',
+      icon: Scale,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta un recurso de apelación contra sentencia laboral conforme a la Estructura 3, Art. 32 de la Ley 29497 y CPC supletorio, acreditando plazo de 5 días hábiles, efecto suspensivo, fundamentación de agravios numerados (económico y de derecho) y pretensión revocatoria: [expediente, especialista, sentencia impugnada, agravios]',
+    },
+    {
+      label: 'Escrito en Ejecución de Sentencia — Liquidación y Embargo (Estructura 4)',
+      icon: FileSignature,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta un escrito en ejecución de sentencia laboral conforme a la Estructura 4 y Art. 59 de la NLPT, solicitando liquidación de intereses legales laborales, costas y costos con apercibimiento de embargo por vencimiento del plazo de cumplimiento voluntario: [expediente, especialista, sentencia firme, monto liquidado]',
+    },
+    {
+      label: 'Escrito Incidental — Tacha de Documento Falso (Estructura 5)',
+      icon: ShieldAlert,
+      badgeColor: '#6366F1',
+      prompt: 'Redacta un escrito incidental de tacha de documento conforme a la Estructura 5, Art. 242 del CPC y NLPT, cuestionando la autenticidad de documento ofrecido por la contraparte con ofrecimiento de pericia grafotécnica: [expediente, especialista, documento tachado, fundamentos]',
+    },
+    {
       label: 'Carta Notarial - Pago de Beneficios Sociales (Plazo 48h)',
       icon: MailCheck,
       badgeColor: '#6366F1',
       prompt: 'Redacta una carta notarial formal conforme a la Ley del Notariado (D. Leg. 1049) y D. Leg. 728, requiriendo a mi empleador el pago inmediato de mi liquidación de beneficios sociales dentro del plazo improrrogable de 48 horas: [empresa, cargo, fecha de ingreso, fecha de cese, sueldo mensual]',
     },
     {
-      label: 'Carta de Renuncia con Exoneración de Preaviso de 30 Días',
-      icon: Briefcase,
-      badgeColor: '#34d17a',
-      prompt: 'Redacta una carta formal de renuncia voluntaria con solicitud de exoneración del plazo de 30 días de preaviso conforme al Art. 18 del D.S. 003-97-TR: [empresa, cargo, último día efectivo de labores]',
-    },
-    {
       label: 'Denuncia por Despido Arbitrario e Inspección ante SUNAFIL',
       icon: ShieldAlert,
       badgeColor: '#f59e0b',
       prompt: 'Redacta una solicitud de inspección laboral y denuncia ante SUNAFIL por despido arbitrario incausado e incumplimiento de obligaciones laborales: [razón social, RUC, centro de labores, hechos]',
-    },
-    {
-      label: 'Contrato de Trabajo a Plazo Fijo Sujeto a Modalidad',
-      icon: FileText,
-      badgeColor: '#6366F1',
-      prompt: 'Redacta un contrato individual de trabajo sujeto a modalidad (D.S. 003-97-TR) con causa objetiva determinante, periodo de prueba y cláusula de confidencialidad: [empleador, trabajador, puesto, remuneración, plazo]',
     },
   ],
   sebastian: [
