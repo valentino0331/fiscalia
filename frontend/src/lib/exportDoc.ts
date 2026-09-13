@@ -44,8 +44,8 @@ export interface DocFormatOptions {
 export const DEFAULT_LEGAL_FORMAT: DocFormatOptions = {
   fontFamilyCss: '"Times New Roman", Times, "Liberation Serif", Georgia, serif',
   fontSizePt: 12,
-  lineHeight: 1.4,
-  marginTopCm: 2.5,
+  lineHeight: 1.5,
+  marginTopCm: 3.0,
   marginRightCm: 2.5,
   marginBottomCm: 2.5,
   marginLeftCm: 3.0,
@@ -186,6 +186,7 @@ export type LineKind =
   | 'SEPARATOR'
   | 'SIGNATURE_LABEL'
   | 'FIELD'
+  | 'TABLE_ROW'
   | 'PLAIN'
 
 export function classifyLine(line: string): LineKind {
@@ -193,6 +194,9 @@ export function classifyLine(line: string): LineKind {
   const plain = cleanHeading(t)
 
   if (!t) return 'PLAIN'
+
+  // Fila de tabla markdown (| Col 1 | Col 2 | o |---|---|)
+  if (/^\|.*\|$/.test(t)) return 'TABLE_ROW'
 
   // Separador de firma
   if (/^_{4,}[-–—_\s]*$/.test(t)) return 'SEPARATOR'
@@ -258,6 +262,7 @@ export type DocBlock =
   | { kind: 'SEPARATOR'; text: string }
   | { kind: 'SIGNATURE_LABEL'; lines: string[] }
   | { kind: 'DOUBLE_SIGNATURE'; data: DoubleSignatureData }
+  | { kind: 'TABLE'; headers: string[]; rows: string[][] }
   | { kind: 'PLAIN'; text: string }
 
 // ─── PARSER INTELIGENTE DE BLOQUES LEGALES ────────────────────────────────────
@@ -306,21 +311,33 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
           const pLeft = parts[0]
           const pRight = parts[1]
 
-          if (!leftCol.role && (/^(EL\s+ARRENDADOR|EL\s+DEMANDANTE|EL\s+PRESTAMISTA|EL\s+MUTUANTE|EL\s+OTORGANTE|EL\s+VENDEDOR|EL\s+LOCADOR|EL\s+PROPIETARIO|PARTE\s+A|DEMANDANTE|PROPIETARIO)/i.test(pLeft) || /^(EL\s+ARRENDATARIO|EL\s+DEMANDADO|EL\s+PRESTATARIO|EL\s+MUTUARIO|EL\s+APODERADO|EL\s+COMPRADOR|EL\s+INQUILINO|ABOGADO|PARTE\s+B)/i.test(pRight))) {
-            leftCol.role = pLeft
-            rightCol.role = pRight
-            continue
-          }
-
-          if (!leftCol.name && !/^(DNI|RUC|CAL|CIP|LEGALIZACI[OÓ]N)/i.test(pLeft)) {
+          if (!leftCol.name && (/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pLeft) || /^(?:NOMBRE|\[\s*NOMBRE)/i.test(pRight))) {
             leftCol.name = pLeft
             rightCol.name = pRight
             continue
           }
 
-          if (/^(DNI|RUC|CAL|CIP|DOCUMENTO)/i.test(pLeft) || !leftCol.docId) {
+          if (!leftCol.role && (/^(EL\s+ARRENDADOR|EL\s+DEMANDANTE|EL\s+PRESTAMISTA|EL\s+MUTUANTE|EL\s+OTORGANTE|EL\s+VENDEDOR|EL\s+LOCADOR|EL\s+PROPIETARIO|PARTE\s+A|DEMANDANTE|PROPIETARIO)\b/i.test(pLeft) || /^(EL\s+ARRENDATARIO|EL\s+DEMANDADO|EL\s+PRESTATARIO|EL\s+MUTUARIO|EL\s+APODERADO|EL\s+COMPRADOR|EL\s+INQUILINO|ABOGADO|PARTE\s+B)\b/i.test(pRight)) && !/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pLeft) && !/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pRight)) {
+            leftCol.role = pLeft
+            rightCol.role = pRight
+            continue
+          }
+
+          if (!leftCol.name && !/^(DNI|RUC|CAL|CIP|LEGALIZACI[OÓ]N|REG\.?)/i.test(pLeft)) {
+            leftCol.name = pLeft
+            rightCol.name = pRight
+            continue
+          }
+
+          if (/^(DNI|RUC|CAL|CIP|DOCUMENTO|REG\.?)/i.test(pLeft) || /^(DNI|RUC|CAL|CIP|DOCUMENTO|REG\.?)/i.test(pRight) || !leftCol.docId) {
             leftCol.docId = pLeft
             rightCol.docId = pRight
+            continue
+          }
+
+          if (!leftCol.role) {
+            leftCol.role = pLeft
+            rightCol.role = pRight
             continue
           }
 
@@ -524,6 +541,58 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
         break
       }
 
+      case 'TABLE_ROW': {
+        const tableLines: string[] = [trimmed]
+        i++
+        while (i < rawLines.length) {
+          const next = rawLines[i].trim()
+          if (!next) break
+          if (classifyLine(next) === 'TABLE_ROW') {
+            tableLines.push(next)
+            i++
+          } else break
+        }
+
+        const parseCells = (rowStr: string): string[] => {
+          let s = rowStr.trim()
+          if (s.startsWith('|')) s = s.slice(1)
+          if (s.endsWith('|')) s = s.slice(0, -1)
+          return s.split('|').map(cell => cell.trim())
+        }
+
+        if (tableLines.length >= 2) {
+          const firstCells = parseCells(tableLines[0])
+          const secondLine = tableLines[1].trim()
+          const isSeparator = /^\|?[\s\-:|]+\|?$/.test(secondLine) && secondLine.includes('-')
+
+          let headers: string[] = []
+          let dataLines: string[] = []
+
+          if (isSeparator) {
+            headers = firstCells
+            dataLines = tableLines.slice(2)
+          } else {
+            if (firstCells.some(h => /^(CONCEPTO|MONTO|DATO|DETALLE|N°|ITEM|DESCRIPCI[OÓ]N)/i.test(h))) {
+              headers = firstCells
+              dataLines = tableLines.slice(1)
+            } else {
+              headers = []
+              dataLines = tableLines
+            }
+          }
+
+          const rows = dataLines
+            .filter(l => !(/^\|?[\s\-:|]+\|?$/.test(l.trim()) && l.includes('-')))
+            .map(parseCells)
+            .filter(r => r.some(c => c.length > 0))
+
+          blocks.push({ kind: 'TABLE', headers, rows })
+        } else if (tableLines.length === 1) {
+          blocks.push({ kind: 'TABLE', headers: [], rows: [parseCells(tableLines[0])] })
+        }
+        break
+      }
+
       case 'PLAIN':
       default: {
         const paraLines = [trimmed]
@@ -677,7 +746,7 @@ export function replaceLetterheadPlaceholders(
   // 1. Nombre del Abogado
   if (p.attorneyName) {
     res = res.replace(
-      /\[\s*(?:NOMBRE\s+DEL\s+ABOGADO(?:\s+(?:DEFENSOR|PATROCINANTE|QUE\s+SUSCRIBE))?|NOMBRE\s+DEL\s+ABOGADO\s*\/\s*ESTUDIO|NOMBRE\s+DEL\s+ABOGADO\s+DEFENSOR\s*\/\s*IMPUTADO|ABOGADO\s+(?:DEFENSOR|PATROCINANTE)|ABOGADO)\s*\]/gi,
+      /\[\s*(?:NOMBRE\s+(?:COMPLETO\s+)?(?:DEL\s+)?ABOGADO(?:\s+(?:DEFENSOR|PATROCINANTE|QUE\s+SUSCRIBE))?|NOMBRE\s+DEL\s+ABOGADO\s*\/\s*ESTUDIO|NOMBRE\s+DEL\s+ABOGADO\s+DEFENSOR\s*\/\s*IMPUTADO|ABOGADO\s+(?:DEFENSOR|PATROCINANTE)|ABOGADO)\s*\]/gi,
       p.attorneyName
     )
   }
@@ -693,7 +762,7 @@ export function replaceLetterheadPlaceholders(
   // 3. Casilla SINOE
   if (p.sinoe) {
     res = res.replace(
-      /\[\s*(?:CASILLA\s+SINOE(?:\s*N°)?|CASILLA\s+ELECTR[OÓ]NICA\s+SINOE|CASILLA\s+ELECTR[OÓ]NICA|CASILLA\s+ELECTRONICA|CASILLA)\s*\]/gi,
+      /\[\s*(?:CASILLA\s+SINOE(?:\s*N°)?|CASILLA\s+ELECTR[OÓ]NICA\s+SINOE|CASILLA\s+ELECTR[OÓ]NICA|CASILLA\s+ELECTRONICA|CASILLA|SINOE)\s*\]/gi,
       p.sinoe
     )
   }
@@ -714,10 +783,10 @@ export function replaceLetterheadPlaceholders(
     )
   }
 
-  // 6. Domicilio Procesal / Dirección
+  // 6. Domicilio Procesal / Dirección del Estudio
   if (p.address) {
     res = res.replace(
-      /\[\s*(?:DIRECCI[OÓ]N\s+PROCESAL|DIRECCION\s+PROCESAL|DOMICILIO\s+PROCESAL(?:\s*\/\s*ESTUDIO)?|DIRECCI[OÓ]N\s+DEL\s+ESTUDIO|DIRECCI[OÓ]N\s+COMPLETA|DIRECCION\s+COMPLETA|DOMICILIO\s+LEGAL|DIRECCI[OÓ]N\s+LEGAL)\s*\]/gi,
+      /\[\s*(?:DIRECCI[OÓ]N\s+(?:DEL\s+ESTUDIO(?:\s+JUR[IÍ]DICO)?|PROCESAL)|DIRECCION\s+(?:DEL\s+ESTUDIO(?:\s+JURIDICO)?|PROCESAL)|DOMICILIO\s+(?:DEL\s+ESTUDIO(?:\s+JUR[IÍ]DICO)?|PROCESAL)(?:\s*\/\s*ESTUDIO)?|DIRECCI[OÓ]N\s+COMPLETA|DIRECCION\s+COMPLETA|DOMICILIO\s+LEGAL|DIRECCI[OÓ]N\s+LEGAL)\s*\]/gi,
       p.address
     )
   }
@@ -725,7 +794,7 @@ export function replaceLetterheadPlaceholders(
   // 7. Nombre del Estudio / Razón Social
   if (p.firmName) {
     res = res.replace(
-      /\[\s*(?:NOMBRE\s+DEL\s+ESTUDIO|ESTUDIO\s+JUR[IÍ]DICO|ESTUDIO\s+JURIDICO|RAZ[OÓ]N\s+SOCIAL|RAZON\s+SOCIAL)\s*\]/gi,
+      /\[\s*(?:NOMBRE\s+DEL\s+ESTUDIO(?:\s+JUR[IÍ]DICO)?|ESTUDIO\s+JUR[IÍ]DICO|ESTUDIO\s+JURIDICO|RAZ[OÓ]N\s+SOCIAL|RAZON\s+SOCIAL)\s*\]/gi,
       p.firmName
     )
   }
@@ -735,9 +804,12 @@ export function replaceLetterheadPlaceholders(
     res = res.replace(/\[\s*(?:CASILLA\s+F[IÍ]SICA(?:\s*N°)?|CASILLA\s+FISICA)\s*\]/gi, p.sinoe)
   }
 
-  // 9. Fecha procesal (sustituye [fecha completa] o [FECHA] por fecha actual en español)
-  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre']
+  // 9. Año actual (ej. N° 01-[AÑO ACTUAL])
   const now = new Date()
+  res = res.replace(/\[\s*(?:A[ÑN]O\s+ACTUAL|A[ÑN]O)\s*\]/gi, `${now.getFullYear()}`)
+
+  // 10. Fecha procesal (sustituye [fecha completa] o [FECHA] por fecha actual en español)
+  const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre']
   const formattedDate = `${now.getDate()} de ${months[now.getMonth()]} de ${now.getFullYear()}`
   res = res.replace(/\[\s*(?:FECHA\s+COMPLETA|FECHA\s+ACTUAL|FECHA)\s*\]/gi, formattedDate)
 
@@ -824,6 +896,31 @@ export function renderDocHtmlBody(content: string, letterhead?: LawFirmLetterhea
         `)
         break
 
+      case 'TABLE': {
+        htmlParts.push('<div class="doc-table-container"><table class="doc-table">')
+        if (block.headers.length > 0) {
+          htmlParts.push('<thead><tr>')
+          for (const h of block.headers) {
+            htmlParts.push(`<th>${parseInlineMarkdownToHtml(h)}</th>`)
+          }
+          htmlParts.push('</tr></thead>')
+        }
+        htmlParts.push('<tbody>')
+        for (const row of block.rows) {
+          const isTotal = row.some(cell => /TOTAL/i.test(cell))
+          htmlParts.push(`<tr class="${isTotal ? 'doc-table-total-row' : ''}">`)
+          row.forEach((cell, cellIdx) => {
+            const isMoney = /^(?:S\/?\.?|\$)\s*[\d,.]+|\b[\d,.]+\s*soles\b/i.test(cell)
+            const isHeaderCol = block.headers.length === 2 && cellIdx === 0 && !/^(?:CONCEPTO|N°|ITEM)/i.test(block.headers[0])
+            const alignClass = isMoney ? 'text-right' : (isHeaderCol ? 'font-bold bg-gray' : '')
+            htmlParts.push(`<td class="${alignClass}">${parseInlineMarkdownToHtml(cell)}</td>`)
+          })
+          htmlParts.push('</tr>')
+        }
+        htmlParts.push('</tbody></table></div>')
+        break
+      }
+
       case 'PLAIN':
         htmlParts.push(`<p class="doc-paragraph">${parseInlineMarkdownToHtml(block.text)}</p>`)
         break
@@ -836,6 +933,43 @@ export function renderDocHtmlBody(content: string, letterhead?: LawFirmLetterhea
 // ─── HOJA CSS COMPLETA PARA IMPRESIÓN / PDF ────────────────────────────────────
 function buildDocCSS(fmt: Required<DocFormatOptions>): string {
   return `
+    /* ── Tablas procesales oficiales ── */
+    .doc-table-container {
+      width: 100%;
+      margin: 12pt 0;
+      page-break-inside: avoid;
+    }
+    .doc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: ${fmt.fontFamilyCss};
+      font-size: 11pt;
+      line-height: 1.35;
+    }
+    .doc-table th, .doc-table td {
+      border: 0.5pt solid #444444;
+      padding: 5pt 8pt;
+      vertical-align: top;
+    }
+    .doc-table th {
+      background-color: #D3D3D3;
+      color: #111;
+      font-weight: bold;
+      text-align: left;
+    }
+    .doc-table tr.doc-table-total-row td {
+      background-color: #D3D3D3;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    .doc-table td.bg-gray {
+      background-color: #D3D3D3;
+      font-weight: bold;
+    }
+    .doc-table td.text-right {
+      text-align: right;
+    }
+
     @page {
       size: A4 portrait;
       margin: ${fmt.marginTopCm}cm ${fmt.marginRightCm}cm ${fmt.marginBottomCm}cm ${fmt.marginLeftCm}cm;
@@ -1291,20 +1425,20 @@ export async function downloadWordDoc(
                       spacing: { before: 680, after: 60, line: 240 },
                       children: [new TextRun({ text: block.data.left.line || '_________________________________', font: 'Times New Roman', size: 22 })],
                     }),
-                    ...(block.data.left.role ? [new Paragraph({
-                      alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.left.role.toUpperCase(), font: 'Times New Roman', size: 22, bold: true })],
-                    })] : []),
                     ...(block.data.left.name ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
                       spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.left.name, font: 'Times New Roman', size: 22 })],
+                      children: [new TextRun({ text: block.data.left.name, font: 'Times New Roman', size: 22, bold: true })],
                     })] : []),
                     ...(block.data.left.docId ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
                       spacing: { before: 20, after: 20, line: 240 },
                       children: [new TextRun({ text: block.data.left.docId, font: 'Times New Roman', size: 22 })],
+                    })] : []),
+                    ...(block.data.left.role ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.left.role, font: 'Times New Roman', size: 22 })],
                     })] : []),
                     ...(block.data.left.extra ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
@@ -1327,20 +1461,20 @@ export async function downloadWordDoc(
                       spacing: { before: 680, after: 60, line: 240 },
                       children: [new TextRun({ text: block.data.right.line || '_________________________________', font: 'Times New Roman', size: 22 })],
                     }),
-                    ...(block.data.right.role ? [new Paragraph({
-                      alignment: AlignmentType.CENTER,
-                      spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.right.role.toUpperCase(), font: 'Times New Roman', size: 22, bold: true })],
-                    })] : []),
                     ...(block.data.right.name ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
                       spacing: { before: 20, after: 20, line: 240 },
-                      children: [new TextRun({ text: block.data.right.name, font: 'Times New Roman', size: 22 })],
+                      children: [new TextRun({ text: block.data.right.name, font: 'Times New Roman', size: 22, bold: true })],
                     })] : []),
                     ...(block.data.right.docId ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
                       spacing: { before: 20, after: 20, line: 240 },
                       children: [new TextRun({ text: block.data.right.docId, font: 'Times New Roman', size: 22 })],
+                    })] : []),
+                    ...(block.data.right.role ? [new Paragraph({
+                      alignment: AlignmentType.CENTER,
+                      spacing: { before: 20, after: 20, line: 240 },
+                      children: [new TextRun({ text: block.data.right.role, font: 'Times New Roman', size: 22 })],
                     })] : []),
                     ...(block.data.right.extra ? [new Paragraph({
                       alignment: AlignmentType.CENTER,
@@ -1354,6 +1488,111 @@ export async function downloadWordDoc(
           ],
         }))
         break
+
+      case 'TABLE': {
+        const numCols = Math.max(block.headers.length, ...block.rows.map(r => r.length), 1)
+        const is2Col = numCols === 2
+        const isCalcTable = is2Col && (
+          block.headers.some(h => /CONCEPTO/i.test(h)) ||
+          block.rows.some(r => r.some(c => /^(?:S\/?\.?|\$)\s*[\d,.]+/i.test(c)))
+        )
+        const isDataTable = is2Col && !isCalcTable
+
+        const tableBorder = { style: BorderStyle.SINGLE, size: 4, color: '444444' }
+        const docxRows: TableRow[] = []
+
+        if (block.headers.length > 0) {
+          const headerCells = block.headers.map((h, colIdx) => {
+            const widthDxa = isCalcTable
+              ? (colIdx === 0 ? 5760 : 2880)
+              : (isDataTable ? (colIdx === 0 ? 3600 : 5040) : Math.floor(8640 / numCols))
+            const isMoney = /MONTO/i.test(h)
+            return new TableCell({
+              width: { size: widthDxa, type: WidthType.DXA },
+              shading: { fill: 'D3D3D3' },
+              borders: {
+                top: tableBorder,
+                bottom: tableBorder,
+                left: tableBorder,
+                right: tableBorder,
+              },
+              children: [
+                new Paragraph({
+                  alignment: isMoney ? AlignmentType.RIGHT : AlignmentType.LEFT,
+                  spacing: { before: 80, after: 80, line: 240 },
+                  children: [
+                    new TextRun({
+                      text: cleanHeading(h).toUpperCase(),
+                      font: 'Times New Roman',
+                      size: 22,
+                      bold: true,
+                      color: '111111',
+                    }),
+                  ],
+                }),
+              ],
+            })
+          })
+          docxRows.push(new TableRow({ children: headerCells, tableHeader: true }))
+        }
+
+        for (const row of block.rows) {
+          const isTotalRow = row.some(cell => /TOTAL/i.test(cell))
+          const cells = row.map((cell, colIdx) => {
+            const widthDxa = isCalcTable
+              ? (colIdx === 0 ? 5760 : 2880)
+              : (isDataTable ? (colIdx === 0 ? 3600 : 5040) : Math.floor(8640 / numCols))
+            const isLabelCol = isDataTable && colIdx === 0
+            const isMoney = isCalcTable && (colIdx === 1 || /^(?:S\/?\.?|\$)\s*[\d,.]+/i.test(cell))
+
+            const fillShading = (isTotalRow || isLabelCol) ? 'D3D3D3' : 'FFFFFF'
+            const isBold = isTotalRow || isLabelCol
+            const cellText = isTotalRow ? cleanHeading(cell).toUpperCase() : cleanHeading(cell)
+
+            return new TableCell({
+              width: { size: widthDxa, type: WidthType.DXA },
+              shading: { fill: fillShading },
+              borders: {
+                top: tableBorder,
+                bottom: tableBorder,
+                left: tableBorder,
+                right: tableBorder,
+              },
+              children: [
+                new Paragraph({
+                  alignment: isMoney ? AlignmentType.RIGHT : AlignmentType.LEFT,
+                  spacing: { before: 60, after: 60, line: 240 },
+                  children: parseInlineMarkdownToDocx(cellText, {
+                    bold: isBold,
+                    size: 22,
+                  }),
+                }),
+              ],
+            })
+          })
+
+          docxRows.push(new TableRow({ children: cells }))
+        }
+
+        docChildren.push(new Table({
+          width: { size: 8640, type: WidthType.DXA },
+          borders: {
+            top: tableBorder,
+            bottom: tableBorder,
+            left: tableBorder,
+            right: tableBorder,
+            insideHorizontal: tableBorder,
+            insideVertical: tableBorder,
+          },
+          rows: docxRows,
+        }))
+
+        docChildren.push(new Paragraph({
+          spacing: { before: 80, after: 120, line: 240 },
+          children: [new TextRun({ text: '' })],
+        }))
+        break
+      }
 
       case 'PLAIN':
         docChildren.push(new Paragraph({
@@ -1386,39 +1625,37 @@ export async function downloadWordDoc(
           default: new Footer({
             children: [
               new Paragraph({
-                alignment: AlignmentType.RIGHT,
+                alignment: AlignmentType.CENTER,
                 spacing: { before: 140, after: 0 },
                 children: [
                   new TextRun({
-                    text: letterhead?.firmName ? `${letterhead.firmName.toUpperCase()}  |  ` : 'HARDMAN JURÍDICO  |  ',
+                    text: letterhead?.firmName ? `${letterhead.firmName}  |  ` : 'Estudio Jurídico  |  ',
                     font: 'Times New Roman',
-                    size: 17,
-                    color: '777777',
+                    size: 20, // 10pt (20 half-points)
+                    color: '555555',
                   }),
                   new TextRun({
                     text: 'Página ',
                     font: 'Times New Roman',
-                    size: 17,
-                    color: '777777',
+                    size: 20,
+                    color: '555555',
                   }),
                   new TextRun({
                     children: [PageNumber.CURRENT],
                     font: 'Times New Roman',
-                    size: 17,
-                    bold: true,
+                    size: 20,
                     color: '555555',
                   }),
                   new TextRun({
                     text: ' de ',
                     font: 'Times New Roman',
-                    size: 17,
-                    color: '777777',
+                    size: 20,
+                    color: '555555',
                   }),
                   new TextRun({
                     children: [PageNumber.TOTAL_PAGES],
                     font: 'Times New Roman',
-                    size: 17,
-                    bold: true,
+                    size: 20,
                     color: '555555',
                   }),
                 ],
@@ -1716,25 +1953,9 @@ export async function downloadPdfDoc(
         pdf.text(sigLine, rightX - pdf.getTextWidth(sigLine) / 2, currentY)
         currentY += 5
 
-        // 2. Roles (Bold)
-        if (block.data.left.role || block.data.right.role) {
-          pdf.setFont('times', 'bold')
-          pdf.setFontSize(9.5)
-          pdf.setTextColor(15, 15, 15)
-          if (block.data.left.role) {
-            const r = block.data.left.role.toUpperCase()
-            pdf.text(r, leftX - pdf.getTextWidth(r) / 2, currentY)
-          }
-          if (block.data.right.role) {
-            const r = block.data.right.role.toUpperCase()
-            pdf.text(r, rightX - pdf.getTextWidth(r) / 2, currentY)
-          }
-          currentY += 4.5
-        }
-
-        // 3. Nombres
+        // 2. Nombres (Bold)
         if (block.data.left.name || block.data.right.name) {
-          pdf.setFont('times', 'normal')
+          pdf.setFont('times', 'bold')
           pdf.setFontSize(9.5)
           pdf.setTextColor(20, 20, 20)
           if (block.data.left.name) {
@@ -1743,10 +1964,10 @@ export async function downloadPdfDoc(
           if (block.data.right.name) {
             pdf.text(block.data.right.name, rightX - pdf.getTextWidth(block.data.right.name) / 2, currentY)
           }
-          currentY += 4.2
+          currentY += 4.5
         }
 
-        // 4. Documentos / DNIs
+        // 3. Documentos / DNIs
         if (block.data.left.docId || block.data.right.docId) {
           pdf.setFont('times', 'normal')
           pdf.setFontSize(9)
@@ -1756,6 +1977,22 @@ export async function downloadPdfDoc(
           }
           if (block.data.right.docId) {
             pdf.text(block.data.right.docId, rightX - pdf.getTextWidth(block.data.right.docId) / 2, currentY)
+          }
+          currentY += 4.2
+        }
+
+        // 4. Roles
+        if (block.data.left.role || block.data.right.role) {
+          pdf.setFont('times', 'normal')
+          pdf.setFontSize(9)
+          pdf.setTextColor(40, 40, 40)
+          if (block.data.left.role) {
+            const r = block.data.left.role
+            pdf.text(r, leftX - pdf.getTextWidth(r) / 2, currentY)
+          }
+          if (block.data.right.role) {
+            const r = block.data.right.role
+            pdf.text(r, rightX - pdf.getTextWidth(r) / 2, currentY)
           }
           currentY += 4.2
         }
@@ -1775,6 +2012,96 @@ export async function downloadPdfDoc(
         }
 
         currentY += 6
+        break
+      }
+
+      case 'TABLE': {
+        const numCols = Math.max(block.headers.length, ...block.rows.map(r => r.length), 1)
+        const is2Col = numCols === 2
+        const isCalcTable = is2Col && (
+          block.headers.some(h => /CONCEPTO/i.test(h)) ||
+          block.rows.some(r => r.some(c => /^(?:S\/?\.?|\$)\s*[\d,.]+/i.test(c)))
+        )
+        const isDataTable = is2Col && !isCalcTable
+
+        const colWidths = isCalcTable
+          ? [contentWidth * 0.66, contentWidth * 0.34]
+          : (isDataTable ? [contentWidth * 0.45, contentWidth * 0.55] : Array(numCols).fill(contentWidth / numCols))
+
+        const rowHeight = 6.5 // mm
+
+        // Header row
+        if (block.headers.length > 0) {
+          if (currentY > pageHeight - marginBottom - 12) {
+            pdf.addPage()
+            currentY = letterhead?.firmName ? 27 : marginTop
+          }
+          pdf.setFillColor(211, 211, 211)
+          pdf.setDrawColor(68, 68, 68)
+          pdf.setLineWidth(0.2)
+
+          let curX = marginLeft
+          block.headers.forEach((h, colIdx) => {
+            const w = colWidths[colIdx] || colWidths[0]
+            pdf.rect(curX, currentY, w, rowHeight, 'FD')
+            pdf.setFont('times', 'bold')
+            pdf.setFontSize(9)
+            pdf.setTextColor(20, 20, 20)
+            const isMoney = /MONTO/i.test(h)
+            if (isMoney) {
+              const tw = pdf.getTextWidth(cleanHeading(h).toUpperCase())
+              pdf.text(cleanHeading(h).toUpperCase(), curX + w - tw - 2, currentY + 4.5)
+            } else {
+              pdf.text(cleanHeading(h).toUpperCase(), curX + 2, currentY + 4.5)
+            }
+            curX += w
+          })
+          currentY += rowHeight
+        }
+
+        // Data rows
+        for (const row of block.rows) {
+          if (currentY > pageHeight - marginBottom - 10) {
+            pdf.addPage()
+            currentY = letterhead?.firmName ? 27 : marginTop
+          }
+
+          const isTotalRow = row.some(c => /TOTAL/i.test(c))
+          let curX = marginLeft
+
+          row.forEach((cell, colIdx) => {
+            const w = colWidths[colIdx] || colWidths[0]
+            const isLabelCol = isDataTable && colIdx === 0
+            const isMoney = isCalcTable && (colIdx === 1 || /^(?:S\/?\.?|\$)\s*[\d,.]+/i.test(cell))
+
+            if (isTotalRow || isLabelCol) {
+              pdf.setFillColor(211, 211, 211)
+              pdf.rect(curX, currentY, w, rowHeight, 'FD')
+              pdf.setFont('times', 'bold')
+            } else {
+              pdf.setFillColor(255, 255, 255)
+              pdf.rect(curX, currentY, w, rowHeight, 'FD')
+              pdf.setFont('times', 'normal')
+            }
+
+            pdf.setFontSize(8.5)
+            pdf.setTextColor(20, 20, 20)
+
+            const cellText = isTotalRow ? cleanHeading(cell).toUpperCase() : cleanHeading(cell)
+            if (isMoney) {
+              const tw = pdf.getTextWidth(cellText)
+              pdf.text(cellText, curX + w - tw - 2, currentY + 4.3)
+            } else {
+              const truncated = pdf.splitTextToSize(cellText, w - 4)[0] || ''
+              pdf.text(truncated, curX + 2, currentY + 4.3)
+            }
+
+            curX += w
+          })
+          currentY += rowHeight
+        }
+
+        currentY += 4
         break
       }
 
