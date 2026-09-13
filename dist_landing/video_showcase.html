@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hardman IA — Estudio de Video Publicitario (TikTok, Reels & YouTube)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #edd38c;
+    --gold-glow: rgba(201, 168, 76, 0.45);
+    --green: #34d17a;
+    --green-glow: rgba(52, 209, 122, 0.4);
+    --bg-dark: #050608;
+    --card-bg: rgba(18, 22, 31, 0.85);
+    --card-border: rgba(201, 168, 76, 0.25);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+  body {
+    background: #020305;
+    color: #ffffff;
+    font-family: 'Outfit', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 20px 10px 40px;
+    overflow-x: hidden;
+  }
+
+  /* TOP STUDIO HEADER */
+  .studio-header {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding: 12px 24px;
+    background: rgba(15, 18, 25, 0.85);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 20px;
+    backdrop-filter: blur(16px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    margin-bottom: 20px;
+  }
+
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-logo .symbol {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #c9a84c, #7b591b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    font-size: 24px;
+    color: #000;
+    box-shadow: 0 0 20px rgba(201, 168, 76, 0.5);
+  }
+
+  .brand-logo h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #fff, #edd38c, #c9a84c);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand-logo p {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 1px;
+  }
+
+  .format-toggles {
+    display: flex;
+    align-items: center;
+    background: rgba(5, 7, 12, 0.8);
+    padding: 4px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 6px;
+  }
+
+  .toggle-btn {
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.25s ease;
+  }
+
+  .toggle-btn.active {
+    background: linear-gradient(135deg, #c9a84c, #9f7c2a);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(201, 168, 76, 0.4);
+  }
+
+  .action-btns {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #c9a84c, #8c671b);
+    color: #000;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(201, 168, 76, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 25px rgba(201, 168, 76, 0.6);
+  }
+
+  .btn-record {
+    background: linear-gradient(135deg, #ef4444, #991b1b);
+    color: #fff;
+    font-weight: 800;
+    font-size: 13px;
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    transition: all 0.2s;
+  }
+  .btn-record.recording {
+    animation: pulseRed 1s infinite alternate;
+  }
+  @keyframes pulseRed {
+    from { box-shadow: 0 0 15px #ef4444; }
+    to { box-shadow: 0 0 35px #ef4444; }
+  }
+
+  /* STAGE VIEWPORT CONTAINER */
+  #stage-wrapper {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 10px 0 24px;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* 9:16 VERTICAL MODE (TIKTOK / REELS / SHORTS) */
+  .mode-vertical #video-stage {
+    width: 440px;
+    height: 782px;
+    border-radius: 36px;
+    border: 3px solid rgba(201, 168, 76, 0.5);
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.95), 0 0 50px rgba(201, 168, 76, 0.25);
+  }
+
+  /* 16:9 LANDSCAPE MODE (YOUTUBE / PRESENTATION) */
+  .mode-horizontal #video-stage {
+    width: 1060px;
+    height: 596px;
+    border-radius: 24px;
+    border: 2.5px solid rgba(201, 168, 76, 0.5);
+    box-shadow: 0 30px 100px rgba(0, 0, 0, 0.95), 0 0 60px rgba(201, 168, 76, 0.3);
+  }
+
+  /* VIDEO STAGE (The Actual Recorded Canvas / Area) */
+  #video-stage {
+    position: relative;
+    background: radial-gradient(circle at 50% 15%, #141926 0%, #050609 85%);
+    overflow: hidden;
+    transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1), height 0.5s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.5s;
+    user-select: none;
+  }
+
+  /* FX BACKGROUND CANVAS */
+  #ambient-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* TIMELINE BAR TOP */
+  #timeline-bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 4px;
+    width: 0%;
+    background: linear-gradient(90deg, #c9a84c, #edd38c, #34d17a);
+    box-shadow: 0 0 12px #c9a84c;
+    z-index: 150;
+    transition: width 0.05s linear;
+  }
+
+  /* BRAND WATERMARK ON VIDEO */
+  .stage-watermark {
+    position: absolute;
+    top: 16px;
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 100;
+    background: rgba(10, 13, 18, 0.7);
+    border: 1px solid rgba(201, 168, 76, 0.35);
+    padding: 5px 12px;
+    border-radius: 100px;
+    backdrop-filter: blur(8px);
+  }
+  .stage-watermark .badge {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    background: #c9a84c;
+    color: #000;
+    font-weight: 900;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cinzel', serif;
+  }
+  .stage-watermark span {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #edd38c;
+  }
+
+  .stage-country {
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    z-index: 100;
+    background: rgba(10, 13, 18, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 5px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(8px);
+  }
+
+  /* SUBTITLES CONTAINER (VIRAL TIKTOK / HORMOZI STYLE) */
+  #viral-subtitles {
+    position: absolute;
+    bottom: 28px;
+    left: 20px;
+    right: 20px;
+    z-index: 120;
+    text-align: center;
+    pointer-events: none;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .subtitle-pill {
+    background: rgba(0, 0, 0, 0.88);
+    border: 1.5px solid rgba(201, 168, 76, 0.6);
+    padding: 10px 22px;
+    border-radius: 16px;
+    font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    line-height: 1.35;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9), 0 0 25px rgba(201, 168, 76, 0.35);
+    max-width: 90%;
+    animation: popSub 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes popSub {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .subtitle-pill .hl-gold {
+    color: #ffd700;
+    text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+  }
+  .subtitle-pill .hl-green {
+    color: #34d17a;
+    text-shadow: 0 0 12px rgba(52, 209, 122, 0.8);
+  }
+  .subtitle-pill .hl-white {
+    color: #ffffff;
+  }
+
+  /* SCENE LAYERS */
+  .scene-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px 110px;
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    text-align: center;
+  }
+
+  .scene-layer.active {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    pointer-events: auto;
+  }
+
+  /* SCENE HEADINGS & TAGS */
+  .gold-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(201, 168, 76, 0.15);
+    border: 1px solid rgba(201, 168, 76, 0.5);
+    color: #c9a84c;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(201, 168, 76, 0.25);
+  }
+
+  .red-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #ff6b6b;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .green-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    border-radius: 100px;
+    background: rgba(52, 209, 122, 0.15);
+    border: 1px solid rgba(52, 209, 122, 0.5);
+    color: #34d17a;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    box-shadow: 0 0 20px rgba(52, 209, 122, 0.3);
+  }
+
+  h2.scene-title {
+    font-family: 'Cinzel', serif;
+    font-weight: 900;
+    line-height: 1.2;
+    background: linear-gradient(135deg, #ffffff 40%, #edd38c 80%, #c9a84c 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px;
+    text-shadow: 0 4px 20px rgba(0,0,0,0.8);
+  }
+
+  .mode-vertical h2.scene-title { font-size: 26px; max-width: 380px; }
+  .mode-horizontal h2.scene-title { font-size: 38px; max-width: 800px; }
+
+  p.scene-desc {
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom: 16px;
+  }
+  .mode-vertical p.scene-desc { font-size: 12px; max-width: 340px; }
+  .mode-horizontal p.scene-desc { font-size: 16px; max-width: 650px; }
+
+  /* MOCKUP & CARDS INSIDE SCENES */
+  .showcase-frame {
+    position: relative;
+    border-radius: 20px;
+    overflow: hidden;
+    border: 2px solid rgba(201, 168, 76, 0.45);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 35px rgba(201, 168, 76, 0.25);
+    background: #0d1017;
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .mode-vertical .showcase-frame {
+    width: 340px;
+    max-height: 380px;
+  }
+  .mode-horizontal .showcase-frame {
+    width: 660px;
+    max-height: 320px;
+  }
+
+  .showcase-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* SPECIALISTS GRID (SCENE 4) */
+  .specialists-grid {
+    display: grid;
+    gap: 8px;
+    width: 100%;
+    max-width: 700px;
+  }
+  .mode-vertical .specialists-grid {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 340px;
+  }
+  .mode-horizontal .specialists-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .lawyer-mini-card {
+    background: rgba(18, 22, 31, 0.95);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 14px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    transition: all 0.3s ease;
+  }
+  .lawyer-mini-card.active-card {
+    border-color: #c9a84c;
+    background: linear-gradient(135deg, rgba(201,168,76,0.2) 0%, rgba(18,22,31,0.95) 100%);
+    box-shadow: 0 0 20px rgba(201,168,76,0.3);
+    transform: scale(1.04);
+  }
+  .lawyer-mini-card img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid #c9a84c;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .lawyer-mini-card h5 {
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lawyer-mini-card p {
+    font-size: 9px;
+    color: #c9a84c;
+    font-weight: 600;
+  }
+
+  /* LIVE VOICE CALL STAGE (SCENE 5) */
+  .voice-call-box {
+    background: radial-gradient(circle at 50% 30%, #152219 0%, #0a0d11 100%);
+    border: 2px solid #34d17a;
+    border-radius: 22px;
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.8), 0 0 40px rgba(52, 209, 122, 0.25);
+  }
+  .mode-vertical .voice-call-box { width: 330px; }
+  .mode-horizontal .voice-call-box { width: 500px; }
+
+  .voice-avatar-ring {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 3px solid #34d17a;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(52, 209, 122, 0.6);
+  }
+  .voice-avatar-ring img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .sound-waves {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 36px;
+  }
+  .wave-bar {
+    width: 5px;
+    background: #34d17a;
+    border-radius: 10px;
+    animation: waveBounce 0.8s infinite ease-in-out alternate;
+  }
+  .wave-bar:nth-child(2) { animation-delay: 0.15s; height: 60%; }
+  .wave-bar:nth-child(3) { animation-delay: 0.3s; height: 100%; }
+  .wave-bar:nth-child(4) { animation-delay: 0.45s; height: 75%; }
+  .wave-bar:nth-child(5) { animation-delay: 0.6s; height: 90%; }
+  .wave-bar:nth-child(6) { animation-delay: 0.2s; height: 40%; }
+  .wave-bar:nth-child(7) { animation-delay: 0.5s; height: 80%; }
+
+  @keyframes waveBounce {
+    0% { height: 20%; transform: scaleY(0.4); }
+    100% { height: 100%; transform: scaleY(1); }
+  }
+
+  /* LIQUIDATION CARD (SCENE 6) */
+  .calc-official-card {
+    background: linear-gradient(135deg, #111520 0%, #080a10 100%);
+    border: 2px solid #c9a84c;
+    border-radius: 20px;
+    padding: 16px 20px;
+    text-align: left;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.8), 0 0 35px rgba(201, 168, 76, 0.25);
+  }
+  .mode-vertical .calc-official-card { width: 340px; }
+  .mode-horizontal .calc-official-card { width: 480px; }
+
+  .calc-official-card .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 8px;
+    color: rgba(255,255,255,0.8);
+  }
+  .calc-official-card .row.total {
+    border-top: 1.5px solid rgba(201, 168, 76, 0.4);
+    padding-top: 10px;
+    margin-top: 10px;
+    font-size: 15px;
+    font-weight: 800;
+    color: #fff;
+  }
+  .calc-official-card .total span { color: #34d17a; font-size: 20px; }
+
+  /* HEYGEN COMPANION PIP OVERLAY (Simulated or Real HeyGen Avatar) */
+  #heygen-pip {
+    position: absolute;
+    bottom: 95px;
+    right: 20px;
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    border: 2.5px solid #c9a84c;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.9), 0 0 20px rgba(201, 168, 76, 0.5);
+    overflow: hidden;
+    z-index: 130;
+    background: #000;
+    transition: all 0.3s ease;
+  }
+  .mode-horizontal #heygen-pip {
+    width: 135px;
+    height: 135px;
+    bottom: 24px;
+    right: 24px;
+  }
+  #heygen-pip img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  #heygen-pip .pip-tag {
+    position: absolute;
+    bottom: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.85);
+    border: 1px solid #c9a84c;
+    color: #edd38c;
+    font-size: 8px;
+    font-weight: 800;
+    padding: 2px 6px;
+    border-radius: 6px;
+    white-space: nowrap;
+    text-transform: uppercase;
+  }
+
+  /* BOTTOM CONTROLS & TIMELINE DOCK */
+  .playback-dock {
+    width: 100%;
+    max-width: 1060px;
+    background: rgba(14, 18, 25, 0.9);
+    border: 1px solid rgba(201, 168, 76, 0.3);
+    border-radius: 18px;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  }
+
+  .player-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dock-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .dock-btn:hover {
+    background: rgba(201, 168, 76, 0.2);
+    border-color: #c9a84c;
+  }
+
+  .time-display {
+    font-family: monospace;
+    font-size: 13px;
+    color: #edd38c;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .scrubber-wrap {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+  }
+  .scrubber {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    outline: none;
+    accent-color: #c9a84c;
+    cursor: pointer;
+  }
+
+  /* HEYGEN EXPORT PACK DRAWER */
+  .heygen-pack-panel {
+    width: 100%;
+    max-width: 1060px;
+    margin-top: 20px;
+    background: rgba(15, 19, 28, 0.75);
+    border: 1px solid rgba(201, 168, 76, 0.25);
+    border-radius: 18px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+  }
+
+  .heygen-pack-panel h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 17px;
+    color: #edd38c;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .script-box {
+    background: #090b10;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #cbd5e1;
+    line-height: 1.6;
+    max-height: 160px;
+    overflow-y: auto;
+    user-select: text;
+  }
+
+  .copy-btn {
+    background: rgba(201, 168, 76, 0.15);
+    border: 1px solid #c9a84c;
+    color: #edd38c;
+    padding: 5px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* DOWNLOAD TOAST */
+  #record-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #11141c;
+    border: 1.5px solid #34d17a;
+    padding: 12px 24px;
+    border-radius: 14px;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(52, 209, 122, 0.4);
+    z-index: 999;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #record-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+</style>
+</head>
+<body class="mode-vertical">
+
+<!-- STUDIO HEADER -->
+<header class="studio-header">
+  <div class="brand-logo">
+    <div class="symbol">H</div>
+    <div>
+      <h1>HARDMAN IA — AD STUDIO</h1>
+      <p>ESTUDIO PUBLICITARIO MULTIFORMATO PARA REDES SOCIALES</p>
+    </div>
+  </div>
+
+  <!-- Format Toggles -->
+  <div class="format-toggles">
+    <button id="toggle-vert" class="toggle-btn active" onclick="setMode('vertical')">
+      <span>📱 9:16 TikTok / Reels / Shorts</span>
+    </button>
+    <button id="toggle-horiz" class="toggle-btn" onclick="setMode('horizontal')">
+      <span>📺 16:9 YouTube / Web HD</span>
+    </button>
+  </div>
+
+  <!-- Direct Actions -->
+  <div class="action-btns">
+    <button id="btn-toggle-pip" class="dock-btn" onclick="toggleHeyGenPip()">
+      <span>👤 Avatar PiP: ON</span>
+    </button>
+    <button id="btn-record-video" class="btn-record" onclick="toggleRecording()">
+      <span id="rec-dot">⏺</span>
+      <span id="rec-text">Grabar Video (WebM/MP4)</span>
+    </button>
+  </div>
+</header>
+
+<!-- STAGE WRAPPER -->
+<div id="stage-wrapper">
+  
+  <div id="video-stage">
+    <!-- Ambient FX particles -->
+    <canvas id="ambient-canvas"></canvas>
+
+    <!-- Top Time bar -->
+    <div id="timeline-bar"></div>
+
+    <!-- Top Watermark & Country -->
+    <div class="stage-watermark">
+      <div class="badge">H</div>
+      <span>HARDMAN.PE</span>
+    </div>
+
+    <div class="stage-country">
+      <span>🇵🇪 PERÚ 2026</span>
+    </div>
+
+    <!-- HEYGEN PIP AVATAR (Interactive Companion) -->
+    <div id="heygen-pip">
+      <img id="pip-img" src="/agents/valentina.jpg" alt="HeyGen Presenter">
+      <div class="pip-tag">Abogada IA</div>
+    </div>
+
+    <!-- DYNAMIC VIRAL SUBTITLES -->
+    <div id="viral-subtitles">
+      <div id="subtitle-box" class="subtitle-pill">
+        <span class="hl-gold">HARDMAN IA:</span> <span class="hl-white">Justicia al Instante</span>
+      </div>
+    </div>
+
+    <!-- SCENE 1: HOOK / DOLOR (0.0s - 4.5s) -->
+    <div class="scene-layer active" id="sc-1">
+      <div class="red-tag">⚠️ URGENCIA LEGAL</div>
+      <h2 class="scene-title">¿Tienes un problema legal urgente?</h2>
+      <p class="scene-desc">Despidos arbitrarios, cartas notariales, contratos o pensiones. No sabes a quién acudir.</p>
+      <div class="showcase-frame" style="max-height: 240px;">
+        <img src="/screen_dashboard.png" alt="Problema Legal" style="filter: brightness(0.7) contrast(1.2);">
+      </div>
+    </div>
+
+    <!-- SCENE 2: SISTEMA TRADICIONAL VS IA (4.5s - 9.5s) -->
+    <div class="scene-layer" id="sc-2">
+      <div class="red-tag">⚖️ SISTEMA TRADICIONAL</div>
+      <h2 class="scene-title">Cientos de soles y semanas de espera</h2>
+      <div style="display: flex; gap: 14px; justify-content: center; align-items: center; margin-top: 10px;">
+        <div style="background: rgba(239,68,68,0.12); border: 1.5px solid rgba(239,68,68,0.5); border-radius: 16px; padding: 14px 20px; text-align: center;">
+          <div style="font-size: 26px; font-weight: 900; color: #ef4444; text-decoration: line-through;">S/ 500+</div>
+          <div style="font-size: 11px; color: rgba(255,255,255,0.6);">Consulta lenta</div>
+        </div>
+        <div style="font-size: 24px; font-weight: 900; color: #c9a84c;">➔</div>
+        <div style="background: rgba(52,209,122,0.15); border: 1.5px solid #34d17a; border-radius: 16px; padding: 14px 20px; text-align: center; box-shadow: 0 0 25px rgba(52,209,122,0.3);">
+          <div style="font-size: 26px; font-weight: 900; color: #34d17a;">100% GRATIS</div>
+          <div style="font-size: 11px; color: #fff; font-weight: 700;">Segundos 24/7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 3: PRESENTANDO HARDMAN IA (9.5s - 14.5s) -->
+    <div class="scene-layer" id="sc-3">
+      <div class="gold-tag">✨ HOY TODO CAMBIÓ</div>
+      <h2 class="scene-title">HARDMAN IA</h2>
+      <p class="scene-desc">El primer bufete de abogados con Inteligencia Artificial del Perú.</p>
+      <div class="showcase-frame">
+        <img src="/screen_dashboard.png" alt="Hardman Dashboard">
+      </div>
+    </div>
+
+    <!-- SCENE 4: 8 ESPECIALISTAS DE ÉLITE (14.5s - 21.0s) -->
+    <div class="scene-layer" id="sc-4">
+      <div class="gold-tag">👥 8 ESPECIALISTAS DE ÉLITE</div>
+      <h2 class="scene-title">Un abogado experto para cada materia</h2>
+      <div class="specialists-grid">
+        <div class="lawyer-mini-card active-card">
+          <img src="/agents/valentina.jpg" alt="Valentina">
+          <div>
+            <h5>Dra. Valentina</h5>
+            <p>Laboral & SUNAFIL</p>
+          </div>
+        </div>
+        <div class="lawyer-mini-card">
+          <img src="/agents/sebastian.jpg" alt="Sebastian">
+          <div>
+            <h5>Dr. Sebastián</h5>
+            <p>Penal & Litigios</p>
+          </div>
+        </div>
+        <div class="lawyer-mini-card">
+          <img src="/agents/camila.jpg" alt="Camila">
+          <div>
+            <h5>Dra. Camila</h5>
+            <p>Familia & Alimentos</p>
+          </div>
+        </div>
+        <div class="lawyer-mini-card">
+          <img src="/agents/diego.jpg" alt="Diego">
+          <div>
+            <h5>Dr. Diego</h5>
+            <p>Civil & Contratos</p>
+          </div>
+        </div>
+        <div class="lawyer-mini-card">
+          <img src="/agents/adriana.jpg" alt="Adriana">
+          <div>
+            <h5>Dra. Adriana</h5>
+            <p>Corporativo / M&A</p>
+          </div>
+        </div>
+        <div class="lawyer-mini-card">
+          <img src="/agents/fernanda.jpg" alt="Fernanda">
+          <div>
+            <h5>Dra. Fernanda</h5>
+            <p>Tributario / SUNAT</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 5: LLAMADA DE VOZ EN TIEMPO REAL (21.0s - 29.0s) -->
+    <div class="scene-layer" id="sc-5">
+      <div class="green-tag">🎙️ VOZ NEURONAL EN TIEMPO REAL</div>
+      <h2 class="scene-title">Habla en vivo con tu abogada</h2>
+      <p class="scene-desc">Conversación natural y asesoría jurídica inmediata vía llamada.</p>
+      <div class="voice-call-box">
+        <div class="voice-avatar-ring">
+          <img src="/agents/valentina.jpg" alt="Valentina Calling">
+        </div>
+        <div style="text-align: center;">
+          <h4 style="font-size: 15px; font-weight: 800; color: #fff;">Dra. Valentina Paredes</h4>
+          <span style="font-size: 11px; color: #34d17a; font-weight: 700;">● En llamada activa · Audio HD</span>
+        </div>
+        <div class="sound-waves">
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 6: DEMANDAS WORD/PDF Y LIQUIDACIONES (29.0s - 36.0s) -->
+    <div class="scene-layer" id="sc-6">
+      <div class="green-tag">📄 DEMANDAS WORD & LIQUIDACIÓN EXACTA</div>
+      <h2 class="scene-title">Exporta tus escritos y calcula en Soles</h2>
+      <div class="calc-official-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+          <span style="font-size: 11px; font-weight: 800; color: #c9a84c;">LIQUIDACIÓN D.L. 728 / LEY 32155</span>
+          <span style="background: rgba(52,209,122,0.2); color: #34d17a; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px;">CONCLUIDO</span>
+        </div>
+        <div class="row">
+          <span>Indemnización por Despido:</span>
+          <strong>S/ 15,750.00</strong>
+        </div>
+        <div class="row">
+          <span>CTS + Intereses Financieros:</span>
+          <strong>S/ 2,420.00</strong>
+        </div>
+        <div class="row">
+          <span>Gratificaciones & Vacaciones:</span>
+          <strong>S/ 3,180.00</strong>
+        </div>
+        <div class="row total">
+          <span>TOTAL A LIQUIDAR:</span>
+          <span>S/ 21,350.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 7: CTA FINAL (36.0s - 44.0s) -->
+    <div class="scene-layer" id="sc-7">
+      <div class="gold-tag">🏛️ HARDMAN IA</div>
+      <h2 class="scene-title" style="font-size: 34px;">Toma el control de tus derechos</h2>
+      <p class="scene-desc">Ingresa ahora y realiza tu primera consulta completamente gratis.</p>
+      
+      <div style="background: linear-gradient(135deg, #c9a84c, #edd38c); color: #000; font-weight: 900; font-size: 20px; padding: 14px 36px; border-radius: 14px; box-shadow: 0 10px 40px rgba(201,168,76,0.6); display: inline-flex; align-items: center; gap: 8px; margin-bottom: 14px;">
+        🌐 hardman.pe
+      </div>
+
+      <div style="font-size: 11px; color: rgba(255,255,255,0.7); letter-spacing: 1px;">
+        LA JUSTICIA Y EL DERECHO, AL ALCANCE DE TUS MANOS.
+      </div>
+    </div>
+
+  </div> <!-- /video-stage -->
+
+</div> <!-- /stage-wrapper -->
+
+<!-- AUDIO WITH REAL HIGH DEF NEURAL VOICE -->
+<audio id="commercial-audio" src="/locucion_comercial_hardman.mp3" preload="auto"></audio>
+
+<!-- PLAYBACK CONTROLS DOCK -->
+<div class="playback-dock">
+  <div class="player-actions">
+    <button id="btn-play-pause" class="btn-primary" onclick="togglePlay()">
+      <span id="play-icon">▶️</span>
+      <span id="play-label">Reproducir Spot</span>
+    </button>
+    <button class="dock-btn" onclick="restartSpot()">
+      <span>🔄 Reiniciar</span>
+    </button>
+  </div>
+
+  <div class="time-display">
+    <span id="cur-time">00:00</span> / <span id="dur-time">00:43</span>
+  </div>
+
+  <div class="scrubber-wrap">
+    <input type="range" id="seek-bar" class="scrubber" min="0" max="43" step="0.1" value="0" oninput="seekTo(this.value)">
+  </div>
+</div>
+
+<!-- HEYGEN COMPANION EXPORT DRAWER -->
+<div class="heygen-pack-panel">
+  <h3>
+    <span>🎬 Guión Maestro para HeyGen & Redes Sociales</span>
+    <button class="copy-btn" onclick="copyScript()">📋 Copiar Guión Completo</button>
+  </h3>
+  <div class="script-box" id="full-script">
+[00:00 - 00:04] ¿Tienes un problema legal urgente y no sabes por dónde empezar?
+[00:04 - 00:09] En el Perú, contratar una consulta tradicional puede costarte cientos de soles y semanas de espera.
+[00:09 - 00:14] Hoy todo cambió. Te presentamos Hardman IA.
+[00:14 - 00:18] El primer bufete de abogados con Inteligencia Artificial del Perú.
+[00:18 - 00:23] Ocho especialistas jurídicos de élite disponibles las 24 horas del día.
+[00:23 - 00:32] Habla en tiempo real por llamada de voz con tu abogada laboralista, redacta demandas y cartas notariales listas en formato Word y PDF en segundos, y calcula tus liquidaciones exactas en Soles.
+[00:32 - 00:36] Toma el control de tus derechos.
+[00:36 - 00:40] Ingresa ahora a hardman.pe y realiza tu primera consulta completamente gratis.
+[00:40 - 00:44] Hardman IA. La justicia y el derecho, al alcance de tus manos.
+  </div>
+</div>
+
+<div id="record-toast">
+  <span>✅ Video grabado con éxito. Iniciando descarga...</span>
+</div>
+
+<script>
+  // SCENE TIMINGS & SUBTITLES SCRIPT
+  const scenes = [
+    { 
+      id: 'sc-1', start: 0.0, end: 4.5, 
+      sub: '<span class="hl-gold">¿TIENES UN PROBLEMA LEGAL</span> <span class="hl-white">URGENTE Y NO SABES POR DÓNDE EMPEZAR?</span>',
+      avatar: '/agents/valentina.jpg'
+    },
+    { 
+      id: 'sc-2', start: 4.5, end: 9.5, 
+      sub: '<span class="hl-white">CONSULTA TRADICIONAL:</span> <span class="hl-gold">CIENTOS DE SOLES</span> <span class="hl-white">Y SEMANAS DE ESPERA</span>',
+      avatar: '/agents/sebastian.jpg'
+    },
+    { 
+      id: 'sc-3', start: 9.5, end: 14.5, 
+      sub: '<span class="hl-gold">HOY TODO CAMBIÓ:</span> <span class="hl-white">TE PRESENTAMOS</span> <span class="hl-gold">HARDMAN IA</span>',
+      avatar: '/agents/valentina.jpg'
+    },
+    { 
+      id: 'sc-4', start: 14.5, end: 21.0, 
+      sub: '<span class="hl-gold">8 ESPECIALISTAS DE ÉLITE</span> <span class="hl-white">DISPONIBLES LAS 24 HORAS</span>',
+      avatar: '/agents/diego.jpg'
+    },
+    { 
+      id: 'sc-5', start: 21.0, end: 29.0, 
+      sub: '<span class="hl-green">HABLA EN TIEMPO REAL</span> <span class="hl-white">POR LLAMADA DE VOZ CON TU ABOGADA</span>',
+      avatar: '/agents/valentina.jpg'
+    },
+    { 
+      id: 'sc-6', start: 29.0, end: 36.0, 
+      sub: '<span class="hl-white">DEMANDAS EN WORD Y PDF +</span> <span class="hl-green">LIQUIDACIÓN EN SOLES</span>',
+      avatar: '/agents/camila.jpg'
+    },
+    { 
+      id: 'sc-7', start: 36.0, end: 44.0, 
+      sub: '<span class="hl-gold">HARDMAN.PE:</span> <span class="hl-green">PRIMERA CONSULTA 100% GRATIS</span>',
+      avatar: '/agents/valentina.jpg'
+    },
+  ];
+
+  const audio = document.getElementById('commercial-audio');
+  const playBtn = document.getElementById('btn-play-pause');
+  const playIcon = document.getElementById('play-icon');
+  const playLabel = document.getElementById('play-label');
+  const timelineBar = document.getElementById('timeline-bar');
+  const curTimeEl = document.getElementById('cur-time');
+  const durTimeEl = document.getElementById('dur-time');
+  const seekBar = document.getElementById('seek-bar');
+  const subBox = document.getElementById('subtitle-box');
+  const pipImg = document.getElementById('pip-img');
+
+  let isPlaying = false;
+
+  function togglePlay() {
+    if (isPlaying) {
+      audio.pause();
+      isPlaying = false;
+      playIcon.textContent = '▶️';
+      playLabel.textContent = 'Reanudar';
+    } else {
+      audio.play().then(() => {
+        isPlaying = true;
+        playIcon.textContent = '⏸️';
+        playLabel.textContent = 'Pausar';
+      }).catch(err => {
+        console.warn('Audio play error, using simulated playback timer:', err);
+        startFallbackTimer();
+      });
+    }
+  }
+
+  function restartSpot() {
+    audio.currentTime = 0;
+    if (!isPlaying) togglePlay();
+  }
+
+  function seekTo(val) {
+    audio.currentTime = parseFloat(val);
+  }
+
+  function setMode(mode) {
+    document.body.className = mode === 'horizontal' ? 'mode-horizontal' : 'mode-vertical';
+    document.getElementById('toggle-vert').classList.toggle('active', mode === 'vertical');
+    document.getElementById('toggle-horiz').classList.toggle('active', mode === 'horizontal');
+    resizeCanvas();
+  }
+
+  function toggleHeyGenPip() {
+    const pip = document.getElementById('heygen-pip');
+    const btn = document.getElementById('btn-toggle-pip');
+    if (pip.style.display === 'none') {
+      pip.style.display = 'block';
+      btn.innerHTML = '<span>👤 Avatar PiP: ON</span>';
+    } else {
+      pip.style.display = 'none';
+      btn.innerHTML = '<span>👤 Avatar PiP: OFF</span>';
+    }
+  }
+
+  function formatTime(s) {
+    const m = Math.floor(s / 60);
+    const sec = Math.floor(s % 60);
+    return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  }
+
+  audio.addEventListener('timeupdate', () => {
+    const t = audio.currentTime;
+    const dur = audio.duration || 43;
+
+    curTimeEl.textContent = formatTime(t);
+    durTimeEl.textContent = formatTime(dur);
+    seekBar.value = t;
+    seekBar.max = dur;
+    timelineBar.style.width = `${(t / dur) * 100}%`;
+
+    // Active Scene Switching
+    scenes.forEach(sc => {
+      const el = document.getElementById(sc.id);
+      if (t >= sc.start && t < sc.end) {
+        if (!el.classList.contains('active')) {
+          el.classList.add('active');
+          subBox.innerHTML = sc.sub;
+          if (sc.avatar) pipImg.src = sc.avatar;
+        }
+      } else {
+        el.classList.remove('active');
+      }
+    });
+  });
+
+  audio.addEventListener('ended', () => {
+    isPlaying = false;
+    playIcon.textContent = '🔄';
+    playLabel.textContent = 'Repetir Spot';
+    timelineBar.style.width = '0%';
+    if (isRecording) stopRecording();
+  });
+
+  // PARTICLES BACKGROUND CANVAS
+  const canvas = document.getElementById('ambient-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+
+  function resizeCanvas() {
+    const stage = document.getElementById('video-stage');
+    canvas.width = stage.clientWidth;
+    canvas.height = stage.clientHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  for (let i = 0; i < 40; i++) {
+    particles.push({
+      x: Math.random() * 800,
+      y: Math.random() * 800,
+      size: Math.random() * 2 + 1,
+      speedY: - (Math.random() * 0.6 + 0.2),
+      alpha: Math.random() * 0.5 + 0.1,
+      color: Math.random() > 0.4 ? 'rgba(201, 168, 76, ' : 'rgba(52, 209, 122, '
+    });
+  }
+
+  function renderFX() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.y += p.speedY;
+      if (p.y < 0) p.y = canvas.height;
+      ctx.fillStyle = p.color + p.alpha + ')';
+      ctx.beginPath();
+      ctx.arc(p.x % canvas.width, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    requestAnimationFrame(renderFX);
+  }
+  renderFX();
+
+  // MEDIA RECORDER INTEGRATION (RECORD REAL VIDEO IN BROWSER)
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let isRecording = false;
+
+  async function toggleRecording() {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  }
+
+  async function startRecording() {
+    try {
+      const stage = document.getElementById('video-stage');
+      const recBtn = document.getElementById('btn-record-video');
+      const recText = document.getElementById('rec-text');
+      
+      // Grab stream from canvas or use display capture if available
+      const stream = canvas.captureStream(30);
+
+      // Mix audio if available
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = audioCtx.createMediaElementSource(audio);
+        const dest = audioCtx.createMediaStreamDestination();
+        source.connect(dest);
+        source.connect(audioCtx.destination);
+        dest.stream.getAudioTracks().forEach(tr => stream.addTrack(tr));
+      } catch (e) {
+        console.log('Audio track note:', e);
+      }
+
+      recordedChunks = [];
+      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      mediaRecorder = new MediaRecorder(stream, MediaRecorder.isTypeSupported(options.mimeType) ? options : undefined);
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const mode = document.body.classList.contains('mode-horizontal') ? '16x9_Landscape' : '9x16_Vertical';
+        a.download = `Hardman_IA_Spot_${mode}.webm`;
+        a.click();
+        showToast();
+      };
+
+      mediaRecorder.start(100);
+      isRecording = true;
+      recBtn.classList.add('recording');
+      recText.textContent = 'Detener y Guardar';
+
+      // Restart audio and sync
+      audio.currentTime = 0;
+      audio.play();
+      isPlaying = true;
+      playIcon.textContent = '⏸️';
+      playLabel.textContent = 'Pausar';
+
+    } catch (err) {
+      alert('Para grabar en máxima fidelidad con audio, usa el botón o graba la pantalla con OBS / Extensión: ' + err.message);
+    }
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+    }
+    isRecording = false;
+    const recBtn = document.getElementById('btn-record-video');
+    const recText = document.getElementById('rec-text');
+    recBtn.classList.remove('recording');
+    recText.textContent = 'Grabar Video (WebM/MP4)';
+  }
+
+  function showToast() {
+    const toast = document.getElementById('record-toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 4000);
+  }
+
+  function copyScript() {
+    const text = document.getElementById('full-script').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      alert('¡Guión copiado al portapapeles!');
+    });
+  }
+</script>
+</body>
+</html>
