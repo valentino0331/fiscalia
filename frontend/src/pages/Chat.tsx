@@ -159,10 +159,34 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
   ],
   diego: [
     {
-      label: 'Demanda de Desalojo por Ocupación Precaria (Art. 911 CC / IV Pleno Casatorio)',
+      label: 'Demanda de Desalojo por Ocupación Precaria (Estructura 1 - Sumarísimo)',
       icon: Home,
       badgeColor: '#06B6D4',
-      prompt: 'Redacta una demanda de desalojo por ocupación precaria en proceso sumarísimo (Art. 546 inc. 4 CPC) conforme al Art. 911 del Código Civil y la doctrina vinculante del IV Pleno Casatorio Civil (Cas. 2195-2011-Ucayali), solicitando la restitución de inmueble inscrito en SUNARP, frutos devengados a liquidarse en ejecución, costas y costos: [demandante, demandado, dirección del inmueble, partida electrónica SUNARP, fecha carta notarial]',
+      prompt: 'Redacta una demanda de desalojo por ocupación precaria en proceso sumarísimo (Art. 546 inc. 4 CPC) conforme a la Estructura 1, Art. 911 del Código Civil y el IV Pleno Casatorio Civil (Cas. 2195-2011-Ucayali), con restitución de inmueble SUNARP, frutos devengados y costas: [demandante, demandado, dirección del inmueble, partida electrónica SUNARP, fecha carta notarial]',
+    },
+    {
+      label: 'Demanda en Proceso Único de Ejecución — Título Valor (Estructura 2)',
+      icon: FileText,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una demanda en Proceso Único de Ejecución (Art. 688 CPC) conforme a la Estructura 2 para cobro de Letra de Cambio / Pagaré protestado, incluyendo tabla de características del título, tabla de liquidación de la deuda y petitorio de mandato ejecutivo: [ejecutante, ejecutado, tipo de título, fecha de emisión, vencimiento, capital adeudado en S/, fecha de protesto]',
+    },
+    {
+      label: 'Solicitud de Sucesión Intestada Judicial (Estructura 3 - No Contencioso)',
+      icon: Scale,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una solicitud de sucesión intestada en proceso no contencioso (Art. 749 inc. 1 y 830 CPC) conforme a la Estructura 3, con orden de prelación hereditaria de los Arts. 815 y 816 CC, sin demandado y con petición de declaración de herederos: [solicitante, causante, fecha de defunción, cónyuge e hijos herederos con DNI]',
+    },
+    {
+      label: 'Contestación de Demanda y Reconvención (Estructura 4)',
+      icon: Scale,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta un escrito de contestación de demanda y reconvención conforme a la Estructura 4 y Art. 442 CPC, con pronunciamiento categórico hecho por hecho (NIEGO/AFIRMO) y reconvención en el Primer Otrosí Digo (Art. 445 CPC) pidiendo declarar infundada la demanda: [expediente, demandante, demandado, materia, hechos contestados, pretensión reconvencional]',
+    },
+    {
+      label: 'Medida Cautelar Fuera de Proceso — Embargo en Inscripción (Estructura 5)',
+      icon: Shield,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una solicitud de medida cautelar fuera de proceso de embargo en forma de inscripción (Art. 636 y 656 CPC) en cuaderno CAUTELAR, fundamentando fumus boni iuris, periculum in mora, contracautela juratoria y la alerta de 10 días hábiles para demandar: [solicitante, futuro demandado, bien inmueble con partida SUNARP, monto de afectación en S/]',
     },
     {
       label: 'Recurso de Apelación contra Sentencia Civil (Arts. 364 y 366 CPC)',
@@ -171,40 +195,16 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       prompt: 'Redacta un recurso formal de apelación contra sentencia civil de primera instancia al amparo de los Arts. 364 y 366 del Código Procesal Civil. Fundamenta el error de hecho y de derecho en que incurrió el juzgador, la naturaleza del agravio sufrido, la inadecuada valoración probatoria y el sustento de la pretensión impugnatoria solicitando su revocatoria o nulidad total. Incluye los tres Otrosí Digo de rigor (Casilla SINOE, física y Arts. 74/80 CPC).',
     },
     {
-      label: 'Demanda de Desalojo por Allanamiento Futuro (Art. 594 CPC / Ley 30201)',
-      icon: Home,
-      badgeColor: '#06B6D4',
-      prompt: 'Redacta una demanda judicial completa de desalojo por vencimiento de contrato / falta de pago al amparo del Art. 594 del Código Procesal Civil modificado por la Ley 30201 (cláusula de allanamiento futuro ante notario). Cumple con los Arts. 424 y 425 CPC, medios probatorios, apercibimiento de lanzamiento en 15 días y los Otrosí Digo legales.',
-    },
-    {
-      label: 'Medida Cautelar de Embargo en Forma de Retención (Art. 657 CPC)',
-      icon: Shield,
-      badgeColor: '#06B6D4',
-      prompt: 'Redacta una solicitud de medida cautelar de embargo en forma de retención sobre cuentas bancarias y fondos del demandado ante el Juez Especializado en lo Civil / Paz Letrado conforme al Art. 657 del Código Procesal Civil. Fundamenta la verosimilitud del derecho (fumus boni iuris), peligro en la demora (periculum in mora), razonabilidad de la medida y contracautela en forma de caución juratoria. Incluye Otrosí Digo.',
-    },
-    {
       label: 'Contrato de Alquiler con Desalojo Notarial Express (Ley 30933)',
       icon: Home,
       badgeColor: '#06B6D4',
       prompt: 'Redacta un contrato de arrendamiento de inmueble con Cláusula de Allanamiento Futuro (Ley 30201) y sometimiento al Desalojo Notarial Express (Ley 30933), con cláusulas de resolución por falta de pago y garantía: [arrendador, arrendatario, dirección del predio, renta mensual en S/, cuenta bancaria]',
     },
     {
-      label: 'Carta Notarial de Desalojo por Vencimiento / Falta de Pago',
-      icon: MailCheck,
-      badgeColor: '#c9a84c',
-      prompt: 'Redacta una carta notarial de requerimiento de restitución de inmueble y desalojo por vencimiento de plazo / falta de pago de rentas conforme al Art. 1428 del Código Civil y Ley 30933, bajo apercibimiento de lanzamiento: [arrendador, arrendatario, dirección, meses adeudados]',
-    },
-    {
       label: 'Contrato de Mutuo Dinerario con Mérito Ejecutivo',
       icon: FileText,
       badgeColor: '#06B6D4',
       prompt: 'Redacta un contrato privado de mutuo dinerario con legalización notarial de firmas (Arts. 1648 y ss. del Código Civil), con pacto de intereses y cláusula de mérito ejecutivo: [prestamista, prestatario, monto en Soles, cronograma de pago]',
-    },
-    {
-      label: 'Minuta de Compraventa de Inmueble con Reserva de Propiedad',
-      icon: FileText,
-      badgeColor: '#34d17a',
-      prompt: 'Redacta una minuta de compraventa de bien inmueble con pacto de reserva de propiedad (Art. 1583 Código Civil), saneamiento por evicción y forma de pago bancarizada: [vendedor, comprador, partida registral SUNARP, precio pactado]',
     },
   ],
   adriana: [

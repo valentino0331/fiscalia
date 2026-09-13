@@ -322,7 +322,7 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
             continue
           }
 
-          if (!leftCol.role && (/^(EL\s+ARRENDADOR|EL\s+DEMANDANTE|EL\s+PRESTAMISTA|EL\s+MUTUANTE|EL\s+OTORGANTE|EL\s+VENDEDOR|EL\s+LOCADOR|EL\s+PROPIETARIO|PARTE\s+A|DEMANDANTE|PROPIETARIO)\b/i.test(pLeft) || /^(EL\s+ARRENDATARIO|EL\s+DEMANDADO|EL\s+PRESTATARIO|EL\s+MUTUARIO|EL\s+APODERADO|EL\s+COMPRADOR|EL\s+INQUILINO|ABOGADO|PARTE\s+B)\b/i.test(pRight)) && !/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pLeft) && !/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pRight)) {
+          if (!leftCol.role && (/^(EL\s+ARRENDADOR|EL\s+DEMANDANTE|EL\s+PRESTAMISTA|EL\s+MUTUANTE|EL\s+OTORGANTE|EL\s+VENDEDOR|EL\s+LOCADOR|EL\s+PROPIETARIO|PARTE\s+A|DEMANDANTE|PROPIETARIO|SOLICITANTE|EL\s+SOLICITANTE|EJECUTANTE|EL\s+EJECUTANTE|REP\.?\s*LEGAL|REPRESENTANTE)\b/i.test(pLeft) || /^(EL\s+ARRENDATARIO|EL\s+DEMANDADO|EL\s+PRESTATARIO|EL\s+MUTUARIO|EL\s+APODERADO|EL\s+COMPRADOR|EL\s+INQUILINO|ABOGADO|ABOGADA|PARTE\s+B|EJECUTADO|EL\s+EJECUTADO)\b/i.test(pRight)) && !/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pLeft) && !/^(?:NOMBRE|\[\s*NOMBRE)/i.test(pRight)) {
             leftCol.role = pLeft
             rightCol.role = pRight
             continue
@@ -400,7 +400,7 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
         const parseSigLines = (arr: string[]): SignatureCol => {
           const col: SignatureCol = { line: '_________________________________' }
           for (const item of arr) {
-            if (/^(EL\s+ARRENDADOR|EL\s+ARRENDATARIO|EL\s+DEMANDANTE|EL\s+DEMANDADO|EL\s+PRESTAMISTA|EL\s+PRESTATARIO|EL\s+MUTUANTE|EL\s+MUTUARIO|EL\s+OTORGANTE|EL\s+APODERADO|EL\s+VENDEDOR|EL\s+COMPRADOR|EL\s+LOCADOR|ABOGADO|PROPIETARIO|INQUILINO|FIRMA)/i.test(item)) {
+            if (/^(EL\s+ARRENDADOR|EL\s+ARRENDATARIO|EL\s+DEMANDANTE|EL\s+DEMANDADO|EL\s+PRESTAMISTA|EL\s+PRESTATARIO|EL\s+MUTUANTE|EL\s+MUTUARIO|EL\s+OTORGANTE|EL\s+APODERADO|EL\s+VENDEDOR|EL\s+COMPRADOR|EL\s+LOCADOR|ABOGADO|ABOGADA|PROPIETARIO|INQUILINO|FIRMA|SOLICITANTE|EJECUTANTE|EJECUTADO|REP\.?\s*LEGAL|REPRESENTANTE)/i.test(item)) {
               col.role = item
             } else if (/^(DNI|RUC|CAL|CIP|DOCUMENTO)/i.test(item)) {
               col.docId = item
