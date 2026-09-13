@@ -1769,8 +1769,46 @@ export async function downloadWordDoc(
     }
   }
 
+  const commonFooter = new Footer({
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 0, after: 0, line: 360 },
+        children: [
+          new TextRun({
+            text: letterhead?.firmName ? `${letterhead.firmName}   |   Página ` : 'Estudio Jurídico   |   Página ',
+            font: 'Times New Roman',
+            size: 20, // 10pt
+            color: '555555',
+          }),
+          new TextRun({
+            children: [PageNumber.CURRENT],
+            font: 'Times New Roman',
+            size: 20,
+            color: '555555',
+          }),
+          new TextRun({
+            text: ' de ',
+            font: 'Times New Roman',
+            size: 20,
+            color: '555555',
+          }),
+          new TextRun({
+            children: [PageNumber.TOTAL_PAGES],
+            font: 'Times New Roman',
+            size: 20,
+            color: '555555',
+          }),
+        ],
+      }),
+    ],
+  })
+
   // ── Documento OpenXML .docx con márgenes oficiales peruanos y paginación judicial ──
   const doc = new Document({
+    features: {
+      updateFields: true,
+    },
     creator: letterhead?.firmName || 'Hardman Inteligencia Jurídica Perú',
     title: title || filename || 'Documento Legal Oficial',
     description: 'Documento procesal formal generado bajo estándares del Poder Judicial del Perú',
@@ -1798,40 +1836,8 @@ export async function downloadWordDoc(
           }),
         },
         footers: {
-          default: new Footer({
-            children: [
-              new Paragraph({
-                alignment: AlignmentType.CENTER,
-                spacing: { before: 0, after: 0, line: 360 },
-                children: [
-                  new TextRun({
-                    text: letterhead?.firmName ? `${letterhead.firmName}   |   Página ` : 'Estudio Jurídico   |   Página ',
-                    font: 'Times New Roman',
-                    size: 20, // 10pt
-                    color: '555555',
-                  }),
-                  new TextRun({
-                    children: [PageNumber.CURRENT],
-                    font: 'Times New Roman',
-                    size: 20,
-                    color: '555555',
-                  }),
-                  new TextRun({
-                    text: ' de ',
-                    font: 'Times New Roman',
-                    size: 20,
-                    color: '555555',
-                  }),
-                  new TextRun({
-                    children: [PageNumber.TOTAL_PAGES],
-                    font: 'Times New Roman',
-                    size: 20,
-                    color: '555555',
-                  }),
-                ],
-              }),
-            ],
-          }),
+          first: commonFooter,
+          default: commonFooter,
         },
         children: docChildren,
       },
