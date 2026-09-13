@@ -422,6 +422,21 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       sendStreamChunk(assistantMessage);
     }
 
+    // Intercepción instantánea de consultas puramente matemáticas o ajenas al derecho (ahorro de 100% tokens)
+    const isTrivialNonLegal = (text: string): boolean => {
+      if (!text || typeof text !== 'string') return false;
+      const t = text.trim().toLowerCase();
+      const mathRegex = /^(?:cu[aá]nto\s+es\s+|calcula\s+)?(?:\(?\s*\d+\s*[\+\-\*\/xX]\s*\d+\s*\)?|\d+\s*(?:m[aá]s|menos|por|entre)\s*\d+)\s*\??$/i;
+      if (mathRegex.test(t)) return true;
+      if (/^(?:cu[eé]ntame\s+un\s+(?:chiste|poema|cuento)|dime\s+un\s+chiste)\??$/i.test(t)) return true;
+      return false;
+    };
+
+    if (!assistantMessage && isTrivialNonLegal(latestUserMessage)) {
+      assistantMessage = 'Mi función en el sistema Hardman es exclusivamente la asesoría y redacción jurídica en el Perú. Por favor, indícame tu consulta legal.';
+      sendStreamChunk(assistantMessage);
+    }
+
     // Inyección inteligente de datos del estudio y abogado patrocinante (membrete)
     let studioBlock = '';
     if (letterhead && typeof letterhead === 'object') {
