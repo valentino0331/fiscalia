@@ -44,10 +44,22 @@ app.use((req, res, next) => {
   next();
 });
 
-const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+const defaultAllowedOrigins = [
+  'https://hardman.lat',
+  'https://www.hardman.lat',
+  'http://hardman.lat',
+  'http://www.hardman.lat',
+  'https://fiscalia-1.onrender.com',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+const envOrigins = (process.env.FRONTEND_URL || '')
   .split(',')
   .map((o) => o.trim())
   .filter(Boolean);
+
+const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
 
 app.use(
   cors({
@@ -55,13 +67,24 @@ app.use(
       if (!origin) return callback(null, true);
 
       const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-      if (allowedOrigins.includes(origin) || (process.env.NODE_ENV !== 'production' && isLocalhost)) {
+      const isHardmanDomain = /^https?:\/\/([a-zA-Z0-9-]+\.)?hardman\.lat$/.test(origin);
+      const isRenderFrontend = /^https:\/\/[\w-]+\.onrender\.com$/.test(origin);
+
+      if (
+        allowedOrigins.includes(origin) ||
+        isHardmanDomain ||
+        isRenderFrontend ||
+        (process.env.NODE_ENV !== 'production' && isLocalhost)
+      ) {
         callback(null, true);
       } else {
+        console.warn('[CORS Bloqueado]:', origin);
         callback(new Error('Origen no permitido por la política CORS'));
       }
     },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   })
 );
 
