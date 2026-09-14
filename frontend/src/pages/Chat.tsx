@@ -268,28 +268,52 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
   ],
   rodrigo: [
     {
-      label: 'Solicitud de Petitorio Minero ante INGEMMET (TUPA 2026)',
+      label: 'Acreditación de Pago de Derecho de Vigencia (Estructura 1 - INGEMMET)',
       icon: FileText,
       badgeColor: '#F59E0B',
-      prompt: 'Redacta una solicitud de petitorio minero conforme al TUO de la Ley General de Minería y el TUPA del INGEMMET, con coordenadas UTM WGS84 y cuadícula: [titular, nombre del petitorio, extensión en hectáreas, ubicación, coordenadas]',
+      prompt: 'Redacta una solicitud de acreditación de pago de derecho de vigencia minera conforme a la Estructura 1, Arts. 38°, 39° y 59° del TUO de la Ley General de Minería (D.S. 014-92-EM) y TUPA INGEMMET vigente, con tabla de datos del derecho minero y comprobante de abono: [código de concesión de 9 dígitos, nombre de concesión, titular/empresa, RUC, constancia de depósito]',
     },
     {
-      label: 'Escrito de Descargo en PAS ante OEFA',
-      icon: ShieldAlert,
-      badgeColor: '#F59E0B',
-      prompt: 'Redacta un escrito de descargos frente a imputación de cargos en Procedimiento Administrativo Sancionador (PAS) de OEFA, sustentando causales eximentes y subsanación voluntaria: [empresa, resolución de imputación, hechos imputados]',
-    },
-    {
-      label: 'Contrato de Cesión y Explotación Minera',
-      icon: FileText,
-      badgeColor: '#34d17a',
-      prompt: 'Redacta un contrato de cesión minera conforme a la Ley General de Minería con regalías, cumplimiento de IGA y plan de cierre: [cedente, cesionario, código de concesión, plazo]',
-    },
-    {
-      label: 'Solicitud de Levantamiento de Suspensión en REINFO',
+      label: 'Recurso de Apelación ante el Consejo de Minería (Estructura 2)',
       icon: Scale,
       badgeColor: '#F59E0B',
-      prompt: 'Redacta una solicitud dirigida a la DGFM del MINEM solicitando el levantamiento de suspensión de inscripción en REINFO con acreditación de IGAFOM: [minero formalizado, código REINFO, concesión]',
+      prompt: 'Redacta un recurso de apelación contra resolución de INGEMMET/DGM ante el Consejo de Minería conforme a la Estructura 2 y Art. 117° del TUO LGM, dentro del plazo fatal de 15 días hábiles, con nota de elevación y petitorio de revocatoria: [código minero, nombre de concesión, resolución impugnada, fecha de notificación, agravios de hecho y derecho]',
+    },
+    {
+      label: 'Descargos al IFI en PAS Ambiental ante OEFA (Estructura 3)',
+      icon: ShieldAlert,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un escrito de descargos al Informe Final de Instrucción (IFI) ante la DFAI del OEFA conforme a la Estructura 3 y Res. CD N° 019-2021-OEFA/CD, acreditando subsanación voluntaria, tipicidad y proporcionalidad: [registro de escrito, expediente OEFA, unidad minera, IFI notificado, descargos]',
+    },
+    {
+      label: 'Recurso de Apelación ante el TFA-OEFA (Estructura 4 - Segunda Instancia)',
+      icon: Scale,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un recurso de apelación contra resolución sancionadora de la DFAI ante el Tribunal de Fiscalización Ambiental (TFA-OEFA) conforme a la Estructura 4, solicitando la revocatoria o nulidad de la multa ambiental: [expediente OEFA, resolución directoral sancionadora, agravios contra cálculo de multa, atenuantes]',
+    },
+    {
+      label: 'Demanda Contencioso-Administrativa Minera (Estructura 8 - Poder Judicial)',
+      icon: Gavel,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta una demanda contencioso-administrativa ante el Juzgado Especializado en lo CA conforme a la Estructura 8 y TUO LPCA (D.S. 011-2019-JUS) tras agotamiento de la vía administrativa, solicitando nulidad de resolución firme: [entidad demandada, resolución de última instancia, petitorio, fecha de notificación, agravios]',
+    },
+    {
+      label: 'Descargos de Seguridad Minera ante OSINERGMIN (Estructura 5)',
+      icon: Shield,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un escrito de descargos frente a Acta de Supervisión de Seguridad y Salud Ocupacional Minera ante la GSM de OSINERGMIN conforme a la Estructura 5 y D.S. 024-2016-EM: [expediente OSINERGMIN, acta de supervisión, unidad minera, descargos técnicos y medidas correctivas implementadas]',
+    },
+    {
+      label: 'Recurso de Apelación ante TASTEM-OSINERGMIN (Estructura 6)',
+      icon: Scale,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un recurso de apelación contra resolución de gerencia ante el Tribunal de Apelaciones en Temas de Energía y Minería (TASTEM) de OSINERGMIN conforme a la Estructura 6, solicitando dejar sin efecto o reducir la sanción: [expediente OSINERGMIN, resolución GSM impugnada, agravios]',
+    },
+    {
+      label: 'Solicitud de Licencia de Uso de Agua Superficial Minera ante ANA (Estructura 7)',
+      icon: FileText,
+      badgeColor: '#06B6D4',
+      prompt: 'Redacta una solicitud de licencia de uso de agua superficial con fines mineros ante la Autoridad Administrativa del Agua (AAA) conforme a la Estructura 7, Ley de Recursos Hídricos N° 29338 y TUPA ANA, con tabla técnica de volumen (l/s y m³/año): [titular, fuente hídrica, volumen en l/s, concesión minera vinculada, coordenadas de captación]',
     },
   ],
   camila: [

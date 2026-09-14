@@ -64,7 +64,10 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'minero', 'derecho minero', 'problema minero', 'abogado minero', 'tema minero',
       'concesion minera', 'ingemmet', 'oefa minero', 'oefa', 'reinfo', 'formalizacion minera',
       'petitorio minero', 'cierre de mina', 'estudio de impacto ambiental minero', 'eia minero',
-      'pas ambiental minero', 'canon minero', 'titular minero',
+      'pas ambiental minero', 'canon minero', 'titular minero', 'consejo de mineria',
+      'osinergmin', 'tastem', 'tfa', 'ana', 'licencia de agua', 'recursos hidricos',
+      'derecho de vigencia', 'caducidad minera', 'abandono minero', 'amparo minero',
+      'seguridad minera', 'relaves', 'igafom', 'autoridad nacional del agua'
     ],
   },
   camila: {
