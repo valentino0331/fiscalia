@@ -4882,6 +4882,200 @@ RODRIGO TORRES SALAS
 Gerente General — MINERÍA SANTA ROSA S.A.C. | _______________________________
 Dr. RODRIGO TORRES SALAS
 Reg. C.A.L. N° 65432 — Abogado
+\`\`\`
+
+════════════════════════════════════════════════════════════════
+MODELOS OFICIALES DE CONTRATOS MINEROS PRIVADOS (FEW-SHOTS)
+════════════════════════════════════════════════════════════════
+
+── MODELO OFICIAL 9 (CONTRATO PRIVADO: CONTRATO DE CESIÓN MINERA — rodrigo_contrato_cesion_minera.docx) ──
+
+\`\`\`document
+CONTRATO DE CESIÓN MINERA
+"SANTA ROSA I"
+Conste por el presente instrumento privado el CONTRATO DE CESIÓN MINERA que celebran, de una parte, como CEDENTE, y de otra parte, como CESIONARIO, las personas que se identifican a continuación, al amparo de los artículos 162° al 170° del Texto Único Ordenado de la Ley General de Minería (D.S. 014-92-EM) y el artículo 32° del Reglamento de Inscripciones del Registro de Derechos Mineros, en los términos y condiciones siguientes:
+CLÁUSULA PRIMERA: PARTES
+1.1.  CEDENTE: MINERÍA SANTA ROSA S.A.C., con RUC N° 20543219876, inscrita en la Partida Electrónica N° 11234567 del Registro de Personas Jurídicas de Lima, debidamente representada por su Gerente General, don Rodrigo Torres Salas, identificado con DNI N° 09876543, con poderes inscritos en la misma partida.
+1.2.  CESIONARIO: INVERSIONES ANDINAS S.A.C., con RUC N° 20612345678, inscrita en la Partida Electrónica N° 22345678 del Registro de Personas Jurídicas de Lima, debidamente representada por su Gerente General, don Carlos Augusto Medina Ríos, identificado con DNI N° 07654321.
+CLÁUSULA SEGUNDA: ANTECEDENTES
+2.1.  El CEDENTE es titular de la concesión minera denominada "SANTA ROSA I" con código INGEMMET 010345687, otorgada mediante Resolución de Presidencia N° 0056-2022-INGEMMET/PE, publicada en el Diario Oficial El Peruano el 15 de marzo de 2022, con una extensión de 200 hectáreas ubicadas en el distrito de Coporaque, provincia de Espinar, departamento de Cusco, para exploración y explotación de minerales metálicos (cobre, plata, zinc).
+2.2.  El CESIONARIO está interesado en obtener los derechos de exploración y explotación sobre la concesión minera "SANTA ROSA I" bajo las condiciones establecidas en el presente contrato.
+CLÁUSULA TERCERA: OBJETO DEL CONTRATO
+3.1.  Por el presente contrato, el CEDENTE cede al CESIONARIO todos los derechos y obligaciones que le corresponden como titular de la concesión minera "SANTA ROSA I" (código INGEMMET 010345687), incluyendo el derecho a explorar y explotar las sustancias minerales contenidas dentro del área de la concesión, conforme al artículo 166° del TUO de la Ley General de Minería.
+3.2.  El CESIONARIO se sustituye en todos los derechos y obligaciones del CEDENTE como titular de las actividades mineras sobre la concesión, incluyendo el pago del derecho de vigencia y penalidades, el cumplimiento de las obligaciones de producción mínima y la presentación de reportes ante las autoridades competentes.
+3.3.  El CEDENTE conserva la titularidad registral de la concesión minera ante el INGEMMET. La cesión no implica transferencia de la propiedad de la concesión sino del derecho a realizar actividades mineras sobre ella.
+CLÁUSULA CUARTA: DATOS DE LA CONCESIÓN CEDIDA
+CLÁUSULA QUINTA: CONTRAPRESTACIÓN
+5.1.  Como contraprestación por la cesión, el CESIONARIO pagará al CEDENTE la suma de US$ 500,000.00 (Quinientos mil y 00/100 dólares americanos), según el siguiente calendario:
+a)  US$ 100,000.00 a la suscripción del presente contrato.
+b)  US$ 200,000.00 a los seis meses de la fecha de suscripción, condicionado al inicio de actividades de exploración.
+c)  US$ 200,000.00 a los doce meses de la fecha de suscripción, condicionado a la presentación del informe de exploración.
+5.2.  Adicionalmente, el CESIONARIO pagará al CEDENTE una regalía de 2% (dos por ciento) sobre el valor de los minerales extraídos de la concesión durante la vigencia del presente contrato.
+CLÁUSULA SEXTA: PLAZO
+El presente contrato tiene una vigencia de CUATRO (4) AÑOS contados desde la fecha de su suscripción, renovables por acuerdo expreso de las partes. Al vencimiento del plazo, si el CESIONARIO hubiera cumplido todas sus obligaciones, tendrá derecho preferente a negociar una transferencia definitiva de la concesión o a renovar el contrato de cesión.
+CLÁUSULA SÉPTIMA: OBLIGACIONES DEL CEDENTE
+7.1.  Garantizar la vigencia y titularidad de la concesión minera durante todo el plazo del contrato.
+7.2.  Defender el título de la concesión ante cualquier pretensión de terceros que afecte los derechos del CESIONARIO, salvo delegación expresa (art. 168° TUO LGM).
+7.3.  Abstenerse de celebrar contratos de cesión sobre la misma concesión con terceros durante la vigencia del presente contrato (art. 169° TUO LGM).
+7.4.  Entregar al CESIONARIO toda la información técnica y geológica disponible sobre la concesión.
+CLÁUSULA OCTAVA: OBLIGACIONES DEL CESIONARIO
+8.1.  Pagar oportunamente el derecho de vigencia y penalidades ante el INGEMMET.
+8.2.  Cumplir con todas las obligaciones ambientales, de seguridad y de producción exigidas por la ley.
+8.3.  Pagar la contraprestación pactada en la Cláusula Quinta.
+8.4.  No transferir el presente contrato a terceros sin el consentimiento expreso del CEDENTE (art. 170° TUO LGM).
+8.5.  Obtener el Instrumento de Gestión Ambiental correspondiente antes de iniciar actividades.
+CLÁUSULA NOVENA: CAUSALES DE RESOLUCIÓN
+Son causales de resolución del presente contrato:
+a)  El incumplimiento de las obligaciones de producción mínima exigidas por la ley.
+b)  El incumplimiento del pago del derecho de vigencia.
+c)  El incumplimiento del pago de la contraprestación pactada.
+d)  La resolución administrativa de la concesión por causa imputable al CESIONARIO.
+CLÁUSULA DÉCIMA: INSCRIPCIÓN REGISTRAL
+Las partes se comprometen a elevar el presente contrato a escritura pública e inscribirlo en el Registro de Derechos Mineros del INGEMMET y en el Registro de Propiedad Inmueble de SUNARP, dentro de los 30 días calendario siguientes a la suscripción, conforme al artículo 32° del Reglamento de Inscripciones del Registro de Derechos Mineros. Los gastos de escritura pública e inscripción serán asumidos por el CESIONARIO.
+CLÁUSULA DÉCIMA PRIMERA: SOLUCIÓN DE CONTROVERSIAS
+Cualquier controversia que surja del presente contrato será resuelta mediante ARBITRAJE de conformidad con el Decreto Legislativo N° 1071 (Ley de Arbitraje), con sede en la ciudad de Lima, ante el Centro de Arbitraje de la Cámara de Comercio de Lima, con aplicación de las reglas del arbitraje nacional. El laudo arbitral será definitivo, inapelable y de obligatorio cumplimiento.
+CLÁUSULA DÉCIMA SEGUNDA: LEY APLICABLE
+El presente contrato se rige por las leyes de la República del Perú, en especial por el TUO de la Ley General de Minería (D.S. 014-92-EM) y supletoriamente por el Código Civil.
+En señal de conformidad, las partes suscriben el presente contrato en dos (2) ejemplares originales de igual tenor, en la ciudad de Lima, a los trece días del mes de septiembre del año dos mil veintiséis.
+Nombre de la concesión | "SANTA ROSA I"
+Código INGEMMET | 010345687
+Resolución de otorgamiento | RP N° 0056-2022-INGEMMET/PE (15/03/2022)
+Extensión | 200 hectáreas (2 cuadrículas)
+Sustancia | Metálica: cobre, plata, zinc
+Ubicación | Distrito Coporaque, Espinar, Cusco
+Partida SUNARP (si aplica) | [A COMPLETAR]
+Estado de la concesión | Vigente — al día en derecho de vigencia
+_______________________________
+RODRIGO TORRES SALAS
+Gerente General — CEDENTE
+MINERÍA SANTA ROSA S.A.C. | _______________________________
+CARLOS AUGUSTO MEDINA RÍOS
+Gerente General — CESIONARIO
+INVERSIONES ANDINAS S.A.C.
+\`\`\`
+
+── MODELO OFICIAL 10 (CONTRATO PRIVADO: CONTRATO DE EXPLOTACIÓN MINERA — rodrigo_contrato_explotacion.docx) ──
+
+\`\`\`document
+CONTRATO DE EXPLOTACIÓN MINERA
+CONCESIÓN "SANTA ROSA I"
+Conste por el presente instrumento privado el CONTRATO DE EXPLOTACIÓN MINERA celebrado al amparo del artículo 162° del TUO de la Ley General de Minería (D.S. 014-92-EM) y las normas del derecho común, entre las partes que se identifican:
+CLÁUSULA PRIMERA: PARTES
+1.1.  CONCEDENTE (Titular de la concesión): MINERÍA SANTA ROSA S.A.C., con RUC N° 20543219876, representada por don Rodrigo Torres Salas, DNI N° 09876543.
+1.2.  OPERADOR (Empresa explotadora): OPERACIONES MINERAS DEL SUR S.A.C., con RUC N° 20567891234, representada por su Gerente General, don Antonio Quispe Mamani, DNI N° 28765432.
+CLÁUSULA SEGUNDA: OBJETO
+El CONCEDENTE autoriza al OPERADOR a realizar actividades de EXPLOTACIÓN de minerales metálicos (cobre, plata, zinc) dentro del área de la concesión minera "SANTA ROSA I" (código INGEMMET 010345687, 200 ha., Espinar-Cusco), bajo las condiciones y limitaciones del presente contrato.
+CLÁUSULA TERCERA: PLAZO
+El presente contrato tiene una vigencia de DIEZ (10) AÑOS contados desde la fecha de suscripción, renovables por períodos iguales si ambas partes lo acuerdan por escrito con no menos de 90 días de anticipación al vencimiento.
+CLÁUSULA CUARTA: CONTRAPRESTACIÓN Y REGALÍAS
+4.1.  El OPERADOR pagará al CONCEDENTE las siguientes contraprestaciones:
+a)  Pago fijo anual: US$ 120,000.00 (Ciento veinte mil dólares americanos) por año, pagaderos en cuotas mensuales de US$ 10,000.00 dentro de los primeros cinco días de cada mes.
+b)  Regalía sobre producción: 3% (tres por ciento) sobre el valor neto de los minerales vendidos por el OPERADOR, calculado sobre el precio LME del metal a la fecha de liquidación.
+c)  Producción mínima garantizada: El OPERADOR garantiza una producción mínima de 500 toneladas métricas de mineral por mes durante la vigencia del contrato.
+CLÁUSULA QUINTA: OBLIGACIONES DEL OPERADOR
+5.1.  Obtener todos los permisos y autorizaciones necesarios para iniciar y mantener las actividades de explotación (EIA, autorización de inicio de actividades ante el MINEM, licencia de agua ante la ANA).
+5.2.  Pagar el derecho de vigencia ante el INGEMMET en nombre del CONCEDENTE, descontando dicho monto de la regalía mensual.
+5.3.  Cumplir con todas las obligaciones ambientales (OEFA), de seguridad (OSINERGMIN) y laborales aplicables.
+5.4.  Presentar al CONCEDENTE informes mensuales de producción con los datos de extracción, procesamiento y ventas.
+5.5.  Ejecutar el cierre progresivo de mina conforme al Plan de Cierre aprobado.
+CLÁUSULA SEXTA: OBLIGACIONES DEL CONCEDENTE
+6.1.  Mantener vigente la concesión "SANTA ROSA I" durante todo el plazo del contrato.
+6.2.  No interferir con las actividades del OPERADOR dentro del área de la concesión.
+6.3.  Cooperar con el OPERADOR para la obtención de permisos ante entidades públicas.
+CLÁUSULA SÉPTIMA: RESOLUCIÓN DEL CONTRATO
+Son causales de resolución: incumplimiento de pago por más de 60 días, incumplimiento reiterado de producción mínima, revocación de permisos por incumplimiento del OPERADOR, caducidad de la concesión por causa imputable al OPERADOR, o resolución por acuerdo mutuo.
+CLÁUSULA OCTAVA: SOLUCIÓN DE CONTROVERSIAS
+Arbitraje ante el Centro de Arbitraje de la Cámara de Comercio de Lima, conforme al D.Leg. N° 1071. El laudo será definitivo e inapelable.
+En señal de conformidad, las partes suscriben el presente contrato en Lima, a los trece días del mes de septiembre del año dos mil veintiséis.
+_______________________________
+RODRIGO TORRES SALAS
+Gerente General — CONCEDENTE
+MINERÍA SANTA ROSA S.A.C. | _______________________________
+ANTONIO QUISPE MAMANI
+Gerente General — OPERADOR
+OPERACIONES MINERAS DEL SUR S.A.C.
+\`\`\`
+
+── MODELO OFICIAL 11 (CONTRATO PRIVADO: CONTRATO DE JOINT VENTURE MINERO — rodrigo_contrato_joint_venture.docx) ──
+
+\`\`\`document
+CONTRATO DE JOINT VENTURE MINERO
+PROYECTO "SANTA ROSA"
+Conste por el presente instrumento privado el CONTRATO DE JOINT VENTURE MINERO celebrado al amparo del artículo 162° del TUO de la Ley General de Minería y las normas del derecho común aplicables, entre las partes que a continuación se identifican:
+CLÁUSULA PRIMERA: PARTES
+1.1.  PARTE A (Titular Minero): MINERÍA SANTA ROSA S.A.C., con RUC N° 20543219876, representada por don Rodrigo Torres Salas, DNI N° 09876543. Aporte: Concesión minera "SANTA ROSA I" (100% de los derechos mineros sobre el área).
+1.2.  PARTE B (Inversionista): PACIFIC MINING INVESTMENTS LTD., representada por don James Robert Smith, pasaporte N° AB-1234567. Aporte: Financiamiento de las actividades de exploración y eventual explotación del Proyecto.
+CLÁUSULA SEGUNDA: OBJETO
+Las partes acuerdan asociarse para desarrollar conjuntamente el PROYECTO MINERO "SANTA ROSA", consistente en la exploración, eventual explotación y beneficio de minerales metálicos (cobre, plata, zinc) contenidos en la concesión "SANTA ROSA I" (código INGEMMET 010345687, 200 ha., Espinar-Cusco), bajo los términos y condiciones del presente contrato.
+CLÁUSULA TERCERA: PARTICIPACIONES
+CLÁUSULA CUARTA: COMPROMISOS DE GASTO — EARN-IN
+Para adquirir su participación del 70%, PACIFIC MINING INVESTMENTS LTD. se compromete a incurrir en los siguientes gastos mínimos de exploración:
+a)  Año 1: US$ 500,000.00 en trabajos de exploración (geofísica, geoquímica, perforación diamantina).
+b)  Año 2: US$ 1,000,000.00 adicionales en exploración avanzada.
+c)  Año 3: US$ 1,500,000.00 adicionales en estudio de factibilidad.
+Si PACIFIC MINING incumple los compromisos de gasto, su participación se reducirá proporcionalmente al monto efectivamente gastado.
+CLÁUSULA QUINTA: OPERADOR DEL PROYECTO
+PACIFIC MINING INVESTMENTS LTD. actuará como OPERADOR del Proyecto durante la fase de exploración, siendo responsable de la ejecución de los trabajos, la obtención de permisos y la presentación de informes ante las autoridades. MINERÍA SANTA ROSA S.A.C. mantendrá la titularidad de la concesión ante el INGEMMET.
+CLÁUSULA SEXTA: COMITÉ TÉCNICO
+Las partes constituyen un Comité Técnico integrado por dos representantes de cada parte, que sesionará mensualmente para revisar el avance del Proyecto, aprobar presupuestos y programas de trabajo. Las decisiones del Comité se adoptarán por consenso. En caso de empate, el Operador tendrá voto de desempate durante la fase de exploración.
+CLÁUSULA SÉPTIMA: DISTRIBUCIÓN DE RESULTADOS
+Los ingresos netos de producción, en caso de llegarse a la fase de explotación, se distribuirán entre las partes en proporción a sus porcentajes de participación vigentes al momento de iniciar la producción.
+CLÁUSULA OCTAVA: DERECHO DE PREFERENCIA
+En caso de que alguna de las partes desee transferir su participación a un tercero, deberá primero ofrecerla a la otra parte en las mismas condiciones propuestas por el tercero (derecho de preferencia o right of first refusal). La parte que recibe la oferta tendrá 30 días calendario para ejercitar su derecho.
+CLÁUSULA NOVENA: SOLUCIÓN DE CONTROVERSIAS
+Arbitraje ante el Centro de Arbitraje de la Cámara de Comercio de Lima, conforme al D.Leg. N° 1071. El laudo será definitivo e inapelable.
+En señal de conformidad, las partes suscriben el presente contrato en Lima, a los trece días del mes de septiembre del año dos mil veintiséis.
+PARTE | APORTE | % PARTICIPACIÓN
+MINERÍA SANTA ROSA S.A.C. | Concesión minera "SANTA ROSA I" | 30%
+PACIFIC MINING INVESTMENTS LTD. | Financiamiento del Proyecto | 70%
+_______________________________
+RODRIGO TORRES SALAS
+Gerente General — PARTE A
+MINERÍA SANTA ROSA S.A.C. | _______________________________
+JAMES ROBERT SMITH
+Apoderado — PARTE B
+PACIFIC MINING INVESTMENTS LTD.
+\`\`\`
+
+── MODELO OFICIAL 12 (CONTRATO PRIVADO: CONTRATO DE OPCIÓN MINERA — rodrigo_contrato_opcion_minera.docx) ──
+
+\`\`\`document
+CONTRATO DE OPCIÓN MINERA
+"SANTA ROSA I"
+Conste por el presente instrumento privado el CONTRATO DE OPCIÓN MINERA celebrado al amparo del artículo 165° del TUO de la Ley General de Minería (D.S. 014-92-EM), entre las partes que se identifican a continuación:
+CLÁUSULA PRIMERA: PARTES
+1.1.  CONCEDENTE (Titular de la opción): MINERÍA SANTA ROSA S.A.C., con RUC N° 20543219876, representada por su Gerente General, don Rodrigo Torres Salas, DNI N° 09876543.
+1.2.  OPCIONISTA (Beneficiario de la opción): PACIFIC MINING INVESTMENTS LTD., sociedad constituida bajo las leyes de Canadá, con número de registro 123456-BC, debidamente representada por su apoderado en el Perú, don James Robert Smith, pasaporte N° AB-1234567.
+CLÁUSULA SEGUNDA: OBJETO
+2.1.  Por el presente contrato, el CONCEDENTE se obliga, incondicional e irrevocablemente, a celebrar en el futuro un CONTRATO DEFINITIVO DE CESIÓN MINERA sobre la concesión "SANTA ROSA I" (código INGEMMET 010345687, 200 hectáreas, Espinar-Cusco), siempre que el OPCIONISTA ejercite su derecho a exigir la conclusión de dicho contrato dentro del plazo estipulado, conforme al artículo 165° del TUO LGM.
+2.2.  El contrato definitivo que podrá exigir el OPCIONISTA es un contrato de cesión minera sobre la concesión "SANTA ROSA I" bajo las condiciones establecidas en la Cláusula Quinta del presente instrumento.
+CLÁUSULA TERCERA: PLAZO DE LA OPCIÓN
+3.1.  El plazo para ejercitar la opción es de DOS (2) AÑOS contados desde la suscripción del presente contrato, esto es, hasta el 13 de septiembre de 2028. Conforme al artículo 165° del TUO LGM, el plazo máximo legal de una opción minera es de cinco años.
+3.2.  El OPCIONISTA podrá ejercitar la opción en cualquier momento dentro del plazo, mediante comunicación escrita notarial al CONCEDENTE.
+CLÁUSULA CUARTA: PRECIO DE LA OPCIÓN
+4.1.  Como contraprestación por el otorgamiento de la presente opción, el OPCIONISTA pagará al CONCEDENTE la suma de US$ 50,000.00 (Cincuenta mil y 00/100 dólares americanos) dentro de los cinco días calendario siguientes a la suscripción del presente contrato.
+4.2.  Dicho monto NO SERÁ DEVUELTO en caso de que el OPCIONISTA no ejercite la opción dentro del plazo estipulado.
+4.3.  En caso de que el OPCIONISTA ejercite la opción, el monto pagado conforme a la cláusula 4.1 será imputado al precio total del contrato definitivo.
+CLÁUSULA QUINTA: CONDICIONES DEL CONTRATO DEFINITIVO
+En caso de que el OPCIONISTA ejercite la opción, el contrato definitivo de cesión minera se celebrará bajo las siguientes condiciones mínimas:
+a)  Precio total de la cesión: US$ 2,000,000.00 (Dos millones de dólares americanos).
+b)  Regalía NSR (Net Smelter Return): 1.5% sobre el valor de producción de la concesión.
+c)  Plazo de la cesión: indefinido mientras se mantenga la vigencia de la concesión.
+d)  Inscripción en el INGEMMET y SUNARP a cargo del cesionario.
+CLÁUSULA SEXTA: OBLIGACIONES DEL CONCEDENTE DURANTE LA OPCIÓN
+6.1.  Mantener vigente la concesión "SANTA ROSA I" pagando oportunamente el derecho de vigencia ante el INGEMMET.
+6.2.  No gravar, vender, transferir ni celebrar otro contrato de opción sobre la concesión mientras esté vigente la presente opción.
+6.3.  Permitir al OPCIONISTA acceder a la concesión para realizar trabajos de due diligence geológico.
+CLÁUSULA SÉPTIMA: SOLUCIÓN DE CONTROVERSIAS
+Cualquier controversia será resuelta mediante arbitraje ante el Centro de Arbitraje de la Cámara de Comercio de Lima, conforme al D.Leg. N° 1071 (Ley de Arbitraje). El idioma del arbitraje será el español.
+En señal de conformidad, las partes suscriben el presente contrato en Lima, a los trece días del mes de septiembre del año dos mil veintiséis.
+_______________________________
+RODRIGO TORRES SALAS
+Gerente General — CONCEDENTE
+MINERÍA SANTA ROSA S.A.C. | _______________________________
+JAMES ROBERT SMITH
+Apoderado — OPCIONISTA
+PACIFIC MINING INVESTMENTS LTD.
 \`\`\``,
 
   camila: `Eres Camila, abogada especialista en derecho de familia con 11 años de experiencia exclusiva en procesos de familia bajo el ordenamiento jurídico peruano.

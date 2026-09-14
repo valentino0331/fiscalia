@@ -30,6 +30,10 @@ function runTests() {
     'rodrigo_modelo6_descargo_osinergmin.docx',
     'rodrigo_modelo7_apelacion_tastem.docx',
     'rodrigo_modelo8_licencia_ana.docx',
+    'rodrigo_contrato_cesion_minera.docx',
+    'rodrigo_contrato_explotacion.docx',
+    'rodrigo_contrato_joint_venture.docx',
+    'rodrigo_contrato_opcion_minera.docx',
   ];
   for (const doc of expectedDocs) {
     const fullPath = path.join(docDir, doc);
@@ -51,7 +55,7 @@ function runTests() {
   assert(rodrigoPrompt.includes('ESTRUCTURA 7 — ANTE ANA / AAA'), 'Estructura 7 formalizada');
   assert(rodrigoPrompt.includes('ESTRUCTURA 8 — DEMANDA CONTENCIOSO-ADMINISTRATIVA'), 'Estructura 8 formalizada');
 
-  // Verificar los 8 Modelos Canónicos Oficiales (Few-Shots)
+  // Verificar los 8 Modelos Canónicos Oficiales de Escritos (Few-Shots)
   assert(rodrigoPrompt.includes('MODELO OFICIAL 1 (ESTRUCTURA 1: SOLICITUD DE ACREDITACIÓN DE PAGO DE DERECHO DE VIGENCIA ANTE INGEMMET — rodrigo_modelo1_ingemmet.docx)'), 'Few-shot Modelo 1 integrado');
   assert(rodrigoPrompt.includes('MODELO OFICIAL 2 (ESTRUCTURA 2: RECURSO DE APELACIÓN ANTE EL CONSEJO DE MINERÍA — rodrigo_modelo2_apelacion_ingemmet.docx)'), 'Few-shot Modelo 2 integrado');
   assert(rodrigoPrompt.includes('MODELO OFICIAL 3 (ESTRUCTURA 3: DESCARGOS AL INFORME FINAL DE INSTRUCCIÓN ANTE OEFA — rodrigo_modelo3_descargo_oefa.docx)'), 'Few-shot Modelo 3 integrado');
@@ -60,6 +64,17 @@ function runTests() {
   assert(rodrigoPrompt.includes('MODELO OFICIAL 6 (ESTRUCTURA 5: DESCARGOS AL ACTA DE SUPERVISIÓN DE SEGURIDAD MINERA ANTE OSINERGMIN — rodrigo_modelo6_descargo_osinergmin.docx)'), 'Few-shot Modelo 6 integrado');
   assert(rodrigoPrompt.includes('MODELO OFICIAL 7 (ESTRUCTURA 6: RECURSO DE APELACIÓN ANTE EL TASTEM-OSINERGMIN — rodrigo_modelo7_apelacion_tastem.docx)'), 'Few-shot Modelo 7 integrado');
   assert(rodrigoPrompt.includes('MODELO OFICIAL 8 (ESTRUCTURA 7: SOLICITUD DE LICENCIA DE USO DE AGUA SUPERFICIAL ANTE LA ANA/AAA — rodrigo_modelo8_licencia_ana.docx)'), 'Few-shot Modelo 8 integrado');
+
+  // Verificar los 4 Modelos Canónicos Oficiales de Contratos Mineros (Few-Shots)
+  assert(rodrigoPrompt.includes('MODELO OFICIAL 9 (CONTRATO PRIVADO: CONTRATO DE CESIÓN MINERA — rodrigo_contrato_cesion_minera.docx)'), 'Few-shot Contrato 9 integrado');
+  assert(rodrigoPrompt.includes('MODELO OFICIAL 10 (CONTRATO PRIVADO: CONTRATO DE EXPLOTACIÓN MINERA — rodrigo_contrato_explotacion.docx)'), 'Few-shot Contrato 10 integrado');
+  assert(rodrigoPrompt.includes('MODELO OFICIAL 11 (CONTRATO PRIVADO: CONTRATO DE JOINT VENTURE MINERO — rodrigo_contrato_joint_venture.docx)'), 'Few-shot Contrato 11 integrado');
+  assert(rodrigoPrompt.includes('MODELO OFICIAL 12 (CONTRATO PRIVADO: CONTRATO DE OPCIÓN MINERA — rodrigo_contrato_opcion_minera.docx)'), 'Few-shot Contrato 12 integrado');
+
+  // Verificar fidelidad de contenido de los contratos
+  assert(rodrigoPrompt.includes('INVERSIONES ANDINAS S.A.C.'), 'Contrato 9 contiene cesionario Inversiones Andinas');
+  assert(rodrigoPrompt.includes('OPERACIONES MINERAS DEL SUR S.A.C.'), 'Contrato 10 contiene operador Operaciones Mineras del Sur');
+  assert(rodrigoPrompt.includes('PACIFIC MINING INVESTMENTS LTD.'), 'Contrato 11 y 12 contienen Pacific Mining Investments');
 
   // Verificar fidelidad de contenido de los modelos
   assert(rodrigoPrompt.includes('010345687'), 'Modelo 1 contiene código minero 010345687');

@@ -315,6 +315,30 @@ const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       badgeColor: '#06B6D4',
       prompt: 'Redacta una solicitud de licencia de uso de agua superficial con fines mineros ante la Autoridad Administrativa del Agua (AAA) conforme a la Estructura 7, Ley de Recursos Hídricos N° 29338 y TUPA ANA, con tabla técnica de volumen (l/s y m³/año): [titular, fuente hídrica, volumen en l/s, concesión minera vinculada, coordenadas de captación]',
     },
+    {
+      label: 'Contrato de Cesión Minera (Arts. 162°-170° TUO LGM)',
+      icon: FileSignature,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un contrato privado de cesión minera conforme a los Arts. 162° al 170° del TUO de la Ley General de Minería (D.S. 014-92-EM) y el Reglamento de Inscripciones de Derechos Mineros, con estipulación de contraprestación, regalías y cláusula arbitral: [cedente, cesionario, nombre y código de concesión, plazo, retribución]',
+    },
+    {
+      label: 'Contrato de Explotación Minera (Acuerdo Privado de Explotación)',
+      icon: FileSignature,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un contrato privado de explotación minera conforme al Art. 162° del TUO de la Ley General de Minería entre el titular concesionario y la empresa operadora, con asignación de responsabilidades ambientales, laborales y de seguridad: [concedente, operador, concesión, porcentaje de producción / pago]',
+    },
+    {
+      label: 'Contrato de Joint Venture Minero (Proyecto Minero)',
+      icon: Building2,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un contrato de Joint Venture minero (asociación en participación) para exploración y eventual explotación de proyecto minero, con comité de gestión, régimen de aportes y distribución de utilidades: [titular minero, inversionista, proyecto/concesión, aportes de capital]',
+    },
+    {
+      label: 'Contrato de Opción Minera (Art. 165° TUO LGM)',
+      icon: FileSignature,
+      badgeColor: '#F59E0B',
+      prompt: 'Redacta un contrato de opción minera exclusiva e irrevocable conforme al Art. 165° del TUO de la Ley General de Minería, con precio de opción, plazo perentorio y condiciones de ejercicio para transferencia definitiva: [concedente, opcionista, concesión, prima de opción, precio final]',
+    },
   ],
   camila: [
     {
