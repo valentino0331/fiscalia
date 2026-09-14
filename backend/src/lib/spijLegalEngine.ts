@@ -622,6 +622,33 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     practicalImpact:
       'Agravantes de extorsión digital y celeridad procesal para medidas cautelares en extorsión.',
   },
+  {
+    lawCode: 'Ley N° 31307',
+    specialistId: 'sebastian',
+    date: 'Vigente 2026',
+    affectedCode: 'Nuevo Código Procesal Constitucional (Arts. 33, 34)',
+    articles: ['Art. 33 inc. 1', 'Art. 34', 'Art. 200 inc. 1 Const.'],
+    keywords: ['ley 31307', 'habeas corpus', 'habeas corpus reparador', 'detencion arbitraria', 'libertad individual', 'sin audiencia previa', 'art 271 ncpp'],
+    summary: 'Régimen de protección urgente de la libertad individual ante detenciones arbitrarias y autos cautelares nulos dictados sin audiencia.',
+    practicalImpact:
+      '1. Art. 33° inc. 1: Procede el habeas corpus reparador contra la privación arbitraria de la libertad.\n' +
+      '2. Art. 34°: El juez constitucional ordena la libertad inmediata del afectado y la nulidad de las resoluciones emitidas sin audiencia previa obligatoria (Art. 271° NCPP).\n' +
+      '3. Cierre procesal obligatorio: "POR LO EXPUESTO" solicitando libertad inmediata.',
+  },
+  {
+    lawCode: 'D.Leg. N° 654 & D.Leg. N° 1296',
+    specialistId: 'sebastian',
+    date: 'Vigente 2026',
+    affectedCode: 'Código de Ejecución Penal (Arts. 48 al 52, Art. 50)',
+    articles: ['Art. 48 CEP', 'Art. 49 CEP', 'Art. 50 CEP', 'Art. 52 CEP'],
+    keywords: ['codigo de ejecucion penal', 'd leg 654', 'd leg 1296', 'semilibertad', 'beneficio penitenciario', 'tercio de la pena', '1/3 de la pena', 'informe inpe', 'oferta laboral'],
+    summary: 'Régimen procesal de beneficios penitenciarios y semilibertad:',
+    practicalImpact:
+      '1. Requisito objetivo: Cumplimiento de más de un tercio (1/3) de la pena privativa de libertad efectiva impuesta.\n' +
+      '2. Requisito negativo: Verificación obligatoria de no encontrarse en la lista de delitos excluidos del Art. 50° CEP.\n' +
+      '3. Requisitos sustantivos: Informe favorable de conducta y educación/trabajo emitido por el INPE, acreditación de oferta laboral formal y pago o fianza de reparación civil.\n' +
+      '4. Competencia: Juez Penal Unipersonal de ejecución (Art. 52° CEP).',
+  },
 
   // ── VALENTINA (LABORAL) ──
   {
@@ -887,9 +914,34 @@ export function isLegalDraftingRequest(query: string): boolean {
     'apelacion de auto', 'recurso de apelacion', 'tutela de derechos', 'control de plazos',
     'sobreseimiento', 'excepcion de prescripcion', 'terminacion anticipada',
     'carta notarial', 'solicitud de', 'minuta', 'habeas corpus', 'reclamacion sunat',
-    'recurso de reclamacion', 'recurso contencioso', 'pacto de socios', 'contrato de arrendamiento'
+    'recurso de reclamacion', 'recurso contencioso', 'pacto de socios', 'contrato de arrendamiento',
+    'audita', 'vicio procesal', 'nulidad procesal', 'estrategia de audiencia', 'litigacion oral', 'alegato oral'
   ];
   return draftingTriggers.some((t) => norm.includes(t));
+}
+
+/**
+ * Detecta si el usuario solicita auditoría de vicios, nulidades procesales o revisión de notificaciones
+ */
+export function isAuditRequest(query: string): boolean {
+  const norm = normalizeText(query);
+  const auditTriggers = [
+    'audita', 'auditar', 'vicio', 'vicios procesales', 'nulidad procesal', 'defecto de notificacion',
+    'cedula de notificacion', 'revisar notificacion', 'inadmisible', 'improcedente', 'debida motivacion'
+  ];
+  return auditTriggers.some((t) => norm.includes(t));
+}
+
+/**
+ * Detecta si el usuario solicita preparación para audiencia oral o litigación en estrados
+ */
+export function isOralHearingRequest(query: string): boolean {
+  const norm = normalizeText(query);
+  const hearingTriggers = [
+    'audiencia', 'audiencia oral', 'estrado', 'litigacion', 'teoria del caso', 'alegato de apertura',
+    'alegato de clausura', 'objecion', 'objeciones', 'informe oral'
+  ];
+  return hearingTriggers.some((t) => norm.includes(t));
 }
 
 /**
@@ -981,11 +1033,28 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     });
   }
 
+  const isAudit = isAuditRequest(userQuery);
+  const isHearing = isOralHearingRequest(userQuery);
+
   if (isDrafting) {
     sections.push('► REGLAS ESTRICTAS PARA LA REDACCIÓN DE ESTE ESCRITO LEGAL:');
     sections.push('- En la sección de "FUNDAMENTACIÓN JURÍDICA", debes citar los artículos de la ley CON SUS MODIFICATORIAS VIGENTES.');
     sections.push('- Debes incluir una subsección de "DOCTRINA JURISPRUDENCIAL VINCULANTE" citando el Pleno o Precedente exacto de tu especialidad.');
     sections.push('- Mantén rigor formal absoluto, redactado en el bloque ```document con sus correspondientes Otrosíes Digo procesales (Casilla SINOE, facultades Arts. 74°/80° CPC o personamiento NCPP).');
+  }
+
+  if (isAudit) {
+    sections.push('► DIRECTIVA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES:');
+    sections.push('- Control Constitucional de Motivación: Aplica la STC 00728-2008-PHC/TC (Caso Llamoja). Revisa si existe motivación aparente, insuficiente o incongruente.');
+    sections.push('- Control de Plazos y Notificación: Verifica el cómputo de plazos hábiles judiciales al 2026 y la validez formal del emplazamiento procesal.');
+    sections.push('- Propón de inmediato el remedio procesal exacto: Nulidad de acto procesal, tacha, excepción previa o recurso impugnatorio.');
+  }
+
+  if (isHearing) {
+    sections.push('► DIRECTIVA PARA PREPARACIÓN DE AUDIENCIA Y LITIGACIÓN ORAL:');
+    sections.push('- Desarrolla la Teoría del Caso en sus 3 niveles (fáctico, jurídico y probatorio sintetizado).');
+    sections.push('- Anticipa las 3 preguntas u objeciones más hostiles que formulará el magistrado y brinda la respuesta jurídica contundente con número de Acuerdo Plenario o Casación.');
+    sections.push('- Estructura el alegato oral con claridad, ritmo persuasivo y sin fórmulas vacías.');
   }
 
   sections.push('════════════════════════════════════════════════════════════════');

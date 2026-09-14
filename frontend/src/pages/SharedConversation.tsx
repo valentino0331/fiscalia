@@ -6,6 +6,7 @@ import remarkGfm from 'remark-gfm'
 import { ArrowRight, ExternalLink } from 'lucide-react'
 import { api } from '@/lib/api'
 import { getAgent } from '@/lib/agents'
+import { SpijBadge, injectSpijBadges, SPIJ_VERIFIED_HREF } from '@/lib/spijBadge'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 
 function safeTime(ts?: string): string {
@@ -141,7 +142,19 @@ export default function SharedConversation() {
                         <p className="whitespace-pre-wrap">{displayContent}</p>
                       ) : (
                         <div className="prose-chat">
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              a: ({ href, children }) => {
+                                if (href === SPIJ_VERIFIED_HREF) {
+                                  return <SpijBadge />
+                                }
+                                return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
+                              },
+                            }}
+                          >
+                            {injectSpijBadges(msg.content)}
+                          </ReactMarkdown>
                         </div>
                       )}
                     </div>

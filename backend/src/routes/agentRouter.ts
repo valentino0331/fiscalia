@@ -3,7 +3,7 @@ type AgentRoutingRule = {
   keywords: string[];
 };
 
-const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
+export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   valentina: {
     label: 'Laboral',
     keywords: [
@@ -30,6 +30,10 @@ const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'apelacion de prision preventiva', 'apelacion contra auto de prision preventiva',
       'peligro de fuga', 'peligro de obstaculizacion', 'arraigo domiciliario', 'arraigo laboral',
       'arraigo familiar', 'casacion 626-2013', 'acuerdo plenario 01-2017',
+      'descargo fiscal', 'escrito de descargo', 'semilibertad', 'beneficio penitenciario',
+      'codigo de ejecucion penal', 'd leg 654', 'ley 31307', 'habeas corpus reparador',
+      'diligencias preliminares solicitadas', 'pretension reparadora', 'inpe', 'redencion de pena',
+      'error de tipo', 'conversion de pena', 'suspension de ejecucion'
     ],
   },
   diego: {
@@ -256,7 +260,8 @@ export function suggestAgentTransfer(
     const penalTriggers = [
       'plazo', 'proceso', 'penal', 'fiscal', 'investigacion', 'prision', 'juicio', 'delito',
       'formalizacion', 'audiencia', 'etapa', 'cpp', 'ncpp', 'sobreseimiento', 'acusacion',
-      'imputado', 'carpeta', 'diligencias', 'defensa', 'coercion'
+      'imputado', 'carpeta', 'diligencias', 'defensa', 'coercion', 'descargo', 'semilibertad',
+      'beneficio', 'habeas', 'penitenciario', 'inpe'
     ];
     if (penalTriggers.some((t) => normalizedInput.includes(t))) {
       return null;

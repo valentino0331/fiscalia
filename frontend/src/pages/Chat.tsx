@@ -21,6 +21,7 @@ import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
 import { downloadWordDoc, downloadPdfDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody, getSavedLetterhead } from '@/lib/exportDoc'
+import { SpijBadge, injectSpijBadges, SPIJ_VERIFIED_HREF } from '@/lib/spijBadge'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
@@ -67,6 +68,20 @@ const PROMPT_MODES: PromptModeItem[] = [
     icon: FileSignature,
     badge: 'Redacción',
     promptPrefix: 'Redacta el modelo oficial de escrito, carta notarial o solicitud formal con estructura legal peruana completa listo para presentar para: ',
+  },
+  {
+    id: 'auditoria',
+    label: 'Auditar Vicios y Nulidades',
+    icon: AlertTriangle,
+    badge: 'Vicios Procesales',
+    promptPrefix: 'Audita minuciosamente este documento o notificación legal. Identifica vicios procesales de forma y fondo, cómputo de plazos fatales, riesgo de prescripción/caducidad y redacta la estrategia de contradicción o nulidad para: ',
+  },
+  {
+    id: 'audiencia',
+    label: 'Estrategia de Audiencia',
+    icon: Gavel,
+    badge: 'Litigación Oral',
+    promptPrefix: 'Actúa como el Magistrado/Fiscal en audiencia judicial oral en el Perú. Evalúa mi teoría del caso, formula las 3 preguntas u objeciones más difíciles que me harán en estrados y cuál es la respuesta jurídica exacta con jurisprudencia para: ',
   },
 ]
 
@@ -2885,11 +2900,16 @@ function MessageBubble({
     ? extractDocumentFromMessage(message.content)
     : { conversationalText: message.content, document: null }
 
+  const formattedConversationalText = !isUser && conversationalText
+    ? injectSpijBadges(conversationalText)
+    : conversationalText
+
   const cleanTextForSpeech = (text: string) =>
     text
       .replace(/```[\s\S]*?```/g, ' ')
       .replace(/`([^`]+)`/g, '$1')
       .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+      .replace(/⚖️ Verificado SPIJ 2026/g, '')
       .replace(/[>#*_~|]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
@@ -2996,12 +3016,15 @@ function MessageBubble({
             <p className="whitespace-pre-wrap">{displayContent}</p>
           ) : (
             <div className="space-y-3">
-              {conversationalText && (
+              {formattedConversationalText && (
                 <div className="prose-chat">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
                       a: ({ href, children }) => {
+                        if (href === SPIJ_VERIFIED_HREF) {
+                          return <SpijBadge />
+                        }
                         if (href?.startsWith('/chat/')) {
                           return (
                             <button
@@ -3021,7 +3044,7 @@ function MessageBubble({
                       },
                     }}
                   >
-                    {conversationalText}
+                    {formattedConversationalText}
                   </ReactMarkdown>
                 </div>
               )}
