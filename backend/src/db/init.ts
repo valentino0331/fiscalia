@@ -35,6 +35,9 @@ export async function initNewTables() {
   await sql`
     CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id)
   `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_subscriptions_status_end ON subscriptions(status, current_period_end)
+  `;
 
   // 3. Conversations table
   await sql`
@@ -50,6 +53,9 @@ export async function initNewTables() {
   `;
   await sql`
     CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id)
+  `;
+  await sql`
+    CREATE INDEX IF NOT EXISTS idx_conversations_user_updated ON conversations(user_id, updated_at DESC)
   `;
   await sql`
     CREATE INDEX IF NOT EXISTS idx_conversations_agent_id ON conversations(agent_id)

@@ -11,6 +11,8 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'vacaciones truncas', 'planilla', 'sunafil', 'renuncia', 'beneficios sociales',
       'hostigamiento laboral', 'contrato de trabajo', 'sueldo', 'salario', 'trabajador',
       'empleador', 'jornada laboral', 'nlpt', 'ley 29497', 'dl 728',
+      'indemnizacion por despido', 'reduccion de remuneracion', 'locacion de servicios',
+      'desnaturalizacion', 'reposicion laboral', 'accidente de trabajo', 'comite de sst', 'convenio colectivo'
     ],
   },
   sebastian: {
@@ -47,6 +49,8 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'codigo civil', 'ley 30933', 'allanamiento futuro', 'cpc', 'codigo procesal civil',
       'ocupacion precaria', 'precario', 'desalojo por ocupacion precaria', 'cuarto pleno casatorio',
       'iv pleno casatorio', 'restitucion de inmueble', 'frutos devengados',
+      'prescripcion adquisitiva', 'usucapion', 'embargo', 'terceria', 'hipoteca', 'mutuo',
+      'clausula penal', 'arras', 'particion de bienes', 'reivindicacion', 'interdicto'
     ],
   },
   adriana: {
@@ -78,6 +82,8 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'tenencia compartida', 'tenencia exclusiva', 'regimen de visitas', 'violencia familiar',
       'patria potestad', 'filiacion', 'sociedad de gananciales', 'separacion de patrimonios',
       'ley 31590', 'ley 30364', 'codigo de los ninos y adolescentes',
+      'omision a la asistencia familiar', 'liquidacion de alimentos devengados',
+      'reconocimiento de paternidad', 'autorizacion de viaje de menor'
     ],
   },
   fernanda: {
@@ -88,6 +94,10 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'apelacion tf', 'impuesto a la renta', 'igv', 'orden de pago', 'resolucion de determinacion',
       'resolucion de multa', 'cobranza coactiva', 'gradualidad de multas', 'codigo tributario',
       'prescripcion tributaria', 'nrus', 'rer', 'rmt', 'regimen general',
+      'detracciones', 'retenciones', 'percepciones', 'bancarizacion', 'dl 1529', 'itf',
+      'declaracion jurada', 'saldo a favor', 'credito fiscal', 'comprobante de pago',
+      'factura electronica', 'guia de remision', 'rtf', 'tribunal fiscal rtf',
+      'esquela de citacion sunat', 'carta de presentacion sunat'
     ],
   },
   marco: {
@@ -98,6 +108,9 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'tribunal de contrataciones publicas', 'tcp', 'procedimiento administrativo sancionador',
       'pas administrativo', 'recurso de reconsideracion', 'recurso de apelacion administrativa',
       'tupa', 'silencio administrativo', 'proceso contencioso administrativo', 'ley 27444',
+      'reconsideracion', 'apelacion administrativa', 'caducidad administrativa',
+      'prescripcion administrativa', 'sancionador', 'medida cautelar administrativa',
+      'acto administrativo', 'resolucion directoral', 'resolucion de alcaldia', 'recurso de revision'
     ],
   },
 };
@@ -212,12 +225,24 @@ const normalize = (value: string): string =>
 
 function scoreTopic(input: string, keywords: string[]): { score: number; hits: string[] } {
   const hits: string[] = [];
+  // Asegurar delimitadores de espacio para chequeos exactos
+  const paddedInput = ` ${input} `;
+
   for (const keyword of keywords) {
     const normalizedKeyword = normalize(keyword);
     if (!normalizedKeyword) continue;
-    // Word boundary or substring matching for compound phrases
-    if (input.includes(normalizedKeyword)) {
-      // Reward multi-word specific legal terms higher
+
+    let matched = false;
+    // Si la palabra clave es corta (<= 4 caracteres, ej. 'cts', 'igv', 'sac', 'ana'), exigir palabra aislada
+    if (normalizedKeyword.length <= 4) {
+      const regex = new RegExp(`(?:^|\\s)${normalizedKeyword}(?:\\s|$)`, 'i');
+      matched = regex.test(input);
+    } else {
+      matched = paddedInput.includes(` ${normalizedKeyword} `) || input.includes(normalizedKeyword);
+    }
+
+    if (matched) {
+      // Recompensar términos compuestos con mayor peso (especificidad jurídica alta)
       const weight = normalizedKeyword.includes(' ') ? 2 : 1;
       for (let i = 0; i < weight; i++) hits.push(keyword);
     }

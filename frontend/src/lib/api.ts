@@ -74,6 +74,11 @@ export const api = {
         '/auth/demo-login',
         { method: 'POST' }
       ),
+    me: () =>
+      request<{ user: UserResponse; subscription: any }>(
+        '/auth/me',
+        { method: 'GET' }
+      ),
   },
 
   chat: {

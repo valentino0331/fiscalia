@@ -34,7 +34,11 @@ export function startKeepAlive() {
 
   console.log(`[KeepAlive] Iniciando servicio de autosostenimiento activo para: ${healthUrl}`);
 
-  const performPing = async () => {
+  let isPinging = false;
+
+  const performPing = async (isRetry = false) => {
+    if (isPinging) return;
+    isPinging = true;
     try {
       pingCount++;
       const res = await fetch(healthUrl, {
@@ -57,8 +61,12 @@ export function startKeepAlive() {
       lastPingTime = new Date().toISOString();
       lastPingStatus = 'failed';
       console.warn(`[KeepAlive] Error en ping #${pingCount}: ${err?.message || err}`);
-      // Reintento corto si falló
-      setTimeout(performPing, RETRY_INTERVAL_MS);
+      // Solo 1 reintento único si fue un fallo del ciclo regular, evitando recursión infinita
+      if (!isRetry) {
+        setTimeout(() => performPing(true), RETRY_INTERVAL_MS);
+      }
+    } finally {
+      isPinging = false;
     }
   };
 

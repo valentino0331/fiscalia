@@ -319,6 +319,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
   const startTime = Date.now();
   const isStream = req.body?.stream === true || req.headers?.accept?.includes('text/event-stream');
 
+  let isClientDisconnected = false;
+  let heartbeatTimer: NodeJS.Timeout | null = null;
+
   // Si se solicita streaming, establecer encabezados SSE de inmediato
   if (isStream) {
     res.setHeader('Content-Type', 'text/event-stream');
@@ -326,23 +329,44 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders?.();
+
+    // Heartbeat cada 15 segundos para evitar que proxies (Cloudflare/Render) corten conexiones largas
+    heartbeatTimer = setInterval(() => {
+      if (!isClientDisconnected && !res.writableEnded) {
+        try {
+          res.write(': ping\n\n');
+        } catch {
+          if (heartbeatTimer) clearInterval(heartbeatTimer);
+        }
+      }
+    }, 15000);
   }
+
+  req.on('close', () => {
+    isClientDisconnected = true;
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+  });
 
   let hasStartedStreaming = false;
   let assistantMessage = '';
   let transferTo: string | undefined;
 
   const sendStreamChunk = (chunk: string) => {
-    if (isStream && chunk) {
+    if (isStream && chunk && !isClientDisconnected && !res.writableEnded) {
       hasStartedStreaming = true;
       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
     }
   };
 
   const abortIfStreamCorrupted = (): boolean => {
+    if (isClientDisconnected) return true;
     if (isStream && hasStartedStreaming && !assistantMessage) {
       console.warn('[AI Engine] Streaming SSE interrumpido a mitad de camino. Finalizando stream para evitar respuestas mezcladas.');
       res.write(`data: ${JSON.stringify({ error: 'La respuesta fue interrumpida temporalmente. Por favor reintente su consulta.' })}\n\n`);
+      if (heartbeatTimer) clearInterval(heartbeatTimer);
       res.end();
       return true;
     }
@@ -1031,6 +1055,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // Incrementar uso en caché de memoria y registrar en tabla inmutable de consumo
     await recordQuestionUsage(req.userId);
 
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+
     if (isStream) {
       res.write(`data: ${JSON.stringify({ done: true, conversationId: finalConvId, transferTo })}\n\n`);
       return res.end();
@@ -1038,6 +1064,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return res.json({ message: assistantMessage, conversationId: finalConvId, ...(transferTo ? { transferTo } : {}) });
     }
   } catch (error: any) {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
     console.error('Chat processing error:', error?.message || error);
     const friendlyError = sanitizeAiErrorMessage(error);
     metrics.recordError({

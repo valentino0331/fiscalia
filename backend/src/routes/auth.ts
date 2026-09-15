@@ -6,6 +6,7 @@ import { db } from '../db';
 import { users, subscriptions } from '../db/schema';
 import { eq } from 'drizzle-orm';
 import { authRateLimiter } from '../middleware/rateLimit';
+import { requireAuth } from '../middleware/auth';
 
 export const authRouter = Router();
 
@@ -148,6 +149,43 @@ authRouter.post('/demo-login', authRateLimiter, async (_req, res) => {
   } catch (err) {
     console.error('[Auth] Error en /demo-login:', err);
     res.status(500).json({ error: 'Error interno al iniciar sesión de demostración' });
+  }
+});
+
+// Endpoint canónico para verificar la sesión activa y obtener datos actualizados en tiempo real
+authRouter.get('/me', requireAuth, async (req: any, res) => {
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.userId),
+      columns: { id: true, email: true, name: true, isAdmin: true, createdAt: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado o dado de baja' });
+    }
+
+    const sub = await db.query.subscriptions.findFirst({
+      where: eq(subscriptions.userId, req.userId),
+      orderBy: (s, { desc }) => [desc(s.createdAt)],
+    });
+
+    const now = new Date();
+    const isExpired = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd) < now : false;
+
+    res.json({
+      user,
+      subscription: sub
+        ? {
+            status: sub.status,
+            plan: sub.plan,
+            currentPeriodEnd: sub.currentPeriodEnd,
+            isExpired,
+          }
+        : null,
+    });
+  } catch (err) {
+    console.error('[Auth] Error en /auth/me:', err);
+    res.status(500).json({ error: 'Error interno al recuperar el perfil' });
   }
 });
 
