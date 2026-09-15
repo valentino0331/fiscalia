@@ -43,6 +43,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('bufete_user')
   }
 
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout()
+    }
+    window.addEventListener('bufete:unauthorized', handleUnauthorized)
+    return () => {
+      window.removeEventListener('bufete:unauthorized', handleUnauthorized)
+    }
+  }, [])
+
   return (
     <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, login, logout }}>
       {children}

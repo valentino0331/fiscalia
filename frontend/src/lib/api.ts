@@ -6,6 +6,12 @@ function getToken(): string | null {
   return localStorage.getItem('bufete_token')
 }
 
+function handleUnauthorized() {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('bufete:unauthorized'))
+  }
+}
+
 async function request<T>(
   path: string,
   options: RequestInit = {}
@@ -19,6 +25,9 @@ async function request<T>(
 
   const res = await fetch(`${API_URL}${path}`, { ...options, headers })
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorized()
+    }
     const err = await res.json().catch(() => ({ error: 'Error desconocido' }))
     throw new Error(err.error || `HTTP ${res.status}`)
   }
@@ -39,6 +48,9 @@ async function uploadFile<T>(path: string, file: File): Promise<T> {
     body: formData,
   })
   if (!res.ok) {
+    if (res.status === 401) {
+      handleUnauthorized()
+    }
     const err = await res.json().catch(() => ({ error: 'Error desconocido' }))
     throw new Error(err.error || `HTTP ${res.status}`)
   }
@@ -104,6 +116,9 @@ export const api = {
         })
 
         if (!res.ok) {
+          if (res.status === 401) {
+            handleUnauthorized()
+          }
           const errData = await res.json().catch(() => ({ error: `HTTP ${res.status}` }))
           throw new Error(errData.error || `HTTP ${res.status}`)
         }
@@ -160,6 +175,9 @@ export const api = {
       }
     },
     tts: async (data: { text: string; agentId: string }, signal?: AbortSignal): Promise<Blob> => {
+      if (!data?.text || !data.text.trim()) {
+        throw new Error('Texto requerido para reproducción de audio')
+      }
       const token = getToken()
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
@@ -168,10 +186,13 @@ export const api = {
       const res = await fetch(`${API_URL}/chat/tts`, {
         method: 'POST',
         headers,
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, text: data.text.trim().slice(0, 2500) }),
         signal,
       })
       if (!res.ok) {
+        if (res.status === 401) {
+          handleUnauthorized()
+        }
         const err = await res.json().catch(() => ({ error: 'Error de audio TTS' }))
         throw new Error(err.error || `HTTP ${res.status}`)
       }

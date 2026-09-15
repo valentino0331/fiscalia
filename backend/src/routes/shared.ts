@@ -14,10 +14,19 @@ sharedRouter.use((_req, res, next) => {
 });
 
 sharedRouter.get('/:token', async (req, res) => {
-  const jwtSecret = process.env.JWT_SECRET;
-  if (!jwtSecret) throw new Error('JWT_SECRET is not set');
   try {
-    const decoded = jwt.verify(req.params.token, jwtSecret, { algorithms: ['HS256'] }) as {
+    const jwtSecret = process.env.JWT_SECRET;
+    if (!jwtSecret) {
+      console.error('[Shared] JWT_SECRET no configurado en entorno');
+      return res.status(500).json({ error: 'Servicio de enlaces compartidos no disponible temporalmente' });
+    }
+
+    const token = req.params.token;
+    if (!token || typeof token !== 'string' || token.length < 20 || token.length > 1000) {
+      return res.status(400).json({ error: 'Token de enlace compartido inválido' });
+    }
+
+    const decoded = jwt.verify(token, jwtSecret, { algorithms: ['HS256'] }) as {
       conversationId?: string;
       type?: string;
     };

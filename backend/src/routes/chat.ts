@@ -216,21 +216,24 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
 chatRouter.post('/tts', audioRateLimiter, requireAuth, requireSubscription, async (req: any, res) => {
   try {
     const { text, agentId } = req.body;
-    if (!text || typeof text !== 'string') {
+    if (!text || typeof text !== 'string' || !text.trim()) {
       return res.status(400).json({ error: 'Texto requerido para síntesis de voz' });
     }
 
+    // Limitar longitud del texto a 2,500 caracteres para evitar sobrecarga del motor TTS
+    const cleanText = text.trim().slice(0, 2500);
     const rawId = String(agentId || '').trim().toLowerCase();
-    const audioBuffer = await generateSpeech(text, rawId);
+
+    const audioBuffer = await generateSpeech(cleanText, rawId);
     res.set({
       'Content-Type': 'audio/mpeg',
       'Content-Length': audioBuffer.length,
     });
     res.send(audioBuffer);
   } catch (error: any) {
-    console.error('TTS generation error:', error?.message || error);
+    console.error('[TTS generation error]:', error?.message || error);
     res.status(500).json({
-      error: error?.message || 'Error en síntesis de voz.',
+      error: 'No se pudo generar el audio en este momento. Por favor, reintenta en unos momentos.',
     });
   }
 });

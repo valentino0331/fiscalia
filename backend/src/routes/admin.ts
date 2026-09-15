@@ -269,14 +269,23 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (_, res) => {
     res.json({ users: userList });
   } catch (error: any) {
     console.error('Error fetching admin users:', error);
-    res.status(500).json({ error: error.message || 'Error al obtener usuarios' });
+    res.status(500).json({ error: 'Error al obtener lista de usuarios' });
   }
 });
+
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ALLOWED_PLANS = new Set(['pro', 'normal', 'junior', 'free', 'pro-trial']);
+const ALLOWED_STATUSES = new Set(['active', 'canceled', 'past_due', 'trialing']);
 
 // 2. Eliminar cuenta de usuario (si no renueva o a petición)
 adminRouter.delete('/users/:id', requireAuth, requireAdmin, async (req: any, res) => {
   try {
     const targetId = req.params.id;
+    if (!targetId || typeof targetId !== 'string' || !UUID_REGEX.test(targetId)) {
+      return res.status(400).json({ error: 'Identificador de usuario inválido' });
+    }
+
     if (req.userId === targetId) {
       return res.status(400).json({ error: 'No puedes eliminar tu propia cuenta de administrador en uso' });
     }
@@ -292,7 +301,7 @@ adminRouter.delete('/users/:id', requireAuth, requireAdmin, async (req: any, res
     res.json({ success: true, message: `Usuario ${targetUser.email} eliminado exitosamente` });
   } catch (error: any) {
     console.error('Error deleting user:', error);
-    res.status(500).json({ error: error.message || 'Error al eliminar el usuario' });
+    res.status(500).json({ error: 'Error al eliminar el usuario' });
   }
 });
 
@@ -300,7 +309,21 @@ adminRouter.delete('/users/:id', requireAuth, requireAdmin, async (req: any, res
 adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any, res) => {
   try {
     const targetId = req.params.id;
+    if (!targetId || typeof targetId !== 'string' || !UUID_REGEX.test(targetId)) {
+      return res.status(400).json({ error: 'Identificador de usuario inválido' });
+    }
+
     const { plan, addDays, status } = req.body;
+
+    if (plan && (!ALLOWED_PLANS.has(String(plan).toLowerCase()))) {
+      return res.status(400).json({ error: 'Plan especificado no es válido' });
+    }
+    if (status && (!ALLOWED_STATUSES.has(String(status).toLowerCase()))) {
+      return res.status(400).json({ error: 'Estado especificado no es válido' });
+    }
+    if (addDays !== undefined && (typeof addDays !== 'number' || addDays < 1 || addDays > 3650)) {
+      return res.status(400).json({ error: 'La cantidad de días debe ser un número entre 1 y 3650' });
+    }
 
     const targetUser = await db.query.users.findFirst({ where: eq(users.id, targetId) });
     if (!targetUser) return res.status(404).json({ error: 'Usuario no encontrado' });
@@ -317,8 +340,8 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
     const updatedFields: any = {
       updatedAt: new Date(),
     };
-    if (plan) updatedFields.plan = plan;
-    if (status) updatedFields.status = status;
+    if (plan) updatedFields.plan = String(plan).toLowerCase();
+    if (status) updatedFields.status = String(status).toLowerCase();
     if (addDays) updatedFields.currentPeriodEnd = newPeriodEnd;
 
     if (sub) {
@@ -327,8 +350,8 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
       await db.insert(subscriptions).values({
         id: uuidv4(),
         userId: targetId,
-        status: status || 'active',
-        plan: plan || 'pro',
+        status: (status && String(status).toLowerCase()) || 'active',
+        plan: (plan && String(plan).toLowerCase()) || 'pro',
         currentPeriodEnd: addDays ? newPeriodEnd : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
       });
     }
@@ -336,7 +359,7 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
     res.json({ success: true, message: 'Plan actualizado con éxito' });
   } catch (error: any) {
     console.error('Error updating user plan:', error);
-    res.status(500).json({ error: error.message || 'Error al actualizar el plan' });
+    res.status(500).json({ error: 'Error al actualizar el plan' });
   }
 });
 
@@ -349,35 +372,53 @@ adminRouter.post('/users', requireAuth, requireAdmin, async (req: any, res) => {
     }
 
     const cleanEmail = String(email).toLowerCase().trim();
+    if (!EMAIL_REGEX.test(cleanEmail) || cleanEmail.length > 255) {
+      return res.status(400).json({ error: 'Formato de correo electrónico no válido' });
+    }
+
+    const cleanPassword = String(password);
+    if (cleanPassword.length < 6 || cleanPassword.length > 100) {
+      return res.status(400).json({ error: 'La contraseña debe tener entre 6 y 100 caracteres' });
+    }
+
+    const cleanPlan = String(plan).toLowerCase().trim();
+    if (!ALLOWED_PLANS.has(cleanPlan)) {
+      return res.status(400).json({ error: 'Plan no válido' });
+    }
+
+    const cleanDurationDays = typeof durationDays === 'number' && durationDays >= 1 && durationDays <= 3650
+      ? durationDays
+      : 30;
+
     const existing = await db.query.users.findFirst({ where: eq(users.email, cleanEmail) });
     if (existing) {
       return res.status(400).json({ error: 'Ya existe una cuenta con ese correo electrónico' });
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(cleanPassword, 12);
     const newUserId = uuidv4();
 
     await db.insert(users).values({
       id: newUserId,
       email: cleanEmail,
-      name: name ? String(name).trim() : null,
+      name: name ? String(name).trim().slice(0, 100) : null,
       passwordHash,
       isAdmin: Boolean(isAdmin),
     });
 
-    const periodEnd = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
+    const periodEnd = new Date(Date.now() + cleanDurationDays * 24 * 60 * 60 * 1000);
     await db.insert(subscriptions).values({
       id: uuidv4(),
       userId: newUserId,
       status: 'active',
-      plan: String(plan),
+      plan: cleanPlan,
       currentPeriodEnd: periodEnd,
     });
 
     res.json({ success: true, message: `Usuario ${cleanEmail} creado exitosamente` });
   } catch (error: any) {
     console.error('Error creating user by admin:', error);
-    res.status(500).json({ error: error.message || 'Error al crear el usuario' });
+    res.status(500).json({ error: 'Error al crear el usuario' });
   }
 });
 
