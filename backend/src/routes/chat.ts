@@ -358,8 +358,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     if (isStream && chunk && !isClientDisconnected && !res.writableEnded) {
       hasStartedStreaming = true;
       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+      (res as any).flush?.();
     }
   };
+
 
   const abortIfStreamCorrupted = (): boolean => {
     if (isClientDisconnected) return true;

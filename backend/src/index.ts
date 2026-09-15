@@ -26,6 +26,8 @@ app.use(
   helmet({
     contentSecurityPolicy: false, // Managed per route for optimal API performance
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Permite a la SPA frontend leer respuestas cross-origin
+    crossOriginOpenerPolicy: false,
     hsts: {
       maxAge: 31536000,
       includeSubDomains: true,
