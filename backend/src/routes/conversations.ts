@@ -15,9 +15,13 @@ function isValidUUID(id: string): boolean {
 
 conversationsRouter.get('/', requireAuth, async (req: any, res) => {
   try {
+    const requestedLimit = parseInt(req.query.limit as string, 10);
+    const safeLimit = !isNaN(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 500) : 100;
+
     const list = await db.query.conversations.findMany({
       where: eq(conversations.userId, req.userId),
       orderBy: [desc(conversations.updatedAt)],
+      limit: safeLimit,
       columns: { id: true, agentId: true, title: true, updatedAt: true },
     });
     res.json(list);
