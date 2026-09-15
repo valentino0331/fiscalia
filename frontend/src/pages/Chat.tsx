@@ -1682,6 +1682,14 @@ export default function Chat() {
     const controller = new AbortController()
     abortControllerRef.current = controller
 
+    let watchdogTimer: NodeJS.Timeout | null = setTimeout(() => {
+      if (controller && !controller.signal.aborted) {
+        console.warn('[Chat] Watchdog timeout: cancelando petición tras 40s sin respuesta')
+        controller.abort()
+        setLoading(false)
+      }
+    }, 40000)
+
     try {
       await api.chat.sendStream(
         {
@@ -1692,6 +1700,10 @@ export default function Chat() {
         },
         {
           onChunk: (chunk: string) => {
+            if (watchdogTimer) {
+              clearTimeout(watchdogTimer)
+              watchdogTimer = null
+            }
             accumulatedText += chunk
             if (!firstChunkReceived) {
               firstChunkReceived = true
@@ -1713,6 +1725,10 @@ export default function Chat() {
             }
           },
           onDone: (result) => {
+            if (watchdogTimer) {
+              clearTimeout(watchdogTimer)
+              watchdogTimer = null
+            }
             abortControllerRef.current = null
             if (result.conversationId && !conversationId) {
               setConversationId(result.conversationId)
@@ -1740,6 +1756,10 @@ export default function Chat() {
             setLoading(false)
           },
           onError: (err: any) => {
+            if (watchdogTimer) {
+              clearTimeout(watchdogTimer)
+              watchdogTimer = null
+            }
             abortControllerRef.current = null
             if (err?.name === 'AbortError' || controller.signal.aborted) {
               setLoading(false)
