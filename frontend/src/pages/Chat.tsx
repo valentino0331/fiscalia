@@ -1868,14 +1868,14 @@ export default function Chat() {
   const limitReached = isLimited && usage!.questionsUsed >= usage!.limit!
 
   return (
-    <div className="flex flex-col overflow-hidden" style={{ background: '#111111', height: '100dvh', minHeight: '100vh' }}>
+    <div className="flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111', height: '100dvh', minHeight: '100vh' }}>
       {/* NAVBAR */}
       <header
-        className="h-14 flex-shrink-0 flex items-center justify-between gap-2 px-3 md:px-4 border-b z-30"
+        className="h-14 flex-shrink-0 flex items-center justify-between gap-1 sm:gap-2 px-2.5 sm:px-4 border-b z-30 max-w-full overflow-hidden"
         style={{ background: '#111111', borderColor: '#2a2a2a' }}
       >
         {/* Left: hamburger + logo */}
-        <div className="flex items-center gap-2 min-w-0 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-shrink-0">
           <button
             onClick={() => setSidebarOpen((prev) => !prev)}
             className="md:hidden w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0"
@@ -1890,7 +1890,7 @@ export default function Chat() {
         </div>
 
         {/* Center: agent info */}
-        <div className="flex items-center justify-center gap-2 min-w-0 flex-1 sm:flex-none">
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 min-w-0 flex-1 sm:flex-none">
           <button
             onClick={() => navigate('/dashboard')}
             className="hidden sm:flex items-center gap-1 text-[11px] font-light transition-colors flex-shrink-0"
@@ -1902,7 +1902,7 @@ export default function Chat() {
             <span className="hidden md:inline">Especialistas</span>
           </button>
           <div className="hidden sm:block w-px h-4 flex-shrink-0" style={{ background: '#2a2a2a' }} />
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
             <div
               className="w-7 h-7 sm:w-8 sm:h-8 rounded-full overflow-hidden flex-shrink-0"
               style={{ border: '1.5px solid rgba(201,168,76,0.25)' }}
@@ -1920,7 +1920,7 @@ export default function Chat() {
         </div>
 
         {/* Right: controls */}
-        <div className="flex items-center gap-1.5 md:gap-3 justify-end flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
           {messages.length > 0 && (
@@ -1930,7 +1930,7 @@ export default function Chat() {
                   newConversation()
                 }
               }}
-              className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+              className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
               style={{
                 background: 'rgba(239,68,68,0.10)',
                 border: '1px solid rgba(239,68,68,0.25)',
@@ -1939,7 +1939,7 @@ export default function Chat() {
               title="Cancelar la consulta actual y reiniciar el chat"
             >
               <RotateCcw size={13} />
-              <span className="hidden sm:inline font-normal">Cancelar consulta</span>
+              <span className="hidden sm:inline font-normal">Cancelar</span>
             </button>
           )}
 
@@ -1947,7 +1947,7 @@ export default function Chat() {
             href="https://wa.me/51929725274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
             target="_blank"
             rel="noreferrer"
-            className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+            className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95 hidden xs:flex"
             style={{
               background: 'rgba(37,211,102,0.12)',
               border: '1px solid rgba(37,211,102,0.30)',
@@ -1956,7 +1956,7 @@ export default function Chat() {
             title="Soporte directo por WhatsApp (929 725 274)"
           >
             <MessageCircle size={14} className="fill-[#25D366]" />
-            <span className="hidden sm:inline font-semibold">WhatsApp</span>
+            <span className="hidden md:inline font-semibold">WhatsApp</span>
           </a>
 
           {conversationId && (
@@ -1995,9 +1995,9 @@ export default function Chat() {
             {audioRepliesEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
           </button>
 
-          <button onClick={() => navigate('/account')}>
+          <button onClick={() => navigate('/account')} className="flex-shrink-0">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-semibold"
+              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] font-semibold"
               style={{
                 background: 'rgba(201,168,76,0.10)',
                 border: '1px solid rgba(201,168,76,0.25)',
@@ -2255,7 +2255,7 @@ export default function Chat() {
           <div
             ref={scrollContainerRef}
             onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-3 sm:px-6 md:px-8 py-4 md:py-6 space-y-5 md:space-y-6"
+            className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full min-w-0 px-2.5 sm:px-6 md:px-8 py-3.5 sm:py-4 md:py-6 space-y-4 sm:space-y-5 md:space-y-6"
           >
             {messages.length === 0 ? (
               <WelcomeScreen
@@ -2513,15 +2513,15 @@ export default function Chat() {
                   }}
                 />
 
-                <div className="flex items-center justify-between pt-2 mt-1" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center justify-between pt-2 mt-1 gap-1 overflow-x-auto sm:overflow-visible" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {/* Left actions */}
-                  <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors"
-                      style={{ color: 'rgba(255,255,255,0.25)' }}
+                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded"
+                      style={{ color: 'rgba(255,255,255,0.35)' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}
                       title="Adjuntar PDF o Word (Máx. 25MB · Recomendado hasta 15MB para máxima agilidad)"
                     >
                       <Paperclip size={12} />
@@ -2529,10 +2529,10 @@ export default function Chat() {
                     </button>
                     <button
                       onClick={() => imageInputRef.current?.click()}
-                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors"
-                      style={{ color: 'rgba(255,255,255,0.25)' }}
+                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded"
+                      style={{ color: 'rgba(255,255,255,0.35)' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.25)' }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}
                       title="Adjuntar imagen"
                     >
                       <ImageIcon size={12} />
@@ -2543,7 +2543,7 @@ export default function Chat() {
                     <button
                       type="button"
                       onClick={() => setSpijModalOpen(true)}
-                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-2 py-1 rounded-md"
+                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 sm:px-2 py-1 rounded-md"
                       style={{
                         color: spijModalOpen ? '#c9a84c' : 'rgba(201,168,76,0.85)',
                         background: spijModalOpen ? 'rgba(201,168,76,0.12)' : 'transparent',
@@ -2551,14 +2551,17 @@ export default function Chat() {
                       title="Consultar o insertar Acuerdos Plenarios de la Corte Suprema y Leyes SPIJ"
                     >
                       <Scale size={12} className="text-[#c9a84c]" />
-                      <span className="font-medium">SPIJ / PLENOS</span>
+                      <span className="font-medium">
+                        <span className="sm:hidden">SPIJ</span>
+                        <span className="hidden sm:inline">SPIJ / PLENOS</span>
+                      </span>
                     </button>
 
                     {/* Specialist Document Templates (Desktop & Mobile) */}
                     <div ref={templatesRef} className="relative">
                       <button
                         onClick={() => setTemplatesOpen((o) => !o)}
-                        className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-2 py-1 rounded-md"
+                        className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 sm:px-2 py-1 rounded-md"
                         style={{
                           color: templatesOpen ? '#c9a84c' : 'rgba(255,255,255,0.40)',
                           background: templatesOpen ? 'rgba(201,168,76,0.10)' : 'transparent',
@@ -2568,7 +2571,7 @@ export default function Chat() {
                         title={`Plantillas legales de ${agent.name} (${agent.badge})`}
                       >
                         <BookOpen size={12} />
-                        <span>PLANTILLAS</span>
+                        <span className="text-[9px] sm:text-[10px]">PLANTILLAS</span>
                       </button>
                       {templatesOpen && (
                         <div
@@ -3108,36 +3111,36 @@ function MessageBubble({
                   }}
                 >
                   {/* File Header */}
-                  <div className="p-3.5 sm:p-4 flex items-center justify-between gap-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-                    <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+                    <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                       <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{
                           background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
                           border: '1px solid rgba(147,197,253,0.3)',
                           boxShadow: '0 4px 12px rgba(30,58,138,0.4)',
                         }}
                       >
-                        <FileText size={20} className="text-blue-200" />
+                        <FileText size={18} className="text-blue-200" />
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-0.5">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 mb-0.5">
                           <span
-                            className="text-[9px] uppercase font-bold px-2 py-0.5 rounded tracking-wider"
+                            className="text-[8px] sm:text-[9px] uppercase font-bold px-1.5 sm:px-2 py-0.5 rounded tracking-wider"
                             style={{ background: 'rgba(96,165,250,0.15)', color: '#93c5fd', border: '1px solid rgba(96,165,250,0.3)' }}
                           >
                             {extractedDoc.type || 'DOCUMENTO OFICIAL'}
                           </span>
                           <span className="text-[10px] text-white/40 hidden sm:inline">Formato Oficial A4</span>
                         </div>
-                        <h4 className="text-[13px] font-semibold text-white truncate max-w-xs sm:max-w-md" title={extractedDoc.title}>
+                        <h4 className="text-[12px] sm:text-[13px] font-semibold text-white truncate max-w-[220px] xs:max-w-xs sm:max-w-md" title={extractedDoc.title}>
                           {extractedDoc.title}.docx
                         </h4>
                       </div>
                     </div>
 
                     {/* Action Buttons in Header */}
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap sm:flex-nowrap justify-start sm:justify-end flex-shrink-0 pt-1 sm:pt-0">
                       <button
                         onClick={async () => {
                           await downloadWordDoc(extractedDoc.title, extractedDoc.content, extractedDoc.title)

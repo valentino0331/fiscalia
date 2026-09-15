@@ -186,22 +186,22 @@ export default function Dashboard() {
     : 'U'
 
   return (
-    <div className="flex flex-col overflow-hidden" style={{ background: '#111111', height: '100dvh', minHeight: '100vh' }}>
+    <div className="flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111', height: '100dvh', minHeight: '100vh' }}>
       {/* NAVBAR */}
       <header
-        className="h-14 flex-shrink-0 flex items-center justify-between gap-2 px-4 border-b z-40"
+        className="h-14 flex-shrink-0 flex items-center justify-between gap-1.5 sm:gap-2 px-3 sm:px-4 border-b z-40 max-w-full overflow-hidden"
         style={{ background: '#111111', borderColor: '#2a2a2a' }}
       >
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           <JurisClaudeLogo size="sm" />
         </div>
 
-        <div className="flex items-center gap-2 md:gap-3 justify-end flex-shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 justify-end flex-shrink-0">
           <UsageCounterBadge />
 
           <button
             onClick={() => setSpijModalOpen(true)}
-            className="h-8 px-2.5 sm:px-3 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95"
+            className="h-8 px-2 sm:px-3 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95 flex-shrink-0"
             style={{
               background: 'rgba(201,168,76,0.12)',
               border: '1px solid rgba(201,168,76,0.30)',
@@ -214,9 +214,9 @@ export default function Dashboard() {
             <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
           </button>
 
-          <button onClick={() => navigate('/account')} className="flex items-center gap-2">
+          <button onClick={() => navigate('/account')} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             <div
-              className="w-[36px] h-[36px] rounded-full flex items-center justify-center text-[11px] font-semibold"
+              className="w-[34px] h-[34px] sm:w-[36px] sm:h-[36px] rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-semibold"
               style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)', color: '#c9a84c' }}
             >
               {initials}
@@ -242,7 +242,7 @@ export default function Dashboard() {
       </header>
 
       {/* Body: Sidebar + Content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden w-full max-w-full">
         {/* SIDEBAR */}
         <aside
           className="hidden md:flex w-[220px] flex-shrink-0 flex-col overflow-y-auto border-r"
@@ -418,7 +418,7 @@ export default function Dashboard() {
         </aside>
 
         {/* MAIN CONTENT */}
-        <main className="flex-1 overflow-y-auto px-4 md:px-8 py-4 md:py-6 pb-32 md:pb-8" style={{ overscrollBehavior: 'contain' }}>
+        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full px-3.5 sm:px-6 md:px-8 py-3.5 sm:py-4 md:py-6 pb-28 md:pb-8" style={{ overscrollBehavior: 'contain' }}>
           <AnimatePresence mode="wait">
             {activeSideItem === 'specialists' && (
               <motion.div
@@ -443,7 +443,7 @@ export default function Dashboard() {
                       </p>
 
                       {/* Quick Action Buttons Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
                         <button
                           onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
@@ -479,7 +479,7 @@ export default function Dashboard() {
                         </button>
                         <button
                           onClick={() => setWhereToGoOpen(true)}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          className="col-span-2 sm:col-span-2 lg:col-span-1 flex items-center justify-center sm:justify-start gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <MapPin size={15} className="text-[#f59e0b] flex-shrink-0" />
                           <span className="text-[11px] leading-tight text-left">A Dónde Acudir</span>

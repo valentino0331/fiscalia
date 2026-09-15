@@ -22,7 +22,7 @@ export default function WhatsAppSupportButton() {
   const whatsappUrl = `https://wa.me/51929725274?text=${message}`
 
   return (
-    <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end group pointer-events-auto">
+    <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom,0px))] sm:bottom-6 right-4 sm:right-6 z-40 flex flex-col items-end group pointer-events-auto">
       {/* Tooltip on hover (arriba del botón) */}
       <div
         className="opacity-0 group-hover:opacity-100 pointer-events-none select-none transition-all duration-200 transform translate-y-1 group-hover:translate-y-0 mb-2 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] shadow-2xl whitespace-nowrap"

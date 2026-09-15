@@ -59,7 +59,8 @@ export default function UsageCounterBadge({
         >
           <Zap size={11} className="text-[#c9a84c] flex-shrink-0" />
           <span className="text-[10px] sm:text-[11px] font-medium text-[#c9a84c] tracking-wide">
-            {compact ? 'Ilimitado' : 'Consultas: Ilimitadas'}
+            <span className="sm:hidden">{compact ? 'Ilimitado' : 'Ilimitadas'}</span>
+            <span className="hidden sm:inline">{compact ? 'Ilimitado' : 'Consultas: Ilimitadas'}</span>
           </span>
         </button>
       ) : (

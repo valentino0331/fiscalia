@@ -115,13 +115,13 @@ export default function Account() {
     : 'U'
 
   return (
-    <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: '#111111' }}>
+    <div className="min-h-screen flex flex-col relative overflow-x-hidden w-full max-w-full" style={{ background: '#111111' }}>
       {/* Header */}
       <header
-        className="h-14 flex items-center justify-between px-6 md:px-12 sticky top-0 z-40 border-b"
+        className="h-14 flex items-center justify-between px-3 sm:px-6 md:px-12 sticky top-0 z-40 border-b max-w-full overflow-hidden"
         style={{ background: '#111111', borderColor: '#2a2a2a' }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={() => navigate('/dashboard')}
             className="flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-light transition-colors"
