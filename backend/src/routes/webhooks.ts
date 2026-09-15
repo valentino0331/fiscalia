@@ -8,6 +8,17 @@ import { eq } from 'drizzle-orm';
 
 export const webhooksRouter = Router();
 
+// Whitelist de eventos Hotmart válidos que procesamos
+const VALID_HOTMART_EVENTS = new Set([
+  'PURCHASE_APPROVED',
+  'SUBSCRIPTION_REACTIVATED',
+  'PURCHASE_CANCELLED',
+  'SUBSCRIPTION_CANCELLATION',
+  'PURCHASE_REFUNDED',
+]);
+
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 webhooksRouter.post('/hotmart', async (req, res) => {
   try {
     const { event, data } = req.body;
@@ -18,6 +29,7 @@ webhooksRouter.post('/hotmart', async (req, res) => {
       return res.status(401).json({ error: 'Webhook no autorizado o no configurado' });
     }
 
+    // Comparación en tiempo constante para prevenir timing attacks
     const trusted = Buffer.from(secret);
     const untrusted = Buffer.from(hottok);
 
@@ -25,10 +37,25 @@ webhooksRouter.post('/hotmart', async (req, res) => {
       return res.status(401).json({ error: 'Token inválido' });
     }
 
-    const email = data?.buyer?.email?.toLowerCase().trim();
-    if (!email) return res.status(400).json({ error: 'Email requerido' });
+    // Validar que el evento sea un tipo conocido
+    if (typeof event !== 'string' || !VALID_HOTMART_EVENTS.has(event)) {
+      // Responder 200 para no exponerle a Hotmart qué eventos ignoramos
+      return res.json({ received: true, status: 'event_ignored' });
+    }
 
-    const transaction = data?.purchase?.transaction || null;
+    const rawEmail = data?.buyer?.email;
+    if (typeof rawEmail !== 'string') {
+      return res.status(400).json({ error: 'Email requerido' });
+    }
+    const email = rawEmail.toLowerCase().trim();
+    if (!EMAIL_REGEX.test(email) || email.length > 255) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    const rawTransaction = data?.purchase?.transaction;
+    const transaction: string | null = typeof rawTransaction === 'string' && rawTransaction.trim()
+      ? rawTransaction.trim().slice(0, 100)
+      : null;
 
     if (transaction) {
       const existingSub = await db.query.subscriptions.findFirst({
@@ -49,7 +76,10 @@ webhooksRouter.post('/hotmart', async (req, res) => {
         const userId = uuidv4();
         const tempPassword = uuidv4();
         const passwordHash = await bcrypt.hash(tempPassword, 12);
-        const buyerName = data?.buyer?.name || null;
+        const rawBuyerName = data?.buyer?.name;
+        const buyerName: string | null = typeof rawBuyerName === 'string'
+          ? rawBuyerName.trim().slice(0, 100) || null
+          : null;
 
         await db.insert(users).values({
           id: userId,
@@ -103,7 +133,8 @@ webhooksRouter.post('/hotmart', async (req, res) => {
 
     res.json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
+    console.error('[Hotmart Webhook] Error procesando webhook:', error);
+    // No exponer detalles del error a Hotmart
     res.status(500).json({ error: 'Error procesando webhook' });
   }
 });

@@ -349,7 +349,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
   try {
     const { agentId, messages, conversationId, letterhead } = req.body;
 
-    if (!SYSTEM_PROMPTS[agentId]) {
+    // Validar que agentId sea un string válido y esté en el registro de prompts
+    if (typeof agentId !== 'string' || !SYSTEM_PROMPTS[agentId]) {
       if (isStream) {
         res.write(`data: ${JSON.stringify({ error: 'Agente no válido' })}\n\n`);
         return res.end();
@@ -365,6 +366,30 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return res.status(400).json({ error: 'Mensajes requeridos' });
     }
 
+    // Sanear mensajes: filtrar sólo role user/assistant con contenido string, limitar a 20k chars por msg
+    const sanitizedMessages = messages
+      .filter((m: any) => (
+        m &&
+        typeof m === 'object' &&
+        (m.role === 'user' || m.role === 'assistant') &&
+        typeof m.content === 'string' &&
+        m.content.trim().length > 0
+      ))
+      .map((m: any) => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content.slice(0, 20000) as string,
+        // ConversationMessage schema requires timestamp — usar el existente o generar uno
+        timestamp: typeof m.timestamp === 'string' ? m.timestamp : new Date().toISOString(),
+      }));
+
+    if (sanitizedMessages.length === 0) {
+      if (isStream) {
+        res.write(`data: ${JSON.stringify({ error: 'Mensajes inválidos' })}\n\n`);
+        return res.end();
+      }
+      return res.status(400).json({ error: 'Mensajes inválidos' });
+    }
+
     const groqKey = process.env.GROQ_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
     const deepseekKey = process.env.DEEPSEEK_API_KEY;
@@ -372,12 +397,12 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const openrouterKey = process.env.OPENROUTER_API_KEY;
     const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
-    const latestUserMessage = [...messages]
+    const latestUserMessage = [...sanitizedMessages]
       .reverse()
       .find((m: any) => m?.role === 'user' && typeof m.content === 'string')?.content || '';
 
     // Ventana deslizante para el prompt: últimos 10 mensajes para evitar latencia de tokens masivos
-    const recentMessages = messages.length > 10 ? messages.slice(-10) : messages;
+    const recentMessages = sanitizedMessages.length > 10 ? sanitizedMessages.slice(-10) : sanitizedMessages;
 
     // Caché en memoria para perfil/memoria de usuario (TTL 5 minutos)
     let memoryBlock = '';
@@ -966,22 +991,31 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       ...(transferTo ? { transferTo } : {}),
     };
 
-    const updatedMessages = [...messages, assistantEntry];
+    const updatedMessages = [...sanitizedMessages, assistantEntry];
     let finalConvId = conversationId;
 
-    if (conversationId) {
+    // Validar conversationId si viene del cliente
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const validConversationId = typeof conversationId === 'string' && UUID_REGEX.test(conversationId)
+      ? conversationId
+      : null;
+
+    if (validConversationId) {
       await db
         .update(conversations)
         .set({ messages: updatedMessages, updatedAt: new Date() })
         .where(
           and(
-            eq(conversations.id, conversationId),
+            eq(conversations.id, validConversationId),
             eq(conversations.userId, req.userId)
           )
         );
+      finalConvId = validConversationId;
     } else {
       finalConvId = uuidv4();
-      const title = latestUserMessage.slice(0, 60) || 'Nueva consulta';
+      // Sanitizar el título: sin caracteres de control, máx 80 chars
+      const rawTitle = latestUserMessage.replace(/[\x00-\x1F\x7F]/g, ' ').trim();
+      const title = rawTitle.slice(0, 80) || 'Nueva consulta';
       await db.insert(conversations).values({
         id: finalConvId,
         userId: req.userId,

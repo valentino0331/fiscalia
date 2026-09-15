@@ -46,8 +46,12 @@ filesRouter.post(
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'Archivo requerido' });
 
+      // Sanitizar el nombre del archivo: solo conservar el nombre base, sin rutas
+      const safeOriginalName = (typeof file.originalname === 'string' && file.originalname.trim())
+        ? file.originalname.replace(/[\\/]/g, '_').trim().slice(0, 255)
+        : 'archivo_subido';
 
-      const mime = resolveMime(file.mimetype, file.originalname);
+      const mime = resolveMime(file.mimetype, safeOriginalName);
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
       const withTimeout = <T>(promise: Promise<T>, ms: number, errorLabel: string): Promise<T> => {
         let timeoutId: NodeJS.Timeout;
@@ -117,7 +121,7 @@ filesRouter.post(
         }
       } else if (
         mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        file.originalname.toLowerCase().endsWith('.docx')
+        safeOriginalName.toLowerCase().endsWith('.docx')
       ) {
         const mammoth = await import('mammoth');
         const result = await mammoth.extractRawText({ buffer: file.buffer });
@@ -127,7 +131,7 @@ filesRouter.post(
         }
       } else if (
         mime === 'application/msword' ||
-        file.originalname.toLowerCase().endsWith('.doc')
+        safeOriginalName.toLowerCase().endsWith('.doc')
       ) {
         return res.status(400).json({
           error: 'El formato de archivo Word 97-2003 (.doc) no es compatible directamente. Por favor guárdalo o conviértelo a formato moderno (.docx) o PDF para que nuestros especialistas legales puedan procesarlo.',
@@ -174,7 +178,7 @@ filesRouter.post(
 
       res.json({
         text: extractedText,
-        fileName: file.originalname,
+        fileName: safeOriginalName,
         fileType: mime,
         fileSize: file.size,
         pageCount,

@@ -167,9 +167,12 @@ export const requireSubscription = async (
         monthlyQuestions = loggedCount;
       } else {
         // Fallback: conteo histórico de conversaciones si aún no hay logs registrados para este mes
+        // Limitado a las últimas 200 conversaciones para evitar cargar JSONB ilimitado
         const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
         const userConversations = await db.query.conversations.findMany({
           where: eq(conversations.userId, userId),
+          columns: { messages: true, createdAt: true },
+          limit: 200,
         });
 
         monthlyQuestions = 0;

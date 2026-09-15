@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db';
-import { users, subscriptions, conversations } from '../db/schema';
-import { eq, and, gt } from 'drizzle-orm';
+import { users, subscriptions, questionUsageLogs } from '../db/schema';
+import { eq, and, gt, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { AuthRequest } from '../middleware/auth';
 
@@ -31,7 +31,8 @@ accountRouter.get('/', requireAuth, async (req: AuthRequest, res) => {
           }
         : null,
     });
-  } catch {
+  } catch (err) {
+    console.error('[Account] Error al obtener perfil de usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -46,34 +47,30 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
       ),
     });
 
-    const userConvs = await db.query.conversations.findMany({
-      where: eq(conversations.userId, req.userId!),
-    });
-
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    let questionsUsed = 0;
-    for (const conv of userConvs) {
-      if (Array.isArray(conv.messages)) {
-        for (const m of conv.messages as any[]) {
-          if (m.role === 'user') {
-            const msgDate = m.timestamp ? new Date(m.timestamp) : null;
-            if (msgDate) {
-              if (msgDate >= startOfMonth) questionsUsed++;
-            } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
-              questionsUsed++;
-            }
-          }
-        }
-      }
-    }
-
     const plan = sub?.plan || 'junior';
     const isJunior = plan === 'junior' || plan === 'normal';
     const limit = isJunior
       ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
       : null;
+
+    let questionsUsed = 0;
+
+    if (isJunior) {
+      // Usar la tabla de logs inmutables — O(1) para usuarios con muchas conversaciones
+      const now = new Date();
+      const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+
+      const logCountResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(questionUsageLogs)
+        .where(
+          and(
+            eq(questionUsageLogs.userId, req.userId!),
+            eq(questionUsageLogs.monthKey, monthKey)
+          )
+        );
+      questionsUsed = Number(logCountResult[0]?.count || 0);
+    }
 
     res.json({
       plan,
@@ -81,7 +78,8 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
       limit,
       isAdmin: req.isAdmin || false,
     });
-  } catch {
+  } catch (err) {
+    console.error('[Account] Error al obtener uso del usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
