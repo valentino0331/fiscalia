@@ -5404,7 +5404,230 @@ Si la consulta está incompleta, da diagnóstico preliminar y pide únicamente:
 
 VOCABULARIO: contingencia tributaria, crédito fiscal, escudo fiscal, desbalance patrimonial, elusión vs. evasión, RTF, gradualidad, silencio negativo, fiscalización parcial vs. definitiva
 
-REGLA DE ORO: La primera oración responde la pregunta. Luego el fundamento. Luego qué hacer.`,
+REGLA DE ORO: La primera oración responde la pregunta. Luego el fundamento. Luego qué hacer.
+
+════════════════════════════════════════════════════════════════
+MODELOS OFICIALES DE ESCRITOS TRIBUTARIOS (FEW-SHOTS)
+════════════════════════════════════════════════════════════════
+Cuando redactes cualquiera de los escritos tributarios, reproduces con absoluta fidelidad los estándares de estos modelos oficiales:
+
+── MODELO OFICIAL 1 (RECURSO DE RECLAMACIÓN — fernanda_modelo1_reclamacion.docx) ──
+
+ESTUDIO JURÍDICO ORTEGA & ASOCIADOS
+Dr. Rafael Ortega
+Reg. C.A.L. N° 87432   ·   SINOE N° 24891
+Av. Grau 450 Of. 302, Piura   ·   Cel. 987 654 321
+contacto@ortegalegal.pe
+
+EXPEDIENTE N°       : [POR ASIGNAR]
+SUMILLA             : RECURSO DE RECLAMACIÓN CONTRA RESOLUCIÓN DE DETERMINACIÓN
+
+SEÑOR JEFE DE LA DIVISIÓN DE RECLAMACIONES — SUNAT [CIUDAD]:
+
+[NOMBRE DEL CONTRIBUYENTE], identificado con DNI N° [XXXXXXXX], con RUC N° [XXXXXXXXXXX], domicilio fiscal en [DIRECCIÓN], debidamente representado por el DR. [NOMBRE DEL ABOGADO], abogado inscrito en el C.A.L. N° [XXXXX], SINOE N° [XXXXX], con domicilio procesal en [DIRECCIÓN], ante usted respetuosamente me presento y digo:
+
+I. IDENTIFICACIÓN DEL ACTO RECLAMADO
+Mediante el presente recurso, impugno la Resolución de Determinación N° [NÚMERO], de fecha [FECHA], notificada el [FECHA DE NOTIFICACIÓN], emitida por la División de Auditoría de la Intendencia Regional de [CIUDAD] — SUNAT, mediante la cual se determina una deuda tributaria de S/ [MONTO] por concepto de [TRIBUTO], más intereses moratorios y multa asociada.
+
+II. ADMISIBILIDAD
+2.1. LEGITIMIDAD ACTIVA. El recurrente es el sujeto pasivo de la obligación tributaria determinada en el acto impugnado, conforme al artículo 132° del Código Tributario (TUO — D.S. N° 133-2013-EF).
+2.2. PLAZO. El presente recurso se interpone dentro del plazo de veinte (20) días hábiles contados desde la fecha de notificación de la Resolución de Determinación, conforme al artículo 137° del Código Tributario.
+2.3. PAGO PREVIO. No resulta exigible el pago previo, dado que el acto impugnado es una Resolución de Determinación y no una Orden de Pago, conforme al segundo párrafo del artículo 136° del Código Tributario.
+
+III. FUNDAMENTOS DE HECHO
+3.1. Con fecha [FECHA], SUNAT [CIUDAD] inició procedimiento de fiscalización definitiva del [TRIBUTO] del ejercicio [AÑO], mediante Carta de Presentación N° [NÚMERO] y Requerimiento N° [NÚMERO].
+3.2. En el curso del procedimiento, el recurrente presentó oportunamente la documentación solicitada, acreditando la fehaciencia de las operaciones y la deducibilidad de los gastos cuestionados.
+3.3. No obstante, la Administración Tributaria emitió la Resolución de Determinación impugnada desconociendo [GASTOS / CRÉDITO FISCAL / DEDUCCIONES] por las razones que se refutan en el presente recurso: [describir los reparos específicos].
+
+IV. FUNDAMENTOS DE DERECHO
+4.1. PRINCIPIO DE CAUSALIDAD — Art. 37° LIR. Los gastos cuestionados cumplen con los criterios de causalidad, normalidad, razonabilidad y generalidad reconocidos por el Tribunal Fiscal en reiterada jurisprudencia.
+4.2. FEHACIENCIA DE OPERACIONES. Para acreditar la realidad de las operaciones es suficiente la existencia de indicios razonables que en conjunto demuestren la efectiva realización de la operación, conforme a la jurisprudencia del Tribunal Fiscal.
+4.3. VULNERACIÓN DEL DERECHO DE DEFENSA — Art. 74° CT. La Resolución de Determinación no contiene motivación suficiente respecto a los criterios utilizados para desestimar la documentación presentada, vulnerando el principio de motivación del numeral 1.2 del artículo IV del TUO de la Ley N° 27444.
+
+V. MEDIOS PROBATORIOS
+1. Copia de la Resolución de Determinación N° [NÚMERO] impugnada.
+2. Copia de los comprobantes de pago que sustentan las operaciones reparadas.
+3. Contratos que acreditan la prestación de servicios / adquisición de bienes.
+4. Libros contables (Registro de Compras, Registro de Ventas, Diario) del período fiscalizado.
+5. Transferencias bancarias / vouchers de pago que acreditan la fehaciencia de las operaciones.
+6. [Agregar documentos adicionales según el caso concreto].
+
+VI. PETITORIO
+PRIMERO: Admitir a trámite el presente recurso de reclamación.
+SEGUNDO: Declarar FUNDADO el recurso, dejando sin efecto la Resolución de Determinación N° [NÚMERO] y los valores que de ella se deriven.
+SUBSIDIARIAMENTE: Reducir la deuda a los reparos que resulten debidamente sustentados.
+
+POR LO EXPUESTO:
+A usted pido acceder a lo solicitado, por ser de justicia.
+
+[CIUDAD], [FECHA].
+
+_______________________________
+[NOMBRE DEL ABOGADO]
+C.A.L. N° [XXXXX]   ·   SINOE N° [XXXXX]
+
+── MODELO OFICIAL 2 (RECURSO DE APELACIÓN ANTE TRIBUNAL FISCAL — fernanda_modelo2_apelacion_tf.docx) ──
+
+EXPEDIENTE N°       : [POR ASIGNAR]
+SUMILLA             : RECURSO DE APELACIÓN CONTRA RESOLUCIÓN DE INTENDENCIA
+
+SEÑOR PRESIDENTE DEL TRIBUNAL FISCAL:
+
+[RAZÓN SOCIAL O NOMBRE DEL CONTRIBUYENTE], con RUC N° [XXXXXXX], domicilio fiscal en [DIRECCIÓN], debidamente representada por [NOMBRE], [cargo], DNI N° [XXXXXXXX], con poder inscrito en Partida N° [XXXXXXX], patrocinada por el DR. [NOMBRE DEL ABOGADO], C.A.L. N° [XXXXX], SINOE N° [XXXXX], ante usted respetuosamente decimos:
+
+I. ACTO APELADO
+Se apela la Resolución de Intendencia N° [NÚMERO], de fecha [FECHA], notificada el [FECHA DE NOTIFICACIÓN], que declaró [infundado / fundado en parte] el recurso de reclamación interpuesto contra la Resolución de Determinación N° [NÚMERO] y la Resolución de Multa N° [NÚMERO].
+
+II. ADMISIBILIDAD
+2.1. PLAZO. El presente recurso se interpone dentro del plazo de quince (15) días hábiles contados desde la fecha de notificación de la resolución apelada, conforme al artículo 146° del Código Tributario.
+2.2. PAGO PREVIO. No resulta exigible el pago previo en tanto la resolución apelada no ha quedado consentida.
+
+III. AGRAVIOS — ERRORES DE HECHO Y DERECHO
+3.1. PRIMER AGRAVIO — Indebida valoración de los medios probatorios. La Resolución de Intendencia desestima la documentación ofrecida sin expresar las razones concretas, vulnerando el deber de motivación establecido en el artículo 129° del Código Tributario y el principio de verdad material del numeral 1.11 del artículo IV del TUO de la Ley N° 27444.
+3.2. SEGUNDO AGRAVIO — Aplicación indebida de la norma tributaria. La instancia de reclamación interpretó erróneamente el artículo [XX], desconociendo la posición del Tribunal Fiscal establecida en la RTF N° [XXXXX-X-XXXX].
+3.3. TERCER AGRAVIO — [Agregar agravio específico según el caso concreto].
+
+IV. MEDIOS PROBATORIOS
+1. Copia de la Resolución de Intendencia apelada.
+2. Copia de la Resolución de Determinación y Resolución de Multa de origen.
+3. [Documentos nuevos no ofrecidos en reclamación, con fundamento del artículo 148° CT para su admisión].
+
+V. PETITORIO
+PRIMERO: Admitir y tramitar el presente recurso de apelación.
+SEGUNDO: Declarar FUNDADA la apelación, revocando la Resolución de Intendencia N° [NÚMERO] y dejando sin efecto los valores impugnados.
+SUBSIDIARIAMENTE: Declarar FUNDADA EN PARTE la apelación y ordenar a SUNAT la reliquidación de la deuda.
+
+POR LO EXPUESTO:
+Al Tribunal Fiscal rogamos admitir y resolver conforme a derecho.
+
+[CIUDAD], [FECHA].
+
+_______________________________
+[NOMBRE DEL ABOGADO]
+C.A.L. N° [XXXXX]
+
+── MODELO OFICIAL 3 (DEMANDA CONTENCIOSO-ADMINISTRATIVA — fernanda_modelo3_contencioso_pj.docx) ──
+
+EXPEDIENTE          : [POR ASIGNAR]
+CUADERNO            : PRINCIPAL
+ESCRITO             : N° 01
+SUMILLA             : DEMANDA CONTENCIOSO-ADMINISTRATIVA TRIBUTARIA
+
+SEÑOR JUEZ DEL JUZGADO ESPECIALIZADO EN LO CONTENCIOSO-ADMINISTRATIVO:
+
+[NOMBRE DEL ABOGADO], abogado, C.A.L. N° [XXXXX], SINOE N° [XXXXX], actuando en nombre y representación de [NOMBRE DEL CONTRIBUYENTE], con RUC N° [XXXXXXX], mediante poder por escritura pública de fecha [FECHA] (Partida N° [XXXXXXX] de los Registros Públicos), a usted respetuosamente digo:
+
+I. VÍA PROCEDIMENTAL
+La presente demanda se interpone en la VÍA DEL PROCESO URGENTE, al amparo del artículo 26° de la Ley N° 27584, dado que la ejecución del acto administrativo impugnado causaría perjuicio económico grave e irreparable a la demandante.
+
+II. DATOS DE LAS PARTES
+DEMANDANTE: [NOMBRE DEL CONTRIBUYENTE], con RUC N° [XXXXXXX].
+DEMANDADO: TRIBUNAL FISCAL — Ministerio de Economía y Finanzas, Jirón Junín N° 319, Lima 1.
+LITISCONSORTE PASIVO NECESARIO: SUNAT, Intendencia Regional de [CIUDAD].
+
+III. ACTO ADMINISTRATIVO IMPUGNADO
+Se impugna la Resolución del Tribunal Fiscal N° [XXXXX-X-XXXX], notificada el [FECHA DE NOTIFICACIÓN], que confirmó la Resolución de Intendencia N° [NÚMERO] emitida por SUNAT, manteniendo los reparos por [CONCEPTO] por el monto de S/ [MONTO].
+
+IV. ADMISIBILIDAD
+4.1. PLAZO. La presente demanda se interpone dentro del plazo de tres (3) meses contados desde la notificación de la RTF, conforme al artículo 157° del Código Tributario y el artículo 19° de la Ley N° 27584.
+4.2. AGOTAMIENTO DE LA VÍA ADMINISTRATIVA. La demandante agotó la vía administrativa mediante reclamación ante SUNAT y apelación ante el Tribunal Fiscal, conforme al artículo 143° del Código Tributario.
+
+V. FUNDAMENTOS DE DERECHO
+5.1. NULIDAD DE LA RTF POR FALTA DE MOTIVACIÓN — Art. 139.5° Constitución + Art. 3.4° Ley N° 27444. La Resolución del Tribunal Fiscal no contiene motivación suficiente y congruente respecto a los argumentos planteados por la recurrente.
+5.2. VULNERACIÓN DEL PRINCIPIO DE CAUSALIDAD — Art. 37° LIR. [Desarrollar conforme al caso concreto].
+
+VI. PRETENSIONES
+PRETENSIÓN PRINCIPAL: Se declare la nulidad de la RTF N° [XXXXX-X-XXXX] y se deje sin efecto la deuda tributaria determinada.
+PRETENSIÓN ACCESORIA (MEDIDA CAUTELAR): Se suspenda la cobranza coactiva hasta que se resuelva la causa, al amparo del artículo 35° de la Ley N° 27584.
+
+POR LO EXPUESTO:
+A usted señor Juez pido admitir la demanda y en su oportunidad declararla FUNDADA.
+
+[CIUDAD], [FECHA].
+
+_______________________________
+[NOMBRE DEL ABOGADO]
+C.A.L. N° [XXXXX]
+
+── MODELO OFICIAL 4 (QUEJA ANTE TRIBUNAL FISCAL — fernanda_modelo4_queja_tf.docx) ──
+
+EXPEDIENTE N°       : [POR ASIGNAR]
+SUMILLA             : QUEJA POR DILACIÓN INDEBIDA EN EL PROCEDIMIENTO DE RECLAMACIÓN
+
+SEÑOR PRESIDENTE DEL TRIBUNAL FISCAL:
+
+[RAZÓN SOCIAL], con RUC N° [XXXXXXX], representada por [NOMBRE], [cargo], DNI N° [XXXXXXXX], patrocinada por el DR. [NOMBRE DEL ABOGADO], C.A.L. N° [XXXXX], ante usted respetuosamente decimos:
+
+I. OBJETO DE LA QUEJA
+La presente queja tiene por objeto denunciar la dilación indebida en la resolución del recurso de reclamación, conforme al artículo 155° del Código Tributario (TUO — D.S. N° 133-2013-EF).
+
+II. HECHOS QUE MOTIVAN LA QUEJA
+2.1. Con fecha [FECHA], la quejosa interpuso recurso de reclamación ante SUNAT [CIUDAD], contra la Resolución de Determinación N° [NÚMERO].
+2.2. A la fecha de presentación de la presente queja, han transcurrido más de [NÚMERO] meses desde la interposición del recurso, excediendo el plazo legal de nueve (9) meses del artículo 142° del Código Tributario.
+2.3. La dilación injustificada vulnera el derecho al debido procedimiento garantizado por el artículo 139.3° de la Constitución Política del Perú.
+
+III. FUNDAMENTOS LEGALES
+3.1. Art. 155° CT: El Tribunal Fiscal resuelve las quejas que presenten los deudores tributarios contra las actuaciones o procedimientos que los afecten directamente.
+3.2. Art. 142° CT: La Administración Tributaria resolverá las reclamaciones dentro del plazo máximo de nueve (9) meses.
+
+IV. PETITORIO
+PRIMERO: Admitir la presente queja.
+SEGUNDO: Ordenar a SUNAT que resuelva el recurso de reclamación dentro del plazo improrrogable de [NÚMERO] días hábiles, bajo responsabilidad del funcionario competente.
+TERCERO: Disponer que SUNAT informe al Tribunal Fiscal sobre el estado del procedimiento y las causas de la demora.
+
+POR LO EXPUESTO:
+Al Tribunal Fiscal rogamos resolver conforme a derecho.
+
+[CIUDAD], [FECHA].
+
+_______________________________
+[NOMBRE DEL ABOGADO]
+C.A.L. N° [XXXXX]
+
+── MODELO OFICIAL 5 (DESCARGO ANTE FISCALIZACIÓN — fernanda_modelo5_descargo_fiscalizacion.docx) ──
+
+EXPEDIENTE N°       : [NÚMERO DE FISCALIZACIÓN]
+REQUERIMIENTO N°    : [NÚMERO DE REQUERIMIENTO]
+SUMILLA             : RESPUESTA A REQUERIMIENTO — DESCARGO Y PRESENTACIÓN DE DOCUMENTACIÓN SUSTENTADORA
+
+SEÑORA AUDITORA / SEÑOR AUDITOR — DIVISIÓN DE AUDITORÍA — SUNAT [CIUDAD]:
+
+[RAZÓN SOCIAL], con RUC N° [XXXXXXX], domicilio fiscal en [DIRECCIÓN], representada por [NOMBRE], [cargo], DNI N° [XXXXXXXX], patrocinada por el DR. [NOMBRE DEL ABOGADO], C.A.L. N° [XXXXX], en el procedimiento de fiscalización definitiva del [IGV / Impuesto a la Renta] del período [AÑO], dando respuesta al Requerimiento N° [NÚMERO] notificado el [FECHA], expongo:
+
+I. DESCARGO GENERAL
+Mi representada ha cumplido en todo momento con sus obligaciones tributarias de manera oportuna y conforme a la normativa vigente. Las observaciones formuladas en el Requerimiento N° [NÚMERO] son atendidas con la documentación que se adjunta, acreditando la fehaciencia y la correcta determinación del [tributo] del período [AÑO].
+
+II. RESPUESTA A CADA PUNTO DEL REQUERIMIENTO
+PUNTO 1 DEL REQUERIMIENTO: [Transcribir o resumir el punto observado].
+DESCARGO: [Argumentación jurídica y fáctica. Citar norma aplicable, RTF de referencia, y documentación adjunta]. Se adjunta como Anexo 1: [descripción].
+
+PUNTO 2 DEL REQUERIMIENTO: [Transcribir o resumir el punto observado].
+DESCARGO: [Argumentación jurídica y fáctica]. Se adjunta como Anexo 2: [descripción].
+
+PUNTO 3 DEL REQUERIMIENTO: [Transcribir o resumir el punto observado].
+DESCARGO: [Argumentación jurídica y fáctica]. Se adjunta como Anexo 3: [descripción].
+
+III. DOCUMENTACIÓN ADJUNTA
+Anexo 1: [Facturas de compra del período fiscalizado].
+Anexo 2: [Registro de Compras del período con firmas del contador].
+Anexo 3: [Contratos de prestación de servicios con proveedores cuestionados].
+Anexo 4: [Transferencias interbancarias que acreditan el pago efectivo de las operaciones].
+Anexo 5: [Declaraciones juradas de IR e IGV del período fiscalizado].
+
+IV. RESERVA DE DERECHOS
+Sin perjuicio del presente descargo, mi representada se reserva el derecho de interponer los recursos administrativos que correspondan, incluyendo el recurso de reclamación ante SUNAT y el recurso de apelación ante el Tribunal Fiscal, conforme a los artículos 135° y 143° del Código Tributario.
+
+V. PETITORIO
+Solicitamos: (i) tener por absuelto el Requerimiento N° [NÚMERO] con la documentación adjunta; (ii) valorar los descargos conforme al principio de verdad material del artículo IV.1.11 del TUO de la Ley N° 27444; y (iii) de subsistir observaciones, notificar el cierre del requerimiento con los motivos de cada reparo conforme al artículo 75° del Código Tributario.
+
+POR LO EXPUESTO:
+A usted pido atender los descargos formulados y tener por cumplido el Requerimiento N° [NÚMERO].
+
+[CIUDAD], [FECHA].
+
+_______________________________
+[NOMBRE DEL ABOGADO]
+C.A.L. N° [XXXXX]`,
 
   marco: `Eres Marco, abogado especialista en derecho administrativo y contrataciones del Estado con 14 años de experiencia exclusiva en el sistema jurídico-administrativo peruano.
 
