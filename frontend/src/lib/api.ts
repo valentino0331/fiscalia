@@ -117,12 +117,42 @@ export const api = {
       if (token) headers['Authorization'] = `Bearer ${token}`
 
       try {
-        const res = await fetch(`${API_URL}/chat`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ ...data, stream: true }),
-          signal,
-        })
+        let res: Response
+        try {
+          res = await fetch(`${API_URL}/chat`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ ...data, stream: true }),
+            signal,
+          })
+        } catch (fetchErr: any) {
+          if (signal?.aborted) throw fetchErr
+          // Si el streaming falla por bloqueo de red/firewall/proxy, fallback inmediato a modo estándar
+          console.warn('[API] Streaming fetch interceptado o fallido, intentando fallback no-stream:', fetchErr)
+          const fallbackRes = await fetch(`${API_URL}/chat`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ ...data, stream: false }),
+            signal,
+          })
+          if (!fallbackRes.ok) {
+            if (fallbackRes.status === 401) handleUnauthorized()
+            const errData = await fallbackRes.json().catch(() => ({ error: `HTTP ${fallbackRes.status}` }))
+            throw new Error(errData.error || `HTTP ${fallbackRes.status}`)
+          }
+          const standardJson = await fallbackRes.json()
+          if (standardJson.message) {
+            callbacks.onChunk(standardJson.message)
+          }
+          callbacks.onDone({
+            conversationId: standardJson.conversationId,
+            transferTo: standardJson.transferTo,
+          })
+          return
+        }
 
         if (!res.ok) {
           if (res.status === 401) {
@@ -182,6 +212,7 @@ export const api = {
         }
         callbacks.onError(err)
       }
+
     },
     tts: async (data: { text: string; agentId: string }, signal?: AbortSignal): Promise<Blob> => {
       if (!data?.text || !data.text.trim()) {
