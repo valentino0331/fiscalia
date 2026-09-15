@@ -544,8 +544,37 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
     const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
 
+    // Detección de requerimiento de redacción documental formal
+    const isDocumentDraftingRequest = (text: string): boolean => {
+      if (!text || typeof text !== 'string') return false;
+      const t = text.toLowerCase();
+      const docKeywords = [
+        'redacta', 'redactar', 'redaccion', 'redacción', 'elabora', 'elaborar',
+        'hazme un escrito', 'haz un escrito', 'prepara una demanda', 'redacta una demanda',
+        'demanda de', 'interponer demanda', 'formular demanda', 'denuncia penal',
+        'carta notarial', 'contrato de', 'minuta de', 'recurso de apelacion', 'recurso de apelación',
+        'contestacion de demanda', 'contestación de demanda', 'medida cautelar', 'habeas corpus',
+        'amparo', 'querella', 'bloque document', 'generar documento', 'generar escrito',
+        'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo'
+      ];
+      return docKeywords.some(kw => t.includes(kw));
+    };
+
+    // Optimización de prompt para consultas conversacionales (ahorro de hasta 60% de tokens y latencia < 1s)
+    const getLeanSystemPrompt = (agentId: string, fullPrompt: string): string => {
+      let p = fullPrompt;
+      const mandateModelsRegex = /==== DEMANDA CIVIL \/ LABORAL[\s\S]*?RECORDATORIO FINAL SOBRE FORMATO DE DOCUMENTOS:/i;
+      p = p.replace(mandateModelsRegex, 'RECORDATORIO FINAL SOBRE FORMATO DE DOCUMENTOS:');
+      const sec6Regex = /SECCI[OÓ]N 6 — LAS \d+ ESTRUCTURAS BASE[\s\S]*?(?:SECCI[OÓ]N 7|════════════════════════════════════════════════════════════════\s*\nSECCI[OÓ]N 7)/i;
+      p = p.replace(sec6Regex, 'SECCIÓN 7');
+      return p;
+    };
+
+    const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
+    const effectiveSystemPrompt = isDocRequest ? fullSystemPrompt : getLeanSystemPrompt(agentId, fullSystemPrompt);
+
     const formattedMessages = [
-      { role: 'system', content: fullSystemPrompt },
+      { role: 'system', content: effectiveSystemPrompt },
       ...recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
     ];
 
@@ -566,6 +595,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // 1. PRIORIDAD 1: Groq LPUs (Inferencia ultra-rápida 300+ tok/s, latencia < 300ms)
     // ─────────────────────────────────────────────────────────────
     if (!assistantMessage && groqKey) {
+      console.log('[AI Engine] Evaluando proveedor Groq LPUs...');
       const groqCandidates = [
         'llama-3.3-70b-versatile',
         'deepseek-r1-distill-llama-70b',
@@ -575,6 +605,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       for (const groqModel of groqCandidates) {
         if (assistantMessage) break;
         try {
+          console.log(`[AI Engine] Intentando Groq (${groqModel})...`);
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 12000);
 
@@ -641,11 +672,13 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openaiKey) {
+      console.log('[AI Engine] Evaluando proveedor OpenAI...');
       const oaiModels = ['gpt-4o-mini', 'gpt-4o'];
 
       for (const oaiModel of oaiModels) {
         if (assistantMessage) break;
         try {
+          console.log(`[AI Engine] Intentando OpenAI (${oaiModel})...`);
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -697,6 +730,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
                 break;
               }
             }
+          } else {
+            const errData = await oaiRes.text().catch(() => '');
+            console.warn(`[AI Engine] OpenAI error on ${oaiModel} (${oaiRes.status}):`, errData);
           }
         } catch (oaiErr: any) {
           console.warn(`[AI Engine] OpenAI error on ${oaiModel}:`, oaiErr?.message || oaiErr);
@@ -709,7 +745,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && deepseekKey) {
+      console.log('[AI Engine] Evaluando proveedor DeepSeek Direct...');
       try {
+        console.log('[AI Engine] Intentando DeepSeek (deepseek-chat)...');
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout estricto
 
@@ -759,6 +797,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               console.log(`[AI Engine] Éxito con DeepSeek en ${Date.now() - startTime}ms`);
             }
           }
+        } else {
+          const errData = await dsRes.text().catch(() => '');
+          console.warn(`[AI Engine] DeepSeek error (${dsRes.status}):`, errData);
         }
       } catch (dsErr: any) {
         console.warn('[AI Engine] DeepSeek error/timeout:', dsErr?.message || dsErr);
@@ -770,15 +811,17 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && anthropicKey) {
+      console.log('[AI Engine] Evaluando proveedor Anthropic...');
       try {
         const anthropic = new Anthropic({ apiKey: anthropicKey });
         const modelToUse = process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022';
+        console.log(`[AI Engine] Intentando Anthropic (${modelToUse})...`);
 
         if (isStream) {
           const stream = anthropic.messages.stream({
             model: modelToUse,
             max_tokens: 4096,
-            system: fullSystemPrompt,
+            system: effectiveSystemPrompt,
             messages: recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
           });
 
@@ -797,13 +840,14 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               success: true,
               durationMs: Date.now() - startTime,
             });
+            console.log(`[AI Engine] Éxito con Anthropic Stream (${modelToUse}) en ${Date.now() - startTime}ms`);
           }
         } else {
           const response = await withTimeout(
             anthropic.messages.create({
               model: modelToUse,
               max_tokens: 4096,
-              system: fullSystemPrompt,
+              system: effectiveSystemPrompt,
               messages: recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
             }),
             18000,
@@ -818,6 +862,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               success: true,
               durationMs: Date.now() - startTime,
             });
+            console.log(`[AI Engine] Éxito con Anthropic (${modelToUse}) en ${Date.now() - startTime}ms`);
           }
         }
       } catch (anthropicErr: any) {
@@ -826,19 +871,25 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 5. PRIORIDAD 5: OpenRouter Fallback
+    // 5. PRIORIDAD 5: OpenRouter Fallback (Con soporte de modelos libres)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openrouterKey) {
+      console.log('[AI Engine] Evaluando proveedor OpenRouter...');
       const candidateModels = [
+        process.env.OPENROUTER_MODEL,
         'meta-llama/llama-3.3-70b-instruct',
         'qwen/qwen-2.5-72b-instruct',
         'deepseek/deepseek-chat',
-      ];
+        'meta-llama/llama-3.3-70b-instruct:free',
+        'deepseek/deepseek-r1:free',
+        'google/gemini-2.0-flash-exp:free',
+      ].filter(Boolean) as string[];
 
       for (const openrouterModel of candidateModels) {
         if (assistantMessage) break;
         try {
+          console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000);
 
@@ -872,6 +923,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
                   success: true,
                   durationMs: Date.now() - startTime,
                 });
+                console.log(`[AI Engine] Éxito con OpenRouter Stream (${openrouterModel}) en ${Date.now() - startTime}ms`);
                 break;
               }
             } else {
@@ -886,9 +938,13 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
                   success: true,
                   durationMs: Date.now() - startTime,
                 });
+                console.log(`[AI Engine] Éxito con OpenRouter (${openrouterModel}) en ${Date.now() - startTime}ms`);
                 break;
               }
             }
+          } else {
+            const errData = await orRes.text().catch(() => '');
+            console.warn(`[AI Engine] OpenRouter error on ${openrouterModel} (${orRes.status}):`, errData);
           }
         } catch (orErr: any) {
           console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
@@ -897,18 +953,21 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 6. PRIORIDAD 6 (ÚLTIMO RECURSO): Google Gemini (Enviado al final por inestabilidad)
+    // 6. PRIORIDAD 6 (ÚLTIMO RECURSO): Google Gemini (Con auto-rotación de claves y modelos 3.6/1.5)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && geminiKey) {
+      console.log('[AI Engine] Evaluando proveedor Google Gemini...');
+      // Eliminamos gemini-2.0-flash que arroja 404 y priorizamos gemini-3.6-flash y gemini-1.5-flash
       const rawGeminiCandidates = [
-        'gemini-2.0-flash',
-        process.env.GEMINI_MODEL,
-        'gemini-2.5-flash',
+        process.env.GEMINI_MODEL || 'gemini-3.6-flash',
+        'gemini-3.6-flash',
         'gemini-1.5-flash-latest',
+        'gemini-1.5-flash',
+        'gemini-2.5-flash',
+        'gemini-1.5-pro',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
-
 
       const rawHistory = recentMessages.slice(0, -1);
       const validHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
@@ -932,52 +991,59 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         validHistory.pop();
       }
 
-      const genAI = new GoogleGenerativeAI(geminiKey);
+      // Soporte multi-clave (separadas por coma en GEMINI_API_KEY) para resiliencia total ante cuotas 429
+      const geminiKeys = (geminiKey || '').split(',').map((k: string) => k.trim()).filter(Boolean);
 
-      for (const geminiModelName of geminiModelCandidates) {
+      for (const currentGeminiKey of geminiKeys) {
         if (assistantMessage) break;
-        try {
-          const modelPlain = genAI.getGenerativeModel({
-            model: geminiModelName,
-            systemInstruction: fullSystemPrompt,
-          });
-          const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
+        const genAI = new GoogleGenerativeAI(currentGeminiKey);
 
-          if (isStream) {
-            const streamResult = await withTimeout(
-              chat.sendMessageStream(latestUserMessage),
-              18000,
-              `Gemini Stream ${geminiModelName}`
-            );
-            for await (const chunk of streamResult.stream) {
-              const chunkText = chunk.text();
-              if (chunkText) {
-                assistantMessage += chunkText;
-                sendStreamChunk(chunkText);
-              }
-            }
-          } else {
-            const result = await withTimeout(
-              chat.sendMessage(latestUserMessage),
-              18000,
-              `Gemini ${geminiModelName}`
-            );
-            assistantMessage = result.response.text();
-          }
-
-          if (assistantMessage) {
-            metrics.recordAiCall({
-              agentId,
-              provider: 'gemini',
+        for (const geminiModelName of geminiModelCandidates) {
+          if (assistantMessage) break;
+          try {
+            console.log(`[AI Engine] Intentando Gemini (${geminiModelName})...`);
+            const modelPlain = genAI.getGenerativeModel({
               model: geminiModelName,
-              success: true,
-              durationMs: Date.now() - startTime,
+              systemInstruction: effectiveSystemPrompt,
             });
-            console.log(`[AI Engine] Éxito con Gemini (${geminiModelName}) en ${Date.now() - startTime}ms`);
-            break;
+            const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
+
+            if (isStream) {
+              const streamResult = await withTimeout(
+                chat.sendMessageStream(latestUserMessage),
+                18000,
+                `Gemini Stream ${geminiModelName}`
+              );
+              for await (const chunk of streamResult.stream) {
+                const chunkText = chunk.text();
+                if (chunkText) {
+                  assistantMessage += chunkText;
+                  sendStreamChunk(chunkText);
+                }
+              }
+            } else {
+              const result = await withTimeout(
+                chat.sendMessage(latestUserMessage),
+                18000,
+                `Gemini ${geminiModelName}`
+              );
+              assistantMessage = result.response.text();
+            }
+
+            if (assistantMessage) {
+              metrics.recordAiCall({
+                agentId,
+                provider: 'gemini',
+                model: geminiModelName,
+                success: true,
+                durationMs: Date.now() - startTime,
+              });
+              console.log(`[AI Engine] Éxito con Gemini (${geminiModelName}) en ${Date.now() - startTime}ms`);
+              break;
+            }
+          } catch (geminiErr: any) {
+            console.warn(`[AI Engine] Gemini ${geminiModelName} error:`, geminiErr?.message || geminiErr);
           }
-        } catch (geminiErr: any) {
-          console.warn(`[AI Engine] Gemini ${geminiModelName} error:`, geminiErr?.message || geminiErr);
         }
       }
     }

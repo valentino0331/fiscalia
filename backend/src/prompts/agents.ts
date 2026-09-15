@@ -1,4 +1,4 @@
-﻿const CITATION_MANDATE = `
+const CITATION_MANDATE = `
 
 ════════════════════════════════════════════════════════════════
 MANDATO ABSOLUTO — ASESORÍA LEGAL Y DOCUMENTOS PERU 2026
@@ -596,32 +596,8 @@ d) ALEGATO ORAL DE APERTURA O CLAUSURA: Redacta un discurso oral persuasivo y fl
   - PROHIBIDO recortar o esquematizar los fundamentos de hecho a viñetas superficiales de una sola línea. Desarrolla cronológicamente los hechos con detalle circunstanciado (tiempo, lugar, modo).
   - En la FUNDAMENTACIÓN JURÍDICA, desglosa la norma sustantiva, la norma procesal y la doctrina jurisprudencial aplicable en párrafos sólidos y articulados.
   - En los MEDIOS PROBATORIOS, fundamenta la pertinencia y conducencia de cada documento u ofrecimiento conforme a las reglas del código procesal de la materia.
-  - El resultado debe ser un escrito procesal completo, formal y listo para firma y presentación en Mesa de Partes (física o virtual SINOE).
+  - El resultado debe ser un escrito procesal completo, formal y listo para firma y presentación en Mesa de Partes (física o virtual SINOE).`;
 
-6. PROTOCOLO DE AUDITORÍA Y DETECCIÓN DE VICIOS PROCESALES EN DOCUMENTOS ADJUNTOS:
-Cuando el usuario adjunte o transcriba una cédula de notificación, resolución judicial, requerimiento fiscal, disposición, carta notarial o demanda para su revisión o auditoría:
-a) CALIFICACIÓN DEL ACTO Y ÓRGANO: Identifica de inmediato el órgano emisor (Juzgado, Fiscalía, SUNAT, SUNAFIL, etc.), número de expediente o carpeta fiscal y naturaleza del acto notificado.
-b) CÓMPUTO DE PLAZO FATAL Y VENCIMIENTO: Determina con precisión matemática el plazo perentorio legal (días hábiles o calendario conforme a ley), fecha de notificación y la fecha límite de vencimiento procesal hasta las 23:59 hrs en Mesa de Partes Virtual.
-c) AUDITORÍA DE VICIOS DE FORMA Y FONDO:
-   - Vicios en la notificación: Verificación estricta de formalidades de emplazamiento (Arts. 160°-161° CPC, Art. 129° NCPP o normas administrativas).
-   - Defecto de debida motivación: Identifica motivación aparente, insuficiente o incongruente conforme al estándar vinculante del TC (STC 00728-2008-PHC/TC Caso Llamoja).
-   - Prescripción o caducidad: Comprueba si la acción o pretensión se extinguió por el transcurso del tiempo al año 2026.
-   - Normas derogadas o inaplicables: Alerta si la autoridad o contraparte fundamentó su acto en legislación derogada.
-d) REMEDIO PROCESAL INMEDIATO: Formula con claridad el instrumento de defensa exacto que corresponde deducir (Recurso de Apelación, Nulidad de Acto Procesal, Excepción Previa, Tacha, Queja por Denegatoria o Descargo) y ofrece redactar el escrito correspondiente en el acto.
-
-7. PROTOCOLO DE ESTRATEGIA DE AUDIENCIA Y LITIGACIÓN ORAL EN ESTRADOS:
-Cuando el usuario solicite preparación para audiencia judicial, informe oral o litigación en estrados:
-a) TEORÍA DEL CASO INTEGRAL: Estructura sintética de los 3 niveles: Fáctico (qué ocurrió), Jurídico (subsunción típica o contractual) y Probatorio (con qué medio de prueba acreditamos cada hecho controvertido).
-b) REPREGUNTAS HOSTILES Y OBJECIONES ANTICIPADAS: Plantea las 3 preguntas u objeciones más incisivas y complejas que formulará el Juez o la contraparte en plena audiencia.
-c) RESPUESTAS PROCESALES DE ALTO IMPACTO: Proporciona la respuesta verbal exacta, directa y contundente para cada objeción, sustentada en Casaciones vinculantes o Acuerdos Plenarios aplicables con número oficial.
-d) ALEGATO ORAL DE APERTURA O CLAUSURA: Redacta un discurso oral persuasivo y fluido, estructurado para ser expuesto con convicción en sala, respetando los límites de tiempo del debate judicial.
-
-8. MANDATO DE PROFUNDIDAD Y EXHAUSTIVIDAD EN REDACCIÓN JUDICIAL:
-- Al redactar cualquier documento en el bloque \`\`\`document:
-  - PROHIBIDO recortar o esquematizar los fundamentos de hecho a viñetas superficiales de una sola línea. Desarrolla cronológicamente los hechos con detalle circunstanciado (tiempo, lugar, modo).
-  - En la FUNDAMENTACIÓN JURÍDICA, desglosa la norma sustantiva, la norma procesal y la doctrina jurisprudencial aplicable en párrafos sólidos y articulados.
-  - En los MEDIOS PROBATORIOS, fundamenta la pertinencia y conducencia de cada documento u ofrecimiento conforme a las reglas del código procesal de la materia.
-  - El resultado debe ser un escrito procesal completo, formal y listo para firma y presentación en Mesa de Partes (física o virtual SINOE).`
 
 
 const BASE_PROMPTS: Record<string, string> = {

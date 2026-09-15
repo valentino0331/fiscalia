@@ -143,6 +143,14 @@ initNewTables()
 
 const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
+  const groqK = Boolean(process.env.GROQ_API_KEY);
+  const oaiK = Boolean(process.env.OPENAI_API_KEY);
+  const dsK = Boolean(process.env.DEEPSEEK_API_KEY);
+  const anthK = Boolean(process.env.ANTHROPIC_API_KEY);
+  const orK = Boolean(process.env.OPENROUTER_API_KEY);
+  const gemK = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+  const gemCount = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').split(',').filter(Boolean).length;
+  console.log(`[AI Engine] Proveedores configurados: Groq=${groqK}, OpenAI=${oaiK}, DeepSeek=${dsK}, Anthropic=${anthK}, OpenRouter=${orK}, Gemini=${gemK} (${gemCount} clave/s)`);
   startKeepAlive();
 });
 
