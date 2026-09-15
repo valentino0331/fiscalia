@@ -57,9 +57,13 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
     label: 'Corporativo',
     keywords: [
       'corporativo', 'derecho corporativo', 'societario', 'derecho societario', 'problema societario',
-      'abogado corporativo', 'sociedad anonima', 'sac', 'srl', 'accionistas', 'fusiones y adquisiciones', 'm&a',
-      'compliance', 'due diligence', 'junta general de accionistas', 'pacto de socios',
+      'abogado corporativo', 'sociedad anonima', 'sac', 'srl', 'eirl', 'sacs', 'accionistas', 'fusiones y adquisiciones', 'm&a',
+      'compliance', 'due diligence', 'junta general de accionistas', 'pacto de socios', 'pacto de accionistas',
       'drag along', 'tag along', 'ley general de sociedades', 'ley 30424', 'reorganizacion societaria',
+      'fusion por absorcion', 'escision', 'transformacion societaria', 'spa', 'sha', 'loi', 'term sheet',
+      'sigm', 'garantias mobiliarias', 'ley 31112', 'control previo de concentraciones', 'splaft', 'ley 27693',
+      'insolvencia', 'reestructuracion patrimonial', 'concursal', 'indecopi concursal', 'pco', 'pcp',
+      'joint venture', 'asociacion en participacion', 'disolucion y liquidacion'
     ],
   },
   rodrigo: {
@@ -107,10 +111,12 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'abogado administrativo', 'licitacion publica', 'contrataciones del estado', 'oece', 'osce', 'ley 32069',
       'tribunal de contrataciones publicas', 'tcp', 'procedimiento administrativo sancionador',
       'pas administrativo', 'recurso de reconsideracion', 'recurso de apelacion administrativa',
-      'tupa', 'silencio administrativo', 'proceso contencioso administrativo', 'ley 27444',
+      'tupa', 'silencio administrativo', 'proceso contencioso administrativo', 'ley 27444', 'ds 006-2026-jus',
       'reconsideracion', 'apelacion administrativa', 'caducidad administrativa',
       'prescripcion administrativa', 'sancionador', 'medida cautelar administrativa',
-      'acto administrativo', 'resolucion directoral', 'resolucion de alcaldia', 'recurso de revision'
+      'acto administrativo', 'resolucion directoral', 'resolucion de alcaldia', 'recurso de revision',
+      'buena pro', 'pladicop', 'jprd', 'regaju', 'rnp', 'ampliacion de plazo contractual', 'adicional de obra',
+      'penalidades contractuales', 'resolucion de contrato'
     ],
   },
 };
@@ -191,6 +197,7 @@ const EXPLICIT_BRANCH_TRIGGERS: Array<{
       'problema administrativo', 'derecho administrativo', 'tema administrativo',
       'caso administrativo', 'abogado administrativo', 'contratacion publica', 'oece',
       'licitacion publica', 'procedimiento administrativo sancionador', 'silencio administrativo',
+      'buena pro', 'tribunal de contrataciones publicas', 'tcp', 'pladicop',
     ],
   },
   {
@@ -200,7 +207,8 @@ const EXPLICIT_BRANCH_TRIGGERS: Array<{
     triggers: [
       'problema corporativo', 'derecho corporativo', 'tema corporativo', 'caso corporativo',
       'abogado corporativo', 'derecho societario', 'tema societario', 'problema societario',
-      'junta de accionistas', 'pacto de socios', 'compliance corporativo',
+      'junta de accionistas', 'pacto de socios', 'compliance corporativo', 'pacto de accionistas',
+      'fusiones y adquisiciones', 'm&a', 'insolvencia empresarial', 'reestructuracion patrimonial',
     ],
   },
   {
