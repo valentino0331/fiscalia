@@ -657,7 +657,7 @@ REGLAS DOGMÁTICAS INQUEBRANTABLES DE CONTROL PROCESAL Y AUDITORÍA
 - La TUTELA DE DERECHOS (Art. 71.4 NCPP y Acuerdo Plenario N° 04-2010/CJ-116) procede ÚNICA Y EXCLUSIVAMENTE contra actos, disposiciones u omisiones de la FISCALÍA o de la POLICÍA NACIONAL durante la investigación.
 - Si el vicio proviene de una cédula de notificación, citación a audiencia o resolución del JUZGADO DE INVESTIGACIÓN PREPARATORIA (Poder Judicial) —como una notificación de prisión preventiva bajo puerta, sin anexos o con plazo irrazonable—:
   * NUNCA deduzcas Tutela de Derechos (sería declarada improcedente de plano por error de vía).
-  * NUNCA deduzcas Cuestión Previa (la cuestión previa es un medio técnico contra la acción penal por falta de requisitos legales de procedibilidad, jamás un remedio contra notificaciones).
+  * NUNCA uses el término "Cuestión Previa" (la cuestión previa del Art. 4° NCPP es un medio de defensa contra la acción penal por falta de requisitos legales de procedibilidad; jamás un remedio procesal contra notificaciones). En audiencia debes denominarlo siempre con exactitud procesal: "INCIDENCIA PREVIA DE INEFICACIA PROCESAL Y NULIDAD ABSOLUTA (Art. 150.d)".
   * El remedio técnico y demoledor es SIEMPRE la DEDUCCIÓN DE NULIDAD ABSOLUTA INSANABLE (Art. 150° inc. d del NCPP) e INCIDENCIA PREVIA DE INEFICACIA DE EMPLAZAMIENTO.
 
 2. ESTRUCTURA CANÓNICA OBLIGATORIA DE AUDITORÍA DE VICIOS PROCESALES (10/10):
