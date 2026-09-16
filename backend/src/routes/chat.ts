@@ -672,7 +672,90 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 2. PRIORIDAD 2: OpenAI (Alta disponibilidad y concurrencia masiva)
+    // 2. PRIORIDAD 2: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Máxima velocidad y confiabilidad)
+    // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
+    if (!assistantMessage && openrouterKey) {
+      console.log('[AI Engine] Evaluando proveedor OpenRouter (Principal)...');
+      const candidateModels = [
+        process.env.OPENROUTER_MODEL,
+        'meta-llama/llama-3.3-70b-instruct',
+        'deepseek/deepseek-chat',
+        'qwen/qwen-2.5-72b-instruct',
+      ].filter(Boolean) as string[];
+
+      for (const openrouterModel of candidateModels) {
+        if (assistantMessage) break;
+        try {
+          console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
+              'X-Title': 'Bufete Fiscalia IA',
+            },
+            body: JSON.stringify({
+              model: openrouterModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+              stream: isStream,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (orRes.ok) {
+            if (isStream) {
+              const streamedText = await streamOpenAICompatible(orRes, sendStreamChunk, controller.signal);
+              if (streamedText) {
+                assistantMessage = streamedText;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openrouter',
+                  model: openrouterModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con OpenRouter Stream (${openrouterModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            } else {
+              const data: any = await orRes.json();
+              const textContent = data.choices?.[0]?.message?.content || '';
+              if (textContent) {
+                assistantMessage = textContent;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openrouter',
+                  model: openrouterModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con OpenRouter (${openrouterModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            }
+          } else {
+            const errData = await orRes.text().catch(() => '');
+            console.warn(`[AI Engine] OpenRouter error on ${openrouterModel} (${orRes.status}):`, errData);
+            if (orRes.status === 402 || orRes.status === 401) {
+              console.warn('[AI Engine] OpenRouter sin saldo o no autorizado (402/401). Pasando al siguiente proveedor.');
+              break;
+            }
+          }
+        } catch (orErr: any) {
+          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 3. PRIORIDAD 3: OpenAI (Alta disponibilidad y concurrencia masiva)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openaiKey) {
@@ -1033,89 +1116,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 6. PRIORIDAD 6: OpenRouter Fallback (Con corte inmediato ante falta de créditos)
-    // ─────────────────────────────────────────────────────────────
-    if (abortIfStreamCorrupted()) return;
-    if (!assistantMessage && openrouterKey) {
-      console.log('[AI Engine] Evaluando proveedor OpenRouter (Fallback)...');
-      const candidateModels = [
-        process.env.OPENROUTER_MODEL,
-        'meta-llama/llama-3.3-70b-instruct',
-        'deepseek/deepseek-chat',
-        'qwen/qwen-2.5-72b-instruct',
-      ].filter(Boolean) as string[];
 
-      for (const openrouterModel of candidateModels) {
-        if (assistantMessage) break;
-        try {
-          console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
-
-          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openrouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
-              'X-Title': 'Bufete Fiscalia IA',
-            },
-            body: JSON.stringify({
-              model: openrouterModel,
-              messages: formattedMessages,
-              temperature: 0.2,
-              stream: isStream,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (orRes.ok) {
-            if (isStream) {
-              const streamedText = await streamOpenAICompatible(orRes, sendStreamChunk, controller.signal);
-              if (streamedText) {
-                assistantMessage = streamedText;
-                metrics.recordAiCall({
-                  agentId,
-                  provider: 'openrouter',
-                  model: openrouterModel,
-                  success: true,
-                  durationMs: Date.now() - startTime,
-                });
-                console.log(`[AI Engine] Éxito con OpenRouter Stream (${openrouterModel}) en ${Date.now() - startTime}ms`);
-                break;
-              }
-            } else {
-              const data: any = await orRes.json();
-              const textContent = data.choices?.[0]?.message?.content || '';
-              if (textContent) {
-                assistantMessage = textContent;
-                metrics.recordAiCall({
-                  agentId,
-                  provider: 'openrouter',
-                  model: openrouterModel,
-                  success: true,
-                  durationMs: Date.now() - startTime,
-                });
-                console.log(`[AI Engine] Éxito con OpenRouter (${openrouterModel}) en ${Date.now() - startTime}ms`);
-                break;
-              }
-            }
-          } else {
-            const errData = await orRes.text().catch(() => '');
-            console.warn(`[AI Engine] OpenRouter error on ${openrouterModel} (${orRes.status}):`, errData);
-            // Si OpenRouter devuelve 402 (sin saldo) o 401 (clave no válida), no reintentar otros modelos para evitar retardos
-            if (orRes.status === 402 || orRes.status === 401) {
-              console.warn('[AI Engine] OpenRouter sin saldo o no autorizado (402/401). Abortando reintentos de OpenRouter.');
-              break;
-            }
-          }
-        } catch (orErr: any) {
-          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
-        }
-      }
-    }
 
     // ─────────────────────────────────────────────────────────────
     // 7. RESPALDO DE EMERGENCIA GARANTIZADO
