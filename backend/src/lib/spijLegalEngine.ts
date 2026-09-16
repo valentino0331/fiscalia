@@ -144,21 +144,41 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Clave para oponerse a procesos inmediatos y solicitar nulidades de actas policiales.',
   },
   {
+    code: 'STC Exp. N° 01558-2015-PHC/TC & 02098-2010-PA/TC',
+    specialistId: 'sebastian',
+    court: 'Tribunal Constitucional del Perú',
+    title: 'Contenido constitucional del derecho de defensa: tiempo y medios adecuados para preparar la defensa técnica',
+    category: 'Derecho Procesal Penal / Constitucional',
+    keywords: [
+      'tiempo razonable', 'medios adecuados', 'notificacion de prision preventiva',
+      'vicio de notificacion', 'anexos de prision preventiva', 'bajo puerta',
+      'nulidad absoluta', 'art 150', 'art 150.d', 'suspension de audiencia',
+      'indefension material', 'igualdad de armas', 'plazo razonable'
+    ],
+    keyPrinciples: [
+      'El derecho de defensa exige de modo insoslayable contar con el tiempo y los medios necesarios para una defensa eficaz y en igualdad de armas.',
+      'El plazo de 48 horas del Art. 271.1 NCPP es un límite temporal máximo para el juzgado, no una habilitación para recortar abusivamente el tiempo de la defensa.',
+      'Notificar un requerimiento de prisión preventiva sin anexos o al cierre de la jornada judicial para el lunes temprano genera indefensión material y Nulidad Absoluta Insanable (Art. 150° inc. d NCPP).',
+    ],
+    bindingGrounds: 'Doctrina jurisprudencial constitucional vinculante sobre el contenido esencial del derecho a no quedar en estado de indefensión técnica.',
+    legalApplication: 'Obligatorio al deducir Nulidad de Notificación, solicitar reprogramación de audiencias de prisión preventiva y fundamentar Hábeas Corpus por indefensión.',
+  },
+  {
     code: 'Acuerdo Plenario N° 04-2010/CJ-116',
     specialistId: 'sebastian',
     court: 'VI Pleno Jurisdiccional Penal - Corte Suprema',
     title: 'Audiencia de Tutela de Derechos (Art. 71 NCPP)',
     category: 'Procesal Penal',
     keywords: [
-      'tutela de derechos', 'art 71', 'art 71.4', 'vulneracion de derechos', 'defensa tecnica',
-      'imputacion necesaria', 'declaracion sin abogado'
+      'tutela de derechos', 'art 71', 'art 71.4', 'vulneracion fiscal',
+      'imputacion necesaria fiscal', 'declaracion sin abogado ante policia'
     ],
     keyPrinciples: [
-      'Vía residual y protectora exclusiva de los derechos fundamentales reconocidos en el Art. 71 NCPP.',
-      'Permite subsanar vulneraciones al derecho de defensa, imputación necesaria y legalidad de actos.',
+      'Vía residual y protectora exclusiva frente a vulneraciones u omisiones cometidas por el MINISTERIO PÚBLICO o la POLICÍA NACIONAL.',
+      'INAPLICABILIDAD CONTRA ACTOS DEL JUEZ: NO procede contra actos, cédulas de notificación o resoluciones del Juzgado de Investigación Preparatoria.',
     ],
-    bindingGrounds: 'Fundamentos Jurídicos 11 al 17 (supuestos habilitantes de la tutela de derechos).',
-    legalApplication: 'Básico al formular solicitudes de Tutela de Derechos ante el Juez de Investigación Preparatoria.',
+    bindingGrounds: 'Fundamentos Jurídicos 11 al 17 (ámbito residual exclusivo de la tutela frente a afectaciones de la Fiscalía).',
+    legalApplication: 'Aplicable exclusivamente ante vulneraciones fiscales o policiales; NUNCA deducir tutela de derechos contra trámites o notificaciones judiciales.',
   },
 
   // ── VALENTINA: LABORAL ──
@@ -1044,10 +1064,13 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
   }
 
   if (isAudit) {
-    sections.push('► DIRECTIVA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES:');
-    sections.push('- Control Constitucional de Motivación: Aplica la STC 00728-2008-PHC/TC (Caso Llamoja). Revisa si existe motivación aparente, insuficiente o incongruente.');
-    sections.push('- Control de Plazos y Notificación: Verifica el cómputo de plazos hábiles judiciales al 2026 y la validez formal del emplazamiento procesal.');
-    sections.push('- Propón de inmediato el remedio procesal exacto: Nulidad de acto procesal, tacha, excepción previa o recurso impugnatorio.');
+    sections.push('► DIRECTIVA CANÓNICA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES (10/10):');
+    sections.push('- ESTRUCTURA OBLIGATORIA DE RESPUESTA EN 3 PARTES:');
+    sections.push('  I. DIAGNÓSTICO DE VICIOS PROCESALES Y VULNERACIÓN CONSTITUCIONAL: Califica la gravedad de los vicios (ej. Nulidad Absoluta Insanable bajo el Art. 150° inc. d del NCPP), omisión de anexos (violación al derecho de contradicción e igualdad de armas), notificación irregular bajo puerta y vulneración al plazo razonable de preparación de la defensa.');
+    sections.push('  II. CÓMPUTO DE PLAZO Y SUSTENTO JURISPRUDENCIAL VINCULANTE: Detalla el cómputo del plazo de vencimiento procesal, los artículos exactos del código procesal aplicable, el Acuerdo Plenario rector (ej. AP 01-2019/CIJ-116 FJ 24-25 para prisión preventiva) y la doctrina constitucional del TC (STC Exp. 01558-2015-PHC/TC y 02098-2010-PA/TC sobre medios y tiempo razonable).');
+    sections.push('  III. PLAN DE ACCIÓN Y REMEDIOS PROCESALES INMEDIATOS: Diseña un plan táctico de 3 pasos (Paso 1: Vía SINOE a primera hora con escrito de Nulidad Absoluta y Reprogramación; Paso 2: En Audiencia, Incidencia oral previa de ineficacia antes de que la contraparte o el fiscal exponga; Paso 3: Táctica subsidiaria con Recurso de Reposición in situ y reserva de Hábeas Corpus).');
+    sections.push('- DISTINCIÓN DOGMÁTICA CRÍTICA:');
+    sections.push('  * Si el vicio proviene de una cédula, notificación, citación o resolución del JUZGADO (Poder Judicial), el remedio es SIEMPRE NULIDAD PROCESAL ABSOLUTA (Art. 150.d NCPP) o Incidencia de Ineficacia de Emplazamiento. NUNCA deduzcas Tutela de Derechos (la Tutela es residual exclusiva contra la Fiscalía o Policía bajo el AP 04-2010) ni Cuestión Previa (la cuestión previa es un medio de defensa contra la acción penal por requisitos de procedibilidad).');
   }
 
   if (isHearing) {
