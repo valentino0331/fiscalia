@@ -394,8 +394,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }, 3000);
   }
 
-  req.on('close', () => {
-    isClientDisconnected = true;
+  res.on('close', () => {
+    if (!res.writableEnded) {
+      isClientDisconnected = true;
+    }
     if (heartbeatTimer) {
       clearInterval(heartbeatTimer);
       heartbeatTimer = null;
@@ -407,23 +409,19 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
   let transferTo: string | undefined;
 
   const sendStreamChunk = (chunk: string) => {
-    if (isStream && chunk && !isClientDisconnected && !res.writableEnded) {
+    if (isStream && chunk && !res.writableEnded) {
       hasStartedStreaming = true;
-      res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
-      (res as any).flush?.();
+      try {
+        res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
+        (res as any).flush?.();
+      } catch {
+        isClientDisconnected = true;
+      }
     }
   };
 
-
   const abortIfStreamCorrupted = (): boolean => {
-    if (isClientDisconnected) return true;
-    if (isStream && hasStartedStreaming && !assistantMessage) {
-      console.warn('[AI Engine] Streaming SSE interrumpido a mitad de camino. Finalizando stream para evitar respuestas mezcladas.');
-      res.write(`data: ${JSON.stringify({ error: 'La respuesta fue interrumpida temporalmente. Por favor reintente su consulta.' })}\n\n`);
-      if (heartbeatTimer) clearInterval(heartbeatTimer);
-      res.end();
-      return true;
-    }
+    if (res.writableEnded || isClientDisconnected) return true;
     return false;
   };
 
