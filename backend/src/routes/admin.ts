@@ -474,6 +474,35 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
     }
   }
 
-  return res.json(result);
+adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, res) => {
+  const t0 = Date.now();
+  const log: string[] = [];
+  const add = (msg: string) => log.push(`[+${Date.now() - t0}ms] ${msg}`);
+
+  add('Start simulation');
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const firstKey = (geminiKey || '').split(',')[0].trim();
+  add(`geminiKey present: ${Boolean(firstKey)}`);
+
+  try {
+    add('Calling Google Generative Language REST gemini-3.6-flash...');
+    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${firstKey}`;
+    const gemRes = await fetch(geminiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: 'hola' }] }]
+      })
+    });
+    add(`Google REST HTTP Status: ${gemRes.status}`);
+    const data: any = await gemRes.json();
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    add(`Google reply: ${reply.slice(0, 100)}`);
+    return res.json({ log, reply, data });
+  } catch (err: any) {
+    add(`Error: ${err.message}`);
+    return res.status(500).json({ log, error: err.message });
+  }
 });
+
 
