@@ -543,6 +543,84 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       sendStreamChunk(assistantMessage);
     }
 
+    // Intercepción instantánea de saludos conversacionales (< 30ms de latencia, 0% costo)
+    const agentProfileData: Record<string, { name: string; title: string; specialty: string; intro: string }> = {
+      valentina: {
+        name: 'Dra. Valentina',
+        title: 'Especialista en Derecho Laboral y Seguridad Social',
+        specialty: 'despidos arbitrarios, liquidación de beneficios sociales, hostigamiento laboral, accidentes de trabajo y negociación de convenios colectivos',
+        intro: '¡Hola! Es un gusto saludarle. Soy la **Dra. Valentina**, abogada especialista en **Derecho Laboral y Seguridad Social** en el Bufete Hardman.',
+      },
+      sebastian: {
+        name: 'Dr. Sebastián',
+        title: 'Especialista en Derecho Penal y Procesal Penal',
+        specialty: 'defensa penal técnica, denuncias ante la Fiscalía, prisiones preventivas, hábeas corpus y delitos económicos',
+        intro: '¡Hola! Le doy la bienvenida. Soy el **Dr. Sebastián**, especialista en **Derecho Penal y Defensa Procesal** en el Bufete Hardman.',
+      },
+      diego: {
+        name: 'Dr. Diego',
+        title: 'Especialista en Derecho Civil, Obligaciones y Contratos',
+        specialty: 'contratos civiles y comerciales, procesos de desalojo, cobro de acreencias, prescripción adquisitiva e indemnizaciones por daños y perjuicios',
+        intro: '¡Hola! Un cordial saludo. Soy el **Dr. Diego**, especialista en **Derecho Civil, Obligaciones y Contratos** en el Bufete Hardman.',
+      },
+      adriana: {
+        name: 'Dra. Adriana',
+        title: 'Especialista en Derecho Corporativo y Societario',
+        specialty: 'constitución de empresas, acuerdos de accionistas, fusiones y adquisiciones, gobierno corporativo y contratos mercantiles',
+        intro: '¡Hola! Bienvenida/o a mi despacho. Soy la **Dra. Adriana**, especialista en **Derecho Corporativo y Societario** en el Bufete Hardman.',
+      },
+      rodrigo: {
+        name: 'Dr. Rodrigo',
+        title: 'Especialista en Derecho Minero, Ambiental y Recursos Naturales',
+        specialty: 'concesiones mineras, permisos ambientales (EIA, DIA), servidumbres mineras y procedimientos sancionadores ante OEFA y OSINERGMIN',
+        intro: '¡Hola! Un saludo atento. Soy el **Dr. Rodrigo**, especialista en **Derecho Minero, Ambiental y Recursos Naturales** en el Bufete Hardman.',
+      },
+      camila: {
+        name: 'Dra. Camila',
+        title: 'Especialista en Derecho de Familia y Sucesiones',
+        specialty: 'pensiones de alimentos, tenencia y régimen de visitas, divorcios (notarial, judicial o municipal), sucesiones intestadas y división y partición de bienes',
+        intro: '¡Hola! Le extiendo un cálido saludo. Soy la **Dra. Camila**, especialista en **Derecho de Familia y Sucesiones** en el Bufete Hardman.',
+      },
+      fernanda: {
+        name: 'Dra. Fernanda',
+        title: 'Especialista en Derecho Tributario y Aduanero',
+        specialty: 'reclamaciones y apelaciones ante SUNAT y Tribunal Fiscal, fiscalizaciones tributarias, levantamiento de embargos y planeamiento fiscal legal',
+        intro: '¡Hola! Qué tal. Soy la **Dra. Fernanda**, abogada especialista en **Derecho Tributario y Fiscalidad** en el Bufete Hardman.',
+      },
+      marco: {
+        name: 'Dr. Marco',
+        title: 'Especialista en Derecho Administrativo y Contrataciones del Estado',
+        specialty: 'licitaciones y contratos con el Estado (OSCE), recursos de apelación ante el Tribunal de Contrataciones, procedimientos administrativos sancionadores y reclamos ante entidades públicas',
+        intro: '¡Hola! Le doy una cordial bienvenida a mi despacho. Soy el **Dr. Marco**, especialista en **Derecho Administrativo y Contrataciones del Estado** en el Bufete Hardman.',
+      },
+    };
+
+    const isGreetingRegex = /^(?:hola(?:[\s,]+(?:doctor[a]?|abogad[oa]|buenos\s+d[ií]as|buenas\s+tardes|buenas\s+noches|amig[oa]|buenas))?|buenos\s+d[ií]as|buenas\s+tardes|buenas\s+noches|buenas|saludos|hello|hi)[\s!.?]*$/i;
+
+    if (!assistantMessage && isGreetingRegex.test(latestUserMessage.trim())) {
+      const prof = agentProfileData[agentId] || {
+        name: 'Asesor Legal',
+        title: 'Especialista en Derecho Peruano',
+        specialty: 'asesoría jurídica estratégica y redacción legal',
+        intro: '¡Hola! Le doy la bienvenida a mi despacho legal en el Bufete Hardman.',
+      };
+      assistantMessage = `${prof.intro}\n\nMe encuentro a su completa disposición para evaluar su caso y brindarle asesoría jurídica estratégica conforme a la normativa peruana vigente al 2026.\n\nEn mi especialidad atiendo materias como: **${prof.specialty}**.\n\n¿En qué asunto o situación jurídica le puedo asesorar el día de hoy?`;
+
+      if (isStream) {
+        const words = assistantMessage.split(/(\s+)/);
+        let buf = '';
+        for (const w of words) {
+          buf += w;
+          if (buf.length >= 25 || w.includes('\n')) {
+            sendStreamChunk(buf);
+            buf = '';
+            await new Promise((r) => setTimeout(r, 12));
+          }
+        }
+        if (buf) sendStreamChunk(buf);
+      }
+    }
+
     // Inyección inteligente de datos del estudio y abogado patrocinante (membrete)
     let studioBlock = '';
     if (letterhead && typeof letterhead === 'object') {
@@ -748,11 +826,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       console.log('[AI Engine] Evaluando proveedor Google Gemini (Prioridad 2)...');
       const rawGeminiCandidates = [
         'gemini-3.6-flash',
-        process.env.GEMINI_MODEL,
-        'gemini-3.5-flash',
         'gemini-3.1-flash-lite',
-        'gemini-flash-latest',
-      ].filter(Boolean) as string[];
+      ];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
       const rawHistory = recentMessages.slice(0, -1);
@@ -791,7 +866,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
           try {
             console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName})...`);
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 7000);
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
 
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${currentGeminiKey}`;
             const geminiBody: any = {

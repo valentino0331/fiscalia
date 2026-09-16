@@ -431,7 +431,7 @@ function sendPushNotification(agentName: string) {
     try {
       new Notification(`${agentName} te respondió`, {
         body: 'Tu consulta jurídica está lista. Haz clic para verla.',
-        icon: '/icon-192.png',
+        icon: '/hardman-icon.svg',
         tag: 'hardman-response',
       })
     } catch { /* notification not supported */ }
