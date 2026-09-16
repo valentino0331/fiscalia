@@ -316,6 +316,54 @@ async function streamOpenAICompatible(
   return fullText;
 }
 
+// Helper to stream chunks from native Google Gemini SSE stream
+async function streamGeminiNative(
+  response: any,
+  onChunk: (chunk: string) => void,
+  signal?: AbortSignal
+): Promise<string> {
+  let fullText = '';
+  const reader = response.body?.getReader();
+  if (!reader) return fullText;
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  try {
+    while (true) {
+      if (signal?.aborted) break;
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed || !trimmed.startsWith('data:')) continue;
+        const dataStr = trimmed.replace(/^data:\s*/, '');
+        try {
+          const json = JSON.parse(dataStr);
+          const parts = json.candidates?.[0]?.content?.parts;
+          if (Array.isArray(parts)) {
+            for (const part of parts) {
+              if (part?.text) {
+                fullText += part.text;
+                onChunk(part.text);
+              }
+            }
+          }
+        } catch {
+          // ignore incomplete json chunk
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock?.();
+  }
+  return fullText;
+}
+
 chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (req: any, res) => {
   const startTime = Date.now();
   const isStream = req.body?.stream === true || req.headers?.accept?.includes('text/event-stream');
@@ -991,12 +1039,11 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     if (!assistantMessage && geminiKey) {
       console.log('[AI Engine] Evaluando proveedor Google Gemini...');
       const rawGeminiCandidates = [
-        process.env.GEMINI_MODEL,
-        'gemini-2.0-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-flash',
         'gemini-3.6-flash',
-        'gemini-1.5-pro-latest',
+        process.env.GEMINI_MODEL,
+        'gemini-3.5-flash',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-latest',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
@@ -1022,7 +1069,6 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         validHistory.pop();
       }
 
-      // Soporte multi-clave (separadas por coma en GEMINI_API_KEY) para resiliencia total ante cuotas 429
       const geminiKeys = (geminiKey || '').split(',').map((k: string) => k.trim()).filter(Boolean);
 
       for (const currentGeminiKey of geminiKeys) {
@@ -1035,33 +1081,38 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
             break;
           }
 
-          let modelNotFound = false;
-
-          // 5.1 Conexión vía Endpoint OpenAI-Compatible de Google
+          // 5.1 Conexión Nativa Ultra-Rápida con Google Generative Language API
           try {
-            console.log(`[AI Engine] Intentando Gemini REST (${geminiModelName})...`);
+            console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName})...`);
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-            const geminiRestRes = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:${isStream ? 'streamGenerateContent?alt=sse&' : 'generateContent?'}key=${currentGeminiKey}`;
+            const geminiRes = await fetch(geminiUrl, {
               method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${currentGeminiKey}`,
-                'Content-Type': 'application/json',
-              },
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                model: geminiModelName,
-                messages: formattedMessages,
-                temperature: 0.2,
-                stream: isStream,
+                system_instruction: {
+                  parts: [{ text: effectiveSystemPrompt }]
+                },
+                contents: [
+                  ...validHistory,
+                  {
+                    role: 'user',
+                    parts: [{ text: latestUserMessage }]
+                  }
+                ],
+                generationConfig: {
+                  temperature: 0.2
+                }
               }),
               signal: controller.signal,
             });
             clearTimeout(timeoutId);
 
-            if (geminiRestRes.ok) {
+            if (geminiRes.ok) {
               if (isStream) {
-                const streamedText = await streamOpenAICompatible(geminiRestRes, sendStreamChunk, controller.signal);
+                const streamedText = await streamGeminiNative(geminiRes, sendStreamChunk, controller.signal);
                 if (streamedText) {
                   assistantMessage = streamedText;
                   metrics.recordAiCall({
@@ -1071,12 +1122,12 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
                     success: true,
                     durationMs: Date.now() - startTime,
                   });
-                  console.log(`[AI Engine] Éxito con Gemini REST Stream (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  console.log(`[AI Engine] Éxito con Gemini Nativo Stream (${geminiModelName}) en ${Date.now() - startTime}ms`);
                   break;
                 }
               } else {
-                const data: any = await geminiRestRes.json();
-                const reply = data.choices?.[0]?.message?.content || '';
+                const data: any = await geminiRes.json();
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
                 if (reply) {
                   assistantMessage = reply;
                   metrics.recordAiCall({
@@ -1086,68 +1137,16 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
                     success: true,
                     durationMs: Date.now() - startTime,
                   });
-                  console.log(`[AI Engine] Éxito con Gemini REST (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  console.log(`[AI Engine] Éxito con Gemini Nativo (${geminiModelName}) en ${Date.now() - startTime}ms`);
                   break;
                 }
               }
             } else {
-              const errTxt = await geminiRestRes.text().catch(() => '');
-              console.warn(`[AI Engine] Gemini REST no respondió 200 en ${geminiModelName} (${geminiRestRes.status}):`, errTxt);
-              if (geminiRestRes.status === 404) {
-                modelNotFound = true;
-              }
+              const errTxt = await geminiRes.text().catch(() => '');
+              console.warn(`[AI Engine] Gemini Nativo no respondió 200 en ${geminiModelName} (${geminiRes.status}):`, errTxt);
             }
           } catch (restErr: any) {
-            console.warn(`[AI Engine] Gemini REST fetch error (${geminiModelName}):`, restErr?.message || restErr);
-          }
-
-          // 5.2 Fallback de respaldo mediante SDK de GoogleGenerativeAI si el modelo no fue un 404 explícito
-          if (!assistantMessage && !modelNotFound && Date.now() - startTime <= MAX_AI_WAIT_MS) {
-            try {
-              console.log(`[AI Engine] Intentando Gemini SDK Fallback (${geminiModelName})...`);
-              const genAI = new GoogleGenerativeAI(currentGeminiKey);
-              const modelPlain = genAI.getGenerativeModel({
-                model: geminiModelName,
-                systemInstruction: effectiveSystemPrompt,
-              });
-              const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
-
-              if (isStream) {
-                const streamResult = await withTimeout(
-                  chat.sendMessageStream(latestUserMessage),
-                  3500,
-                  `Gemini Stream ${geminiModelName}`
-                );
-                for await (const chunk of streamResult.stream) {
-                  const chunkText = chunk.text();
-                  if (chunkText) {
-                    assistantMessage += chunkText;
-                    sendStreamChunk(chunkText);
-                  }
-                }
-              } else {
-                const result = await withTimeout(
-                  chat.sendMessage(latestUserMessage),
-                  3500,
-                  `Gemini ${geminiModelName}`
-                );
-                assistantMessage = result.response.text();
-              }
-
-              if (assistantMessage) {
-                metrics.recordAiCall({
-                  agentId,
-                  provider: 'gemini',
-                  model: geminiModelName,
-                  success: true,
-                  durationMs: Date.now() - startTime,
-                });
-                console.log(`[AI Engine] Éxito con Gemini SDK (${geminiModelName}) en ${Date.now() - startTime}ms`);
-                break;
-              }
-            } catch (geminiErr: any) {
-              console.warn(`[AI Engine] Gemini SDK ${geminiModelName} error:`, geminiErr?.message || geminiErr);
-            }
+            console.warn(`[AI Engine] Gemini Nativo fetch error (${geminiModelName}):`, restErr?.message || restErr);
           }
         }
       }

@@ -422,7 +422,7 @@ adminRouter.post('/users', requireAuth, requireAdmin, async (req: any, res) => {
   }
 });
 
-adminRouter.get('/test-ai', requireAuth, requireAdmin, async (_, res) => {
+adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => {
   const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
   const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
 
@@ -457,8 +457,8 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (_, res) => {
         result.gemini.raw = modelsData;
       }
 
-      // Test a quick 1-sentence prompt with the configured or default flash model
-      const candidateToTest = result.gemini.availableModels?.[0] || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      // Test a quick 1-sentence prompt with the specified or recommended model
+      const candidateToTest = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
       const testGen = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidateToTest}:generateContent?key=${firstKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
