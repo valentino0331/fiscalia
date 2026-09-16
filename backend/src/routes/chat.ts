@@ -740,9 +740,127 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 2. PRIORIDAD 2: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Máxima velocidad y confiabilidad)
+    // 2. PRIORIDAD 2: Google Gemini (gemini-3.6-flash Nativo Ultra Rápido)
     // ─────────────────────────────────────────────────────────────
-    const MAX_AI_WAIT_MS = 8000;
+    const MAX_AI_WAIT_MS = 14000;
+    if (abortIfStreamCorrupted()) return;
+    if (!assistantMessage && geminiKey) {
+      console.log('[AI Engine] Evaluando proveedor Google Gemini (Prioridad 2)...');
+      const rawGeminiCandidates = [
+        'gemini-3.6-flash',
+        process.env.GEMINI_MODEL,
+        'gemini-3.5-flash',
+        'gemini-3.1-flash-lite',
+        'gemini-flash-latest',
+      ].filter(Boolean) as string[];
+      const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
+
+      const rawHistory = recentMessages.slice(0, -1);
+      const validHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
+
+      for (const m of rawHistory) {
+        const content = typeof m.content === 'string' ? m.content.trim() : '';
+        if (!content) continue;
+        const role: 'user' | 'model' = m.role === 'assistant' ? 'model' : 'user';
+
+        if (validHistory.length === 0 && role === 'model') continue;
+
+        const prev = validHistory[validHistory.length - 1];
+        if (prev && prev.role === role) {
+          prev.parts[0].text += `\n\n${content}`;
+        } else {
+          validHistory.push({ role, parts: [{ text: content }] });
+        }
+      }
+
+      if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === 'user') {
+        validHistory.pop();
+      }
+
+      const geminiKeys = (geminiKey || '').split(',').map((k: string) => k.trim()).filter(Boolean);
+
+      for (const currentGeminiKey of geminiKeys) {
+        if (assistantMessage || Date.now() - startTime > MAX_AI_WAIT_MS) break;
+
+        for (const geminiModelName of geminiModelCandidates) {
+          if (assistantMessage || Date.now() - startTime > MAX_AI_WAIT_MS) {
+            console.warn(`[AI Engine] Tiempo límite alcanzado (${Date.now() - startTime}ms). Pasando al siguiente proveedor.`);
+            break;
+          }
+
+          try {
+            console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName})...`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:${isStream ? 'streamGenerateContent?alt=sse&' : 'generateContent?'}key=${currentGeminiKey}`;
+            const geminiRes = await fetch(geminiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                systemInstruction: {
+                  parts: [{ text: effectiveSystemPrompt }]
+                },
+                contents: [
+                  ...validHistory,
+                  {
+                    role: 'user',
+                    parts: [{ text: latestUserMessage }]
+                  }
+                ],
+                generationConfig: {
+                  temperature: 0.2
+                }
+              }),
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            if (geminiRes.ok) {
+              if (isStream) {
+                const streamedText = await streamGeminiNative(geminiRes, sendStreamChunk, controller.signal);
+                if (streamedText) {
+                  assistantMessage = streamedText;
+                  metrics.recordAiCall({
+                    agentId,
+                    provider: 'gemini',
+                    model: geminiModelName,
+                    success: true,
+                    durationMs: Date.now() - startTime,
+                  });
+                  console.log(`[AI Engine] Éxito con Gemini Nativo Stream (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  break;
+                }
+              } else {
+                const data: any = await geminiRes.json();
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                if (reply) {
+                  assistantMessage = reply;
+                  metrics.recordAiCall({
+                    agentId,
+                    provider: 'gemini',
+                    model: geminiModelName,
+                    success: true,
+                    durationMs: Date.now() - startTime,
+                  });
+                  console.log(`[AI Engine] Éxito con Gemini Nativo (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  break;
+                }
+              }
+            } else {
+              const errTxt = await geminiRes.text().catch(() => '');
+              console.warn(`[AI Engine] Gemini Nativo no respondió 200 en ${geminiModelName} (${geminiRes.status}):`, errTxt);
+            }
+          } catch (restErr: any) {
+            console.warn(`[AI Engine] Gemini Nativo fetch error (${geminiModelName}):`, restErr?.message || restErr);
+          }
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 3. PRIORIDAD 3: OpenRouter (Llama 3.3 70B & DeepSeek V3)
+    // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openrouterKey) {
       console.log('[AI Engine] Evaluando proveedor OpenRouter (Principal)...');
@@ -1032,124 +1150,6 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       }
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 5. PRIORIDAD 5: Google Gemini (High-Speed OpenAI-compatible REST + SDK Fallback)
-    // ─────────────────────────────────────────────────────────────
-    if (abortIfStreamCorrupted()) return;
-    if (!assistantMessage && geminiKey) {
-      console.log('[AI Engine] Evaluando proveedor Google Gemini...');
-      const rawGeminiCandidates = [
-        'gemini-3.6-flash',
-        process.env.GEMINI_MODEL,
-        'gemini-3.5-flash',
-        'gemini-3.1-flash-lite',
-        'gemini-flash-latest',
-      ].filter(Boolean) as string[];
-      const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
-
-      const rawHistory = recentMessages.slice(0, -1);
-      const validHistory: { role: 'user' | 'model'; parts: { text: string }[] }[] = [];
-
-      for (const m of rawHistory) {
-        const content = typeof m.content === 'string' ? m.content.trim() : '';
-        if (!content) continue;
-        const role: 'user' | 'model' = m.role === 'assistant' ? 'model' : 'user';
-
-        if (validHistory.length === 0 && role === 'model') continue;
-
-        const prev = validHistory[validHistory.length - 1];
-        if (prev && prev.role === role) {
-          prev.parts[0].text += `\n\n${content}`;
-        } else {
-          validHistory.push({ role, parts: [{ text: content }] });
-        }
-      }
-
-      if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === 'user') {
-        validHistory.pop();
-      }
-
-      const geminiKeys = (geminiKey || '').split(',').map((k: string) => k.trim()).filter(Boolean);
-
-      for (const currentGeminiKey of geminiKeys) {
-        if (assistantMessage || Date.now() - startTime > MAX_AI_WAIT_MS) break;
-
-        for (const geminiModelName of geminiModelCandidates) {
-          if (assistantMessage || Date.now() - startTime > MAX_AI_WAIT_MS) {
-            console.warn(`[AI Engine] Tiempo límite de espera global alcanzado (${Date.now() - startTime}ms). Activando respuesta legal inmediata.`);
-            break;
-          }
-
-          // 5.1 Conexión Nativa Ultra-Rápida con Google Generative Language API
-          try {
-            console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName})...`);
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:${isStream ? 'streamGenerateContent?alt=sse&' : 'generateContent?'}key=${currentGeminiKey}`;
-            const geminiRes = await fetch(geminiUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                systemInstruction: {
-                  parts: [{ text: effectiveSystemPrompt }]
-                },
-                contents: [
-                  ...validHistory,
-                  {
-                    role: 'user',
-                    parts: [{ text: latestUserMessage }]
-                  }
-                ],
-                generationConfig: {
-                  temperature: 0.2
-                }
-              }),
-              signal: controller.signal,
-            });
-            clearTimeout(timeoutId);
-
-            if (geminiRes.ok) {
-              if (isStream) {
-                const streamedText = await streamGeminiNative(geminiRes, sendStreamChunk, controller.signal);
-                if (streamedText) {
-                  assistantMessage = streamedText;
-                  metrics.recordAiCall({
-                    agentId,
-                    provider: 'gemini',
-                    model: geminiModelName,
-                    success: true,
-                    durationMs: Date.now() - startTime,
-                  });
-                  console.log(`[AI Engine] Éxito con Gemini Nativo Stream (${geminiModelName}) en ${Date.now() - startTime}ms`);
-                  break;
-                }
-              } else {
-                const data: any = await geminiRes.json();
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                if (reply) {
-                  assistantMessage = reply;
-                  metrics.recordAiCall({
-                    agentId,
-                    provider: 'gemini',
-                    model: geminiModelName,
-                    success: true,
-                    durationMs: Date.now() - startTime,
-                  });
-                  console.log(`[AI Engine] Éxito con Gemini Nativo (${geminiModelName}) en ${Date.now() - startTime}ms`);
-                  break;
-                }
-              }
-            } else {
-              const errTxt = await geminiRes.text().catch(() => '');
-              console.warn(`[AI Engine] Gemini Nativo no respondió 200 en ${geminiModelName} (${geminiRes.status}):`, errTxt);
-            }
-          } catch (restErr: any) {
-            console.warn(`[AI Engine] Gemini Nativo fetch error (${geminiModelName}):`, restErr?.message || restErr);
-          }
-        }
-      }
-    }
 
     // ─────────────────────────────────────────────────────────────
     // 7. RESPALDO DE EMERGENCIA GARANTIZADO (Latencia < 8.5s asegurada)
