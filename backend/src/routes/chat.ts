@@ -358,6 +358,23 @@ async function streamGeminiNative(
         }
       }
     }
+    if (buffer.trim() && buffer.trim().startsWith('data:')) {
+      const dataStr = buffer.trim().replace(/^data:\s*/, '');
+      try {
+        const json = JSON.parse(dataStr);
+        const parts = json.candidates?.[0]?.content?.parts;
+        if (Array.isArray(parts)) {
+          for (const part of parts) {
+            if (part?.text) {
+              fullText += part.text;
+              onChunk(part.text);
+            }
+          }
+        }
+      } catch {
+        // ignore incomplete json chunk
+      }
+    }
   } finally {
     reader.releaseLock?.();
   }
@@ -379,7 +396,6 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders?.();
     res.write(': stream-ready\n\n');
-    res.write(`data: ${JSON.stringify({ chunk: ' ' })}\n\n`);
     (res as any).flush?.();
 
     // Heartbeat cada 3 segundos para mantener vivo el socket a través de Cloudflare/Render
@@ -824,9 +840,13 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     if (!assistantMessage && geminiKey) {
       console.log('[AI Engine] Evaluando proveedor Google Gemini (Prioridad 2)...');
       const rawGeminiCandidates = [
+        process.env.GEMINI_MODEL,
         'gemini-3.6-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-latest',
         'gemini-3.1-flash-lite',
-      ];
+      ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
       const rawHistory = recentMessages.slice(0, -1);
@@ -863,11 +883,12 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
           }
 
           try {
-            console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName})...`);
+            console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName}) ${isStream ? '[STREAMING]' : '[SYNC]'}...`);
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 40000);
 
-            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${currentGeminiKey}`;
+            const geminiEndpoint = isStream ? 'streamGenerateContent?alt=sse&' : 'generateContent?';
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:${geminiEndpoint}key=${currentGeminiKey}`;
             const geminiBody: any = {
               systemInstruction: {
                 parts: [{ text: effectiveSystemPrompt }]
@@ -896,7 +917,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               const errTxt = await geminiRes.text().catch(() => '');
               let shouldRetry = false;
               if (errTxt.includes('thinkingConfig') || errTxt.includes('thinking_config')) {
-                delete geminiBody.generationConfig.thinkingConfig;
+                delete geminiBody.generationConfig?.thinkingConfig;
                 shouldRetry = true;
               }
               if (errTxt.includes('systemInstruction') || errTxt.includes('system_instruction')) {
@@ -917,33 +938,35 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
             clearTimeout(timeoutId);
 
             if (geminiRes.ok) {
-              const data: any = await geminiRes.json();
-              const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-              if (reply) {
-                assistantMessage = reply;
-                if (isStream) {
-                  // Streaming progresivo suave hacia el cliente para efecto de mecanografía en tiempo real
-                  const words = reply.split(/(\s+)/);
-                  let buffer = '';
-                  for (const w of words) {
-                    buffer += w;
-                    if (buffer.length >= 20 || w.includes('\n')) {
-                      sendStreamChunk(buffer);
-                      buffer = '';
-                      await new Promise((r) => setTimeout(r, 12));
-                    }
-                  }
-                  if (buffer) sendStreamChunk(buffer);
+              if (isStream) {
+                const streamedText = await streamGeminiNative(geminiRes, sendStreamChunk, controller.signal);
+                if (streamedText) {
+                  assistantMessage = streamedText;
+                  metrics.recordAiCall({
+                    agentId,
+                    provider: 'gemini',
+                    model: geminiModelName,
+                    success: true,
+                    durationMs: Date.now() - startTime,
+                  });
+                  console.log(`[AI Engine] Éxito con Gemini Stream (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  break;
                 }
-                metrics.recordAiCall({
-                  agentId,
-                  provider: 'gemini',
-                  model: geminiModelName,
-                  success: true,
-                  durationMs: Date.now() - startTime,
-                });
-                console.log(`[AI Engine] Éxito con Gemini Nativo (${geminiModelName}) en ${Date.now() - startTime}ms`);
-                break;
+              } else {
+                const data: any = await geminiRes.json();
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                if (reply) {
+                  assistantMessage = reply;
+                  metrics.recordAiCall({
+                    agentId,
+                    provider: 'gemini',
+                    model: geminiModelName,
+                    success: true,
+                    durationMs: Date.now() - startTime,
+                  });
+                  console.log(`[AI Engine] Éxito con Gemini Nativo (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  break;
+                }
               }
             } else {
               const errTxt = await geminiRes.text().catch(() => '');

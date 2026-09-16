@@ -2297,6 +2297,7 @@ export default function Chat() {
                     onOpenDeadline={(text) => setDeadlineModal({ isOpen: true, deadlineText: text })}
                     onRetry={handleRetryPrompt}
                     onContinue={handleContinueWriting}
+                    isStreaming={loading && i === messages.length - 1 && msg.role === 'assistant'}
                     lastUserMessage={
                       messages
                         .slice(0, i)
@@ -2305,7 +2306,7 @@ export default function Chat() {
                     }
                   />
                 ))}
-                {loading && (
+                {loading && messages[messages.length - 1]?.role !== 'assistant' && (
                   <ThinkingIndicator
                     agent={agent}
                     lastUserMessage={messages.filter((m) => m.role === 'user').slice(-1)[0]?.content}
@@ -2942,6 +2943,7 @@ function MessageBubble({
   lastUserMessage,
   onRetry,
   onContinue,
+  isStreaming,
 }: {
   message: Message
   agent: NonNullable<ReturnType<typeof getAgent>>
@@ -2954,6 +2956,7 @@ function MessageBubble({
   lastUserMessage?: string
   onRetry?: (prompt: string) => void
   onContinue?: () => void
+  isStreaming?: boolean
 }) {
   const navigate = useNavigate()
   const isUser = message.role === 'user'
@@ -3117,6 +3120,13 @@ function MessageBubble({
                   >
                     {formattedConversationalText}
                   </ReactMarkdown>
+                  {isStreaming && (
+                    <span
+                      className="inline-block w-1.5 h-4 ml-1 bg-[#c9a84c] rounded-[1px] animate-pulse align-middle"
+                      style={{ boxShadow: '0 0 8px rgba(201,168,76,0.85)' }}
+                      title="Escribiendo en tiempo real..."
+                    />
+                  )}
                 </div>
               )}
 
@@ -3286,7 +3296,7 @@ function MessageBubble({
           )}
         </div>
 
-        {!isUser && (
+        {!isUser && !isStreaming && (
           <div className="flex items-center gap-1.5 mt-2 px-1 flex-wrap">
             {/* TTS play/pause button on demand */}
             <button

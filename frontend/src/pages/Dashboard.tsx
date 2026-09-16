@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, Search, X, Shield, MessageSquare, Clock, FileText, Trash2, Star,
-  Sparkles, Calculator, Baby, Briefcase, Home, ShieldAlert, CreditCard, ShoppingBag, MapPin, ChevronRight,
+  Sparkles, Calculator, MapPin, ChevronRight,
   Edit2, Check, Scale
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -35,7 +35,6 @@ const CATEGORIES = [
 
 const SIDEBAR_MAIN = [
   { id: 'specialists', label: 'Especialistas', icon: Search },
-  { id: 'spij', label: 'SPIJ & Plenos', icon: Scale },
   { id: 'consultations', label: 'Mis consultas', icon: MessageSquare },
   { id: 'history', label: 'Historial', icon: Clock },
   { id: 'habilidades', label: 'Guardados', icon: Star },
@@ -267,10 +266,6 @@ export default function Dashboard() {
                   <button
                     key={item.id}
                     onClick={() => {
-                      if (item.id === 'spij') {
-                        setSpijModalOpen(true)
-                        return
-                      }
                       if (item.id === 'documents') {
                         setDocGenModal({ isOpen: true, docType: 'carta_notarial' })
                         return
@@ -443,7 +438,7 @@ export default function Dashboard() {
                       </p>
 
                       {/* Quick Action Buttons Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-2.5">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
                         <button
                           onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
@@ -459,18 +454,6 @@ export default function Dashboard() {
                           <span className="text-[11px] leading-tight text-left">Escanear Cédula/PDF</span>
                         </button>
                         <button
-                          onClick={() => setSpijModalOpen(true)}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15 group"
-                        >
-                          <div className="w-6 h-6 rounded-lg bg-[#c9a84c]/10 border border-[#c9a84c]/30 flex items-center justify-center flex-shrink-0">
-                            <Scale size={13} className="text-[#c9a84c]" />
-                          </div>
-                          <div className="text-left leading-tight min-w-0">
-                            <span className="block text-[11px] font-semibold text-white group-hover:text-[#c9a84c] transition-colors truncate">SPIJ & Plenos</span>
-                            <span className="block text-[8px] text-[#34d17a] font-mono">16 Plenos · Vig. 2026</span>
-                          </div>
-                        </button>
-                        <button
                           onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
                           className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
@@ -479,125 +462,12 @@ export default function Dashboard() {
                         </button>
                         <button
                           onClick={() => setWhereToGoOpen(true)}
-                          className="col-span-2 sm:col-span-2 lg:col-span-1 flex items-center justify-center sm:justify-start gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
                         >
                           <MapPin size={15} className="text-[#f59e0b] flex-shrink-0" />
                           <span className="text-[11px] leading-tight text-left">A Dónde Acudir</span>
                         </button>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* S.O.S. Common Citizen Cases Grid */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">
-                        SITUACIONES FRECUENTES (ORIENTACIÓN INMEDIATA)
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {/* S.O.S. 1 */}
-                      <button
-                        onClick={() => navigate('/chat/valentina', { state: { transferMessage: 'Hola Valentina, me acaban de despedir / no me pagan mi liquidación. ¿Qué tengo que hacer paso a paso?' } })}
-                        className="p-3.5 rounded-xl text-left transition-all border group bg-[#161616] border-white/10 hover:border-[#c9a84c]/40 hover:bg-[#1a1a1a]"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-500/10 text-indigo-400">
-                            <Briefcase size={16} />
-                          </div>
-                          <ChevronRight size={14} className="text-white/20 group-hover:text-[#c9a84c] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <h4 className="text-[12px] font-medium text-white mb-0.5">Me despidieron o no me pagan</h4>
-                        <p className="text-[10px] text-white/40 font-light leading-snug">
-                          Cálculo de liquidación, carta de requerimiento y denuncia en SUNAFIL.
-                        </p>
-                      </button>
-
-                      {/* S.O.S. 2 */}
-                      <button
-                        onClick={() => setDocGenModal({ isOpen: true, docType: 'alimentos' })}
-                        className="p-3.5 rounded-xl text-left transition-all border group bg-[#161616] border-white/10 hover:border-[#c9a84c]/40 hover:bg-[#1a1a1a]"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-pink-500/10 text-pink-400">
-                            <Baby size={16} />
-                          </div>
-                          <ChevronRight size={14} className="text-white/20 group-hover:text-[#c9a84c] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <h4 className="text-[12px] font-medium text-white mb-0.5">Pensión de alimentos</h4>
-                        <p className="text-[10px] text-white/40 font-light leading-snug">
-                          Demanda gratuita ante el Juzgado de Paz Letrado o conciliación en DEMUNA.
-                        </p>
-                      </button>
-
-                      {/* S.O.S. 3 */}
-                      <button
-                        onClick={() => navigate('/chat/diego', { state: { transferMessage: 'Hola Diego, tengo problemas con un alquiler: el inquilino no me paga / necesito un contrato con desalojo rápido. ¿Qué hago?' } })}
-                        className="p-3.5 rounded-xl text-left transition-all border group bg-[#161616] border-white/10 hover:border-[#c9a84c]/40 hover:bg-[#1a1a1a]"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-500/10 text-emerald-400">
-                            <Home size={16} />
-                          </div>
-                          <ChevronRight size={14} className="text-white/20 group-hover:text-[#c9a84c] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <h4 className="text-[12px] font-medium text-white mb-0.5">Problemas con alquiler o vivienda</h4>
-                        <p className="text-[10px] text-white/40 font-light leading-snug">
-                          Contrato con desalojo express (Ley 30201) y cobro a inquilinos morosos.
-                        </p>
-                      </button>
-
-                      {/* S.O.S. 4 */}
-                      <button
-                        onClick={() => navigate('/chat/sebastian', { state: { transferMessage: 'Hola Sebastián, me llegó una citación de la Policía / Fiscalía. ¿Cuáles son mis derechos y qué debo hacer?' } })}
-                        className="p-3.5 rounded-xl text-left transition-all border group bg-[#161616] border-white/10 hover:border-[#c9a84c]/40 hover:bg-[#1a1a1a]"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-500/10 text-red-400">
-                            <ShieldAlert size={16} />
-                          </div>
-                          <ChevronRight size={14} className="text-white/20 group-hover:text-[#c9a84c] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <h4 className="text-[12px] font-medium text-white mb-0.5">Citación policial o fiscal</h4>
-                        <p className="text-[10px] text-white/40 font-light leading-snug">
-                          Derecho a guardar silencio, solicitar copia de denuncia y abogado gratis.
-                        </p>
-                      </button>
-
-                      {/* S.O.S. 5 */}
-                      <button
-                        onClick={() => setCalcModal({ isOpen: true, tab: 'prescripcion' })}
-                        className="p-3.5 rounded-xl text-left transition-all border group bg-[#161616] border-white/10 hover:border-[#c9a84c]/40 hover:bg-[#1a1a1a]"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-cyan-500/10 text-cyan-400">
-                            <CreditCard size={16} />
-                          </div>
-                          <ChevronRight size={14} className="text-white/20 group-hover:text-[#c9a84c] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <h4 className="text-[12px] font-medium text-white mb-0.5">Deudas bancarias o papeletas SAT</h4>
-                        <p className="text-[10px] text-white/40 font-light leading-snug">
-                          Verifica si tu deuda ya prescribió e inembargabilidad de tu sueldo.
-                        </p>
-                      </button>
-
-                      {/* S.O.S. 6 */}
-                      <button
-                        onClick={() => setDocGenModal({ isOpen: true, docType: 'indecopi' })}
-                        className="p-3.5 rounded-xl text-left transition-all border group bg-[#161616] border-white/10 hover:border-[#c9a84c]/40 hover:bg-[#1a1a1a]"
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-teal-500/10 text-teal-400">
-                            <ShoppingBag size={16} />
-                          </div>
-                          <ChevronRight size={14} className="text-white/20 group-hover:text-[#c9a84c] group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <h4 className="text-[12px] font-medium text-white mb-0.5">Estafas por internet o compras</h4>
-                        <p className="text-[10px] text-white/40 font-light leading-snug">
-                          Reclamo en Libro de Reclamaciones y denuncia formal ante INDECOPI.
-                        </p>
-                      </button>
                     </div>
                   </div>
                 </div>
