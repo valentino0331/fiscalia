@@ -379,6 +379,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     res.setHeader('X-Accel-Buffering', 'no');
     res.flushHeaders?.();
     res.write(': stream-ready\n\n');
+    res.write(`data: ${JSON.stringify({ chunk: ' ' })}\n\n`);
     (res as any).flush?.();
 
     // Heartbeat cada 3 segundos para mantener vivo el socket a través de Cloudflare/Render
@@ -719,7 +720,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     };
 
     const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
-    const effectiveSystemPrompt = isDocRequest ? fullSystemPrompt : getLeanSystemPrompt(agentId, fullSystemPrompt);
+    const effectiveSystemPrompt = fullSystemPrompt;
 
     const formattedMessages = [
       { role: 'system', content: effectiveSystemPrompt },
@@ -816,9 +817,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 2. PRIORIDAD 2: Google Gemini (gemini-3.6-flash Nativo Ultra Rápido)
+    // 2. PRIORIDAD 2: Google Gemini (gemini-3.6-flash Razonamiento Jurídico Experto)
     // ─────────────────────────────────────────────────────────────
-    const MAX_AI_WAIT_MS = 14000;
+    const MAX_AI_WAIT_MS = 45000;
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && geminiKey) {
       console.log('[AI Engine] Evaluando proveedor Google Gemini (Prioridad 2)...');
@@ -864,7 +865,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
           try {
             console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName})...`);
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000);
+            const timeoutId = setTimeout(() => controller.abort(), 40000);
 
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:generateContent?key=${currentGeminiKey}`;
             const geminiBody: any = {
@@ -879,10 +880,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
                 }
               ],
               generationConfig: {
-                temperature: 0.2,
-                thinkingConfig: {
-                  thinkingBudget: 0
-                }
+                temperature: 0.1,
               }
             };
 
