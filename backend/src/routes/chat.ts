@@ -157,6 +157,7 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
+            'gemini-3.6-flash',
             'gemini-2.5-flash',
             'gemini-2.0-flash-exp',
             'gemini-1.5-flash-latest',
@@ -874,19 +875,17 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 5. PRIORIDAD 5: Google Gemini (SDK directo con ultra baja latencia < 500ms)
+    // 5. PRIORIDAD 5: Google Gemini (High-Speed OpenAI-compatible REST + SDK Fallback)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && geminiKey) {
       console.log('[AI Engine] Evaluando proveedor Google Gemini...');
-      // Priorizamos gemini-1.5-flash que responde en < 500ms y no tiene problemas de 404 ni 402
+      // Priorizamos el modelo de entorno y gemini-3.6-flash para respuesta instantánea (< 800ms)
       const rawGeminiCandidates = [
-        'gemini-1.5-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-2.5-flash',
         process.env.GEMINI_MODEL,
         'gemini-3.6-flash',
-        'gemini-1.5-pro',
+        'gemini-2.5-flash',
+        'gemini-1.5-flash',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
@@ -917,53 +916,118 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
 
       for (const currentGeminiKey of geminiKeys) {
         if (assistantMessage) break;
-        const genAI = new GoogleGenerativeAI(currentGeminiKey);
 
         for (const geminiModelName of geminiModelCandidates) {
           if (assistantMessage) break;
-          try {
-            console.log(`[AI Engine] Intentando Gemini (${geminiModelName})...`);
-            const modelPlain = genAI.getGenerativeModel({
-              model: geminiModelName,
-              systemInstruction: effectiveSystemPrompt,
-            });
-            const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
 
-            if (isStream) {
-              const streamResult = await withTimeout(
-                chat.sendMessageStream(latestUserMessage),
-                18000,
-                `Gemini Stream ${geminiModelName}`
-              );
-              for await (const chunk of streamResult.stream) {
-                const chunkText = chunk.text();
-                if (chunkText) {
-                  assistantMessage += chunkText;
-                  sendStreamChunk(chunkText);
+          // 5.1 Conexión de ultra alta velocidad vía Endpoint OpenAI-Compatible de Google (SSE Streaming nativo para gemini-3.6-flash)
+          try {
+            console.log(`[AI Engine] Intentando Gemini REST (${geminiModelName})...`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 16000);
+
+            const geminiRestRes = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${currentGeminiKey}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: geminiModelName,
+                messages: formattedMessages,
+                temperature: 0.2,
+                stream: isStream,
+              }),
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            if (geminiRestRes.ok) {
+              if (isStream) {
+                const streamedText = await streamOpenAICompatible(geminiRestRes, sendStreamChunk, controller.signal);
+                if (streamedText) {
+                  assistantMessage = streamedText;
+                  metrics.recordAiCall({
+                    agentId,
+                    provider: 'gemini',
+                    model: geminiModelName,
+                    success: true,
+                    durationMs: Date.now() - startTime,
+                  });
+                  console.log(`[AI Engine] Éxito con Gemini REST Stream (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  break;
+                }
+              } else {
+                const data: any = await geminiRestRes.json();
+                const reply = data.choices?.[0]?.message?.content || '';
+                if (reply) {
+                  assistantMessage = reply;
+                  metrics.recordAiCall({
+                    agentId,
+                    provider: 'gemini',
+                    model: geminiModelName,
+                    success: true,
+                    durationMs: Date.now() - startTime,
+                  });
+                  console.log(`[AI Engine] Éxito con Gemini REST (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                  break;
                 }
               }
             } else {
-              const result = await withTimeout(
-                chat.sendMessage(latestUserMessage),
-                18000,
-                `Gemini ${geminiModelName}`
-              );
-              assistantMessage = result.response.text();
+              const errTxt = await geminiRestRes.text().catch(() => '');
+              console.warn(`[AI Engine] Gemini REST no respondió 200 en ${geminiModelName} (${geminiRestRes.status}):`, errTxt);
             }
+          } catch (restErr: any) {
+            console.warn(`[AI Engine] Gemini REST fetch error (${geminiModelName}):`, restErr?.message || restErr);
+          }
 
-            if (assistantMessage) {
-              metrics.recordAiCall({
-                agentId,
-                provider: 'gemini',
+          // 5.2 Fallback de respaldo mediante SDK de GoogleGenerativeAI
+          if (!assistantMessage) {
+            try {
+              console.log(`[AI Engine] Intentando Gemini SDK Fallback (${geminiModelName})...`);
+              const genAI = new GoogleGenerativeAI(currentGeminiKey);
+              const modelPlain = genAI.getGenerativeModel({
                 model: geminiModelName,
-                success: true,
-                durationMs: Date.now() - startTime,
+                systemInstruction: effectiveSystemPrompt,
               });
-              console.log(`[AI Engine] Éxito con Gemini (${geminiModelName}) en ${Date.now() - startTime}ms`);
-              break;
+              const chat = modelPlain.startChat({ history: validHistory, generationConfig: { temperature: 0.2 } });
+
+              if (isStream) {
+                const streamResult = await withTimeout(
+                  chat.sendMessageStream(latestUserMessage),
+                  14000,
+                  `Gemini Stream ${geminiModelName}`
+                );
+                for await (const chunk of streamResult.stream) {
+                  const chunkText = chunk.text();
+                  if (chunkText) {
+                    assistantMessage += chunkText;
+                    sendStreamChunk(chunkText);
+                  }
+                }
+              } else {
+                const result = await withTimeout(
+                  chat.sendMessage(latestUserMessage),
+                  14000,
+                  `Gemini ${geminiModelName}`
+                );
+                assistantMessage = result.response.text();
+              }
+
+              if (assistantMessage) {
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'gemini',
+                  model: geminiModelName,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con Gemini SDK (${geminiModelName}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            } catch (geminiErr: any) {
+              console.warn(`[AI Engine] Gemini SDK ${geminiModelName} error:`, geminiErr?.message || geminiErr);
             }
-          } catch (geminiErr: any) {
-            console.warn(`[AI Engine] Gemini ${geminiModelName} error:`, geminiErr?.message || geminiErr);
           }
         }
       }
