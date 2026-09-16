@@ -422,3 +422,58 @@ adminRouter.post('/users', requireAuth, requireAdmin, async (req: any, res) => {
   }
 });
 
+adminRouter.get('/test-ai', requireAuth, requireAdmin, async (_, res) => {
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
+
+  const result: any = {
+    gemini: { configured: Boolean(geminiKey) },
+    openrouter: { configured: Boolean(openrouterKey) },
+  };
+
+  if (openrouterKey) {
+    try {
+      const orAuthRes = await fetch('https://openrouter.ai/api/v1/auth/key', {
+        headers: { Authorization: `Bearer ${openrouterKey}` }
+      });
+      result.openrouter.keyStatus = orAuthRes.status;
+      result.openrouter.authData = await orAuthRes.json().catch(() => ({}));
+    } catch (e: any) {
+      result.openrouter.error = e.message;
+    }
+  }
+
+  if (geminiKey) {
+    const firstKey = geminiKey.split(',')[0].trim();
+    try {
+      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${firstKey}`);
+      result.gemini.status = modelsRes.status;
+      const modelsData: any = await modelsRes.json().catch(() => ({}));
+      if (modelsData.models && Array.isArray(modelsData.models)) {
+        result.gemini.availableModels = modelsData.models
+          .map((m: any) => m.name?.replace('models/', ''))
+          .filter((name: string) => name && (name.includes('flash') || name.includes('pro') || name.includes('gemini')));
+      } else {
+        result.gemini.raw = modelsData;
+      }
+
+      // Test a quick 1-sentence prompt with the configured or default flash model
+      const candidateToTest = result.gemini.availableModels?.[0] || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+      const testGen = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidateToTest}:generateContent?key=${firstKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: 'Hola, di "OK" en una sola palabra.' }] }]
+        })
+      });
+      result.gemini.testModel = candidateToTest;
+      result.gemini.testStatus = testGen.status;
+      result.gemini.testResult = await testGen.json().catch(() => ({}));
+    } catch (e: any) {
+      result.gemini.error = e.message;
+    }
+  }
+
+  return res.json(result);
+});
+

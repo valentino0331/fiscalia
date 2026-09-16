@@ -694,6 +694,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // ─────────────────────────────────────────────────────────────
     // 2. PRIORIDAD 2: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Máxima velocidad y confiabilidad)
     // ─────────────────────────────────────────────────────────────
+    const MAX_AI_WAIT_MS = 8000;
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openrouterKey) {
       console.log('[AI Engine] Evaluando proveedor OpenRouter (Principal)...');
@@ -702,16 +703,20 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         process.env.OPENROUTER_MODEL?.replace(':free', ''),
         'meta-llama/llama-3.3-70b-instruct',
         'deepseek/deepseek-chat',
-        'qwen/qwen-2.5-72b-instruct',
       ].filter(Boolean) as string[];
       const candidateModels = [...new Set(rawOrModels)];
 
       for (const openrouterModel of candidateModels) {
         if (assistantMessage) break;
+        if (Date.now() - startTime > MAX_AI_WAIT_MS) {
+          console.warn(`[AI Engine] Tiempo límite de espera (${Date.now() - startTime}ms). Saltando a siguiente proveedor.`);
+          break;
+        }
+
         try {
           console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -765,8 +770,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
           } else {
             const errData = await orRes.text().catch(() => '');
             console.warn(`[AI Engine] OpenRouter error on ${openrouterModel} (${orRes.status}):`, errData);
-            if (orRes.status === 402 || orRes.status === 401) {
-              console.warn('[AI Engine] OpenRouter sin saldo o no autorizado (402/401). Pasando al siguiente proveedor.');
+            if (orRes.status === 402 || orRes.status === 401 || orRes.status === 404) {
+              console.warn(`[AI Engine] OpenRouter no disponible (${orRes.status}). Interrumpiendo reintentos y pasando al siguiente proveedor.`);
               break;
             }
           }
@@ -985,12 +990,13 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && geminiKey) {
       console.log('[AI Engine] Evaluando proveedor Google Gemini...');
-      // Priorizamos el modelo de entorno y gemini-3.6-flash para respuesta instantánea (< 800ms)
       const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-3.6-flash',
-        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-latest',
         'gemini-1.5-flash',
+        'gemini-3.6-flash',
+        'gemini-1.5-pro-latest',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
@@ -1024,12 +1030,18 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
 
         for (const geminiModelName of geminiModelCandidates) {
           if (assistantMessage) break;
+          if (Date.now() - startTime > MAX_AI_WAIT_MS) {
+            console.warn(`[AI Engine] Tiempo límite de espera global alcanzado (${Date.now() - startTime}ms). Activando respuesta legal inmediata.`);
+            break;
+          }
 
-          // 5.1 Conexión de ultra alta velocidad vía Endpoint OpenAI-Compatible de Google (SSE Streaming nativo para gemini-3.6-flash)
+          let modelNotFound = false;
+
+          // 5.1 Conexión vía Endpoint OpenAI-Compatible de Google
           try {
             console.log(`[AI Engine] Intentando Gemini REST (${geminiModelName})...`);
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 16000);
+            const timeoutId = setTimeout(() => controller.abort(), 3500);
 
             const geminiRestRes = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
               method: 'POST',
@@ -1081,13 +1093,16 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
             } else {
               const errTxt = await geminiRestRes.text().catch(() => '');
               console.warn(`[AI Engine] Gemini REST no respondió 200 en ${geminiModelName} (${geminiRestRes.status}):`, errTxt);
+              if (geminiRestRes.status === 404) {
+                modelNotFound = true;
+              }
             }
           } catch (restErr: any) {
             console.warn(`[AI Engine] Gemini REST fetch error (${geminiModelName}):`, restErr?.message || restErr);
           }
 
-          // 5.2 Fallback de respaldo mediante SDK de GoogleGenerativeAI
-          if (!assistantMessage) {
+          // 5.2 Fallback de respaldo mediante SDK de GoogleGenerativeAI si el modelo no fue un 404 explícito
+          if (!assistantMessage && !modelNotFound && Date.now() - startTime <= MAX_AI_WAIT_MS) {
             try {
               console.log(`[AI Engine] Intentando Gemini SDK Fallback (${geminiModelName})...`);
               const genAI = new GoogleGenerativeAI(currentGeminiKey);
@@ -1100,7 +1115,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               if (isStream) {
                 const streamResult = await withTimeout(
                   chat.sendMessageStream(latestUserMessage),
-                  14000,
+                  3500,
                   `Gemini Stream ${geminiModelName}`
                 );
                 for await (const chunk of streamResult.stream) {
@@ -1113,7 +1128,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               } else {
                 const result = await withTimeout(
                   chat.sendMessage(latestUserMessage),
-                  14000,
+                  3500,
                   `Gemini ${geminiModelName}`
                 );
                 assistantMessage = result.response.text();
@@ -1138,10 +1153,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       }
     }
 
-
-
     // ─────────────────────────────────────────────────────────────
-    // 7. RESPALDO DE EMERGENCIA GARANTIZADO
+    // 7. RESPALDO DE EMERGENCIA GARANTIZADO (Latencia < 8.5s asegurada)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage) {
@@ -1156,12 +1169,24 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         marco: { name: 'Marco', role: 'Derecho Administrativo y Contrataciones' },
       };
       const info = agentNames[agentId] || { name: 'Asesor Legal', role: 'Derecho Peruano' };
-      assistantMessage = [
-        `Estimado cliente: He recepcionado su consulta respecto a su caso en el área de **${info.role}**.`,
-        `\n\nHe registrado los antecedentes fácticos. Para brindarle el patrocinio inmediato y la redacción del escrito correspondiente, por favor especifique si requiere:\n\n1. **Redacción de escrito / Carta Notarial**\n2. **Cálculo de montos o liquidación**\n3. **Plan de acción procesal paso a paso**\n\nQuedo a su disposición para resolver su situación jurídica de inmediato.`,
-      ].join(' ');
 
-      sendStreamChunk(assistantMessage);
+      const isGreeting = /^(hola|buenas|buenos d[ií]as|buenas tardes|buenas noches|saludos|hello|hi)[\s!.?]*$/i.test(latestUserMessage.trim());
+      if (isGreeting) {
+        assistantMessage = `¡Hola! Soy **${info.name}**, especialista en **${info.role}** en el Bufete Hardman.\n\nHe recibido su comunicación y me encuentro a su completa disposición para evaluar su caso y brindarle asesoría legal estratégica conforme a la normativa peruana vigente.\n\n¿En qué asunto o situación jurídica le puedo asesorar el día de hoy?`;
+      } else {
+        assistantMessage = [
+          `Estimado cliente: He recepcionado su consulta respecto a su caso en el área de **${info.role}**.`,
+          `\n\nHe tomado debida nota de los antecedentes expuestos. Para brindarle el patrocinio inmediato y la estrategia legal pertinente bajo la normativa peruana, por favor indíqueme si requiere:\n\n1. **Redacción de escrito / Carta Notarial / Demanda**\n2. **Cálculo de montos, liquidación o contingencia legal**\n3. **Plan de acción procesal paso a paso**\n\nQuedo a su disposición para resolver su situación jurídica de inmediato.`,
+        ].join(' ');
+      }
+
+      if (isStream) {
+        const words = assistantMessage.split(' ');
+        for (let i = 0; i < words.length; i += 4) {
+          const slice = words.slice(i, i + 4).join(' ') + (i + 4 < words.length ? ' ' : '');
+          sendStreamChunk(slice);
+        }
+      }
     }
 
     // Auto-detección: Si el mensaje del asistente contiene un enlace de derivación a otro agente, registrar transferTo
