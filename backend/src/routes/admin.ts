@@ -105,7 +105,7 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
       hasDeepseekKey: Boolean(process.env.DEEPSEEK_API_KEY),
       hasGeminiKey: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
       hasAnthropicKey: Boolean(process.env.ANTHROPIC_API_KEY),
-      hasOpenrouterKey: Boolean(process.env.OPENROUTER_API_KEY),
+      hasOpenrouterKey: Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY),
       hasGroqKey: Boolean(process.env.GROQ_API_KEY),
       hasOpenaiKey: Boolean(process.env.OPENAI_API_KEY),
       hasElevenLabsKey: Boolean(process.env.ELEVENLABS_API_KEY),
