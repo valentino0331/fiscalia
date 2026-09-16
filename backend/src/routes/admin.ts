@@ -474,6 +474,9 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
     }
   }
 
+  return res.json(result);
+});
+
 adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, res) => {
   const t0 = Date.now();
   const log: string[] = [];

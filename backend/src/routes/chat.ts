@@ -1072,11 +1072,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       const geminiKeys = (geminiKey || '').split(',').map((k: string) => k.trim()).filter(Boolean);
 
       for (const currentGeminiKey of geminiKeys) {
-        if (assistantMessage) break;
+        if (assistantMessage || Date.now() - startTime > MAX_AI_WAIT_MS) break;
 
         for (const geminiModelName of geminiModelCandidates) {
-          if (assistantMessage) break;
-          if (Date.now() - startTime > MAX_AI_WAIT_MS) {
+          if (assistantMessage || Date.now() - startTime > MAX_AI_WAIT_MS) {
             console.warn(`[AI Engine] Tiempo límite de espera global alcanzado (${Date.now() - startTime}ms). Activando respuesta legal inmediata.`);
             break;
           }
@@ -1092,7 +1091,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                system_instruction: {
+                systemInstruction: {
                   parts: [{ text: effectiveSystemPrompt }]
                 },
                 contents: [
