@@ -1889,6 +1889,7 @@ export default function Chat() {
   }
 
   const insertSuggestion = (text: string) => {
+    setIsVoiceMessage(false)
     setInput(text)
     textareaRef.current?.focus()
     setTimeout(autoResize, 50)
@@ -3036,6 +3037,7 @@ function MessageBubble({
   const [previewOpen, setPreviewOpen] = useState(false)
   const [copiedUser, setCopiedUser] = useState(false)
   const [sharedUser, setSharedUser] = useState(false)
+  const [isHovered, setIsHovered] = useState(false)
   const isSpeaking = speakingMessageId === message.timestamp
   const isLoadingAudio = audioLoadingId === message.timestamp
   const deadlines = !isUser ? detectDeadlines(message.content) : []
@@ -3044,9 +3046,16 @@ function MessageBubble({
     ? extractDocumentFromMessage(message.content)
     : { conversationalText: message.content, document: null }
 
-  const formattedConversationalText = !isUser && conversationalText
-    ? injectSpijBadges(conversationalText)
+  const cleanConversationalText = !isUser && conversationalText
+    ? conversationalText
+        .replace(/^[ \t]*[⏹⬜◻◽▢][ \t]*/gm, '- ')
+        .replace(/[⏹⬜◻◽▢]/g, '•')
+        .replace(/\[\s*\]/g, '•')
     : conversationalText
+
+  const formattedConversationalText = !isUser && cleanConversationalText
+    ? injectSpijBadges(cleanConversationalText)
+    : cleanConversationalText
 
   const cleanTextForSpeech = (text: string) =>
     text
@@ -3125,6 +3134,8 @@ function MessageBubble({
       initial={{ opacity: 0, y: isUser ? 8 : -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`group relative flex ${isUser ? 'justify-end' : 'justify-start'} gap-2 sm:gap-3 w-full max-w-4xl mx-auto`}
     >
       {!isUser && (
@@ -3163,15 +3174,6 @@ function MessageBubble({
               <span className="max-w-[170px] truncate">{attachmentName}</span>
               <Download size={9} className="opacity-75" />
             </button>
-          )}
-          {isVoice && !attachmentName && (
-            <div
-              className="flex items-center gap-1 px-2 py-1 rounded-t-lg text-[9px] font-medium"
-              style={{ background: 'rgba(201,168,76,0.10)', color: 'rgba(201,168,76,0.80)' }}
-            >
-              <Mic size={9} />
-              Audio
-            </div>
           )}
         </div>
 
@@ -3594,7 +3596,11 @@ function MessageBubble({
         )}
 
         {isUser && (
-          <div className="flex items-center justify-end gap-1.5 mt-1.5 px-1 sm:opacity-0 sm:group-hover:opacity-100 opacity-90 transition-all duration-200">
+          <div
+            className={`flex items-center justify-end gap-1.5 mt-1.5 px-1 transition-all duration-200 ${
+              isHovered ? 'opacity-100' : 'opacity-75'
+            }`}
+          >
             <span className="text-[10px] mr-1 text-white/30 select-none">
               {formatTime(message.timestamp)}
             </span>
@@ -3603,8 +3609,8 @@ function MessageBubble({
             <button
               type="button"
               onClick={handleCopyUser}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-white/10 text-white/70 hover:text-white active:scale-95 shadow-sm"
-              style={{ background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-white/10 text-white/80 hover:text-white active:scale-95 shadow-sm"
+              style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)' }}
               title="Copiar texto del mensaje al portapapeles"
             >
               {copiedUser ? (
@@ -3625,8 +3631,8 @@ function MessageBubble({
               <button
                 type="button"
                 onClick={() => onEditPrompt(displayContent || message.content)}
-                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-[#c9a84c]/20 text-[#c9a84c] hover:text-[#e5c96a] active:scale-95 shadow-sm"
-                style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)' }}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-[#c9a84c]/25 text-[#c9a84c] hover:text-[#e5c96a] active:scale-95 shadow-sm"
+                style={{ background: 'rgba(201, 168, 76, 0.12)', border: '1px solid rgba(201, 168, 76, 0.35)' }}
                 title="Editar este mensaje para modificarlo y volver a enviarlo"
               >
                 <Edit2 size={11} />
@@ -3638,8 +3644,8 @@ function MessageBubble({
             <button
               type="button"
               onClick={handleShareUser}
-              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-white/10 text-white/70 hover:text-white active:scale-95 shadow-sm"
-              style={{ background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-white/10 text-white/80 hover:text-white active:scale-95 shadow-sm"
+              style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)' }}
               title="Compartir o reutilizar este prompt"
             >
               {sharedUser ? (
