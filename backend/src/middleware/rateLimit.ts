@@ -22,11 +22,8 @@ export function createRateLimiter(options: RateLimitOptions) {
     max,
     message = 'Demasiadas peticiones desde esta IP. Por favor intente más tarde.',
     keyGenerator = (req: Request) => {
-      // Usar IP del cliente (respetando proxies de Render si trust proxy está activo)
-      const forwarded = req.headers['x-forwarded-for'];
-      const ip = typeof forwarded === 'string' 
-        ? forwarded.split(',')[0].trim() 
-        : req.socket.remoteAddress || 'unknown';
+      // Usar IP validada por Express (que respeta app.set('trust proxy', 1))
+      const ip = req.ip || req.socket.remoteAddress || 'unknown';
       return `${ip}:${req.baseUrl || ''}${req.path || ''}`;
     },
   } = options;

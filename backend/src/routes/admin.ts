@@ -31,7 +31,7 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
       db.execute(sql`
         select agent_id,
                count(*)::int as conversations,
-               coalesce(sum(jsonb_array_length(messages)), 0)::int as messages
+               coalesce(sum(case when jsonb_typeof(messages) = 'array' then jsonb_array_length(messages) else 0 end), 0)::int as messages
         from conversations
         group by 1
         order by conversations desc
@@ -177,12 +177,26 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
 // GESTIÓN DE USUARIOS Y SUSCRIPCIONES
 // ─────────────────────────────────────────────────────────────
 
-// 1. Listar todos los usuarios con su suscripción, vencimiento y consultas del mes
-adminRouter.get('/users', requireAuth, requireAdmin, async (_, res) => {
+// 1. Listar usuarios con paginación opcional, su suscripción, vencimiento y consultas del mes
+adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
   try {
-    const allUsers = await db.query.users.findMany({
-      orderBy: [desc(users.createdAt)],
-    });
+    const rawLimit = parseInt(req.query?.limit as string, 10);
+    const rawPage = parseInt(req.query?.page as string, 10);
+    const limit = !isNaN(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 200) : 100;
+    const page = !isNaN(rawPage) && rawPage > 0 ? rawPage : 1;
+    const offset = (page - 1) * limit;
+
+    const [allUsers, totalUsersCount] = await Promise.all([
+      db.query.users.findMany({
+        orderBy: [desc(users.createdAt)],
+        limit,
+        offset,
+      }),
+      db.select({ count: sql<number>`count(*)::int` }).from(users),
+    ]);
+
+    const total = Number(totalUsersCount[0]?.count || 0);
+    const totalPages = Math.ceil(total / limit);
 
     const now = new Date();
     const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
@@ -266,7 +280,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (_, res) => {
       };
     });
 
-    res.json({ users: userList });
+    res.json({ users: userList, total, page, totalPages });
   } catch (error: any) {
     console.error('Error fetching admin users:', error);
     res.status(500).json({ error: 'Error al obtener lista de usuarios' });
@@ -458,7 +472,7 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
       }
 
       // Test a quick 1-sentence prompt with the specified or recommended model
-      const candidateToTest = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
+      const candidateToTest = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
       const testGen = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidateToTest}:generateContent?key=${firstKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -488,7 +502,7 @@ adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, r
   add(`geminiKey present: ${Boolean(firstKey)}`);
 
   try {
-    const model = (req.query.model as string) || 'gemini-3.6-flash';
+    const model = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
     const disableThinking = req.query.thinking === 'false' || req.query.thinking === '0';
     add(`Calling Google Generative Language REST ${model} (disableThinking: ${disableThinking})...`);
     

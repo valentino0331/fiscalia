@@ -24,6 +24,12 @@ export function getKeepAliveStatus() {
 export function startKeepAlive() {
   if (intervalId) return;
 
+  // Solo activar en producción para no generar tráfico parásito desde localhost a producción
+  if (process.env.NODE_ENV !== 'production' && !process.env.RENDER_EXTERNAL_URL) {
+    console.log('[KeepAlive] Servicio omitido en entorno de desarrollo local.');
+    return;
+  }
+
   const targetUrl =
     process.env.RENDER_EXTERNAL_URL ||
     process.env.BACKEND_URL ||

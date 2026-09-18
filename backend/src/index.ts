@@ -49,9 +49,8 @@ app.use((req, res, next) => {
 const defaultAllowedOrigins = [
   'https://hardman.lat',
   'https://www.hardman.lat',
-  'http://hardman.lat',
-  'http://www.hardman.lat',
   'https://fiscalia-1.onrender.com',
+  'https://fiscalia-t0bl.onrender.com',
   'http://localhost:5173',
   'http://localhost:3000',
 ];
@@ -63,19 +62,21 @@ const envOrigins = (process.env.FRONTEND_URL || '')
 
 const allowedOrigins = Array.from(new Set([...defaultAllowedOrigins, ...envOrigins]));
 
+// 1. Rutas públicas con CORS abierto para enlaces compartidos
+app.use('/shared', sharedRouter);
+
+// 2. Middleware de CORS estricto para rutas protegidas y autenticadas
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin) return callback(null, true);
 
       const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-      const isHardmanDomain = /^https?:\/\/([a-zA-Z0-9-]+\.)?hardman\.lat$/.test(origin);
-      const isRenderFrontend = /^https:\/\/[\w-]+\.onrender\.com$/.test(origin);
+      const isHardmanDomain = /^https:\/\/([a-zA-Z0-9-]+\.)?hardman\.lat$/.test(origin);
 
       if (
         allowedOrigins.includes(origin) ||
         isHardmanDomain ||
-        isRenderFrontend ||
         (process.env.NODE_ENV !== 'production' && isLocalhost)
       ) {
         callback(null, true);
@@ -100,7 +101,6 @@ app.use('/account', accountRouter);
 app.use('/webhooks', webhooksRouter);
 app.use('/admin', adminRouter);
 app.use('/files', filesRouter);
-app.use('/shared', sharedRouter);
 app.use('/saved', savedRouter);
 app.use('/memory', memoryRouter);
 

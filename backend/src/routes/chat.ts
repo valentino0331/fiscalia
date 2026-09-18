@@ -14,6 +14,7 @@ import { metrics } from '../lib/metrics';
 import { generateSpeech } from '../lib/tts';
 import { getSpijLegalGrounding, JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
 import { chatRateLimiter, audioRateLimiter } from '../middleware/rateLimit';
+import { encryptConversationMessages, encryptTitle } from '../lib/encryption';
 
 const audioUpload = multer({
   storage: multer.memoryStorage(),
@@ -443,7 +444,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
   };
 
   try {
-    const { agentId, messages, conversationId, letterhead } = req.body;
+    const { agentId, messages, conversationId, letterhead, ephemeral, confidential } = req.body;
 
     // Validar que agentId sea un string válido y esté en el registro de prompts
     if (typeof agentId !== 'string' || !SYSTEM_PROMPTS[agentId]) {
@@ -526,7 +527,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
           memoryBlock,
           expiresAt: Date.now() + 5 * 60 * 1000,
         });
-      } catch { /* memory is optional */ }
+      } catch (memErr: any) {
+        console.warn('[Chat] No se pudo cargar memoria de usuario (opcional):', memErr?.message || memErr);
+      }
     }
 
     // Check if message should be transferred to another agent
@@ -756,9 +759,101 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       });
     };
 
+    const MAX_AI_WAIT_MS = 45000;
+
     // ─────────────────────────────────────────────────────────────
-    // 1. PRIORIDAD 1: Groq LPUs (Inferencia ultra-rápida 300+ tok/s, latencia < 300ms)
+    // 1. PRIORIDAD 1: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
     // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
+    if (!assistantMessage && openrouterKey) {
+      console.log('[AI Engine] Evaluando proveedor OpenRouter (Prioridad 1)...');
+      const rawOrModels = [
+        process.env.OPENROUTER_MODEL,
+        'meta-llama/llama-3.3-70b-instruct',
+        'deepseek/deepseek-chat',
+        'anthropic/claude-3.5-haiku',
+      ].filter(Boolean) as string[];
+      const candidateModels = [...new Set(rawOrModels)];
+
+      for (const openrouterModel of candidateModels) {
+        if (assistantMessage) break;
+        if (Date.now() - startTime > MAX_AI_WAIT_MS) {
+          console.warn(`[AI Engine] Tiempo límite de espera (${Date.now() - startTime}ms). Saltando a siguiente proveedor.`);
+          break;
+        }
+
+        try {
+          console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
+              'X-Title': 'Bufete Fiscalia IA',
+            },
+            body: JSON.stringify({
+              model: openrouterModel,
+              messages: formattedMessages,
+              temperature: 0.2,
+              stream: isStream,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
+
+          if (orRes.ok) {
+            if (isStream) {
+              const streamedText = await streamOpenAICompatible(orRes, sendStreamChunk, controller.signal);
+              if (streamedText) {
+                assistantMessage = streamedText;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openrouter',
+                  model: openrouterModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con OpenRouter Stream (${openrouterModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            } else {
+              const data: any = await orRes.json();
+              const textContent = data.choices?.[0]?.message?.content || '';
+              if (textContent) {
+                assistantMessage = textContent;
+                metrics.recordAiCall({
+                  agentId,
+                  provider: 'openrouter',
+                  model: openrouterModel,
+                  success: true,
+                  durationMs: Date.now() - startTime,
+                });
+                console.log(`[AI Engine] Éxito con OpenRouter (${openrouterModel}) en ${Date.now() - startTime}ms`);
+                break;
+              }
+            }
+          } else {
+            const errData = await orRes.text().catch(() => '');
+            console.warn(`[AI Engine] OpenRouter error on ${openrouterModel} (${orRes.status}):`, errData);
+            if (orRes.status === 402 || orRes.status === 401) {
+              console.warn(`[AI Engine] OpenRouter no disponible (${orRes.status}). Interrumpiendo reintentos y pasando al siguiente proveedor.`);
+              break;
+            }
+          }
+        } catch (orErr: any) {
+          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // 2. PRIORIDAD 2: Groq LPUs (Inferencia ultra-rápida 300+ tok/s, latencia < 300ms)
+    // ─────────────────────────────────────────────────────────────
+    if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && groqKey) {
       console.log('[AI Engine] Evaluando proveedor Groq LPUs...');
       const groqCandidates = [
@@ -833,19 +928,16 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 2. PRIORIDAD 2: Google Gemini (gemini-3.6-flash Razonamiento Jurídico Experto)
+    // 3. PRIORIDAD 3: Google Gemini (gemini-3.6-flash Razonamiento Jurídico Experto)
     // ─────────────────────────────────────────────────────────────
-    const MAX_AI_WAIT_MS = 45000;
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && geminiKey) {
-      console.log('[AI Engine] Evaluando proveedor Google Gemini (Prioridad 2)...');
+      console.log('[AI Engine] Evaluando proveedor Google Gemini (Prioridad 3)...');
       const rawGeminiCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-3.6-flash',
-        'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-3.1-flash-lite',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawGeminiCandidates)];
 
@@ -980,99 +1072,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 3. PRIORIDAD 3: OpenRouter (Modelos Free & Fallbacks)
-    // ─────────────────────────────────────────────────────────────
-    if (abortIfStreamCorrupted()) return;
-    if (!assistantMessage && openrouterKey) {
-      console.log('[AI Engine] Evaluando proveedor OpenRouter (Prioridad 3)...');
-      const rawOrModels = [
-        process.env.OPENROUTER_MODEL,
-        'google/gemini-2.0-flash-exp:free',
-        'meta-llama/llama-3.2-3b-instruct:free',
-        'mistralai/mistral-7b-instruct:free',
-        'deepseek/deepseek-r1:free',
-        'meta-llama/llama-3.3-70b-instruct',
-        'deepseek/deepseek-chat',
-      ].filter(Boolean) as string[];
-      const candidateModels = [...new Set(rawOrModels)];
-
-      for (const openrouterModel of candidateModels) {
-        if (assistantMessage) break;
-        if (Date.now() - startTime > MAX_AI_WAIT_MS) {
-          console.warn(`[AI Engine] Tiempo límite de espera (${Date.now() - startTime}ms). Saltando a siguiente proveedor.`);
-          break;
-        }
-
-        try {
-          console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-          const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${openrouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
-              'X-Title': 'Bufete Fiscalia IA',
-            },
-            body: JSON.stringify({
-              model: openrouterModel,
-              messages: formattedMessages,
-              temperature: 0.2,
-              stream: isStream,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
-
-          if (orRes.ok) {
-            if (isStream) {
-              const streamedText = await streamOpenAICompatible(orRes, sendStreamChunk, controller.signal);
-              if (streamedText) {
-                assistantMessage = streamedText;
-                metrics.recordAiCall({
-                  agentId,
-                  provider: 'openrouter',
-                  model: openrouterModel,
-                  success: true,
-                  durationMs: Date.now() - startTime,
-                });
-                console.log(`[AI Engine] Éxito con OpenRouter Stream (${openrouterModel}) en ${Date.now() - startTime}ms`);
-                break;
-              }
-            } else {
-              const data: any = await orRes.json();
-              const textContent = data.choices?.[0]?.message?.content || '';
-              if (textContent) {
-                assistantMessage = textContent;
-                metrics.recordAiCall({
-                  agentId,
-                  provider: 'openrouter',
-                  model: openrouterModel,
-                  success: true,
-                  durationMs: Date.now() - startTime,
-                });
-                console.log(`[AI Engine] Éxito con OpenRouter (${openrouterModel}) en ${Date.now() - startTime}ms`);
-                break;
-              }
-            }
-          } else {
-            const errData = await orRes.text().catch(() => '');
-            console.warn(`[AI Engine] OpenRouter error on ${openrouterModel} (${orRes.status}):`, errData);
-            if (orRes.status === 402 || orRes.status === 401 || orRes.status === 404) {
-              console.warn(`[AI Engine] OpenRouter no disponible (${orRes.status}). Interrumpiendo reintentos y pasando al siguiente proveedor.`);
-              break;
-            }
-          }
-        } catch (orErr: any) {
-          console.warn(`[AI Engine] OpenRouter error on ${openrouterModel}:`, orErr?.message || orErr);
-        }
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // 3. PRIORIDAD 3: OpenAI (Alta disponibilidad y concurrencia masiva)
+    // 4. PRIORIDAD 4: OpenAI (Alta disponibilidad y concurrencia masiva)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openaiKey) {
@@ -1145,7 +1145,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 3. PRIORIDAD 3: DeepSeek Direct (Modo rápido deepseek-chat con timeout corto de 10s)
+    // 5. PRIORIDAD 5: DeepSeek Direct (Modo rápido deepseek-chat con timeout corto de 10s)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && deepseekKey) {
@@ -1211,7 +1211,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 4. PRIORIDAD 4: Anthropic Claude (claude-3-5-haiku)
+    // 6. PRIORIDAD 6: Anthropic Claude (claude-3-5-haiku)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && anthropicKey) {
@@ -1334,11 +1334,18 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const validConversationId = typeof conversationId === 'string' && UUID_REGEX.test(conversationId)
       ? conversationId
       : null;
+    const isEphemeral = ephemeral === true || confidential === true;
 
-    if (validConversationId) {
+    if (isEphemeral) {
+      // Modo Confidencial / Retención Cero: no se persiste en base de datos
+      finalConvId = null;
+    } else if (validConversationId) {
       await db
         .update(conversations)
-        .set({ messages: updatedMessages, updatedAt: new Date() })
+        .set({
+          messages: encryptConversationMessages(req.userId, updatedMessages),
+          updatedAt: new Date(),
+        })
         .where(
           and(
             eq(conversations.id, validConversationId),
@@ -1355,8 +1362,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         id: finalConvId,
         userId: req.userId,
         agentId,
-        title,
-        messages: updatedMessages,
+        title: encryptTitle(req.userId, title),
+        messages: encryptConversationMessages(req.userId, updatedMessages),
       });
     }
 

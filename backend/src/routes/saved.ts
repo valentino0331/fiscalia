@@ -4,6 +4,7 @@ import { savedMessages } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
+import { encryptText, decryptText } from '../lib/encryption';
 
 export const savedRouter = Router();
 
@@ -17,7 +18,11 @@ savedRouter.get('/', requireAuth, requireSubscription, async (req: any, res) => 
       .from(savedMessages)
       .where(eq(savedMessages.userId, req.userId))
       .orderBy(desc(savedMessages.createdAt));
-    res.json(rows);
+    const decryptedRows = rows.map((r) => ({
+      ...r,
+      content: decryptText(r.content, req.userId),
+    }));
+    res.json(decryptedRows);
   } catch (err) {
     console.error('[Saved] Error al obtener mensajes guardados:', err);
     res.status(500).json({ error: 'Error interno al obtener los mensajes guardados' });
@@ -41,16 +46,20 @@ savedRouter.post('/', requireAuth, requireSubscription, async (req: any, res) =>
       return res.status(400).json({ error: 'El contenido supera el límite de 50,000 caracteres' });
     }
 
+    const trimmedContent = content.trim();
     const [row] = await db
       .insert(savedMessages)
       .values({
         userId: req.userId,
         agentId: agentId.toLowerCase().trim(),
         agentName: agentName.trim().slice(0, 100),
-        content: content.trim(),
+        content: encryptText(trimmedContent, req.userId),
       })
       .returning();
-    res.json(row);
+    res.json({
+      ...row,
+      content: trimmedContent,
+    });
   } catch (err) {
     console.error('[Saved] Error al guardar mensaje:', err);
     res.status(500).json({ error: 'Error interno al guardar el mensaje' });

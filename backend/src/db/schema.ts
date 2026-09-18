@@ -32,6 +32,7 @@ export const subscriptions = pgTable(
   },
   (table) => ({
     userIdIdx: index('idx_subscriptions_user_id').on(table.userId),
+    statusEndIdx: index('idx_subscriptions_status_end').on(table.status, table.currentPeriodEnd),
   })
 );
 
@@ -51,6 +52,8 @@ export const conversations = pgTable(
   (table) => ({
     userIdIdx: index('idx_conversations_user_id').on(table.userId),
     agentIdIdx: index('idx_conversations_agent_id').on(table.agentId),
+    userUpdatedIdx: index('idx_conversations_user_updated').on(table.userId, table.updatedAt),
+    createdAtIdx: index('idx_conversations_created_at').on(table.createdAt),
   })
 );
 

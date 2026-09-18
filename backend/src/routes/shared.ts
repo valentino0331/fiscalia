@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import { db } from '../db';
 import { conversations } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import { decryptConversationMessages, decryptTitle } from '../lib/encryption';
 
 export const sharedRouter = Router();
 
@@ -44,8 +45,8 @@ sharedRouter.get('/:token', async (req, res) => {
     res.json({
       id: conv.id,
       agentId: conv.agentId,
-      title: conv.title,
-      messages: conv.messages,
+      title: decryptTitle(conv.userId, conv.title),
+      messages: decryptConversationMessages(conv.userId, conv.messages as any),
       updatedAt: conv.updatedAt,
     });
   } catch {

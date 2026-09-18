@@ -21,6 +21,7 @@ import { getAgent, AGENTS } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate, formatTime } from '@/lib/utils'
 import { downloadWordDoc, downloadPdfDoc, printDocument, extractDocumentFromMessage, renderDocHtmlBody, getSavedLetterhead } from '@/lib/exportDoc'
+import { saveAttachmentLocally, downloadChatAttachment } from '@/lib/attachmentStorage'
 import { SpijBadge, injectSpijBadges, SPIJ_VERIFIED_HREF } from '@/lib/spijBadge'
 import type { Message, Conversation } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
@@ -1614,6 +1615,7 @@ export default function Chat() {
     setExtractError(null)
     setPageCount(null)
     setExtracting(true)
+    saveAttachmentLocally(file).catch(() => {})
     try {
       const result = await api.files.extract(file)
       setExtractedText(result.text)
@@ -3007,14 +3009,22 @@ function MessageBubble({
 
 
 
-  const displayContent = isUser
-    ? message.content.replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n/, '')
-    : message.content
-
   const hasAttachment = isUser && message.content.includes('[Archivo adjunto:')
   const attachmentName = hasAttachment
-    ? message.content.match(/\[Archivo adjunto: (.+?)\]/)?.[1]
+    ? message.content.match(/\[Archivo adjunto:\s*([^\]\n]+)\]/)?.[1]?.trim() || null
     : null
+
+  const extractedDocContent = hasAttachment
+    ? message.content.match(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---\n([\s\S]*?)\n--- FIN DEL DOCUMENTO ---/)?.[1] || null
+    : null
+
+  const displayContent = isUser
+    ? message.content
+        .replace(/\[Archivo adjunto:\s*[^\]\n]+\]\n?/gi, '')
+        .replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n?/gi, '')
+        .trim()
+    : message.content
+
   const isVoice = (message as any).isVoice === true
 
   return (
@@ -3049,13 +3059,17 @@ function MessageBubble({
         {/* Badges for user messages */}
         <div className="flex items-center gap-1.5 mb-0">
           {attachmentName && (
-            <div
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-t-lg text-[9px] font-medium"
-              style={{ background: 'rgba(201,168,76,0.15)', color: '#c9a84c' }}
+            <button
+              type="button"
+              onClick={() => downloadChatAttachment(attachmentName, extractedDocContent)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-t-lg text-[9px] font-medium transition-all hover:brightness-125 cursor-pointer active:scale-95"
+              style={{ background: 'rgba(201,168,76,0.18)', color: '#e6ca65' }}
+              title="Descargar archivo original"
             >
               <FileText size={10} />
-              {attachmentName}
-            </div>
+              <span className="max-w-[170px] truncate">{attachmentName}</span>
+              <Download size={9} className="opacity-75" />
+            </button>
           )}
           {isVoice && !attachmentName && (
             <div
@@ -3087,7 +3101,55 @@ function MessageBubble({
           }
         >
           {isUser ? (
-            <p className="whitespace-pre-wrap">{displayContent}</p>
+            <div className="space-y-3">
+              {hasAttachment && attachmentName && (
+                <div
+                  className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg transition-all"
+                  style={{
+                    background: 'rgba(0,0,0,0.35)',
+                    border: '1px solid rgba(201,168,76,0.30)',
+                  }}
+                >
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                      style={{
+                        background: attachmentName.toLowerCase().endsWith('.pdf')
+                          ? 'rgba(239,68,68,0.15)'
+                          : 'rgba(59,130,246,0.15)',
+                        color: attachmentName.toLowerCase().endsWith('.pdf') ? '#f87171' : '#60a5fa',
+                      }}
+                    >
+                      <FileText size={16} />
+                    </div>
+                    <div className="min-w-0 text-left">
+                      <p className="text-[12px] font-medium text-white truncate max-w-[160px] xs:max-w-[220px] sm:max-w-[300px]" title={attachmentName}>
+                        {attachmentName}
+                      </p>
+                      <span className="text-[10px] text-[#c9a84c]/75">
+                        Documento original adjunto
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => downloadChatAttachment(attachmentName, extractedDocContent)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer flex-shrink-0 hover:bg-[#c9a84c]/30 text-[#e6ca65] hover:text-white active:scale-95 shadow-sm"
+                    style={{
+                      background: 'rgba(201,168,76,0.20)',
+                      border: '1px solid rgba(201,168,76,0.35)',
+                    }}
+                    title="Descargar archivo original"
+                  >
+                    <Download size={13} />
+                    <span>Descargar</span>
+                  </button>
+                </div>
+              )}
+              {displayContent ? (
+                <p className="whitespace-pre-wrap">{displayContent}</p>
+              ) : null}
+            </div>
           ) : (
             <div className="space-y-3">
               {formattedConversationalText && (

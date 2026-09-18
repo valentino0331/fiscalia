@@ -4,6 +4,11 @@ import { db } from '../db';
 import { conversations } from '../db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth';
+import {
+  decryptConversationMessages,
+  encryptTitle,
+  decryptTitle,
+} from '../lib/encryption';
 
 export const conversationsRouter = Router();
 
@@ -24,7 +29,11 @@ conversationsRouter.get('/', requireAuth, async (req: any, res) => {
       limit: safeLimit,
       columns: { id: true, agentId: true, title: true, updatedAt: true },
     });
-    res.json(list);
+    const decryptedList = list.map((item) => ({
+      ...item,
+      title: decryptTitle(req.userId, item.title),
+    }));
+    res.json(decryptedList);
   } catch (err) {
     console.error('[Conversations] Error al listar conversaciones:', err);
     res.status(500).json({ error: 'Error interno al obtener conversaciones' });
@@ -43,7 +52,12 @@ conversationsRouter.get('/:id', requireAuth, async (req: any, res) => {
       ),
     });
     if (!conv) return res.status(404).json({ error: 'Conversación no encontrada' });
-    res.json(conv);
+    const decryptedConv = {
+      ...conv,
+      title: decryptTitle(req.userId, conv.title),
+      messages: decryptConversationMessages(req.userId, conv.messages as any),
+    };
+    res.json(decryptedConv);
   } catch (err) {
     console.error('[Conversations] Error al obtener conversación:', err);
     res.status(500).json({ error: 'Error interno al obtener la conversación' });
@@ -63,9 +77,10 @@ conversationsRouter.patch('/:id', requireAuth, async (req: any, res) => {
     return res.status(400).json({ error: 'Título no puede estar vacío' });
   }
   try {
+    const encryptedTitle = encryptTitle(req.userId, sanitizedTitle);
     const updated = await db
       .update(conversations)
-      .set({ title: sanitizedTitle, updatedAt: new Date() })
+      .set({ title: encryptedTitle, updatedAt: new Date() })
       .where(
         and(
           eq(conversations.id, req.params.id),
@@ -78,7 +93,10 @@ conversationsRouter.patch('/:id', requireAuth, async (req: any, res) => {
       return res.status(404).json({ error: 'Conversación no encontrada' });
     }
 
-    res.json(updated[0]);
+    res.json({
+      ...updated[0],
+      title: sanitizedTitle,
+    });
   } catch (err) {
     console.error('[Conversations] Error al actualizar conversación:', err);
     res.status(500).json({ error: 'Error interno al actualizar la conversación' });

@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
 
-const MAX_SIZE_MB = 25;
+const MAX_SIZE_MB = 15;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -67,11 +67,9 @@ filesRouter.post(
 
       const rawCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-3.6-flash',
-        'gemini-2.5-flash',
         'gemini-2.0-flash',
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-pro-latest',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawCandidates)];
       let extractedText = '';
