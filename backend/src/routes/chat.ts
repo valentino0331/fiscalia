@@ -767,10 +767,13 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openrouterKey) {
       console.log('[AI Engine] Evaluando proveedor OpenRouter (Prioridad 1)...');
+      const sanitizedEnvModel = process.env.OPENROUTER_MODEL
+        ? process.env.OPENROUTER_MODEL.replace(/:free$/, '').trim()
+        : null;
       const rawOrModels = [
-        process.env.OPENROUTER_MODEL,
-        'meta-llama/llama-3.3-70b-instruct',
         'deepseek/deepseek-chat',
+        sanitizedEnvModel,
+        'meta-llama/llama-3.3-70b-instruct',
         'anthropic/claude-3.5-haiku',
       ].filter(Boolean) as string[];
       const candidateModels = [...new Set(rawOrModels)];
@@ -785,7 +788,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         try {
           console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const timeoutId = setTimeout(() => controller.abort(), 18000);
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -799,6 +802,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               model: openrouterModel,
               messages: formattedMessages,
               temperature: 0.2,
+              max_tokens: 4096,
               stream: isStream,
             }),
             signal: controller.signal,
