@@ -947,7 +947,8 @@ export function isAuditRequest(query: string): boolean {
   const norm = normalizeText(query);
   const auditTriggers = [
     'audita', 'auditar', 'vicio', 'vicios procesales', 'nulidad procesal', 'defecto de notificacion',
-    'cedula de notificacion', 'revisar notificacion', 'inadmisible', 'improcedente', 'debida motivacion'
+    'cedula de notificacion', 'revisar notificacion', 'inadmisible', 'improcedente', 'debida motivacion',
+    'notificacion', 'notificación', 'bajo puerta', 'sin anexar', 'emplazamiento', 'traslado'
   ];
   return auditTriggers.some((t) => norm.includes(t));
 }
@@ -1064,13 +1065,27 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
   }
 
   if (isAudit) {
-    sections.push('► DIRECTIVA CANÓNICA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES (10/10):');
-    sections.push('- ESTRUCTURA OBLIGATORIA DE RESPUESTA EN 3 PARTES:');
-    sections.push('  I. DIAGNÓSTICO DE VICIOS PROCESALES Y VULNERACIÓN CONSTITUCIONAL: Califica la gravedad de los vicios (ej. Nulidad Absoluta Insanable bajo el Art. 150° inc. d del NCPP), omisión de anexos (violación al derecho de contradicción e igualdad de armas), notificación irregular bajo puerta y vulneración al plazo razonable de preparación de la defensa.');
-    sections.push('  II. CÓMPUTO DE PLAZO Y SUSTENTO JURISPRUDENCIAL VINCULANTE: Detalla el cómputo del plazo de vencimiento procesal, los artículos exactos del código procesal aplicable, el Acuerdo Plenario rector (ej. AP 01-2019/CIJ-116 FJ 24-25 para prisión preventiva) y la doctrina constitucional del TC (STC Exp. 01558-2015-PHC/TC y 02098-2010-PA/TC sobre medios y tiempo razonable).');
-    sections.push('  III. PLAN DE ACCIÓN Y REMEDIOS PROCESALES INMEDIATOS: Diseña un plan táctico de 3 pasos (Paso 1: Vía SINOE a primera hora con escrito de Nulidad Absoluta y Reprogramación; Paso 2: En Audiencia, Incidencia oral previa de ineficacia antes de que la contraparte o el fiscal exponga; Paso 3: Táctica subsidiaria con Recurso de Reposición in situ y reserva de Hábeas Corpus).');
-    sections.push('- DISTINCIÓN DOGMÁTICA CRÍTICA:');
-    sections.push('  * Si el vicio proviene de una cédula, notificación, citación o resolución del JUZGADO (Poder Judicial), el remedio es SIEMPRE NULIDAD PROCESAL ABSOLUTA (Art. 150.d NCPP) o Incidencia de Ineficacia de Emplazamiento. NUNCA deduzcas Tutela de Derechos (la Tutela es residual exclusiva contra la Fiscalía o Policía bajo el AP 04-2010) ni usar el término "Cuestión Previa" (la cuestión previa del Art. 4° NCPP es un medio contra la acción penal; en sala nómbralo siempre "Incidencia Previa de Ineficacia Procesal").');
+    sections.push('► DIRECTIVA CANÓNICA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES (10/10 SUPREMO):');
+    sections.push('- ESTRUCTURA OBLIGATORIA DE RESPUESTA EN 4 BLOQUES DE EXCELENCIA:');
+    sections.push('  I. DIAGNÓSTICO DE VICIOS PROCESALES Y VULNERACIÓN CONSTITUCIONAL:');
+    sections.push('     1. VICIOS REDONDILES DE NULIDAD ABSOLUTA INSANABLE: Califica la gravedad bajo el Art. 150° inc. d del NCPP por inobservancia del contenido esencial del Derecho de Defensa, Igualdad de Armas y Debido Proceso (Art. 139° inc. 14 de la Constitución).');
+    sections.push('     2. NOTIFICACIÓN DEFECTUOSA E INCOMPLETA (Omisión de Anexos): Conforme al Art. 127° inc. 1 y Art. 271° inc. 1 del NCPP, el traslado del requerimiento de prisión preventiva exige la entrega física o digital completa de todos los elementos de convicción que lo sustentan; omitir declaraciones testimoniales deja a la defensa a ciegas para contradecir el primer presupuesto de "Sospecha Fuerte" o Fumus Comissi Delicti.');
+    sections.push('     3. EMPLAZAMIENTO IRREGULAR Y DEPOSITADO "BAJO PUERTA": Infracción de los Arts. 127° y 129° del NCPP al notificar sin garantías de recepción fuera de horario de despacho judicial judicial.');
+    sections.push('     4. VULNERACIÓN AL PLAZO RAZONABLE DE PREPARACIÓN DE LA DEFENSA: Aclara con rigor dogmático que las 48 horas del Art. 271° inc. 1 del NCPP son un plazo máximo para el juzgado, NO un plazo de recorte o asfixia para la defensa.');
+    sections.push('  II. CÓMPUTO DE PLAZO Y SUSTENTO JURISPRUDENCIAL VINCULANTE:');
+    sections.push('     - Cómputo fatal: Declara con crudeza que de viernes 7:00 pm a lunes 8:30 am el plazo efectivo de preparación fue de exactamente 0 DÍAS HÁBILES (sábado y domingo juzgado y fiscalía cerrados).');
+    sections.push('     - Artículos exactos del NCPP: Art. 150° inc. d (nulidad absoluta), Arts. 127° y 129° (notificaciones válidas), Art. 271° inc. 1 (prisión preventiva y traslado íntegro) y Art. IX del Título Preliminar del NCPP.');
+    sections.push('     - Jurisprudencia rectora:');
+    sections.push('       * Acuerdo Plenario N° 01-2019/CIJ-116 (Fundamentos Jurídicos 24 y 25: Exigencia de contradicción cualificada sobre "Sospecha Fuerte").');
+    sections.push('       * STC Exp. N° 01558-2015-PHC/TC y STC Exp. N° 02098-2010-PA/TC (el derecho de defensa comprende el tiempo y los medios razonables indispensables para preparar la defensa técnica).');
+    sections.push('  III. PLAN DE ACCIÓN Y LITIGACIÓN EN 3 PASOS:');
+    sections.push('     - PASO 1 (HOY / VÍA SINOE): Ingresar Escrito de Nulidad Absoluta de Notificación y Emplazamiento con solicitud de Reprogramación de audiencia y entrega inmediata de anexos.');
+    sections.push('     - PASO 2 (EN AUDIENCIA 8:30 AM): Al instalarse la audiencia y ANTES de que el Fiscal exponga su requerimiento, formular INCIDENCIA PREVIA DE INEFICACIA PROCESAL (Art. 150.d NCPP) solicitando suspensión y plazo prudencial de 24 a 48 horas.');
+    sections.push('     - PASO 3 (TÁCTICA SUBSIDIARIA EN ESTRADOS): Si el Juez rechaza la suspensión, interponer de inmediato en el acto RECURSO DE REPOSICIÓN ORAL EN AUDIENCIA bajo el ARTÍCULO 415° DEL NCPP (OBLIGATORIO: citar siempre el Art. 415° NCPP para reposición in situ; NUNCA citar Art. 421° que corresponde a la apelación), consignando reserva expresa de Apelación y demanda de Hábeas Corpus.');
+    sections.push('  IV. ADVERTENCIA BLINDAJE ANTITRAMPAS:');
+    sections.push('     * Señala expresamente: ⚠️ ADVERTENCIA: NO procede Tutela de Derechos (Acuerdo Plenario N° 04-2010/CJ-116) porque el defecto proviene del Juzgado, no de la Fiscalía. El remedio es NULIDAD ABSOLUTA (Art. 150.d).');
+    sections.push('  V. ESCRITO JUDICIAL COMPLETO EN BLOQUE DOCUMENT:');
+    sections.push('     * Concluye redactando inmediatamente en el bloque ```document el escrito judicial listo para ingresar al SINOE (con Sumilla, Cuaderno Cautelar, Hechos, Fundamentos de Derecho, Petitorio en 3 puntos y Primer Otrosí Digo con Casilla SINOE).');
   }
 
   if (isHearing) {
