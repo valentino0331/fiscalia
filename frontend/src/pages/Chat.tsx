@@ -1920,7 +1920,7 @@ export default function Chat() {
   const limitReached = isLimited && usage!.questionsUsed >= usage!.limit!
 
   return (
-    <div className="flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111', height: '100dvh', minHeight: '100vh' }}>
+    <div className="fixed inset-0 flex flex-col overflow-hidden w-full max-w-full h-full" style={{ background: '#111111' }}>
       {/* NAVBAR */}
       <header
         className="h-14 flex-shrink-0 flex items-center justify-between gap-1 sm:gap-2 px-2.5 sm:px-4 border-b z-30 max-w-full overflow-hidden"
@@ -1945,12 +1945,10 @@ export default function Chat() {
         <div className="flex items-center justify-center gap-1.5 sm:gap-2 min-w-0 flex-1 sm:flex-none">
           <button
             onClick={() => navigate('/dashboard')}
-            className="hidden sm:flex items-center gap-1 text-[11px] font-light transition-colors flex-shrink-0"
-            style={{ color: 'rgba(255,255,255,0.40)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = '#ffffff' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.40)' }}
+            className="flex items-center gap-0.5 text-[11px] font-light transition-colors flex-shrink-0 text-white/50 hover:text-white"
+            title="Volver a Especialistas"
           >
-            <ChevronLeft size={14} />
+            <ChevronLeft size={16} />
             <span className="hidden md:inline">Especialistas</span>
           </button>
           <div className="hidden sm:block w-px h-4 flex-shrink-0" style={{ background: '#2a2a2a' }} />
@@ -2385,7 +2383,7 @@ export default function Chat() {
           </AnimatePresence>
 
           {/* Input area */}
-          <div className="flex-shrink-0 p-3 sm:p-4 md:px-8 md:pb-6 relative z-20">
+          <div className="flex-shrink-0 p-2.5 sm:p-4 md:px-8 md:pb-6 relative z-20 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
             <div className="max-w-4xl mx-auto space-y-2">
 
               {/* Voice message indicator in input */}
@@ -2601,29 +2599,23 @@ export default function Chat() {
                   }}
                 />
 
-                <div className="flex items-center justify-between pt-2 mt-1 gap-1 overflow-x-auto sm:overflow-visible" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  {/* Left actions */}
-                  <div className="flex items-center gap-1 sm:gap-2.5 flex-shrink-0">
+                <div className="flex items-center justify-between pt-1.5 sm:pt-2 mt-1 gap-1.5 sm:gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                  {/* Left actions: smooth horizontal scroll only if needed, min-w-0 */}
+                  <div className="flex items-center gap-1 sm:gap-2 min-w-0 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded"
-                      style={{ color: 'rgba(255,255,255,0.35)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}
+                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/45 flex-shrink-0"
                       title="Adjuntar PDF o Word (Máx. 25MB · Recomendado hasta 15MB para máxima agilidad)"
                     >
-                      <Paperclip size={12} />
+                      <Paperclip size={13} />
                       <span className="hidden sm:inline">PDF / WORD</span>
                     </button>
                     <button
                       onClick={() => imageInputRef.current?.click()}
-                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded"
-                      style={{ color: 'rgba(255,255,255,0.35)' }}
-                      onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.35)' }}
+                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/45 flex-shrink-0"
                       title="Adjuntar imagen"
                     >
-                      <ImageIcon size={12} />
+                      <ImageIcon size={13} />
                       <span className="hidden sm:inline">IMAGEN</span>
                     </button>
 
@@ -2631,31 +2623,31 @@ export default function Chat() {
                     <button
                       type="button"
                       onClick={() => setSpijModalOpen(true)}
-                      className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 sm:px-2 py-1 rounded-md"
+                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0"
                       style={{
-                        color: spijModalOpen ? '#c9a84c' : 'rgba(201,168,76,0.85)',
-                        background: spijModalOpen ? 'rgba(201,168,76,0.12)' : 'transparent',
+                        color: spijModalOpen ? '#c9a84c' : 'rgba(201,168,76,0.90)',
+                        background: spijModalOpen ? 'rgba(201,168,76,0.15)' : 'rgba(201,168,76,0.06)',
+                        border: '1px solid rgba(201,168,76,0.22)',
                       }}
                       title="Consultar o insertar Acuerdos Plenarios de la Corte Suprema y Leyes SPIJ"
                     >
                       <Scale size={12} className="text-[#c9a84c]" />
-                      <span className="font-medium">
+                      <span>
                         <span className="sm:hidden">SPIJ</span>
                         <span className="hidden sm:inline">SPIJ / PLENOS</span>
                       </span>
                     </button>
 
                     {/* Specialist Document Templates (Desktop & Mobile) */}
-                    <div ref={templatesRef} className="relative">
+                    <div ref={templatesRef} className="relative flex-shrink-0">
                       <button
                         onClick={() => setTemplatesOpen((o) => !o)}
-                        className="flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 sm:px-2 py-1 rounded-md"
+                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 sm:px-2 py-1 rounded-md text-white/45 hover:text-[#c9a84c] flex-shrink-0"
                         style={{
-                          color: templatesOpen ? '#c9a84c' : 'rgba(255,255,255,0.40)',
                           background: templatesOpen ? 'rgba(201,168,76,0.10)' : 'transparent',
                         }}
                         onMouseEnter={(e) => { e.currentTarget.style.color = '#c9a84c' }}
-                        onMouseLeave={(e) => { if (!templatesOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.40)' }}
+                        onMouseLeave={(e) => { if (!templatesOpen) e.currentTarget.style.color = 'rgba(255,255,255,0.45)' }}
                         title={`Plantillas legales de ${agent.name} (${agent.badge})`}
                       >
                         <BookOpen size={12} />
@@ -2711,8 +2703,8 @@ export default function Chat() {
                     </div>
                   </div>
 
-                  {/* Right actions */}
-                  <div className="flex items-center gap-2">
+                  {/* Right actions: ALWAYS anchored, visible, flex-shrink-0 */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto pl-1">
                     {input.length > 0 && (
                       <span className="text-[9px] hidden lg:inline" style={{ color: 'rgba(255,255,255,0.30)' }}>
                         Enter · Shift+Enter
@@ -2852,11 +2844,11 @@ function WelcomeScreen({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center justify-center min-h-full py-12 text-center px-4 max-w-2xl mx-auto"
+      className="flex flex-col items-center justify-center min-h-full py-4 sm:py-10 text-center px-3 sm:px-4 max-w-2xl mx-auto"
     >
-      <div className="relative mb-5">
+      <div className="relative mb-3 sm:mb-5">
         <div
-          className="w-20 h-20 rounded-full overflow-hidden"
+          className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden"
           style={{
             border: '1.5px solid rgba(201,168,76,0.25)',
             boxShadow: '0 0 25px rgba(201,168,76,0.10)',
@@ -2865,49 +2857,49 @@ function WelcomeScreen({
           <img src={agent.image} alt={agent.name} className="w-full h-full object-cover object-top" />
         </div>
         <span
-          className="absolute bottom-1 right-1 w-3.5 h-3.5 rounded-full dot-online"
+          className="absolute bottom-0.5 right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full dot-online"
           style={{ background: '#34d17a', border: '2px solid #111111' }}
         />
       </div>
 
-      <h2 className="text-[22px] font-extralight text-white mb-1 tracking-wide">
+      <h2 className="text-xl sm:text-[22px] font-extralight text-white mb-0.5 sm:mb-1 tracking-wide">
         {agent.name}
       </h2>
       <p
-        className="text-[9px] font-semibold uppercase mb-4"
-        style={{ letterSpacing: '3px', color: '#c9a84c' }}
+        className="text-[8.5px] sm:text-[9px] font-semibold uppercase mb-3 sm:mb-4"
+        style={{ letterSpacing: '2.5px', color: '#c9a84c' }}
       >
         {agent.role}
       </p>
 
       <div
-        className="p-5 rounded-xl max-w-lg mb-8 text-left"
+        className="p-3.5 sm:p-5 rounded-xl max-w-lg mb-3.5 sm:mb-6 text-left"
         style={{
           background: '#1a1a1a',
           border: '1px solid #2a2a2a',
         }}
       >
-        <p className="text-[13px] font-light leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)' }}>
+        <p className="text-xs sm:text-[13px] font-light leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)' }}>
           {agent.welcomeMessage}
         </p>
       </div>
 
       <p
-        className="text-[8px] font-bold uppercase mb-3"
-        style={{ letterSpacing: '3px', color: 'rgba(255,255,255,0.25)' }}
+        className="text-[8px] font-bold uppercase mb-2 sm:mb-2.5"
+        style={{ letterSpacing: '2.5px', color: 'rgba(255,255,255,0.25)' }}
       >
         CONSULTAS FRECUENTES
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 w-full max-w-lg">
         {agent.suggestions.map((s, i) => (
           <button
             key={i}
             onClick={() => onSuggestion(s)}
-            className="p-3 rounded-[10px] text-[11px] font-light text-left transition-all duration-200 flex items-center justify-between group"
+            className="p-2.5 sm:p-3 rounded-[10px] text-[10.5px] sm:text-[11px] font-light text-left transition-all duration-200 flex items-center justify-between group"
             style={{
               background: '#1a1a1a',
               border: '1px solid #333333',
-              color: 'rgba(255,255,255,0.60)',
+              color: 'rgba(255,255,255,0.65)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'translateY(-1px)'
@@ -2920,7 +2912,7 @@ function WelcomeScreen({
               e.currentTarget.style.borderColor = '#333333'
             }}
           >
-            <span>{s}</span>
+            <span className="leading-snug">{s}</span>
             <CornerDownLeft size={12} className="text-[rgba(255,255,255,0.20)] group-hover:text-[#c9a84c] transition-colors flex-shrink-0 ml-2" />
           </button>
         ))}

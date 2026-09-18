@@ -1269,7 +1269,7 @@ function AgentCard({ agent, index }: { agent: Agent; index: number }) {
       }}
     >
       {/* Photo area */}
-      <div className="relative overflow-hidden" style={{ aspectRatio: '3/4', maxHeight: '300px' }}>
+      <div className="relative overflow-hidden w-full aspect-[4/3] sm:aspect-[3/4] sm:max-h-[300px]">
         <img
           src={agent.image}
           alt={agent.name}
