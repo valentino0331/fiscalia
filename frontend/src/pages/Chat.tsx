@@ -1305,53 +1305,7 @@ export default function Chat() {
     baseInputRef.current = input
     isRecordingRef.current = true
 
-    let stream: MediaStream | null = null
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Navegador no soporta captura de audio')
-      }
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaStreamRef.current = stream
-    } catch (err: any) {
-      console.warn('Mic permission error:', err)
-      isRecordingRef.current = false
-      setMicPermissionDenied(true)
-      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador.')
-      return
-    }
-
-    setIsRecording(true)
-    setRecordingSeconds(0)
-    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingSeconds((s) => s + 1)
-    }, 1000)
-
-    // Iniciar MediaRecorder para capturar audio como respaldo 100% garantizado
-    if (stream) {
-      try {
-        const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : ''
-        const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
-        mediaRecorderRef.current = recorder
-        audioChunksRef.current = []
-        recorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            audioChunksRef.current.push(e.data)
-          }
-        }
-        recorder.start(250)
-      } catch (recErr) {
-        console.warn('MediaRecorder error:', recErr)
-      }
-    }
-
-    // Reconocimiento de voz en tiempo real con Web Speech API
+    // 1. Web Speech API nativo del navegador (100% GRATUITO, CERO TOKENS, tiempo real)
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
       try {
@@ -1361,6 +1315,15 @@ export default function Chat() {
         rec.continuous = true
         rec.interimResults = true
         rec.maxAlternatives = 1
+
+        rec.onstart = () => {
+          setIsRecording(true)
+          setRecordingSeconds(0)
+          if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+          recordingTimerRef.current = setInterval(() => {
+            setRecordingSeconds((s) => s + 1)
+          }, 1000)
+        }
 
         rec.onresult = (event: any) => {
           let interim = ''
@@ -1385,7 +1348,7 @@ export default function Chat() {
         }
 
         rec.onend = () => {
-          // Auto-reiniciar si el usuario sigue grabando (evita que el navegador corte tras 1 seg de silencio)
+          // Auto-reiniciar si el usuario sigue grabando
           if (isRecordingRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start()
@@ -1394,6 +1357,7 @@ export default function Chat() {
         }
 
         rec.onerror = (e: any) => {
+          console.warn('SpeechRecognition error:', e?.error)
           if (e?.error === 'not-allowed') {
             setMicPermissionDenied(true)
             setVoiceError('Permiso de micrófono no concedido.')
@@ -1402,8 +1366,61 @@ export default function Chat() {
 
         recognitionRef.current = rec
         rec.start()
+        setIsRecording(true)
+        setRecordingSeconds(0)
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+        recordingTimerRef.current = setInterval(() => {
+          setRecordingSeconds((s) => s + 1)
+        }, 1000)
+        return // Web Speech API iniciado con éxito: 0 tokens, 100% nativo y gratuito
       } catch (speechErr) {
-        console.warn('SpeechRecognition start failed:', speechErr)
+        console.warn('SpeechRecognition no disponible, usando captura de audio:', speechErr)
+      }
+    }
+
+    // 2. Respaldo solo si el navegador no tiene Web Speech API
+    let stream: MediaStream | null = null
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Navegador no soporta captura de audio')
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+    } catch (err: any) {
+      console.warn('Mic permission error:', err)
+      isRecordingRef.current = false
+      setMicPermissionDenied(true)
+      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador.')
+      return
+    }
+
+    setIsRecording(true)
+    setRecordingSeconds(0)
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => s + 1)
+    }, 1000)
+
+    if (stream) {
+      try {
+        const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : ''
+        const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+        mediaRecorderRef.current = recorder
+        audioChunksRef.current = []
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            audioChunksRef.current.push(e.data)
+          }
+        }
+        recorder.start(250)
+      } catch (recErr) {
+        console.warn('MediaRecorder error:', recErr)
       }
     }
   }
@@ -1439,8 +1456,8 @@ export default function Chat() {
     setLiveTranscript('')
     liveTranscriptRef.current = ''
 
-    // Si Web Speech API ya escribió texto en el input, terminamos de inmediato
-    if (hasSpokenRef.current) {
+    // Si Web Speech API ya escribió texto en el input o estuvo activo, terminamos de inmediato (0 tokens)
+    if (hasSpokenRef.current || (!mediaRecorderRef.current && recognitionRef.current)) {
       setIsVoiceMessage(true)
       setTimeout(() => {
         autoResize()
