@@ -1829,6 +1829,18 @@ export default function Chat() {
     }
   }
 
+  const handleEditPrompt = (promptToEdit: string) => {
+    if (!promptToEdit) return
+    setInput(promptToEdit)
+    if (textareaRef.current) {
+      textareaRef.current.focus()
+      setTimeout(() => {
+        autoResize()
+        textareaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 50)
+    }
+  }
+
   const handleContinueWriting = () => {
     setInput('Por favor continúa con la redacción legal exactamente desde el último punto donde te quedaste, respetando el formato procesal y la numeración.')
     if (textareaRef.current) {
@@ -2299,6 +2311,7 @@ export default function Chat() {
                     onOpenDeadline={(text) => setDeadlineModal({ isOpen: true, deadlineText: text })}
                     onRetry={handleRetryPrompt}
                     onContinue={handleContinueWriting}
+                    onEditPrompt={handleEditPrompt}
                     isStreaming={loading && i === messages.length - 1 && msg.role === 'assistant'}
                     lastUserMessage={
                       messages
@@ -2945,6 +2958,7 @@ function MessageBubble({
   lastUserMessage,
   onRetry,
   onContinue,
+  onEditPrompt,
   isStreaming,
 }: {
   message: Message
@@ -2958,6 +2972,7 @@ function MessageBubble({
   lastUserMessage?: string
   onRetry?: (prompt: string) => void
   onContinue?: () => void
+  onEditPrompt?: (prompt: string) => void
   isStreaming?: boolean
 }) {
   const navigate = useNavigate()
@@ -2968,6 +2983,8 @@ function MessageBubble({
   const [saved, setSaved] = useState(false)
   const [savingMsg, setSavingMsg] = useState(false)
   const [previewOpen, setPreviewOpen] = useState(false)
+  const [copiedUser, setCopiedUser] = useState(false)
+  const [sharedUser, setSharedUser] = useState(false)
   const isSpeaking = speakingMessageId === message.timestamp
   const isLoadingAudio = audioLoadingId === message.timestamp
   const deadlines = !isUser ? detectDeadlines(message.content) : []
@@ -3027,12 +3044,37 @@ function MessageBubble({
 
   const isVoice = (message as any).isVoice === true
 
+  const handleCopyUser = () => {
+    const textToCopy = displayContent || message.content
+    navigator.clipboard.writeText(textToCopy)
+    setCopiedUser(true)
+    setTimeout(() => setCopiedUser(false), 2000)
+  }
+
+  const handleShareUser = async () => {
+    const textToShare = displayContent || message.content
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Consulta Legal — Juris Inteligencia',
+          text: textToShare,
+        })
+        return
+      } catch {
+        // Fallback to clipboard
+      }
+    }
+    navigator.clipboard.writeText(textToShare)
+    setSharedUser(true)
+    setTimeout(() => setSharedUser(false), 2000)
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: isUser ? 8 : -12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className={`flex ${isUser ? 'justify-end' : 'justify-start'} gap-2 sm:gap-3 w-full max-w-4xl mx-auto`}
+      className={`group relative flex ${isUser ? 'justify-end' : 'justify-start'} gap-2 sm:gap-3 w-full max-w-4xl mx-auto`}
     >
       {!isUser && (
         <div
@@ -3501,9 +3543,67 @@ function MessageBubble({
         )}
 
         {isUser && (
-          <p className="text-[9px] mt-1 px-1" style={{ color: 'rgba(255,255,255,0.20)' }}>
-            {formatTime(message.timestamp)}
-          </p>
+          <div className="flex items-center justify-end gap-1.5 mt-1.5 px-1 sm:opacity-0 sm:group-hover:opacity-100 opacity-90 transition-all duration-200">
+            <span className="text-[10px] mr-1 text-white/30 select-none">
+              {formatTime(message.timestamp)}
+            </span>
+
+            {/* Copiar mensaje */}
+            <button
+              type="button"
+              onClick={handleCopyUser}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-white/10 text-white/70 hover:text-white active:scale-95 shadow-sm"
+              style={{ background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              title="Copiar texto del mensaje al portapapeles"
+            >
+              {copiedUser ? (
+                <>
+                  <Check size={11} className="text-emerald-400" />
+                  <span className="text-emerald-400 font-semibold">Copiado</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={11} />
+                  <span>Copiar</span>
+                </>
+              )}
+            </button>
+
+            {/* Editar mensaje */}
+            {onEditPrompt && (
+              <button
+                type="button"
+                onClick={() => onEditPrompt(displayContent || message.content)}
+                className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-[#c9a84c]/20 text-[#c9a84c] hover:text-[#e5c96a] active:scale-95 shadow-sm"
+                style={{ background: 'rgba(201, 168, 76, 0.08)', border: '1px solid rgba(201, 168, 76, 0.25)' }}
+                title="Editar este mensaje para modificarlo y volver a enviarlo"
+              >
+                <Edit2 size={11} />
+                <span>Editar</span>
+              </button>
+            )}
+
+            {/* Compartir prompt */}
+            <button
+              type="button"
+              onClick={handleShareUser}
+              className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer hover:bg-white/10 text-white/70 hover:text-white active:scale-95 shadow-sm"
+              style={{ background: 'rgba(255, 255, 255, 0.06)', border: '1px solid rgba(255, 255, 255, 0.12)' }}
+              title="Compartir o reutilizar este prompt"
+            >
+              {sharedUser ? (
+                <>
+                  <Check size={11} className="text-emerald-400" />
+                  <span className="text-emerald-400 font-semibold">Copiado</span>
+                </>
+              ) : (
+                <>
+                  <Share2 size={11} />
+                  <span>Compartir</span>
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
 

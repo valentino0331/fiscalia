@@ -158,10 +158,10 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
-            'gemini-3.6-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
+            'gemini-1.5-pro',
             'gemini-2.5-flash',
-            'gemini-2.0-flash-exp',
-            'gemini-1.5-flash-latest',
           ].filter(Boolean) as string[];
 
           let geminiMime = 'audio/webm';
