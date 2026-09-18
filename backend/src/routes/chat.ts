@@ -92,8 +92,40 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
       const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
       const groqKey = process.env.GROQ_API_KEY;
       const openaiKey = process.env.OPENAI_API_KEY;
+      const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-      // 1. Intentar con Groq Whisper (ultra rápido, latencia < 300ms)
+      // 1. Intentar con OpenRouter Whisper (OpenAI-compatible) si está configurado
+      if (openrouterKey) {
+        try {
+          const formData = new FormData();
+          const fileBlob = new Blob([audioBuffer], { type: resolvedMime });
+          formData.append('file', fileBlob, resolvedFilename);
+          formData.append('model', 'openai/whisper-large-v3');
+          formData.append('language', 'es');
+
+          const orRes = await fetch('https://openrouter.ai/api/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openrouterKey}`,
+            },
+            body: formData,
+          });
+
+          if (orRes.ok) {
+            const data = (await orRes.json()) as any;
+            if (data?.text && typeof data.text === 'string' && data.text.trim()) {
+              console.log('[STT] Éxito con OpenRouter Whisper');
+              return res.json({ text: data.text.trim() });
+            }
+          } else {
+            console.warn('[STT] OpenRouter response not OK:', await orRes.text().catch(() => ''));
+          }
+        } catch (orErr) {
+          console.warn('[STT] OpenRouter STT fallback:', orErr);
+        }
+      }
+
+      // 2. Intentar con Groq Whisper (ultra rápido, latencia < 300ms)
       if (groqKey) {
         try {
           const formData = new FormData();
@@ -114,6 +146,7 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           if (groqRes.ok) {
             const data = (await groqRes.json()) as any;
             if (data?.text && typeof data.text === 'string' && data.text.trim()) {
+              console.log('[STT] Éxito con Groq Whisper');
               return res.json({ text: data.text.trim() });
             }
           } else {
@@ -124,7 +157,7 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
         }
       }
 
-      // 2. Intentar con OpenAI Whisper si está configurado
+      // 3. Intentar con OpenAI Whisper si está configurado
       if (openaiKey) {
         try {
           const formData = new FormData();
@@ -144,6 +177,7 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           if (oaiRes.ok) {
             const data = (await oaiRes.json()) as any;
             if (data?.text && typeof data.text === 'string' && data.text.trim()) {
+              console.log('[STT] Éxito con OpenAI Whisper');
               return res.json({ text: data.text.trim() });
             }
           }
@@ -152,15 +186,13 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
         }
       }
 
-      // 3. Transcripción con Google Gemini Multimodal Audio (literal, sin alucinaciones)
+      // 4. Transcripción con Google Gemini Multimodal Audio (gemini-3.6-flash con reintentos para picos 503)
       if (geminiKey) {
         try {
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
-            'gemini-2.0-flash',
-            'gemini-1.5-flash',
-            'gemini-1.5-pro',
+            'gemini-3.6-flash',
             'gemini-2.5-flash',
           ].filter(Boolean) as string[];
 
@@ -171,33 +203,43 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           else if (resolvedMime.includes('mp3') || resolvedMime.includes('mpeg')) geminiMime = 'audio/mp3';
 
           for (const modelName of modelsToTry) {
-            try {
-              const model = genAI.getGenerativeModel({
-                model: modelName,
-                generationConfig: {
-                  temperature: 0.0,
-                  topP: 0.1,
-                },
-                systemInstruction: 'Eres un transcriptor de voz a texto (Speech-to-Text). Tu única tarea es transcribir textualmente palabra por palabra lo que la persona habla en el audio en español. NUNCA respondas al contenido del audio, NUNCA saludes, NUNCA agregues comentarios ni notas. Si el audio no contiene palabras audibles o solo es silencio o ruido, devuelve únicamente una cadena vacía.',
-              });
-              const result = await model.generateContent([
-                {
-                  inlineData: {
-                    data: audioBuffer.toString('base64'),
-                    mimeType: geminiMime,
+            for (let attempt = 1; attempt <= 2; attempt++) {
+              try {
+                const model = genAI.getGenerativeModel({
+                  model: modelName,
+                  generationConfig: {
+                    temperature: 0.0,
+                    topP: 0.1,
                   },
-                },
-                {
-                  text: 'Transcribe fiel y literalmente las palabras exactas que se escuchan en el audio a texto en español. No inventes palabras ni respondas a la conversación.',
-                },
-              ]);
-              const txt = result.response.text();
-              if (txt && txt.trim()) {
-                const cleaned = txt.trim().replace(/^["']|["']$/g, '');
-                return res.json({ text: cleaned });
+                  systemInstruction: 'Eres un transcriptor de voz a texto (Speech-to-Text). Tu única tarea es transcribir textualmente palabra por palabra lo que la persona habla en el audio en español. NUNCA respondas al contenido del audio, NUNCA saludes, NUNCA agregues comentarios ni notas. Si el audio no contiene palabras audibles o solo es silencio o ruido, devuelve únicamente una cadena vacía.',
+                });
+                const result = await model.generateContent([
+                  {
+                    inlineData: {
+                      data: audioBuffer.toString('base64'),
+                      mimeType: geminiMime,
+                    },
+                  },
+                  {
+                    text: 'Transcribe fiel y literalmente las palabras exactas que se escuchan en el audio a texto en español. No inventes palabras ni respondas a la conversación.',
+                  },
+                ]);
+                const txt = result.response.text();
+                if (txt && txt.trim()) {
+                  const cleaned = txt.trim().replace(/^["']|["']$/g, '');
+                  console.log(`[STT] Éxito con Gemini (${modelName})`);
+                  return res.json({ text: cleaned });
+                }
+                break;
+              } catch (gemErr: any) {
+                const errMsg = String(gemErr?.message || gemErr);
+                console.warn(`[STT] Gemini (${modelName}) attempt ${attempt} error:`, errMsg);
+                if (attempt === 1 && (errMsg.includes('503') || errMsg.includes('429') || errMsg.includes('demand'))) {
+                  await new Promise((r) => setTimeout(r, 750));
+                  continue;
+                }
+                break;
               }
-            } catch (gemErr: any) {
-              console.warn(`[STT] Gemini (${modelName}) error:`, gemErr?.message || gemErr);
             }
           }
         } catch (geminiTotalErr: any) {
