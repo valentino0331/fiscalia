@@ -205,14 +205,14 @@ export function classifyLine(line: string): LineKind {
   // Cláusulas de contratos (PRIMERA.-, SEGUNDA.-, DÉCIMO PRIMERA.-, etc.)
   if (isClauseHeading(t)) return 'CLAUSE'
 
-  // Título principal del documento
-  if (/^(CONTRATO DE ARRENDAMIENTO|CONTRATO DE|CONTRATO|CARTA NOTARIAL|DENUNCIA PENAL|DENUNCIA|DEMANDA DE|DEMANDA|RECURSO DE APELACI[OÓ]N|RECURSO DE RECLAMACI[OÓ]N|RECURSO DE QUEJA|MEDIDA CAUTELAR|SOLICITUD DE|SOLICITUD|ESCRITO DE DESCARGO|ESCRITO|INFORME|DICTAMEN|PODER SIMPLE|PODER ESPECIAL)/i.test(plain)) return 'MAIN_TITLE'
+  // Sumilla, expediente, cuaderno, escrito, carpeta fiscal, carátula judicial / fiscal (MÁXIMA PRIORIDAD PARA ENCABEZADOS)
+  if (/^(SUMILLA\s*:|EXPEDIENTE(\s+JUDICIAL)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:|EXP\.?\s*(NOTARIAL|JUDICIAL)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:|CARPETA\s+FISCAL\s*(?:N?°|Nº|NRO\.?|#)?\s*:|FISCAL(\s+RESPONSABLE|\s+RESP\.?)?\s*:|CUADERNO(\s+INCIDENTAL|\s+CAUTELAR|\s+PRINCIPAL)?\s*:|ESCRITO\s*(?:N?°|Nº|NRO\.?|#)?\s*[:\d]|SECRETARIO(\s+JUDICIAL)?\s*:|ESPECIALISTA(\s+LEGAL)?\s*:|CASILLA\s*(SINOE|ELECTR[OÓ]NICA|F[IÍ]SICA)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:|KARDEX(\s+NOTARIAL)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:)/i.test(plain)) return 'SUMILLA'
+
+  // Título principal del documento (excluye expresamente campos de carátula como ESCRITO :, EXPEDIENTE :, etc.)
+  if (/^(CONTRATO DE ARRENDAMIENTO|CONTRATO DE|CONTRATO|CARTA NOTARIAL|DENUNCIA PENAL|DENUNCIA|DEMANDA DE|DEMANDA|RECURSO DE APELACI[OÓ]N|RECURSO DE RECLAMACI[OÓ]N|RECURSO DE QUEJA|MEDIDA CAUTELAR|SOLICITUD DE|SOLICITUD|ESCRITO DE DESCARGO|ESCRITO DE APERSONAMIENTO|ESCRITO JUDICIAL|INFORME|DICTAMEN|PODER SIMPLE|PODER ESPECIAL)/i.test(plain) && !/^(ESCRITO|EXPEDIENTE|CUADERNO|SUMILLA)\s*[:\d]/i.test(plain)) return 'MAIN_TITLE'
 
   // Autoridad destinataria
   if (/^(SE[ÑN]OR\s+(JUEZ|FISCAL|PRESIDENTE|DIRECTOR|NOTARIO|SECRETARIO)|AL\s+(JUZGADO|SEÑOR|SE[ÑN]OR|DESPACHO)|A\s+LA\s+(FISCALÍA|JUNTA|AUTORIDAD|CORTE|SALA))/i.test(plain)) return 'AUTHORITY'
-
-  // Sumilla, expediente, carpeta fiscal, carátula judicial / fiscal
-  if (/^(SUMILLA\s*:|EXPEDIENTE(\s+JUDICIAL)?\s*N?°?\s*:|EXP\.?\s*(NOTARIAL|JUDICIAL)?\s*N?°?\s*:|CARPETA\s+FISCAL\s*N?°?\s*:|FISCAL(\s+RESPONSABLE|\s+RESP\.?)?\s*:|CUADERNO\s*:|ESCRITO\s*N?°?\s*:|SECRETARIO(\s+JUDICIAL)?\s*:|ESPECIALISTA(\s+LEGAL)?\s*:|CASILLA\s*(SINOE|ELECTR[OÓ]NICA|F[IÍ]SICA)?\s*N?°?\s*:|KARDEX(\s+NOTARIAL)?\s*N?°?\s*:)/i.test(plain)) return 'SUMILLA'
 
   // Encabezados markdown ## ### ####
   if (/^#{2,4}\s/.test(t)) return 'HEADING_MD'
@@ -460,7 +460,17 @@ export function parseDocumentBlocks(content: string): DocBlock[] {
         i++
         while (i < rawLines.length) {
           const next = rawLines[i].trim()
-          if (!next) break
+          if (!next) {
+            // Si hay una línea en blanco pero la siguiente sigue siendo parte de la carátula/sumilla, continuar en el mismo bloque
+            if (i + 1 < rawLines.length) {
+              const peekNext = rawLines[i + 1].trim()
+              if (peekNext && (classifyLine(peekNext) === 'SUMILLA' || (classifyLine(peekNext) === 'FIELD' && /^(DENUNCIANTE|DENUNCIADO|IMPUTADO|INVESTIGADO|AGRAVIADO|DELITO|MATERIA|DEMANDANTE|DEMANDADO)\s*:/i.test(cleanHeading(peekNext))))) {
+                i++
+                continue
+              }
+            }
+            break
+          }
           const nextKind = classifyLine(next)
           if (nextKind === 'SUMILLA') {
             sumLines.push(cleanHeading(next))
