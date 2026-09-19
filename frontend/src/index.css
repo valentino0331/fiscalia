@@ -325,6 +325,15 @@
     color: #111 !important;
     text-rendering: optimizeLegibility;
     background: #fff;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  .doc-preview-sheet * {
+    box-sizing: border-box;
+    max-width: 100%;
   }
 
   /* Título principal centrado */
@@ -347,11 +356,18 @@
     color: #000;
   }
 
-  /* Sumilla / Expediente */
+  /* Sumilla / Expediente / Carátula Judicial */
+  .doc-preview-sheet .doc-sumilla-box {
+    margin: 0 0 1.2rem auto;
+    max-width: 75%;
+    text-align: right;
+  }
+
   .doc-preview-sheet .doc-sumilla {
     font-weight: 700;
-    margin: 0 0 1rem;
-    line-height: 1.4;
+    margin: 0 0 0.3rem;
+    line-height: 1.35;
+    text-align: right;
     color: #000;
   }
 
@@ -402,10 +418,12 @@
   /* Línea de firma */
   .doc-preview-sheet .doc-sig-line {
     text-align: center;
-    margin: 2.5rem 0 0.2rem;
+    margin: 2.2rem 0 0.2rem;
     letter-spacing: 2px;
     color: #111;
     font-size: 11pt;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   /* Etiqueta de firma (Nombre / DNI / CAL) */

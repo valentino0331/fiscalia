@@ -199,8 +199,8 @@ export function classifyLine(line: string): LineKind {
   // Fila de tabla markdown (| Col 1 | Col 2 | o |---|---|)
   if (/^\|.*\|$/.test(t)) return 'TABLE_ROW'
 
-  // Separador de firma
-  if (/^_{4,}[-–—_\s]*$/.test(t)) return 'SEPARATOR'
+  // Separador de firma o línea divisoria
+  if (/^_{4,}[-–—_\s]*$/.test(t) || /^[━─=–—]{4,}/.test(t)) return 'SEPARATOR'
 
   // Cláusulas de contratos (PRIMERA.-, SEGUNDA.-, DÉCIMO PRIMERA.-, etc.)
   if (isClauseHeading(t)) return 'CLAUSE'

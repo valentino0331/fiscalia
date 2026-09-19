@@ -609,13 +609,13 @@ Teléfono: ${denuncianteTelefono || '_______________'}
 
       return {
         title: `Carta_Notarial_${cartaRemitente.replace(/\s+/g, '_') || 'Requerimiento'}`,
-        content: `                                                        EXP. NOTARIAL N°: ___________________
-                                                        KARDEX NOTARIAL : ___________________
+        content: `EXP. NOTARIAL N°: ___________________
+KARDEX NOTARIAL : ___________________
 
 SEÑOR NOTARIO PÚBLICO DE LA CIUDAD DE ${(cartaCiudad || 'LIMA').toUpperCase()}:
 Sírvase usted tramitar, notificar y diligenciar por conducto notarial la presente CARTA NOTARIAL, con arreglo a lo dispuesto en el artículo 100° y siguientes del Decreto Legislativo del Notariado N° 1049, a la persona y en el domicilio que se indica a continuación:
 
-                                                        ${cartaCiudad || 'Lima'}, ${today}
+${cartaCiudad || 'Lima'}, ${today}
 
 SEÑOR(ES):
 ${cartaDestinatario || '[NOMBRE O RAZÓN SOCIAL DEL DESTINATARIO]'}
@@ -732,7 +732,7 @@ El presente proceso se tramita en la VÍA DEL PROCESO ÚNICO de Alimentos (Ley N
 POR TANTO:
 A usted, Señor Juez, pido admitir la presente demanda y oportunamente declararla FUNDADA con expresa condena de costas y costos.
 
-                                                        ${today}
+${today}
 
 
 _______________________________________________________
@@ -875,7 +875,7 @@ DNI N°: ${indDniConsumidor || '_______________'}`,
         content: `CARTA DE RENUNCIA VOLUNTARIA Y PREAVISO DE LEY
 (Artículo 18° del D.S. N° 003-97-TR — Ley de Productividad y Competitividad Laboral)
 
-                                                        ${today}
+${today}
 
 Señor(a):
 ${renunciaJefe || '[NOMBRE DEL GERENTE GENERAL O JEFE DE RR.HH.]'}
@@ -1702,16 +1702,17 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
 
             {/* ÁREA DE VISUALIZACIÓN — fondo gris tipo Acrobat, hoja blanca continua */}
             <div
-              className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-6 flex flex-col items-center bg-[#2b2e35]"
+              className="flex-1 overflow-y-auto overflow-x-auto p-3 sm:p-6 flex flex-col items-center bg-[#2b2e35]"
               style={{ gap: 0 }}
             >
               {viewMode === 'sheet' ? (
                 <div
-                  className="bg-white rounded-none w-full"
+                  className="bg-white rounded-sm w-full"
                   style={{
-                    maxWidth: zoomLevel === 85 ? '580px' : zoomLevel === 115 ? '760px' : '660px',
-                    /* Margen visual proporcional según el formato reglamentario del documento */
-                    padding: `${fmt.marginTopCm * 37.8}px ${fmt.marginRightCm * 37.8}px ${fmt.marginBottomCm * 37.8}px ${fmt.marginLeftCm * 37.8}px`,
+                    maxWidth: zoomLevel === 85 ? '560px' : zoomLevel === 115 ? '740px' : '640px',
+                    boxSizing: 'border-box',
+                    /* Margen visual limpio y equilibrado para pantalla (las medidas físicas cm rigen en la impresión/Word) */
+                    padding: '36px 36px 48px 40px',
                     fontFamily: fmt.fontFamilyCss,
                     fontSize: `${fmt.fontSizePt}pt`,
                     lineHeight: `${fmt.lineHeight}`,
@@ -1723,12 +1724,16 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
                 >
                   {/* Texto del documento — sin membrete publicitario, justificado y con tipografía oficial */}
                   <div
-                    className="doc-preview-sheet"
+                    className="doc-preview-sheet w-full"
                     style={{
                       fontFamily: fmt.fontFamilyCss,
                       fontSize: `${fmt.fontSizePt}pt`,
                       lineHeight: `${fmt.lineHeight}`,
                       color: '#111111',
+                      boxSizing: 'border-box',
+                      maxWidth: '100%',
+                      overflowWrap: 'anywhere',
+                      wordBreak: 'break-word',
                     }}
                     dangerouslySetInnerHTML={{ __html: renderDocHtmlBody(docData.content) }}
                   />
