@@ -93,8 +93,9 @@ webhooksRouter.post('/hotmart', async (req, res) => {
 
       if (!user) {
         const userId = uuidv4();
-        // Contraseña provisional segura y legible para el abogado (ej: Hardman-839124!)
-        generatedPassword = `Hardman-${Math.floor(100000 + Math.random() * 900000)}!`;
+        // Generación criptográficamente segura y 100% única por cada abogado (ej: Hardman-482915!)
+        const uniquePin = crypto.randomInt(100000, 999999);
+        generatedPassword = `Hardman-${uniquePin}!`;
         const passwordHash = await bcrypt.hash(generatedPassword, 12);
 
         await db.insert(users).values({
