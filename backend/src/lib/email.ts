@@ -181,11 +181,16 @@ export async function sendSubscriptionUpdatedEmail(params: SubscriptionUpdatedEm
             <td>
               <h1 style="color:#c9a84c;font-size:20px;margin:0 0 10px;">HARDMAN IA &bull; Suscripción Actualizada</h1>
               <p style="color:#c4c8d3;font-size:14px;line-height:1.5;">
-                Hola ${greetingName}, confirmamos que su suscripción al <strong style="color:#c9a84c;">${planLabel}</strong> ha sido renovada / actualizada exitosamente.
+                Hola ${greetingName}, confirmamos que su cuenta ha sido actualizada con éxito al <strong style="color:#c9a84c;">${planLabel}</strong>.
+              </p>
+              <p style="color:#8a90a0;font-size:13px;line-height:1.5;margin:12px 0;">
+                ✓ Sus <strong>250 consultas mensuales</strong> han sido acreditadas de inmediato.<br>
+                ✓ Sus credenciales de ingreso (correo y contraseña) <strong>se mantienen exactamente iguales</strong>.<br>
+                ✓ Su nuevo periodo mensual corre a partir de hoy.
               </p>
               <p style="margin:20px 0;">
-                <a href="${params.loginUrl}" style="display:inline-block;padding:12px 24px;background:#c9a84c;color:#000;text-decoration:none;font-weight:700;border-radius:8px;">
-                  Ir a mi Despacho
+                <a href="${params.loginUrl}" style="display:inline-block;padding:12px 24px;background:#c9a84c;color:#000000 !important;text-decoration:none;font-weight:700;border-radius:8px;">
+                  Ingresar a mi Despacho Hardman &rarr;
                 </a>
               </p>
             </td>
