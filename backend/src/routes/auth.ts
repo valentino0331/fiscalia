@@ -57,7 +57,7 @@ authRouter.post('/register', authRateLimiter, async (req, res) => {
         id: uuidv4(),
         userId,
         status: 'active',
-        plan: 'pro-trial',
+        plan: 'junior',
         currentPeriodEnd: periodEnd,
       });
     } catch (subErr) {

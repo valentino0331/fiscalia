@@ -23,17 +23,19 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 webhooksRouter.post('/hotmart', async (req, res) => {
   try {
-    const { event, data } = req.body;
-    const hottok = req.headers['x-hotmart-hottok'];
-    const secret = process.env.HOTMART_SECRET;
+    const { event, data } = req.body || {};
+    const hottok = req.headers['x-hotmart-hottok'] || req.body?.hottok || data?.hottok;
+    const secret = process.env.HOTMART_SECRET?.trim();
 
-    if (!secret || typeof hottok !== 'string') {
+    if (!secret || typeof hottok !== 'string' || !hottok.trim()) {
       return res.status(401).json({ error: 'Webhook no autorizado o no configurado' });
     }
 
+    const candidateHottok = hottok.trim();
+
     // Comparación en tiempo constante para prevenir timing attacks
     const trusted = Buffer.from(secret);
-    const untrusted = Buffer.from(hottok);
+    const untrusted = Buffer.from(candidateHottok);
 
     if (trusted.length !== untrusted.length || !crypto.timingSafeEqual(trusted, untrusted)) {
       return res.status(401).json({ error: 'Token inválido' });
