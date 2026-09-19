@@ -73,10 +73,12 @@ app.use(
 
       const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
       const isHardmanDomain = /^https:\/\/([a-zA-Z0-9-]+\.)?hardman\.lat$/.test(origin);
+      const isNetlifyDomain = /^https:\/\/([a-zA-Z0-9-]+\.)?netlify\.app$/.test(origin);
 
       if (
         allowedOrigins.includes(origin) ||
         isHardmanDomain ||
+        isNetlifyDomain ||
         (process.env.NODE_ENV !== 'production' && isLocalhost)
       ) {
         callback(null, true);
