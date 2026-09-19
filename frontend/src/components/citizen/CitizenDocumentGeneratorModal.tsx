@@ -1707,37 +1707,25 @@ Constancia de legalización notarial de firmas para otorgar fecha cierta y méri
             >
               {viewMode === 'sheet' ? (
                 <div
-                  className="bg-white rounded-sm w-full"
+                  className="doc-preview-sheet w-full bg-white rounded-sm shadow-2xl border text-black select-text"
                   style={{
                     maxWidth: zoomLevel === 85 ? '560px' : zoomLevel === 115 ? '740px' : '640px',
                     boxSizing: 'border-box',
-                    /* Margen visual limpio y equilibrado para pantalla (las medidas físicas cm rigen en la impresión/Word) */
+                    /* Margen uniforme de inicio a fin */
                     padding: '36px 36px 48px 40px',
                     fontFamily: fmt.fontFamilyCss,
                     fontSize: `${fmt.fontSizePt}pt`,
                     lineHeight: `${fmt.lineHeight}`,
                     color: '#111111',
                     boxShadow: '0 4px 24px rgba(0,0,0,0.40)',
-                    border: '1px solid #c8c8c8',
-                    minHeight: '800px',
+                    borderColor: '#c8c8c8',
+                    minHeight: '850px',
+                    margin: '0 auto',
+                    overflowWrap: 'anywhere',
+                    wordBreak: 'break-word',
                   }}
-                >
-                  {/* Texto del documento — sin membrete publicitario, justificado y con tipografía oficial */}
-                  <div
-                    className="doc-preview-sheet w-full"
-                    style={{
-                      fontFamily: fmt.fontFamilyCss,
-                      fontSize: `${fmt.fontSizePt}pt`,
-                      lineHeight: `${fmt.lineHeight}`,
-                      color: '#111111',
-                      boxSizing: 'border-box',
-                      maxWidth: '100%',
-                      overflowWrap: 'anywhere',
-                      wordBreak: 'break-word',
-                    }}
-                    dangerouslySetInnerHTML={{ __html: renderDocHtmlBody(docData.content) }}
-                  />
-                </div>
+                  dangerouslySetInnerHTML={{ __html: renderDocHtmlBody(docData.content) }}
+                />
               ) : (
                 <pre
                   className="w-full p-4 rounded-xl text-[11px] font-mono leading-relaxed whitespace-pre-wrap"
