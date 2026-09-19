@@ -89,6 +89,17 @@
     color: rgba(255,255,255,0.20);
     font-weight: 300;
   }
+
+  /* Evitar zoom automático deformante en iPhone/Safari al enfocar inputs */
+  @media screen and (max-width: 768px) {
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="search"],
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer components {

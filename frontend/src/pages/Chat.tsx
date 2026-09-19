@@ -1897,7 +1897,7 @@ export default function Chat() {
   const limitReached = isLimited && usage!.questionsUsed >= usage!.limit!
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden w-full max-w-full h-full" style={{ background: '#111111' }}>
+    <div className="fixed inset-0 h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111' }}>
       {/* NAVBAR */}
       <header
         className="h-14 flex-shrink-0 flex items-center justify-between gap-1 sm:gap-2 px-2.5 sm:px-4 border-b z-30 max-w-full overflow-hidden"
@@ -2344,7 +2344,7 @@ export default function Chat() {
           </AnimatePresence>
 
           {/* Input area */}
-          <div className="flex-shrink-0 p-2.5 sm:p-4 md:px-8 md:pb-6 relative z-20 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
+          <div className="flex-shrink-0 px-2.5 py-1.5 sm:p-4 md:px-8 md:pb-6 relative z-20 pb-[max(0.5rem,env(safe-area-inset-bottom))] w-full max-w-full overflow-hidden box-border">
             <div className="max-w-4xl mx-auto space-y-2">
 
               {/* Voice message indicator in input */}
@@ -2524,7 +2524,7 @@ export default function Chat() {
 
               {/* Input container */}
               <div
-                className="rounded-[14px] p-2.5 sm:p-3 transition-all duration-300"
+                className="rounded-[14px] p-2 sm:p-3 transition-all duration-300 w-full max-w-full box-border overflow-hidden"
                 style={{
                   background: '#1a1a1a',
                   border: '1px solid #333333',
@@ -2535,6 +2535,12 @@ export default function Chat() {
                   const container = e.currentTarget
                   container.style.borderColor = '#c9a84c'
                   container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
+                  setTimeout(() => {
+                    scrollContainerRef.current?.scrollTo({
+                      top: scrollContainerRef.current.scrollHeight,
+                      behavior: 'smooth',
+                    })
+                  }, 150)
                 }}
                 onBlur={(e) => {
                   if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -2551,7 +2557,7 @@ export default function Chat() {
                   onKeyDown={handleKeyDown}
                   placeholder={`Escribe o usa el micrófono para ${agent.name}...`}
                   rows={1}
-                  className="w-full bg-transparent outline-none resize-none text-[13px] font-light leading-relaxed px-1"
+                  className="w-full bg-transparent outline-none resize-none text-[16px] sm:text-[13px] font-light leading-relaxed px-1"
                   style={{
                     minHeight: '26px',
                     maxHeight: '120px',
@@ -2560,20 +2566,20 @@ export default function Chat() {
                   }}
                 />
 
-                <div className="flex items-center justify-between pt-1.5 sm:pt-2 mt-1 gap-1.5 sm:gap-2" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                <div className="flex items-center justify-between pt-1.5 sm:pt-2 mt-1 gap-1 sm:gap-2 max-w-full" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                   {/* Left actions: smooth horizontal scroll only if needed, min-w-0 */}
-                  <div className="flex items-center gap-1 sm:gap-2 min-w-0 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
+                  <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/45 flex-shrink-0"
-                      title="Adjuntar PDF o Word (Máx. 25MB · Recomendado hasta 15MB para máxima agilidad)"
+                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
+                      title="Adjuntar PDF o Word (Máx. 25MB)"
                     >
                       <Paperclip size={13} />
                       <span className="hidden sm:inline">PDF / WORD</span>
                     </button>
                     <button
                       onClick={() => imageInputRef.current?.click()}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/45 flex-shrink-0"
+                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
                       title="Adjuntar imagen"
                     >
                       <ImageIcon size={13} />
@@ -2805,11 +2811,11 @@ function WelcomeScreen({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col items-center justify-center min-h-full py-4 sm:py-10 text-center px-3 sm:px-4 max-w-2xl mx-auto"
+      className="flex flex-col items-center justify-center min-h-full py-2 sm:py-10 text-center px-3 sm:px-4 max-w-2xl mx-auto"
     >
-      <div className="relative mb-3 sm:mb-5">
+      <div className="relative mb-2 sm:mb-5">
         <div
-          className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden"
+          className="w-14 h-14 sm:w-20 sm:h-20 rounded-full overflow-hidden"
           style={{
             border: '1.5px solid rgba(201,168,76,0.25)',
             boxShadow: '0 0 25px rgba(201,168,76,0.10)',
@@ -2823,40 +2829,40 @@ function WelcomeScreen({
         />
       </div>
 
-      <h2 className="text-xl sm:text-[22px] font-extralight text-white mb-0.5 sm:mb-1 tracking-wide">
+      <h2 className="text-lg sm:text-[22px] font-extralight text-white mb-0.5 sm:mb-1 tracking-wide">
         {agent.name}
       </h2>
       <p
-        className="text-[8.5px] sm:text-[9px] font-semibold uppercase mb-3 sm:mb-4"
+        className="text-[8px] sm:text-[9px] font-semibold uppercase mb-2 sm:mb-4"
         style={{ letterSpacing: '2.5px', color: '#c9a84c' }}
       >
         {agent.role}
       </p>
 
       <div
-        className="p-3.5 sm:p-5 rounded-xl max-w-lg mb-3.5 sm:mb-6 text-left"
+        className="p-3 sm:p-5 rounded-xl max-w-lg mb-2.5 sm:mb-6 text-left"
         style={{
           background: '#1a1a1a',
           border: '1px solid #2a2a2a',
         }}
       >
-        <p className="text-xs sm:text-[13px] font-light leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)' }}>
+        <p className="text-[11.5px] sm:text-[13px] font-light leading-relaxed" style={{ color: 'rgba(255,255,255,0.60)' }}>
           {agent.welcomeMessage}
         </p>
       </div>
 
       <p
-        className="text-[8px] font-bold uppercase mb-2 sm:mb-2.5"
+        className="text-[7.5px] sm:text-[8px] font-bold uppercase mb-1.5 sm:mb-2.5"
         style={{ letterSpacing: '2.5px', color: 'rgba(255,255,255,0.25)' }}
       >
         CONSULTAS FRECUENTES
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 w-full max-w-lg">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2.5 w-full max-w-lg">
         {agent.suggestions.map((s, i) => (
           <button
             key={i}
             onClick={() => onSuggestion(s)}
-            className="p-2.5 sm:p-3 rounded-[10px] text-[10.5px] sm:text-[11px] font-light text-left transition-all duration-200 flex items-center justify-between group"
+            className="p-2 sm:p-3 rounded-[10px] text-[10px] sm:text-[11px] font-light text-left transition-all duration-200 flex items-center justify-between group"
             style={{
               background: '#1a1a1a',
               border: '1px solid #333333',
