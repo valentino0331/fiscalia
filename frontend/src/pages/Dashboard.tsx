@@ -17,7 +17,6 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
-import WhatsAppSupportButton from '@/components/ui/WhatsAppSupportButton'
 
 const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
 
@@ -67,6 +66,19 @@ export default function Dashboard() {
   const [editingTitle, setEditingTitle] = useState('')
   const [savedMessages, setSavedMessages] = useState<{ id: string; agentId: string; agentName: string; content: string; createdAt: string }[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
+  const [userPlan, setUserPlan] = useState<'junior' | 'senior'>('junior')
+
+  useEffect(() => {
+    api.account.usage()
+      .then((data) => {
+        if (data.plan === 'senior' || data.plan === 'pro' || data.limit === null) {
+          setUserPlan('senior')
+        } else {
+          setUserPlan('junior')
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const handleStartRename = (conv: Conversation, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -222,7 +234,12 @@ export default function Dashboard() {
             </div>
             <div className="text-left hidden sm:block">
               <p className="text-[13px] font-normal text-white max-w-[120px] truncate leading-tight">{user?.name || 'Mi Cuenta'}</p>
-              <p className="text-[7px] uppercase tracking-[2px] font-semibold" style={{ color: '#c9a84c' }}>MIEMBRO PRO</p>
+              <p
+                className="text-[7px] uppercase tracking-[2px] font-semibold"
+                style={{ color: userPlan === 'senior' ? '#c9a84c' : '#34d17a' }}
+              >
+                {userPlan === 'senior' ? 'PLAN SENIOR' : 'PLAN JUNIOR'}
+              </p>
             </div>
           </button>
 
@@ -1209,8 +1226,6 @@ export default function Dashboard() {
           />
         )}
       </Suspense>
-
-      <WhatsAppSupportButton />
     </div>
   )
 }

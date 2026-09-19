@@ -255,12 +255,12 @@ export default function Account() {
                     </span>
                   </div>
                   <h4 className="text-[15px] font-light text-white">
-                    {data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? 'Membresía Junior (S/ 39/mes)' : 'Membresía Senior Ilimitada (S/ 69/mes)'}
+                    {data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal' ? 'Membresía Junior (S/ 39/mes)' : 'Membresía Senior (S/ 69/mes)'}
                   </h4>
                   <p className="text-[11px] font-light" style={{ color: 'rgba(255,255,255,0.40)' }}>
                     {data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal'
                       ? '50 consultas mensuales con acceso a los 8 agentes especializados y subida de expedientes.'
-                      : 'Consultas ilimitadas con acceso a los 8 agentes especializados y soporte WhatsApp prioritario.'}
+                      : '250 consultas mensuales con acceso a los 8 agentes especializados, expedientes completos y soporte WhatsApp prioritario.'}
                   </p>
                 </div>
                 <div
@@ -362,7 +362,7 @@ export default function Account() {
                     <ul className="space-y-1.5 text-[11px] text-white/70">
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span className="font-semibold text-white">Consultas ilimitadas</span>
+                        <span className="font-semibold text-white">250 consultas mensuales (Máxima capacidad)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
@@ -370,7 +370,7 @@ export default function Account() {
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span>Subida de documentos (PDF, expedientes)</span>
+                        <span>Subida de expedientes completos (hasta 30 MB)</span>
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
@@ -378,9 +378,22 @@ export default function Account() {
                       </li>
                       <li className="flex items-center gap-1.5">
                         <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                        <span>Generación judicial en Word (.docx)</span>
+                        <span>Generación judicial en Word (.docx) oficial</span>
                       </li>
                     </ul>
+
+                    {(data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal') && (
+                      <a
+                        href="https://pay.hotmart.com/M107246567H?off=ayixxvun"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 w-full py-2 px-3 rounded-lg text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:opacity-90 shadow-md"
+                        style={{ background: '#c9a84c' }}
+                      >
+                        <Zap size={13} />
+                        Actualizar a Plan Senior (S/ 69)
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>

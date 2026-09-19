@@ -192,8 +192,8 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
-            'gemini-3.6-flash',
-            'gemini-2.5-flash',
+            'gemini-2.0-flash',
+            'gemini-1.5-flash',
           ].filter(Boolean) as string[];
 
           let geminiMime = 'audio/webm';
@@ -830,7 +830,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         try {
           console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 18000);
+          const timeoutId = setTimeout(() => controller.abort(), 25000);
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',

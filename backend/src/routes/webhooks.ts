@@ -3,8 +3,10 @@ import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
-import { subscriptions, users } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { subscriptions, users, questionUsageLogs } from '../db/schema';
+import { eq, and } from 'drizzle-orm';
+import { sendWelcomeCredentialsEmail, sendSubscriptionUpdatedEmail } from '../lib/email';
+import { invalidateUserSubscriptionCache } from '../middleware/subscription';
 
 export const webhooksRouter = Router();
 
@@ -72,14 +74,28 @@ webhooksRouter.post('/hotmart', async (req, res) => {
       const periodEnd = new Date();
       periodEnd.setDate(periodEnd.getDate() + 30);
 
+      // Detectar plan dinámicamente según código exacto de oferta Hotmart, nombre de plan o precio (Junior: S/39, Senior: S/69)
+      const rawPlanName = String(data?.subscription?.plan?.name || '').toLowerCase().trim();
+      const rawOffer = String(data?.purchase?.offer?.code || data?.purchase?.offer?.name || '').toLowerCase().trim();
+      const priceVal = Number(data?.purchase?.price?.value ?? data?.purchase?.original_offer_price?.value ?? 0);
+
+      // ayixxvun = Senior (S/ 69), hm1anfcw = Junior (S/ 39)
+      const isSenior = rawOffer === 'ayixxvun' || rawPlanName.includes('senior') || rawOffer.includes('senior') || priceVal >= 60;
+      const assignedPlan: 'junior' | 'senior' = isSenior ? 'senior' : 'junior';
+
+      const rawBuyerName = data?.buyer?.name;
+      const buyerName: string | null = typeof rawBuyerName === 'string'
+        ? rawBuyerName.trim().slice(0, 100) || null
+        : null;
+
+      let generatedPassword = '';
+      const isNewUser = !user;
+
       if (!user) {
         const userId = uuidv4();
-        const tempPassword = uuidv4();
-        const passwordHash = await bcrypt.hash(tempPassword, 12);
-        const rawBuyerName = data?.buyer?.name;
-        const buyerName: string | null = typeof rawBuyerName === 'string'
-          ? rawBuyerName.trim().slice(0, 100) || null
-          : null;
+        // Contraseña provisional segura y legible para el abogado (ej: Hardman-839124!)
+        generatedPassword = `Hardman-${Math.floor(100000 + Math.random() * 900000)}!`;
+        const passwordHash = await bcrypt.hash(generatedPassword, 12);
 
         await db.insert(users).values({
           id: userId,
@@ -90,7 +106,7 @@ webhooksRouter.post('/hotmart', async (req, res) => {
         });
 
         user = { id: userId, email, passwordHash, name: buyerName, isAdmin: false, createdAt: new Date() };
-        console.log(`[Hotmart] Usuario creado automáticamente: ${email}`);
+        console.log(`[Hotmart] Usuario creado automáticamente: ${email} (Plan: ${assignedPlan})`);
       }
 
       await db
@@ -99,7 +115,7 @@ webhooksRouter.post('/hotmart', async (req, res) => {
           id: uuidv4(),
           userId: user.id,
           status: 'active',
-          plan: 'pro',
+          plan: assignedPlan,
           hotmartTransaction: transaction,
           currentPeriodEnd: periodEnd,
         })
@@ -107,14 +123,55 @@ webhooksRouter.post('/hotmart', async (req, res) => {
           target: subscriptions.userId,
           set: {
             status: 'active',
-            plan: 'pro',
+            plan: assignedPlan,
             hotmartTransaction: transaction,
             currentPeriodEnd: periodEnd,
             updatedAt: new Date(),
           },
         });
 
-      console.log(`[Hotmart] Suscripción activada: ${email} (tx: ${transaction})`);
+      console.log(`[Hotmart] Suscripción ${assignedPlan.toUpperCase()} activada: ${email} (tx: ${transaction})`);
+
+      // Resetear uso del mes actual e invalidar caché para que tenga sus consultas frescas de inmediato
+      try {
+        const nowDate = new Date();
+        const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
+        await db
+          .delete(questionUsageLogs)
+          .where(
+            and(
+              eq(questionUsageLogs.userId, user.id),
+              eq(questionUsageLogs.monthKey, monthKey)
+            )
+          );
+      } catch (err) {
+        console.error('[Hotmart Webhook] Error al reiniciar contador de consultas:', err);
+      }
+      invalidateUserSubscriptionCache(user.id);
+
+      // Despachar correo electrónico con credenciales o confirmación
+      const baseUrl = (process.env.FRONTEND_URL || 'https://hardman.lat').replace(/\/$/, '');
+      const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(email)}`;
+      try {
+        if (isNewUser) {
+          await sendWelcomeCredentialsEmail({
+            to: email,
+            name: buyerName,
+            plan: assignedPlan,
+            password: generatedPassword,
+            loginUrl,
+          });
+        } else {
+          await sendSubscriptionUpdatedEmail({
+            to: email,
+            name: user.name,
+            plan: assignedPlan,
+            loginUrl,
+          });
+        }
+      } catch (emailErr) {
+        console.error('[Hotmart Webhook] Error al enviar email de bienvenida:', emailErr);
+      }
     }
 
     if (

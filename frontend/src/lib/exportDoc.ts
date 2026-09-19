@@ -2418,7 +2418,19 @@ export function extractDocumentFromMessage(rawContent: string): {
       .replace(/^---+\s*$/m, '')
       .trim()
 
+    // Si el cuerpo del documento es solo un placeholder vacío o una frase de plantilla sin texto legal real
+    const isPlaceholderOnly = !docBody ||
+      docBody.includes('[CUERPO DEL DOCUMENTO') ||
+      (docBody.startsWith('[') && docBody.endsWith(']') && docBody.length < 150);
+
     const conversationalText = rawContent.replace(docBlockRegex, '').trim()
+    if (isPlaceholderOnly) {
+      return {
+        conversationalText,
+        document: null,
+      }
+    }
+
     return {
       conversationalText,
       document: { title, type: docType, content: replaceLetterheadPlaceholders(docBody || blockContent) },

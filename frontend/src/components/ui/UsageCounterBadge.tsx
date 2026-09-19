@@ -33,20 +33,18 @@ export default function UsageCounterBadge({
 
   if (!usage) return null
 
-  const isUnlimited = usage.limit === null
+  const isSenior = usage.plan === 'senior' || usage.plan === 'pro'
   const used = usage.questionsUsed
-  const limit = usage.limit || 50
+  const limit = usage.limit || (isSenior ? 250 : 50)
 
   let dotColor = '#34d17a'
-  if (!isUnlimited) {
-    const ratio = used / limit
-    if (ratio >= 0.9) dotColor = '#ef4444'
-    else if (ratio >= 0.7) dotColor = '#f59e0b'
-  }
+  const ratio = used / limit
+  if (ratio >= 0.9) dotColor = '#ef4444'
+  else if (ratio >= 0.7) dotColor = '#f59e0b'
 
   return (
     <>
-      {isUnlimited ? (
+      {isSenior ? (
         <button
           type="button"
           onClick={() => setModalOpen(true)}
@@ -55,12 +53,12 @@ export default function UsageCounterBadge({
             background: 'rgba(201,168,76,0.08)',
             borderColor: 'rgba(201,168,76,0.30)',
           }}
-          title="Plan Senior: Consultas ilimitadas. Haz clic para ver detalles y soporte VIP."
+          title={`Plan Senior: ${used}/${limit} consultas mensuales. Soporte VIP por WhatsApp.`}
         >
           <Zap size={11} className="text-[#c9a84c] flex-shrink-0" />
           <span className="text-[10px] sm:text-[11px] font-medium text-[#c9a84c] tracking-wide">
-            <span className="sm:hidden">{compact ? 'Ilimitado' : 'Ilimitadas'}</span>
-            <span className="hidden sm:inline">{compact ? 'Ilimitado' : 'Consultas: Ilimitadas'}</span>
+            <span className="sm:hidden">{used}/{limit}</span>
+            <span className="hidden sm:inline">Consultas: <strong className="text-white font-bold">{used}</strong> / {limit}</span>
           </span>
         </button>
       ) : (
@@ -72,7 +70,7 @@ export default function UsageCounterBadge({
             background: '#161616',
             borderColor: 'rgba(255,255,255,0.12)',
           }}
-          title={`Plan Junior: ${used}/${limit} consultas. Haz clic para ver detalles o subir a Senior Ilimitado.`}
+          title={`Plan Junior: ${used}/${limit} consultas. Haz clic para subir a Senior (250 consultas).`}
         >
           <span
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"

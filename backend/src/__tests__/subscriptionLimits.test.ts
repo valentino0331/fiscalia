@@ -49,4 +49,22 @@ describe('Subscription & Plan Limits Logic', () => {
     expect(calculateDaysRemaining(endIn5Days, now)).toBe(5);
     expect(calculateDaysRemaining(expired2DaysAgo, now)).toBe(0);
   });
+
+  it('correctly maps Hotmart webhook payloads to Junior or Senior plan', () => {
+    const resolvePlan = (planName?: string, offer?: string, price?: number): 'junior' | 'senior' => {
+      const p = String(planName || '').toLowerCase().trim();
+      const o = String(offer || '').toLowerCase().trim();
+      const pr = Number(price || 0);
+      return (o === 'ayixxvun' || p.includes('senior') || o.includes('senior') || pr >= 60) ? 'senior' : 'junior';
+    };
+
+    expect(resolvePlan('Junior', 'oferta_junior', 39)).toBe('junior');
+    expect(resolvePlan('Senior', 'oferta_senior', 69)).toBe('senior');
+    expect(resolvePlan('', 'hm1anfcw', 0)).toBe('junior');
+    expect(resolvePlan('', 'ayixxvun', 0)).toBe('senior');
+    expect(resolvePlan('', '', 39)).toBe('junior');
+    expect(resolvePlan('', '', 69)).toBe('senior');
+    expect(resolvePlan('Plan Junior Abogados', '', 0)).toBe('junior');
+    expect(resolvePlan('Plan Senior Ilimitado', '', 0)).toBe('senior');
+  });
 });

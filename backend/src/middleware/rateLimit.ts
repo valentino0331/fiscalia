@@ -90,11 +90,16 @@ export const authRateLimiter = createRateLimiter({
   message: 'Demasiados intentos de acceso o registro. Por seguridad, espere unos minutos antes de reintentar.',
 });
 
-// 2. Limiter para peticiones de chat IA: 60 peticiones / minuto
+// 2. Limiter para peticiones de chat IA: Anti-bot estricto (12 consultas / minuto por usuario o IP)
 export const chatRateLimiter = createRateLimiter({
   windowMs: 60 * 1000,
-  max: 60,
-  message: 'Límite de consultas concurrentes alcanzado. Por favor envíe sus consultas con una cadencia normal.',
+  max: 12,
+  message: 'Protección Anti-Bot: Se ha detectado un ritmo de consultas inusualmente alto. Por favor mantenga una cadencia normal de trabajo.',
+  keyGenerator: (req) => {
+    const userId = (req as any).userId;
+    const ip = req.ip || req.socket.remoteAddress || 'unknown';
+    return userId ? `user_chat:${userId}` : `ip_chat:${ip}`;
+  },
 });
 
 // 3. Limiter para consumo de audio (TTS síntesis y STT transcripción): 25 peticiones / minuto

@@ -1305,7 +1305,55 @@ export default function Chat() {
     baseInputRef.current = input
     isRecordingRef.current = true
 
-    // 1. Web Speech API nativo del navegador (100% GRATUITO, CERO TOKENS, tiempo real)
+    // 1. Obtener stream del micrófono obligatorio para MediaRecorder
+    let stream: MediaStream | null = null
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Navegador no soporta captura de audio')
+      }
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      mediaStreamRef.current = stream
+    } catch (err: any) {
+      console.warn('Mic permission error:', err)
+      isRecordingRef.current = false
+      setIsRecording(false)
+      setMicPermissionDenied(true)
+      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador.')
+      return
+    }
+
+    setIsRecording(true)
+    setRecordingSeconds(0)
+    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
+    recordingTimerRef.current = setInterval(() => {
+      setRecordingSeconds((s) => s + 1)
+    }, 1000)
+
+    // 2. Iniciar MediaRecorder SIEMPRE (garantiza captura de audio real)
+    if (stream) {
+      try {
+        const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
+          ? 'audio/webm'
+          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
+          ? 'audio/mp4'
+          : ''
+        const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
+        mediaRecorderRef.current = recorder
+        audioChunksRef.current = []
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            audioChunksRef.current.push(e.data)
+          }
+        }
+        recorder.start(100)
+      } catch (recErr) {
+        console.warn('MediaRecorder error:', recErr)
+      }
+    }
+
+    // 3. Concurrente: Web Speech API para transcripción visual instantánea si está disponible
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     if (SpeechRecognition) {
       try {
@@ -1315,15 +1363,6 @@ export default function Chat() {
         rec.continuous = true
         rec.interimResults = true
         rec.maxAlternatives = 1
-
-        rec.onstart = () => {
-          setIsRecording(true)
-          setRecordingSeconds(0)
-          if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
-          recordingTimerRef.current = setInterval(() => {
-            setRecordingSeconds((s) => s + 1)
-          }, 1000)
-        }
 
         rec.onresult = (event: any) => {
           let interim = ''
@@ -1348,7 +1387,6 @@ export default function Chat() {
         }
 
         rec.onend = () => {
-          // Auto-reiniciar si el usuario sigue grabando
           if (isRecordingRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start()
@@ -1357,70 +1395,13 @@ export default function Chat() {
         }
 
         rec.onerror = (e: any) => {
-          console.warn('SpeechRecognition error:', e?.error)
-          if (e?.error === 'not-allowed') {
-            setMicPermissionDenied(true)
-            setVoiceError('Permiso de micrófono no concedido.')
-          }
+          console.warn('SpeechRecognition warning (se utilizará STT de respaldo backend):', e?.error)
         }
 
         recognitionRef.current = rec
         rec.start()
-        setIsRecording(true)
-        setRecordingSeconds(0)
-        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
-        recordingTimerRef.current = setInterval(() => {
-          setRecordingSeconds((s) => s + 1)
-        }, 1000)
-        return // Web Speech API iniciado con éxito: 0 tokens, 100% nativo y gratuito
       } catch (speechErr) {
-        console.warn('SpeechRecognition no disponible, usando captura de audio:', speechErr)
-      }
-    }
-
-    // 2. Respaldo solo si el navegador no tiene Web Speech API
-    let stream: MediaStream | null = null
-    try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Navegador no soporta captura de audio')
-      }
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      mediaStreamRef.current = stream
-    } catch (err: any) {
-      console.warn('Mic permission error:', err)
-      isRecordingRef.current = false
-      setMicPermissionDenied(true)
-      setVoiceError('Permiso de micrófono no concedido. Habilita el acceso en tu navegador.')
-      return
-    }
-
-    setIsRecording(true)
-    setRecordingSeconds(0)
-    if (recordingTimerRef.current) clearInterval(recordingTimerRef.current)
-    recordingTimerRef.current = setInterval(() => {
-      setRecordingSeconds((s) => s + 1)
-    }, 1000)
-
-    if (stream) {
-      try {
-        const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-          ? 'audio/webm;codecs=opus'
-          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : ''
-        const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
-        mediaRecorderRef.current = recorder
-        audioChunksRef.current = []
-        recorder.ondataavailable = (e) => {
-          if (e.data && e.data.size > 0) {
-            audioChunksRef.current.push(e.data)
-          }
-        }
-        recorder.start(250)
-      } catch (recErr) {
-        console.warn('MediaRecorder error:', recErr)
+        console.warn('SpeechRecognition no disponible:', speechErr)
       }
     }
   }
@@ -1443,6 +1424,7 @@ export default function Chat() {
 
     setIsRecording(false)
 
+    // Detener MediaRecorder y recolectar chunks de audio
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       const recorder = mediaRecorderRef.current
       await new Promise<void>((resolve) => {
@@ -1450,26 +1432,21 @@ export default function Chat() {
         try { recorder.stop() } catch { resolve() }
       })
     }
+    const currentMime = mediaRecorderRef.current?.mimeType || 'audio/webm'
     mediaRecorderRef.current = null
     stopAllMediaTracks()
 
     setLiveTranscript('')
     liveTranscriptRef.current = ''
 
-    // Si Web Speech API ya escribió texto en el input o estuvo activo, terminamos de inmediato (0 tokens)
-    if (hasSpokenRef.current || (!mediaRecorderRef.current && recognitionRef.current)) {
-      setIsVoiceMessage(true)
-      setTimeout(() => {
-        autoResize()
-        textareaRef.current?.focus()
-      }, 30)
-      return
-    }
+    // Comprobar si Web Speech API logró transcribir texto válido
+    const webSpeechText = finalTranscriptRef.current.trim()
+    const hadWebSpeech = hasSpokenRef.current && webSpeechText.length > 0
 
-    // Si Web Speech API no capturó texto (bloqueado/sin soporte en el navegador), transcribir audio grabado con el backend
-    if (audioChunksRef.current.length > 0) {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-      if (audioBlob.size > 500) {
+    // Si Web Speech API no capturó texto o fue silencio/falla, transcribir con IA en el backend (Whisper / Gemini)
+    if (!hadWebSpeech && audioChunksRef.current.length > 0) {
+      const audioBlob = new Blob(audioChunksRef.current, { type: currentMime })
+      if (audioBlob.size > 200) {
         setIsTranscribing(true)
         try {
           const res = await api.chat.stt(audioBlob)
@@ -1992,22 +1969,6 @@ export default function Chat() {
               <span className="hidden sm:inline font-normal">Cancelar</span>
             </button>
           )}
-
-          <a
-            href="https://wa.me/51929725274?text=Hola%20Hardman%20IA%2C%20requiero%20soporte%20con%20mi%20consulta%20legal."
-            target="_blank"
-            rel="noreferrer"
-            className="h-8 px-2 sm:px-2.5 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95 hidden xs:flex"
-            style={{
-              background: 'rgba(37,211,102,0.12)',
-              border: '1px solid rgba(37,211,102,0.30)',
-              color: '#25D366',
-            }}
-            title="Soporte directo por WhatsApp (929 725 274)"
-          >
-            <MessageCircle size={14} className="fill-[#25D366]" />
-            <span className="hidden md:inline font-semibold">WhatsApp</span>
-          </a>
 
           {conversationId && (
             <button

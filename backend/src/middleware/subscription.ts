@@ -134,81 +134,84 @@ export const requireSubscription = async (
 
   req.userPlan = plan;
 
-  // Plan Junior (or legacy normal): 50 queries / user / month
-  // Plan Senior (or legacy pro): unlimited queries
+  // Plan Junior: 50 consultas / mes | Plan Senior: 250 consultas / mes
   const isJunior = plan === 'junior' || plan === 'normal';
+  const LIMIT = isJunior
+    ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
+    : parseInt(process.env.SENIOR_QUESTION_LIMIT || '250', 10);
 
-  if (isJunior) {
-    const LIMIT = parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10);
-    const nowDate = new Date();
-    const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
+  const nowDate = new Date();
+  const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
 
-    // 2. Revisar caché de conteo mensual (TTL 60s)
-    let monthlyQuestions: number;
-    const cachedUsage = usageCache.get(userId);
+  // 2. Revisar caché de conteo mensual (TTL 60s)
+  let monthlyQuestions: number;
+  const cachedUsage = usageCache.get(userId);
 
-    if (cachedUsage && cachedUsage.monthKey === monthKey && cachedUsage.expiresAt > nowMs) {
-      monthlyQuestions = cachedUsage.count;
+  if (cachedUsage && cachedUsage.monthKey === monthKey && cachedUsage.expiresAt > nowMs) {
+    monthlyQuestions = cachedUsage.count;
+  } else {
+    // 1. Consultar conteo desde la tabla de logs inmutables (O(1) en RAM)
+    const logCountResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(questionUsageLogs)
+      .where(
+        and(
+          eq(questionUsageLogs.userId, userId),
+          eq(questionUsageLogs.monthKey, monthKey)
+        )
+      );
+
+    let loggedCount = Number(logCountResult[0]?.count || 0);
+
+    if (loggedCount > 0) {
+      monthlyQuestions = loggedCount;
     } else {
-      // 1. Consultar conteo desde la tabla de logs inmutables (O(1) en RAM)
-      const logCountResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(questionUsageLogs)
-        .where(
-          and(
-            eq(questionUsageLogs.userId, userId),
-            eq(questionUsageLogs.monthKey, monthKey)
-          )
-        );
+      // Fallback: conteo histórico de conversaciones si aún no hay logs registrados para este mes
+      // Limitado a las últimas 200 conversaciones para evitar cargar JSONB ilimitado
+      const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
+      const userConversations = await db.query.conversations.findMany({
+        where: eq(conversations.userId, userId),
+        columns: { messages: true, createdAt: true },
+        limit: 200,
+      });
 
-      let loggedCount = Number(logCountResult[0]?.count || 0);
-
-      if (loggedCount > 0) {
-        monthlyQuestions = loggedCount;
-      } else {
-        // Fallback: conteo histórico de conversaciones si aún no hay logs registrados para este mes
-        // Limitado a las últimas 200 conversaciones para evitar cargar JSONB ilimitado
-        const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
-        const userConversations = await db.query.conversations.findMany({
-          where: eq(conversations.userId, userId),
-          columns: { messages: true, createdAt: true },
-          limit: 200,
-        });
-
-        monthlyQuestions = 0;
-        for (const conv of userConversations) {
-          if (Array.isArray(conv.messages)) {
-            for (const m of conv.messages as any[]) {
-              if (m.role === 'user') {
-                const msgDate = m.timestamp ? new Date(m.timestamp) : null;
-                if (msgDate) {
-                  if (msgDate >= startOfMonth) monthlyQuestions++;
-                } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
-                  monthlyQuestions++;
-                }
+      monthlyQuestions = 0;
+      for (const conv of userConversations) {
+        if (Array.isArray(conv.messages)) {
+          for (const m of conv.messages as any[]) {
+            if (m.role === 'user') {
+              const msgDate = m.timestamp ? new Date(m.timestamp) : null;
+              if (msgDate) {
+                if (msgDate >= startOfMonth) monthlyQuestions++;
+              } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
+                monthlyQuestions++;
               }
             }
           }
         }
       }
-
-      pruneCache(usageCache);
-      usageCache.set(userId, {
-        count: monthlyQuestions,
-        monthKey,
-        expiresAt: nowMs + 60 * 1000, // 60s TTL
-      });
     }
 
-    if (monthlyQuestions >= LIMIT) {
-      return res.status(403).json({
-        error: `Has alcanzado el límite de ${LIMIT} consultas mensuales de tu Plan Junior. Actualiza a Plan Senior (S/ 69/mes) para consultas ilimitadas y soporte por WhatsApp prioritario.`,
-        code: 'LIMIT_REACHED',
-        questionsUsed: monthlyQuestions,
-        limit: LIMIT,
-        plan: 'junior',
-      });
-    }
+    pruneCache(usageCache);
+    usageCache.set(userId, {
+      count: monthlyQuestions,
+      monthKey,
+      expiresAt: nowMs + 60 * 1000, // 60s TTL
+    });
+  }
+
+  if (monthlyQuestions >= LIMIT) {
+    const errorMsg = isJunior
+      ? `Has alcanzado el límite de ${LIMIT} consultas mensuales de tu Plan Junior. Actualiza a Plan Senior (S/ 69/mes) para obtener 250 consultas y soporte por WhatsApp prioritario.`
+      : `Has alcanzado el límite mensual de ${LIMIT} consultas de tu Plan Senior. Tu cuota se reiniciará en el próximo ciclo de facturación.`;
+
+    return res.status(403).json({
+      error: errorMsg,
+      code: 'LIMIT_REACHED',
+      questionsUsed: monthlyQuestions,
+      limit: LIMIT,
+      plan: isJunior ? 'junior' : 'senior',
+    });
   }
 
   next();

@@ -51,26 +51,24 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
     const isJunior = plan === 'junior' || plan === 'normal';
     const limit = isJunior
       ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
-      : null;
+      : parseInt(process.env.SENIOR_QUESTION_LIMIT || '250', 10);
 
     let questionsUsed = 0;
 
-    if (isJunior) {
-      // Usar la tabla de logs inmutables — O(1) para usuarios con muchas conversaciones
-      const now = new Date();
-      const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+    // Usar la tabla de logs inmutables — O(1) para usuarios con muchas conversaciones
+    const now = new Date();
+    const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
 
-      const logCountResult = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(questionUsageLogs)
-        .where(
-          and(
-            eq(questionUsageLogs.userId, req.userId!),
-            eq(questionUsageLogs.monthKey, monthKey)
-          )
-        );
-      questionsUsed = Number(logCountResult[0]?.count || 0);
-    }
+    const logCountResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(questionUsageLogs)
+      .where(
+        and(
+          eq(questionUsageLogs.userId, req.userId!),
+          eq(questionUsageLogs.monthKey, monthKey)
+        )
+      );
+    questionsUsed = Number(logCountResult[0]?.count || 0);
 
     res.json({
       plan,

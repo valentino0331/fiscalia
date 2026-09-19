@@ -34,7 +34,7 @@ export default function CitizenCalculatorsModal({
   const [tab, setTab] = useState<'liquidacion' | 'alimentos' | 'prescripcion' | 'penal' | 'aranceles'>(initialTab)
   const [copied, setCopied] = useState(false)
 
-  // Liquidación State
+
   const [sueldo, setSueldo] = useState('2000')
   const [tieneHijos, setTieneHijos] = useState(false)
   const [regimen, setRegimen] = useState<'general' | 'pequena' | 'micro'>('general')
@@ -42,12 +42,10 @@ export default function CitizenCalculatorsModal({
   const [fechaFin, setFechaFin] = useState(new Date().toISOString().slice(0, 10))
   const [motivoCese, setMotivoCese] = useState<'renuncia' | 'despido' | 'termino'>('despido')
 
-  // Alimentos State
   const [ingresoDemandado, setIngresoDemandado] = useState('2500')
   const [numHijos, setNumHijos] = useState('1')
   const [gastosColegioSalud, setGastosColegioSalud] = useState('900')
 
-  // Prescripción State
   const [tipoDeuda, setTipoDeuda] = useState<'sat' | 'tributario' | 'banco' | 'pagare'>('sat')
   const [fechaUltimoPago, setFechaUltimoPago] = useState('2020-01-15')
 
@@ -396,11 +394,10 @@ Base legal: ${resPres.nombreNorma}`
         <div className="flex gap-2 mb-4 flex-shrink-0 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:grid sm:grid-cols-5">
           <button
             onClick={() => setTab('liquidacion')}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
-              tab === 'liquidacion'
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${tab === 'liquidacion'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-            }`}
+              }`}
           >
             <Briefcase size={16} className={tab === 'liquidacion' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
@@ -411,11 +408,10 @@ Base legal: ${resPres.nombreNorma}`
 
           <button
             onClick={() => setTab('alimentos')}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
-              tab === 'alimentos'
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${tab === 'alimentos'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-            }`}
+              }`}
           >
             <Baby size={16} className={tab === 'alimentos' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
@@ -426,11 +422,10 @@ Base legal: ${resPres.nombreNorma}`
 
           <button
             onClick={() => setTab('prescripcion')}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
-              tab === 'prescripcion'
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${tab === 'prescripcion'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-            }`}
+              }`}
           >
             <CreditCard size={16} className={tab === 'prescripcion' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>
@@ -441,11 +436,10 @@ Base legal: ${resPres.nombreNorma}`
 
           <button
             onClick={() => setTab('penal')}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
-              tab === 'penal'
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${tab === 'penal'
                 ? 'border-[#ef4444] bg-[#ef4444]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-            }`}
+              }`}
           >
             <ShieldAlert size={16} className={tab === 'penal' ? 'text-[#ef4444]' : 'text-white/40'} />
             <div>
@@ -456,11 +450,10 @@ Base legal: ${resPres.nombreNorma}`
 
           <button
             onClick={() => setTab('aranceles')}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${
-              tab === 'aranceles'
+            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[11px] font-medium border transition-all text-left min-w-[150px] sm:min-w-0 flex-1 ${tab === 'aranceles'
                 ? 'border-[#c9a84c] bg-[#c9a84c]/14 text-[#ffffff] shadow-sm'
                 : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-            }`}
+              }`}
           >
             <Scale size={16} className={tab === 'aranceles' ? 'text-[#c9a84c]' : 'text-white/40'} />
             <div>

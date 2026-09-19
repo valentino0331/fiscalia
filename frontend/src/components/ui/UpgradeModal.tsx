@@ -135,37 +135,41 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#c9a84c]">
-                    PASA AL PLAN SENIOR ILIMITADO
+                    PASA AL PLAN SENIOR (250 CONSULTAS)
                   </span>
                   <span className="text-xs font-bold text-white">S/ 69 / mes</span>
                 </div>
                 <p className="text-xs text-white/80 font-light mb-3 leading-relaxed">
-                  Por solo S/ 30 más al mes, elimina todo límite y litiga con respaldo completo para tu estudio jurídico.
+                  Multiplica tu capacidad x5 por solo S/ 30 más al mes y litiga con máxima potencia para tu estudio jurídico.
                 </p>
                 <ul className="space-y-1.5 text-[11px] text-white/70 mb-4">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                    <strong className="text-white">Consultas ilimitadas</strong> (nunca te quedes a mitad de un plazo)
+                    <strong className="text-white">250 consultas mensuales</strong> (máxima capacidad para litigio activo)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Membrete de tu Estudio Jurídico en Word (.docx) y PDF</span>
+                    <span>Subida de expedientes completos y carpetas fiscales (hasta 30 MB)</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Soporte prioritario por WhatsApp directo (929 725 274)</span>
+                    <span>Plenos casatorios y jurisprudencia vinculante de la Corte Suprema</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
+                    <span>Soporte VIP prioritario por WhatsApp directo (929 725 274)</span>
                   </li>
                 </ul>
 
                 <a
-                  href="https://wa.me/51929725274?text=Hola%20Hardman%20IA,%20quiero%20actualizar%20mi%20cuenta%20al%20Plan%20Senior%20Ilimitado%20(S/%2069/mes)."
+                  href="https://pay.hotmart.com/M107246567H?off=ayixxvun"
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:opacity-90 shadow-md"
                   style={{ background: '#c9a84c' }}
                 >
                   <Zap size={14} />
-                  Actualizar a Plan Senior Ilimitado
+                  Actualizar a Plan Senior (S/ 69)
                   <ArrowRight size={13} />
                 </a>
               </div>

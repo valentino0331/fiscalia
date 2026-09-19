@@ -1065,27 +1065,43 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
   }
 
   if (isAudit) {
-    sections.push('► DIRECTIVA CANÓNICA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES (10/10 SUPREMO):');
+    sections.push('► DIRECTIVA CANÓNICA PARA AUDITORÍA Y CONTROL DE VICIOS PROCESALES (MÁXIMA PROFUNDIDAD 10/10 SUPREMO):');
+    sections.push('- EXIGENCIA DE DESARROLLO EXHAUSTIVO: Queda TERMINANTEMENTE PROHIBIDO responder con esquemas telegráficos o viñetas superficiales de una sola línea. Cada acápite debe desarrollarse en prosa jurídica rigurosa, articulada y fundamentada como socio litigante senior.');
     sections.push('- ESTRUCTURA OBLIGATORIA DE RESPUESTA EN 4 BLOQUES DE EXCELENCIA:');
     sections.push('  I. DIAGNÓSTICO DE VICIOS PROCESALES Y VULNERACIÓN CONSTITUCIONAL:');
-    sections.push('     1. VICIOS REDONDILES DE NULIDAD ABSOLUTA INSANABLE: Califica la gravedad bajo el Art. 150° inc. d del NCPP por inobservancia del contenido esencial del Derecho de Defensa, Igualdad de Armas y Debido Proceso (Art. 139° inc. 14 de la Constitución).');
-    sections.push('     2. NOTIFICACIÓN DEFECTUOSA E INCOMPLETA (Omisión de Anexos): Conforme al Art. 127° inc. 1 y Art. 271° inc. 1 del NCPP, el traslado del requerimiento de prisión preventiva exige la entrega física o digital completa de todos los elementos de convicción que lo sustentan; omitir declaraciones testimoniales deja a la defensa a ciegas para contradecir el primer presupuesto de "Sospecha Fuerte" o Fumus Comissi Delicti.');
-    sections.push('     3. EMPLAZAMIENTO IRREGULAR Y DEPOSITADO "BAJO PUERTA": Infracción de los Arts. 127° y 129° del NCPP al notificar sin garantías de recepción fuera de horario de despacho judicial judicial.');
-    sections.push('     4. VULNERACIÓN AL PLAZO RAZONABLE DE PREPARACIÓN DE LA DEFENSA: Aclara con rigor dogmático que las 48 horas del Art. 271° inc. 1 del NCPP son un plazo máximo para el juzgado, NO un plazo de recorte o asfixia para la defensa.');
+    sections.push('     1. VICIO RADICAL DE NULIDAD ABSOLUTA INSANABLE: Desarrolla y califica la gravedad bajo el Art. 150° inc. d del NCPP por inobservancia del contenido esencial del Derecho de Defensa, Principio de Contradicción, Igualdad de Armas y Debido Proceso (Art. 139° inc. 14 de la Constitución).');
+    sections.push('     2. NOTIFICACIÓN DEFECTUOSA E INCOMPLETA (Omisión de Anexos): Conforme al Art. 127° inc. 1 y Art. 271° inc. 1 del NCPP, el traslado del requerimiento de prisión preventiva exige la entrega física o digital completa de todos los elementos de convicción que lo sustentan; omitir declaraciones testimoniales deja a la defensa técnica en total indefensión material para contradecir el primer presupuesto de "Sospecha Fuerte" o Fumus Comissi Delicti.');
+    sections.push('     3. EMPLAZAMIENTO IRREGULAR Y DEPOSITADO "BAJO PUERTA": Infracción de los Arts. 127° y 129° del NCPP al notificar sin garantías fehacientes de recepción y fuera de horario judicial de despacho.');
+    sections.push('     4. VULNERACIÓN AL PLAZO RAZONABLE DE PREPARACIÓN DE LA DEFENSA: Aclara con contundencia dogmática que el plazo de 48 horas del Art. 271° inc. 1 del NCPP es un plazo legal máximo fijado para el juzgado, NO un plazo de asfixia ni de recorte del derecho de defensa.');
     sections.push('  II. CÓMPUTO DE PLAZO Y SUSTENTO JURISPRUDENCIAL VINCULANTE:');
     sections.push('     - Cómputo fatal: Declara con crudeza que de viernes 7:00 pm a lunes 8:30 am el plazo efectivo de preparación fue de exactamente 0 DÍAS HÁBILES (sábado y domingo juzgado y fiscalía cerrados).');
-    sections.push('     - Artículos exactos del NCPP: Art. 150° inc. d (nulidad absoluta), Arts. 127° y 129° (notificaciones válidas), Art. 271° inc. 1 (prisión preventiva y traslado íntegro) y Art. IX del Título Preliminar del NCPP.');
-    sections.push('     - Jurisprudencia rectora:');
-    sections.push('       * Acuerdo Plenario N° 01-2019/CIJ-116 (Fundamentos Jurídicos 24 y 25: Exigencia de contradicción cualificada sobre "Sospecha Fuerte").');
-    sections.push('       * STC Exp. N° 01558-2015-PHC/TC y STC Exp. N° 02098-2010-PA/TC (el derecho de defensa comprende el tiempo y los medios razonables indispensables para preparar la defensa técnica).');
+    sections.push('     - Artículos exactos del NCPP: Art. 150° inc. d (nulidad absoluta), Arts. 127° y 129° (formalidad de notificaciones), Art. 271° inc. 1 (traslado íntegro en prisión preventiva) y Art. IX del Título Preliminar del NCPP.');
+    sections.push('     - Jurisprudencia rectora y precedentes vinculantes:');
+    sections.push('       * Acuerdo Plenario N° 01-2019/CIJ-116 (Fundamentos Jurídicos 24 y 25: Exigencia de contradicción cualificada sobre el estándar de "Sospecha Fuerte").');
+    sections.push('       * STC Exp. N° 01558-2015-PHC/TC y STC Exp. N° 02098-2010-PA/TC (el derecho de defensa comprende el tiempo y los medios razonables e indispensables para preparar la defensa técnica).');
     sections.push('  III. PLAN DE ACCIÓN Y LITIGACIÓN EN 3 PASOS:');
     sections.push('     - PASO 1 (HOY / VÍA SINOE): Ingresar Escrito de Nulidad Absoluta de Notificación y Emplazamiento con solicitud de Reprogramación de audiencia y entrega inmediata de anexos.');
     sections.push('     - PASO 2 (EN AUDIENCIA 8:30 AM): Al instalarse la audiencia y ANTES de que el Fiscal exponga su requerimiento, formular INCIDENCIA PREVIA DE INEFICACIA PROCESAL (Art. 150.d NCPP) solicitando suspensión y plazo prudencial de 24 a 48 horas.');
     sections.push('     - PASO 3 (TÁCTICA SUBSIDIARIA EN ESTRADOS): Si el Juez rechaza la suspensión, interponer de inmediato en el acto RECURSO DE REPOSICIÓN ORAL EN AUDIENCIA bajo el ARTÍCULO 415° DEL NCPP (OBLIGATORIO: citar siempre el Art. 415° NCPP para reposición in situ; NUNCA citar Art. 421° que corresponde a la apelación), consignando reserva expresa de Apelación y demanda de Hábeas Corpus.');
     sections.push('  IV. ADVERTENCIA BLINDAJE ANTITRAMPAS:');
     sections.push('     * Señala expresamente: ⚠️ ADVERTENCIA: NO procede Tutela de Derechos (Acuerdo Plenario N° 04-2010/CJ-116) porque el defecto proviene del Juzgado, no de la Fiscalía. El remedio es NULIDAD ABSOLUTA (Art. 150.d).');
-    sections.push('  V. ESCRITO JUDICIAL COMPLETO EN BLOQUE DOCUMENT:');
-    sections.push('     * Concluye redactando inmediatamente en el bloque ```document el escrito judicial listo para ingresar al SINOE (con Sumilla, Cuaderno Cautelar, Hechos, Fundamentos de Derecho, Petitorio en 3 puntos y Primer Otrosí Digo con Casilla SINOE).');
+    sections.push('  V. OBLIGACIÓN PROCESAL DE REDACCIÓN INMEDIATA DEL ESCRITO JUDICIAL (BLOQUE DOCUMENT):');
+    sections.push('     - Tras concluir el análisis de los 4 bloques anteriores, redacta DE INMEDIATO el escrito judicial formal completo dentro del bloque ```document listo para ingresar al SINOE:');
+    sections.push('       * TÍTULO: NULIDAD_ABSOLUTA_DE_NOTIFICACION_PRISION_PREVENTIVA');
+    sections.push('       * TIPO: INCIDENTE DE NULIDAD / ESCRITO JUDICIAL');
+    sections.push('       * CONTENIDO OBLIGATORIO Y PROFUNDIDAD EXIGIDA: Redacta íntegramente todo el escrito procesal formal en texto plano limpio (sin asteriscos), desarrollando cada sección con extensión profesional y fundamentos sólidos de hecho y de derecho:');
+    sections.push('         - SUMILLA: DEDUCE NULIDAD ABSOLUTA DE NOTIFICACIÓN Y EMPLAZAMIENTO POR VULNERACIÓN DEL CONTENIDO ESENCIAL DEL DERECHO DE DEFENSA Y SOLICITA REPROGRAMACIÓN CON TRASLADO ÍNTEGRO DE ELEMENTOS DE CONVICCIÓN');
+    sections.push('         - CUADERNO: CAUTELAR / PRISIÓN PREVENTIVA');
+    sections.push('         - SEÑOR JUEZ DEL JUZGADO DE INVESTIGACIÓN PREPARATORIA DE [CIUDAD]:');
+    sections.push('         - Comparecencia del abogado defensor y datos del imputado');
+    sections.push('         - I. PETITORIO: Tres pretensiones numeradas (Pretensión Principal de nulidad absoluta bajo Art. 150° inc. d NCPP, Primera Pretensión Accesoria de entrega íntegra de testimoniales bajo Arts. 127° y 271° NCPP, y Segunda Pretensión Accesoria de reprogramación con plazo razonable no menor a 48 horas hábiles).');
+    sections.push('         - II. FUNDAMENTOS DE HECHO: Relato circunstanciado y cronológico extenso del depósito bajo puerta a las 19:00 hrs del viernes, la ausencia de copias de declaraciones testimoniales que fundamentan la imputación, la fijación intempestiva para el lunes 08:30 am y la existencia real de 0 días hábiles de preparación.');
+    sections.push('         - III. FUNDAMENTACIÓN JURÍDICA: Análisis dogmático profundo de la afectación constitucional (Art. 139° inc. 14), normas procesales del NCPP (Arts. IX T.P., 127°, 129°, 150°.d y 271°.1), doctrina vinculante de la STC Exp. N° 01558-2015-PHC/TC sobre el tiempo y medios razonables de defensa, y el Acuerdo Plenario N° 01-2019/CIJ-116 FJ 24-25 sobre contradicción de la sospecha fuerte.');
+    sections.push('         - IV. MEDIOS PROBATORIOS: Cédula de notificación con constancia de recepción bajo puerta y cargo donde se constata la omisión de testimoniales.');
+    sections.push('         - POR TANTO: Fórmula procesal formal de admisibilidad y fundabilidad.');
+    sections.push('         - PRIMER OTROSÍ DIGO: Señalamiento de Casilla Electrónica SINOE, Casilla física, correo electrónico procesal y celular.');
+    sections.push('         - SEGUNDO OTROSÍ DIGO: Delegación de facultades procesales.');
+    sections.push('       * ⛔ PROHIBICIÓN ABSOLUTA: NUNCA hagas un esquema o borrador resumido de una línea por acápite. NUNCA escribas "[CUERPO DEL DOCUMENTO EN TEXTO PLANO — CERO MARKDOWN]". Redacta todo el escrito judicial formal completo y exhaustivo.');
   }
 
   if (isHearing) {
