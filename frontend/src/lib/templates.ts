@@ -129,6 +129,20 @@ export const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       category: 'Investigación Preliminar',
       prompt: 'Redacta una solicitud de control de plazos conforme al Art. 343 del NCPP ante el Juez de Investigación Preparatoria por vencimiento excesivo del plazo de diligencias preliminares sin pronunciamiento fiscal: [carpeta fiscal, fecha de disposición de inicio, plazo vencido]',
     },
+    {
+      label: 'Contestación de Querella Penal por Difamación / Calumnia (Art. 462 NCPP)',
+      icon: Shield,
+      badgeColor: '#EF4444',
+      category: 'Ejercicio Privado de la Acción',
+      prompt: 'Redacta un escrito de contestación de querella penal por delito contra el honor (difamación / calumnia) al amparo de los Arts. 132 del Código Penal y 462 del NCPP, deduciendo excepción de atipicidad por animus criticandi, negando los hechos y ofreciendo medios probatorios de descargo: [juzgado unipersonal, querellante, querellado, expediente penal, hechos contestados]',
+    },
+    {
+      label: 'Solicitud de Cesación de Prisión Preventiva por Nuevos Elementos (Art. 283 NCPP)',
+      icon: Scale,
+      badgeColor: '#EF4444',
+      category: 'Medidas Coercitivas',
+      prompt: 'Redacta una solicitud de cesación de prisión preventiva al amparo del Art. 283 del NCPP y D. Leg. 1585, acreditando nuevos elementos de convicción que desvanecen los motivos iniciales de la medida y arraigo reforzado, solicitando comparecencia con restricciones: [juez de investigación preparatoria, expediente, imputado, delito, nuevos elementos]',
+    },
   ],
   diego: [
     {

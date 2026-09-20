@@ -27,16 +27,12 @@ export default function TemplatesModal({
   currentAgentId,
   onInsertPrompt,
 }: TemplatesModalProps) {
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(
-    currentAgentId || 'valentina'
-  )
   const [searchQuery, setSearchQuery] = useState('')
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
 
-  // Sync selectedAgentId when currentAgentId changes or modal opens
+  // Reset search and copied state when opening
   useEffect(() => {
-    if (isOpen && currentAgentId) {
-      setSelectedAgentId(currentAgentId)
+    if (isOpen) {
       setSearchQuery('')
       setCopiedIndex(null)
     }
@@ -53,12 +49,13 @@ export default function TemplatesModal({
   }, [isOpen, onClose])
 
   const activeAgent = useMemo(() => {
-    return getAgent(selectedAgentId) || AGENTS[0]
-  }, [selectedAgentId])
+    return getAgent(currentAgentId || 'sebastian') || AGENTS[0]
+  }, [currentAgentId])
 
   const rawTemplates = useMemo(() => {
-    return SPECIALIST_TEMPLATES[selectedAgentId] || SPECIALIST_TEMPLATES.valentina || []
-  }, [selectedAgentId])
+    const aid = currentAgentId || 'sebastian'
+    return SPECIALIST_TEMPLATES[aid] || SPECIALIST_TEMPLATES.sebastian || []
+  }, [currentAgentId])
 
   const filteredTemplates = useMemo(() => {
     if (!searchQuery.trim()) return rawTemplates
@@ -111,19 +108,28 @@ export default function TemplatesModal({
           >
             <div className="flex items-center gap-3">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0"
                 style={{
-                  background: 'rgba(201,168,76,0.12)',
-                  border: '1px solid rgba(201,168,76,0.25)',
-                  color: '#c9a84c',
+                  border: '1.5px solid rgba(201,168,76,0.35)',
+                  boxShadow: '0 2px 10px rgba(0,0,0,0.5)',
                 }}
               >
-                <BookOpen size={20} />
+                {activeAgent.image ? (
+                  <img
+                    src={activeAgent.image}
+                    alt={activeAgent.name}
+                    className="w-full h-full object-cover object-top"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-[#c9a84c]/10 text-[#c9a84c]">
+                    <BookOpen size={20} />
+                  </div>
+                )}
               </div>
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm sm:text-base font-semibold text-white tracking-wide">
-                    PLANTILLAS Y MODELOS LEGALES
+                    PLANTILLAS Y MODELOS · {activeAgent.name.toUpperCase()}
                   </h2>
                   <span
                     className="text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
@@ -137,7 +143,7 @@ export default function TemplatesModal({
                   </span>
                 </div>
                 <p className="text-[11px] text-white/50 mt-0.5">
-                  Modelos procesales y contractuales oficiales de{' '}
+                  Modelos y escritos procesales oficiales de{' '}
                   <span className="text-white/80 font-medium">{activeAgent.name}</span> · {activeAgent.role}
                 </p>
               </div>
@@ -151,42 +157,6 @@ export default function TemplatesModal({
             >
               <X size={18} />
             </button>
-          </div>
-
-          {/* Specialist Selector Tabs */}
-          <div
-            className="px-4 py-2.5 border-b overflow-x-auto flex items-center gap-1.5 flex-shrink-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-            style={{ borderColor: 'rgba(255,255,255,0.05)', background: '#181818' }}
-          >
-            <span className="text-[10px] font-medium text-white/40 mr-1 flex-shrink-0 uppercase tracking-wider">
-              Especialista:
-            </span>
-            {AGENTS.map((ag) => {
-              const isSelected = ag.id === selectedAgentId
-              return (
-                <button
-                  key={ag.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedAgentId(ag.id)
-                    setSearchQuery('')
-                  }}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all flex-shrink-0"
-                  style={{
-                    background: isSelected ? 'rgba(201,168,76,0.15)' : 'rgba(255,255,255,0.03)',
-                    color: isSelected ? '#c9a84c' : 'rgba(255,255,255,0.50)',
-                    border: isSelected ? '1px solid rgba(201,168,76,0.35)' : '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: isSelected ? '#c9a84c' : ag.color }}
-                  />
-                  <span>{ag.name}</span>
-                  <span className="text-[9px] opacity-70">({ag.badge})</span>
-                </button>
-              )
-            })}
           </div>
 
           {/* Search bar */}
@@ -206,7 +176,7 @@ export default function TemplatesModal({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Buscar plantillas de ${activeAgent.name} (ej. demanda, apelación, contrato, medida)...`}
+                placeholder={`Buscar entre las plantillas de ${activeAgent.name} (ej. ${activeAgent.badge === 'PENAL' ? 'prisión preventiva, apelación, querella' : 'demanda, escrito, recurso'})...`}
                 className="w-full bg-transparent text-xs text-white placeholder-white/35 outline-none font-light"
               />
               {searchQuery && (
@@ -330,10 +300,10 @@ export default function TemplatesModal({
             style={{ borderColor: 'rgba(255,255,255,0.06)', background: '#121212' }}
           >
             <span className="text-white/40">
-              💡 Haz clic en cualquier modelo para cargarlo directamente en tu mensaje.
+              💡 Haz clic en cualquier modelo para cargarlo directamente en tu chat con {activeAgent.name}.
             </span>
             <span className="text-white/30 text-[10px]">
-              {filteredTemplates.length} plantilla{filteredTemplates.length === 1 ? '' : 's'} disponible{filteredTemplates.length === 1 ? '' : 's'}
+              {filteredTemplates.length} plantilla{filteredTemplates.length === 1 ? '' : 's'} de {activeAgent.name}
             </span>
           </div>
         </motion.div>
