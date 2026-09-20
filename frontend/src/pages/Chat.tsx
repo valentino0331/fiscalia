@@ -12,7 +12,7 @@ import {
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2, MessageCircle,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
-  Scale, Shield, Gavel, Building2, Search, Edit2, RotateCcw, type LucideIcon
+  Scale, Shield, Gavel, Building2, Search, Edit2, RotateCcw, Folder, FolderCheck, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -30,6 +30,7 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
+import LinkedFolderModal, { type LinkedFolderState } from '@/components/chat/LinkedFolderModal'
 
 const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
 
@@ -860,6 +861,30 @@ export default function Chat() {
   const [spijModalOpen, setSpijModalOpen] = useState(false)
   const currentAudioRef = useRef<HTMLAudioElement | null>(null)
 
+  const [folderModalOpen, setFolderModalOpen] = useState(false)
+  const [linkedFolder, setLinkedFolder] = useState<LinkedFolderState | null>(null)
+
+  const handleLinkFolder = (folderName: string, files: File[]) => {
+    const docs = files.map((f) => ({
+      name: f.name,
+      size: f.size,
+      type: f.type,
+      file: f,
+      status: 'pending' as const,
+    }))
+    setLinkedFolder({
+      folderName,
+      docs,
+      linkedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    })
+    setFolderModalOpen(false)
+  }
+
+  const handleUnlinkFolder = () => {
+    setLinkedFolder(null)
+    setFolderModalOpen(false)
+  }
+
   const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
   const [shareLoading, setShareLoading] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
@@ -1634,7 +1659,7 @@ export default function Chat() {
 
   const sendMessage = useCallback(async () => {
     const trimmed = input.trim()
-    if ((!trimmed && !extractedText) || loading || !agent) return
+    if ((!trimmed && !extractedText && !linkedFolder) || loading || !agent) return
 
     let fullContent = trimmed
     const wasVoice = isVoiceMessage
@@ -1642,6 +1667,13 @@ export default function Chat() {
       const fileLabel = attachedFile ? `[Archivo adjunto: ${attachedFile.name}]\n` : ''
       const contextBlock = `${fileLabel}--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---\n${extractedText}\n--- FIN DEL DOCUMENTO ---\n\n`
       fullContent = contextBlock + (trimmed || 'Analiza este documento y proporciona tu opinión legal.')
+    }
+
+    if (linkedFolder && linkedFolder.docs.length > 0) {
+      const folderHeader = `[CARPETA FISCAL / EXPEDIENTE VINCULADO (Modo Cowork): "${linkedFolder.folderName}"]\n` +
+        `Documentos en expediente (${linkedFolder.docs.length}): ${linkedFolder.docs.map((d) => d.name).join(', ')}\n` +
+        `Instrucción especial: Considera todos los documentos de este expediente en tu análisis jurídico.\n\n`
+      fullContent = folderHeader + fullContent
     }
 
     const userMessage: Message = {
@@ -1749,6 +1781,8 @@ export default function Chat() {
             if (usage && usage.limit !== null) {
               setUsage((prev) => prev ? { ...prev, questionsUsed: prev.questionsUsed + 1 } : null)
             }
+            // Notificar instantáneamente a todos los badges para que el contador disminuya en pantalla
+            window.dispatchEvent(new CustomEvent('hardman:usage-updated', { detail: { optimisticDecrement: true } }))
             setLoading(false)
           },
           onError: (err: any) => {
@@ -2523,6 +2557,41 @@ export default function Chat() {
                 )}
               </AnimatePresence>
 
+              {/* Linked Folder (Cowork) Indicator Banner */}
+              {linkedFolder && (
+                <div
+                  className="mb-2 px-3 py-2 rounded-xl flex items-center justify-between gap-2 text-xs"
+                  style={{
+                    background: 'rgba(16,185,129,0.10)',
+                    border: '1px solid rgba(16,185,129,0.25)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FolderCheck size={14} className="text-emerald-400 flex-shrink-0" />
+                    <span className="text-[11px] text-emerald-300 font-medium truncate">
+                      Expediente vinculado: <strong>{linkedFolder.folderName}</strong> ({linkedFolder.docs.length} documentos listos para consultas cruzadas)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setFolderModalOpen(true)}
+                      className="text-[10px] text-emerald-400 hover:underline font-medium cursor-pointer"
+                    >
+                      Ver / Cambiar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLinkedFolder(null)}
+                      className="text-white/40 hover:text-white p-0.5 cursor-pointer"
+                      title="Desvincular expediente"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Input container */}
               <div
                 className="rounded-[14px] p-2 sm:p-3 transition-all duration-300 w-full max-w-full box-border overflow-hidden"
@@ -2585,6 +2654,30 @@ export default function Chat() {
                     >
                       <ImageIcon size={13} />
                       <span className="hidden sm:inline">IMAGEN</span>
+                    </button>
+
+                    {/* Cowork Folder linking button */}
+                    <button
+                      type="button"
+                      onClick={() => setFolderModalOpen(true)}
+                      className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer ${
+                        linkedFolder
+                          ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/25'
+                          : 'text-white/50 hover:text-[#c9a84c]'
+                      }`}
+                      title={
+                        linkedFolder
+                          ? `Carpeta vinculada: ${linkedFolder.folderName} (${linkedFolder.docs.length} docs)`
+                          : 'Vincular Carpeta Fiscal / Expediente (Modo Cowork)'
+                      }
+                    >
+                      <Folder size={12} className={linkedFolder ? 'text-emerald-400' : ''} />
+                      <span>
+                        <span className="sm:hidden">{linkedFolder ? 'CARPETA' : 'CARPETA'}</span>
+                        <span className="hidden sm:inline">
+                          {linkedFolder ? linkedFolder.folderName.slice(0, 12) : 'VINCULAR CARPETA'}
+                        </span>
+                      </span>
                     </button>
 
                     {/* SPIJ & Acuerdos Plenarios quick button */}
@@ -2775,6 +2868,14 @@ export default function Chat() {
       <WhereToGoModal
         isOpen={whereToGoOpen}
         onClose={() => setWhereToGoOpen(false)}
+      />
+
+      <LinkedFolderModal
+        isOpen={folderModalOpen}
+        onClose={() => setFolderModalOpen(false)}
+        linkedFolder={linkedFolder}
+        onLinkFolder={handleLinkFolder}
+        onUnlinkFolder={handleUnlinkFolder}
       />
 
       <Suspense fallback={null}>

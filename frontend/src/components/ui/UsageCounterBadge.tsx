@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api'
 import { Zap } from 'lucide-react'
 import UpgradeModal from './UpgradeModal'
@@ -19,7 +19,7 @@ export default function UsageCounterBadge({
   } | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  useEffect(() => {
+  const fetchUsage = useCallback(() => {
     api.account.usage()
       .then((data) => {
         setUsage({
@@ -31,11 +31,33 @@ export default function UsageCounterBadge({
       .catch(() => {})
   }, [])
 
+  useEffect(() => {
+    fetchUsage()
+
+    const handleUsageUpdate = (e?: Event) => {
+      const customEvt = e as CustomEvent<{ optimisticDecrement?: boolean; increment?: number }>
+      if (customEvt?.detail?.optimisticDecrement || customEvt?.detail?.increment) {
+        const inc = customEvt?.detail?.increment ?? 1
+        setUsage((prev) => (prev ? { ...prev, questionsUsed: prev.questionsUsed + inc } : prev))
+      }
+      setTimeout(fetchUsage, 400)
+    }
+
+    window.addEventListener('hardman:usage-updated', handleUsageUpdate)
+    window.addEventListener('focus', fetchUsage)
+
+    return () => {
+      window.removeEventListener('hardman:usage-updated', handleUsageUpdate)
+      window.removeEventListener('focus', fetchUsage)
+    }
+  }, [fetchUsage])
+
   if (!usage) return null
 
   const isSenior = usage.plan === 'senior' || usage.plan === 'pro'
   const used = usage.questionsUsed
   const limit = usage.limit || (isSenior ? 250 : 50)
+  const remaining = Math.max(0, limit - used)
 
   let dotColor = '#34d17a'
   const ratio = used / limit
@@ -53,12 +75,14 @@ export default function UsageCounterBadge({
             background: 'rgba(201,168,76,0.08)',
             borderColor: 'rgba(201,168,76,0.30)',
           }}
-          title={`Plan Senior: ${used}/${limit} consultas mensuales. Soporte VIP por WhatsApp.`}
+          title={`Plan Senior/Pro: ${remaining} de ${limit} consultas disponibles este mes. Soporte VIP por WhatsApp.`}
         >
           <Zap size={11} className="text-[#c9a84c] flex-shrink-0" />
           <span className="text-[10px] sm:text-[11px] font-medium text-[#c9a84c] tracking-wide">
-            <span className="sm:hidden">{used}/{limit}</span>
-            <span className="hidden sm:inline">Consultas: <strong className="text-white font-bold">{used}</strong> / {limit}</span>
+            <span className="sm:hidden">{remaining}/{limit}</span>
+            <span className="hidden sm:inline">
+              Consultas: <strong className="text-white font-bold">{remaining}</strong> restantes
+            </span>
           </span>
         </button>
       ) : (
@@ -70,7 +94,7 @@ export default function UsageCounterBadge({
             background: '#161616',
             borderColor: 'rgba(255,255,255,0.12)',
           }}
-          title={`Plan Junior: ${used}/${limit} consultas. Haz clic para subir a Senior (250 consultas).`}
+          title={`Plan Junior: ${remaining} de ${limit} consultas disponibles. Haz clic para subir a Senior (250 consultas).`}
         >
           <span
             className="w-1.5 h-1.5 rounded-full flex-shrink-0"
@@ -78,7 +102,7 @@ export default function UsageCounterBadge({
           />
           <span className="text-[10px] sm:text-[11px] font-light text-white/70">
             <span className="text-white/40 hidden md:inline">Consultas: </span>
-            <strong className="text-white font-medium">{used}</strong> / {limit}
+            <strong className="text-white font-medium">{remaining}</strong> restantes
           </span>
         </button>
       )}
