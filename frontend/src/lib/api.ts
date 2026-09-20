@@ -335,6 +335,12 @@ export const api = {
       request<{ success: boolean; message: string }>(`/admin/users/${id}/plan`, { method: 'PATCH', body: JSON.stringify(data) }),
     createUser: (data: { email: string; password: string; name?: string; plan?: string; isAdmin?: boolean; durationDays?: number }) =>
       request<{ success: boolean; message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+    compliance: () =>
+      request<any>('/admin/compliance'),
+    security: () =>
+      request<any>('/admin/security'),
+    simulateThreat: (type: string) =>
+      request<any>('/admin/security/simulate-threat', { method: 'POST', body: JSON.stringify({ type }) }),
   },
 
   saved: {

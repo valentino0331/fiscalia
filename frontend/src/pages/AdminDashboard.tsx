@@ -8,15 +8,17 @@ import {
   AlertTriangle, ArrowUpRight, Copy, Check, Download, Zap, PieChart,
   Server, Gauge, Database, Lock, CheckCheck, RefreshCcw,
   Trash2, UserPlus, Calendar, Clock, Crown, ShieldAlert, CheckCircle, X, Search,
-  Key, UserCheck, AlertCircle
+  Key, UserCheck, AlertCircle, ShieldCheck, Scale
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { AGENTS } from '@/lib/agents'
 import type { AdminStats, BalancedScorecard, AdminUserItem } from '@/types'
 import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
+import CompliancePanel from '@/components/admin/CompliancePanel'
+import SecurityCenterPanel from '@/components/admin/SecurityCenterPanel'
 
-type DashboardTab = 'users' | 'scorecard' | 'operations' | 'capacity'
+type DashboardTab = 'users' | 'scorecard' | 'operations' | 'capacity' | 'compliance' | 'security'
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
@@ -348,7 +350,57 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                 <Gauge size={13} />
                 Escala 1000+
               </button>
+              <button
+                onClick={() => setActiveTab('compliance')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'compliance'
+                    ? 'bg-[#c9a84c] text-[#111111] shadow-lg shadow-[#c9a84c]/20 font-semibold'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <Scale size={13} />
+                Normativas ISO & Leyes
+              </button>
+              <button
+                onClick={() => setActiveTab('security')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all whitespace-nowrap ${
+                  activeTab === 'security'
+                    ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 font-semibold'
+                    : 'text-white/60 hover:text-white'
+                }`}
+              >
+                <ShieldAlert size={13} className={activeTab === 'security' ? 'text-white' : 'text-rose-400'} />
+                Ciberseguridad & Anti-Robo
+              </button>
             </div>
+
+            <button
+              onClick={() => setActiveTab('security')}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-medium transition-all border whitespace-nowrap"
+              style={{
+                background: activeTab === 'security' ? 'rgba(239,68,68,0.20)' : 'rgba(239,68,68,0.08)',
+                borderColor: 'rgba(239,68,68,0.30)',
+                color: '#f87171',
+              }}
+              title="Centro de Ciberseguridad, WAF y Blindaje Antirrobo"
+            >
+              <ShieldAlert size={13} />
+              <span>Blindaje Antirrobo</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('compliance')}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[11px] font-medium transition-all border whitespace-nowrap"
+              style={{
+                background: activeTab === 'compliance' ? 'rgba(201,168,76,0.20)' : 'rgba(201,168,76,0.08)',
+                borderColor: 'rgba(201,168,76,0.30)',
+                color: '#c9a84c',
+              }}
+              title="Auditoría de Normativas ISO y Marco Legal Integral"
+            >
+              <ShieldCheck size={13} />
+              <span>Auditar ISO & Leyes</span>
+            </button>
 
             <button
               onClick={handleCopyBscReport}
@@ -1408,6 +1460,30 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     </div>
                   </div>
                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'compliance' && (
+              <motion.div
+                key="compliance-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <CompliancePanel />
+              </motion.div>
+            )}
+
+            {activeTab === 'security' && (
+              <motion.div
+                key="security-view"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <SecurityCenterPanel />
               </motion.div>
             )}
           </AnimatePresence>

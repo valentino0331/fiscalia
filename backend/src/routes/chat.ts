@@ -15,6 +15,7 @@ import { generateSpeech } from '../lib/tts';
 import { getSpijLegalGrounding, JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
 import { chatRateLimiter, audioRateLimiter } from '../middleware/rateLimit';
 import { encryptConversationMessages, encryptTitle } from '../lib/encryption';
+import { detectPromptExtractionThreat, recordSecurityIncident } from '../middleware/securityShield';
 
 const audioUpload = multer({
   storage: multer.memoryStorage(),
@@ -539,6 +540,29 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const latestUserMessage = [...sanitizedMessages]
       .reverse()
       .find((m: any) => m?.role === 'user' && typeof m.content === 'string')?.content || '';
+
+    // 🛡️ ESCUDO DE PROPIEDAD INTELECTUAL & ANTI-ROBO DE PROMPTS (Decisión 486 CAN & D.L. 822)
+    const promptThreat = detectPromptExtractionThreat(latestUserMessage);
+    if (promptThreat.isThreat) {
+      recordSecurityIncident({
+        ip: (req.ip || req.socket.remoteAddress || 'desconocida').replace(/^::ffff:/, ''),
+        type: 'PROMPT_EXTRACTION',
+        severity: 'HIGH',
+        description: 'Intento de extracción de System Prompt y propiedad intelectual de agentes',
+        target: `/chat (agente: ${agentId})`,
+        blockedPayload: latestUserMessage.slice(0, 100),
+        actionTaken: 'BLOCKED_400',
+      });
+
+      const refusalNotice = 'Estimado usuario: Las instrucciones internas, metodologías operativas y prompts de nuestros especialistas jurídicos constituyen secreto industrial y propiedad intelectual protegida por el Decreto Legislativo N° 822 y la Decisión 486 de la Comunidad Andina. Como asistente legal, me encuentro a su entera disposición para absolver sus consultas sustantivas y procesales sobre la legislación peruana.';
+
+      if (isStream) {
+        res.write(`data: ${JSON.stringify({ chunk: refusalNotice })}\n\n`);
+        res.write(`data: ${JSON.stringify({ done: true })}\n\n`);
+        return res.end();
+      }
+      return res.json({ message: refusalNotice });
+    }
 
     // Ventana deslizante para el prompt: últimos 10 mensajes para evitar latencia de tokens masivos
     const recentMessages = sanitizedMessages.length > 10 ? sanitizedMessages.slice(-10) : sanitizedMessages;

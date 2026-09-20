@@ -10,9 +10,12 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: false, // 🛡️ Anti-Robo de Código: Impide la descarga o inspección de archivos fuente TypeScript
+    minify: 'esbuild',
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
+        banner: '/*! Bufete IA / JurisClaude. PROPIEDAD INTELECTUAL Y SECRETO INDUSTRIAL PROTEGIDO (C) 2026. Prohibida la copia, ingeniería inversa o extracción no autorizada según Ley N° 30096 y D.L. 822. */',
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-framer': ['framer-motion'],

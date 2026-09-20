@@ -14,6 +14,7 @@ import { savedRouter } from './routes/saved';
 import { memoryRouter } from './routes/memory';
 import { initNewTables } from './db/init';
 import { startKeepAlive, getKeepAliveStatus } from './lib/keepAlive';
+import { securityShieldMiddleware } from './middleware/securityShield';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,7 +43,9 @@ app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), geolocation=()');
   res.setHeader('X-Legal-Confidentiality-Policy', 'ISO-27701-Compliant; Professional-Privilege-Guaranteed');
+  res.setHeader('X-Software-Engineering-Standard', 'ISO-IEC-25010-SQuaRE; OWASP-LLM-2025');
   next();
 });
 
@@ -95,6 +98,9 @@ app.use(
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Escudo Perimetral de Ciberseguridad, WAF, Anti-Penetración y Bloqueo de Escáneres
+app.use(securityShieldMiddleware);
 
 app.use('/auth', authRouter);
 app.use('/chat', chatRouter);
