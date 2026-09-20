@@ -177,14 +177,24 @@ export function securityShieldMiddleware(req: Request, res: Response, next: Next
         if (p.test(obj)) return { isThreat: true, type: 'COMMAND_INJECTION', payload: obj };
       }
     } else if (typeof obj === 'object') {
-      // Prevención de Prototype Pollution
-      if ('__proto__' in obj || 'constructor' in obj && obj.constructor?.prototype) {
+      // Prevención de Prototype Pollution: inspeccionar propiedades propias del objeto sin disparar sobre la cadena de prototipo estándar de JS
+      const hasOwn = Object.prototype.hasOwnProperty;
+      if (
+        hasOwn.call(obj, '__proto__') ||
+        hasOwn.call(obj, 'constructor') ||
+        hasOwn.call(obj, 'prototype')
+      ) {
         return { isThreat: true, type: 'PROTOTYPE_POLLUTION', payload: '__proto__ injection' };
       }
 
       for (const key of Object.keys(obj)) {
+        // No bloquear caracteres especiales en contraseñas legítimas
+        if (key === 'password') {
+          continue;
+        }
+
         // En endpoints de chat, el prompt legal legítimo puede contener palabras de leyes; no bloquear falso positivo de chat aquí
-        if (req.path === '/chat' && (key === 'message' || key === 'content')) {
+        if ((req.path === '/chat' || req.originalUrl?.includes('/chat')) && (key === 'message' || key === 'content')) {
           continue;
         }
 
