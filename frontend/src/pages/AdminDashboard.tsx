@@ -868,7 +868,17 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                         ÍNDICE GLOBAL DE SALUD ESTRATÉGICA
                       </div>
                       <h2 className="text-2xl font-light text-white">
-                        Rendimiento del Producto: <span className="font-semibold text-[#c9a84c]">96.8 / 100</span>
+                        Rendimiento del Producto:{' '}
+                        <span className="font-semibold text-[#c9a84c]">
+                          {stats ? (
+                            Math.min(100, Math.round(
+                              ((stats.scorecard?.customer.csatScore ?? 100) +
+                               (stats.scorecard?.processes.uptimePercent ?? 100) +
+                               (stats.scorecard?.processes.legalAccuracyRate ?? 100) +
+                               (stats.aiMetrics?.successRate ?? 100)) / 4
+                            ))
+                          ) : 100} / 100
+                        </span>
                       </h2>
                       <p className="text-[11px] text-white/50 font-light mt-1">
                         Evaluación integral en las 4 perspectivas estratégicas: Financiera, Clientes, Procesos e IA.
@@ -939,38 +949,38 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     icon={<HeartHandshake size={18} className="text-pink-400" />}
                     title="2. Perspectiva de Clientes & Abogados"
                     subtitle="Satisfacción, Adopción y Experiencia Jurídica"
-                    badge="NPS +78"
+                    badge={`Retención ${stats.scorecard?.customer.retentionRate ?? 0}%`}
                     badgeColor="pink"
                   >
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <MetricItem
                         label="Satisfacción Legal (CSAT)"
-                        value={`${stats.scorecard?.customer.csatScore || 97.4}%`}
-                        sublabel="Basado en feedback y guardados"
+                        value={`${stats.scorecard?.customer.csatScore ?? 100}%`}
+                        sublabel="Basado en consultas exitosas"
                         status="good"
                       />
                       <MetricItem
                         label="Net Promoter Score"
-                        value={`+${stats.scorecard?.customer.npsScore || 78}`}
-                        sublabel="Categoría Clase Mundial (>70)"
+                        value={`+${stats.scorecard?.customer.npsScore ?? 0}`}
+                        sublabel="Calculado sobre retención real"
                         status="good"
                       />
                       <MetricItem
-                        label="Retención Mensual"
-                        value={`${stats.scorecard?.customer.retentionRate || 89.2}%`}
-                        sublabel="Uso recurrente en litigios"
+                        label="Retención Real"
+                        value={`${stats.scorecard?.customer.retentionRate ?? 0}%`}
+                        sublabel="Abogados con >1 caso en BD"
                         status="good"
                       />
                       <MetricItem
                         label="Tiempo de Respuesta"
-                        value={`${stats.scorecard?.customer.avgResolutionTimeMs || 1350} ms`}
+                        value={`${stats.scorecard?.customer.avgResolutionTimeMs ?? stats.systemHealth?.dbLatencyMs ?? 0} ms`}
                         sublabel="SLA Meta: < 2,500 ms"
                         status="good"
                       />
                     </div>
                     <ProgressBar
                       label="Índice de Retención y Fidelización"
-                      current={stats.scorecard?.customer.retentionRate || 89.2}
+                      current={stats.scorecard?.customer.retentionRate ?? 0}
                       target={100}
                       unit="%"
                     />
@@ -981,7 +991,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     icon={<Shield size={18} className="text-cyan-400" />}
                     title="3. Procesos Internos & Calidad Legal"
                     subtitle="Eficacia Procesal, Normativa y Documentos"
-                    badge="SLA 99.98%"
+                    badge={`SLA ${stats.scorecard?.processes.uptimePercent != null ? Number(stats.scorecard.processes.uptimePercent).toFixed(1) : 100}%`}
                     badgeColor="cyan"
                   >
                     <div className="grid grid-cols-2 gap-3 mb-4">
@@ -993,26 +1003,26 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                       />
                       <MetricItem
                         label="Precisión Normativa"
-                        value={`${stats.scorecard?.processes.legalAccuracyRate || 99.8}%`}
+                        value={`${stats.scorecard?.processes.legalAccuracyRate ?? 100}%`}
                         sublabel="Conforme a leyes 2026"
                         status="good"
                       />
                       <MetricItem
-                        label="Documentos Notariales"
-                        value={(stats.scorecard?.processes.documentsGeneratedCount || Math.round(stats.overview.totalConversations * 0.45)).toLocaleString()}
-                        sublabel="Cartas, contratos y demandas"
+                        label="Documentos Guardados"
+                        value={(stats.scorecard?.processes.documentsGeneratedCount ?? 0).toLocaleString()}
+                        sublabel="Guardados en Neon PostgreSQL"
                         status="good"
                       />
                       <MetricItem
                         label="Resolución Directa"
-                        value={`${stats.scorecard?.processes.directResolutionRate || 94.2}%`}
-                        sublabel="Sin escalamiento manual"
+                        value={`${stats.scorecard?.processes.directResolutionRate ?? 100}%`}
+                        sublabel="Sin errores de ejecución"
                         status="good"
                       />
                     </div>
                     <ProgressBar
                       label="Disponibilidad del Sistema (Uptime)"
-                      current={stats.scorecard?.processes.uptimePercent || 99.98}
+                      current={stats.scorecard?.processes.uptimePercent ?? 100}
                       target={100}
                       unit="%"
                     />
@@ -1023,31 +1033,31 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     icon={<Cpu size={18} className="text-emerald-400" />}
                     title="4. Aprendizaje, Tecnología & IA"
                     subtitle="Modelos Híbridos, Latencia y Síntesis Vocal"
-                    badge="IA 100% Éxito"
+                    badge={`IA ${stats.aiMetrics?.successRate ?? 100}% Éxito`}
                     badgeColor="emerald"
                   >
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <MetricItem
                         label="Tasa de Éxito IA"
-                        value={`${stats.aiMetrics?.successRate || 100}%`}
-                        sublabel={`${stats.aiMetrics?.totalCalls || 0} llamadas procesadas`}
+                        value={`${stats.aiMetrics?.successRate ?? 100}%`}
+                        sublabel={`${stats.aiMetrics?.totalCalls ?? 0} llamadas procesadas`}
                         status="good"
                       />
                       <MetricItem
                         label="Latencia de BD (Neon)"
-                        value={`${stats.systemHealth?.dbLatencyMs || 25} ms`}
+                        value={`${stats.systemHealth?.dbLatencyMs ?? 0} ms`}
                         sublabel="PostgreSQL Serverless"
                         status="good"
                       />
                       <MetricItem
                         label="Motor Principal"
-                        value="Gemini 2.0 Flash"
-                        sublabel="Fallback Claude 3.5 Sonnet"
+                        value={stats.aiMetrics?.geminiModel || 'Gemini 2.0 Flash'}
+                        sublabel={`Fallback: ${stats.aiMetrics?.anthropicModel || 'Claude 3.5'}`}
                         status="good"
                       />
                       <MetricItem
                         label="Adopción Voz HD"
-                        value={`${stats.scorecard?.learning.voiceHdAdoption || 84.5}%`}
+                        value={`${stats.scorecard?.learning.voiceHdAdoption ?? (stats.aiMetrics?.hasElevenLabsKey ? 100 : 0)}%`}
                         sublabel={stats.aiMetrics?.hasElevenLabsKey ? 'ElevenLabs Conectado' : 'Síntesis Web'}
                         status={stats.aiMetrics?.hasElevenLabsKey ? 'good' : 'neutral'}
                       />
@@ -1372,8 +1382,10 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
 
                     <div className="flex items-center gap-3">
                       <div className="px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-center">
-                        <p className="text-[9px] uppercase font-bold tracking-wider">Status SLA</p>
-                        <p className="text-[14px] font-semibold">99.98% Activo</p>
+                        <p className="text-[9px] uppercase font-bold tracking-wider">Status SLA Real</p>
+                        <p className="text-[14px] font-semibold">
+                          {stats?.systemHealth?.availabilityPercent != null ? `${stats.systemHealth.availabilityPercent.toFixed(2)}% Activo` : '100% Activo'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -1386,8 +1398,10 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                       <span className="text-[9px] uppercase font-bold tracking-wider text-white/40">Throughput Inferencia</span>
                       <Zap size={16} className="text-[#c9a84c]" />
                     </div>
-                    <div className="text-2xl font-light text-white mb-1">140 RPS</div>
-                    <p className="text-[10px] text-emerald-400">Transacciones por segundo pico</p>
+                    <div className="text-2xl font-light text-white mb-1">
+                      {stats?.systemHealth?.currentRps != null ? `${stats.systemHealth.currentRps} RPS` : '0.00 RPS'}
+                    </div>
+                    <p className="text-[10px] text-emerald-400">RPS en tiempo real del runtime</p>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#2a2a2a]">
@@ -1395,26 +1409,32 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                       <span className="text-[9px] uppercase font-bold tracking-wider text-white/40">Latencia Percentil P95</span>
                       <Gauge size={16} className="text-cyan-400" />
                     </div>
-                    <div className="text-2xl font-light text-white mb-1">38 ms</div>
-                    <p className="text-[10px] text-white/40">Tiempo de consulta P95</p>
+                    <div className="text-2xl font-light text-white mb-1">
+                      {stats?.systemHealth?.p95LatencyMs ?? stats?.systemHealth?.dbLatencyMs ?? 0} ms
+                    </div>
+                    <p className="text-[10px] text-white/40">Latencia P95 en vivo (IA &amp; Neon DB)</p>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#2a2a2a]">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[9px] uppercase font-bold tracking-wider text-white/40">Zero-Hallucination Rate</span>
+                      <span className="text-[9px] uppercase font-bold tracking-wider text-white/40">Precisión / Éxito Legal</span>
                       <CheckCheck size={16} className="text-emerald-400" />
                     </div>
-                    <div className="text-2xl font-light text-white mb-1">99.85%</div>
-                    <p className="text-[10px] text-emerald-400">Validación estricta de leyes 2026</p>
+                    <div className="text-2xl font-light text-white mb-1">
+                      {stats?.aiMetrics?.successRate != null ? `${stats.aiMetrics.successRate}%` : '100%'}
+                    </div>
+                    <p className="text-[10px] text-emerald-400">Tasa de éxito en consultas legales</p>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-[#1a1a1a] border border-[#2a2a2a]">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-[9px] uppercase font-bold tracking-wider text-white/40">Cache Hit Rate</span>
+                      <span className="text-[9px] uppercase font-bold tracking-wider text-white/40">Memoria Heap Activa</span>
                       <Database size={16} className="text-pink-400" />
                     </div>
-                    <div className="text-2xl font-light text-white mb-1">91.4%</div>
-                    <p className="text-[10px] text-white/40">Plantillas y jurisprudencia cacheada</p>
+                    <div className="text-2xl font-light text-white mb-1">
+                      {stats?.systemHealth?.memoryUsageMB ?? 0} MB
+                    </div>
+                    <p className="text-[10px] text-white/40">RAM Heap Node.js ({stats?.systemHealth?.memoryTotalMB ?? stats?.systemHealth?.memoryUsageMB ?? 0} MB asignados)</p>
                   </div>
                 </div>
 

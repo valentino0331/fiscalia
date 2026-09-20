@@ -95,6 +95,10 @@ export interface AdminSystemHealth {
   dbLatencyMs: number
   uptimeSeconds: number
   memoryUsageMB: number
+  memoryTotalMB?: number
+  currentRps?: number
+  availabilityPercent?: number
+  p95LatencyMs?: number
   nodeVersion: string
 }
 

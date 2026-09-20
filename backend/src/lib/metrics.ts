@@ -89,16 +89,31 @@ class MetricsManager {
     const groqCount = this.aiMetrics.filter((m) => m.provider === 'groq').length;
     const openaiCount = this.aiMetrics.filter((m) => m.provider === 'openai').length;
 
+    const durations = this.aiMetrics.map((m) => m.durationMs).sort((a, b) => a - b);
+    const p95DurationMs = durations.length > 0
+      ? durations[Math.min(durations.length - 1, Math.floor(durations.length * 0.95))]
+      : avgDurationMs || 0;
+
+    const uptimeSec = Math.max(1, Math.floor((Date.now() - this.startTime) / 1000));
+    const currentRps = Number((this.totalRequests / uptimeSec).toFixed(2));
+    const availabilityPercent = this.totalRequests > 0
+      ? Math.round(((this.totalRequests - this.totalErrors) / this.totalRequests) * 10000) / 100
+      : 100.0;
+
     return {
-      uptimeSeconds: Math.floor((Date.now() - this.startTime) / 1000),
+      uptimeSeconds: uptimeSec,
       totalRequests: this.totalRequests,
       totalErrors: this.totalErrors,
+      currentRps,
+      availabilityPercent,
+      p95DurationMs,
       ai: {
         totalCalls: totalAi,
         successfulCalls: successfulAi,
         failedCalls: failedAi,
         successRate: totalAi > 0 ? Math.round((successfulAi / totalAi) * 100) : 100,
         avgDurationMs,
+        p95DurationMs,
         deepseekCount,
         geminiCount,
         anthropicCount,
