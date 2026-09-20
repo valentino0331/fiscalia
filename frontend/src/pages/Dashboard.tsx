@@ -11,7 +11,7 @@ import { AGENTS, getAgent } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
 import type { Agent, Conversation } from '@/types'
-import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
+import HardmanLogo from '@/components/brand/HardmanLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
@@ -204,7 +204,7 @@ export default function Dashboard() {
         style={{ background: '#111111', borderColor: '#2a2a2a' }}
       >
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          <JurisClaudeLogo size="sm" />
+          <HardmanLogo size="sm" />
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 justify-end flex-shrink-0">

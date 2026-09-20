@@ -24,7 +24,7 @@ import { downloadWordDoc, downloadPdfDoc, printDocument, extractDocumentFromMess
 import { saveAttachmentLocally, downloadChatAttachment } from '@/lib/attachmentStorage'
 import { SpijBadge, injectSpijBadges, SPIJ_VERIFIED_HREF } from '@/lib/spijBadge'
 import type { Message, Conversation } from '@/types'
-import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
+import HardmanLogo from '@/components/brand/HardmanLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
 import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModal'
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
@@ -837,7 +837,7 @@ export default function Chat() {
 
   const [audioRepliesEnabled, setAudioRepliesEnabled] = useState<boolean>(() => {
     try {
-      return localStorage.getItem('bufete_auto_speak') === 'true'
+      return (localStorage.getItem('hardman_auto_speak') || localStorage.getItem('bufete_auto_speak')) === 'true'
     } catch {
       return false
     }
@@ -1914,7 +1914,7 @@ export default function Chat() {
             <Menu size={16} />
           </button>
           <div className="hidden sm:block">
-            <JurisClaudeLogo size="sm" />
+            <HardmanLogo size="sm" />
           </div>
         </div>
 
@@ -1988,6 +1988,7 @@ export default function Chat() {
               const next = !audioRepliesEnabled
               setAudioRepliesEnabled(next)
               try {
+                localStorage.setItem('hardman_auto_speak', String(next))
                 localStorage.setItem('bufete_auto_speak', String(next))
               } catch {}
             }}

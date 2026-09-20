@@ -234,7 +234,7 @@ export default function LiveVoiceCallModal({
     const agentRoleClean = agent.role.replace(/^Especialista en\s+/i, '')
     const isMale = ['sebastian', 'diego', 'rodrigo', 'marco'].includes(agent.id)
     const titlePrefix = isMale ? 'el abogado' : 'la abogada'
-    const welcome = `Estimado usuario, le saluda ${titlePrefix} ${agent.name}, especialista en ${agentRoleClean} del bufete Hardman. Le escucho atentamente, ¿cuál es su consulta o patrocinio legal a evaluar?`
+    const welcome = `Estimado usuario, le saluda ${titlePrefix} ${agent.name}, especialista en ${agentRoleClean} de Hardman. Le escucho atentamente, ¿cuál es su consulta o patrocinio legal a evaluar?`
     setLastAssistantText(welcome)
     conversationHistoryRef.current.push({ role: 'assistant', content: welcome })
 

@@ -6,7 +6,7 @@ async function generateCommercialVoiceover() {
   const script = `¿Tienes un problema legal urgente y no sabes por dónde empezar?
 En el Perú, contratar una consulta tradicional puede costarte cientos de soles y semanas de espera.
 Hoy todo cambió. Te presentamos Hardman IA.
-El primer bufete de abogados con Inteligencia Artificial del Perú.
+La primera plataforma jurídica con Inteligencia Artificial del Perú.
 Ocho especialistas jurídicos de élite disponibles las 24 horas del día.
 Habla en tiempo real por llamada de voz con tu abogada laboralista, redacta demandas y cartas notariales listas en formato Word y PDF en segundos, y calcula tus liquidaciones exactas en Soles.
 Toma el control de tus derechos.

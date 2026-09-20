@@ -79,7 +79,7 @@ export const SPECIALISTS: SpecialistMeta[] = [
   {
     id: 'all',
     name: 'Todos',
-    role: 'Bufete Completo',
+    role: 'Hardman Completo',
     badge: 'GENERAL',
     image: '',
     color: '#c9a84c',
@@ -2023,7 +2023,7 @@ export default function SpijModal({
                     <p className="text-[11px] text-white/70 max-w-xl">
                       {isLocked
                         ? `Todas las consultas y escritos redactados por ${currentSpecialistInfo.name} se sustentan estrictamente en la jurisprudencia vinculante del Poder Judicial y las normas vigentes del SPIJ en materia de ${currentSpecialistInfo.role}.`
-                        : 'Cada respuesta procesal, cálculo numérico y modelo de escrito emitido por el bufete de Inteligencia Artificial está anclado a fuentes jurídicas primarias y vigentes en el Perú.'}
+                        : 'Cada respuesta procesal, cálculo numérico y modelo de escrito emitido por Hardman está anclado a fuentes jurídicas primarias y vigentes en el Perú.'}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">

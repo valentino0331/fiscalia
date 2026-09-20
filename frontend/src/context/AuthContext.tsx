@@ -16,13 +16,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null)
 
   useEffect(() => {
-    const savedToken = localStorage.getItem('bufete_token')
-    const savedUser = localStorage.getItem('bufete_user')
+    const savedToken = localStorage.getItem('hardman_token') || localStorage.getItem('bufete_token')
+    const savedUser = localStorage.getItem('hardman_user') || localStorage.getItem('bufete_user')
     if (savedToken && savedUser) {
       try {
         setToken(savedToken)
         setUser(JSON.parse(savedUser))
       } catch {
+        localStorage.removeItem('hardman_token')
+        localStorage.removeItem('hardman_user')
         localStorage.removeItem('bufete_token')
         localStorage.removeItem('bufete_user')
       }
@@ -32,6 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = (newToken: string, newUser: User) => {
     setToken(newToken)
     setUser(newUser)
+    localStorage.setItem('hardman_token', newToken)
+    localStorage.setItem('hardman_user', JSON.stringify(newUser))
     localStorage.setItem('bufete_token', newToken)
     localStorage.setItem('bufete_user', JSON.stringify(newUser))
   }
@@ -39,6 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     setToken(null)
     setUser(null)
+    localStorage.removeItem('hardman_token')
+    localStorage.removeItem('hardman_user')
     localStorage.removeItem('bufete_token')
     localStorage.removeItem('bufete_user')
   }
@@ -47,8 +53,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const handleUnauthorized = () => {
       logout()
     }
+    window.addEventListener('hardman:unauthorized', handleUnauthorized)
     window.addEventListener('bufete:unauthorized', handleUnauthorized)
     return () => {
+      window.removeEventListener('hardman:unauthorized', handleUnauthorized)
       window.removeEventListener('bufete:unauthorized', handleUnauthorized)
     }
   }, [])

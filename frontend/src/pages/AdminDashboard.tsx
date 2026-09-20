@@ -14,7 +14,7 @@ import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { AGENTS } from '@/lib/agents'
 import type { AdminStats, BalancedScorecard, AdminUserItem } from '@/types'
-import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
+import HardmanLogo from '@/components/brand/HardmanLogo'
 import CompliancePanel from '@/components/admin/CompliancePanel'
 import SecurityCenterPanel from '@/components/admin/SecurityCenterPanel'
 
@@ -245,7 +245,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
             <span className="hidden sm:inline">Volver</span>
           </button>
           <div className="w-px h-4" style={{ background: '#2a2a2a' }} />
-          <JurisClaudeLogo size="sm" />
+          <HardmanLogo size="sm" />
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">

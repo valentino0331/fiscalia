@@ -1,4 +1,4 @@
-# Bufete IA — Frontend
+# Hardman — Frontend
 
 ## Requisitos previos
 

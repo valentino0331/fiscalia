@@ -15,7 +15,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        banner: '/*! Bufete IA / JurisClaude. PROPIEDAD INTELECTUAL Y SECRETO INDUSTRIAL PROTEGIDO (C) 2026. Prohibida la copia, ingeniería inversa o extracción no autorizada según Ley N° 30096 y D.L. 822. */',
+        banner: '/*! Hardman. PROPIEDAD INTELECTUAL Y SECRETO INDUSTRIAL PROTEGIDO (C) 2026. Prohibida la copia, ingeniería inversa o extracción no autorizada según Ley N° 30096 y D.L. 822. */',
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           'vendor-framer': ['framer-motion'],

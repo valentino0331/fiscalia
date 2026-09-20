@@ -110,7 +110,7 @@ export default function SecurityCenterPanel() {
   const handleCopyReport = () => {
     const reportText = `═══════════════════════════════════════════════════════════════════════
 REPORTE DE CIBERSEGURIDAD, ANTI-PENETRACIÓN Y BLINDAJE ANTIRROBO
-SISTEMA: Bufete IA / JurisClaude LegalTech
+SISTEMA: HARDMAN LegalTech
 ESTADO GENERAL: ${telemetry.status} (100% BLINDADO)
 FECHA: ${new Date().toLocaleString('es-PE')}
 ═══════════════════════════════════════════════════════════════════════

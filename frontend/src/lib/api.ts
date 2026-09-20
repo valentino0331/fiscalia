@@ -7,11 +7,12 @@ const API_URL = import.meta.env.VITE_API_URL || (
 type UserResponse = { id: string; email: string; name: string | null; isAdmin: boolean }
 
 function getToken(): string | null {
-  return localStorage.getItem('bufete_token')
+  return localStorage.getItem('hardman_token') || localStorage.getItem('bufete_token')
 }
 
 function handleUnauthorized() {
   if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('hardman:unauthorized'))
     window.dispatchEvent(new CustomEvent('bufete:unauthorized'))
   }
 }

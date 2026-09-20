@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
-import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
+import HardmanLogo from '@/components/brand/HardmanLogo'
 
 import { parseLetterheadDetails } from '@/lib/exportDoc'
 
@@ -133,7 +133,7 @@ export default function Account() {
             Dashboard
           </button>
           <div className="w-px h-4" style={{ background: '#2a2a2a' }} />
-          <JurisClaudeLogo size="sm" />
+          <HardmanLogo size="sm" />
         </div>
 
         <button

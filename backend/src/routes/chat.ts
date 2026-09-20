@@ -292,7 +292,7 @@ function sanitizeAiErrorMessage(err: any): string {
     msg.includes('rate limit') ||
     msg.includes('too many requests')
   ) {
-    return 'Este especialista legal está experimentando una alta demanda temporalmente. Por favor, reintenta tu consulta en unos momentos o consulta con otro especialista del bufete.';
+    return 'Este especialista legal está experimentando una alta demanda temporalmente. Por favor, reintenta tu consulta en unos momentos o consulta con otro especialista de Hardman.';
   }
   if (msg.includes('api key') || msg.includes('unauthorized') || msg.includes('401') || msg.includes('403')) {
     return 'El servicio de IA se encuentra en mantenimiento temporal. Por favor, reintenta en unos instantes.';
@@ -605,7 +605,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       const destName = transferSuggestion.agentName;
       assistantMessage = [
         `Estimado usuario: Analizada su consulta fáctica, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
-        `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de nuestro bufete.`,
+        `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de Hardman.`,
         `Haga clic en el botón inferior para continuar; su consulta se cargará de manera automática en el despacho de ${destName}.`,
       ].join(' ');
 
@@ -633,49 +633,49 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         name: 'Dra. Valentina',
         title: 'Especialista en Derecho Laboral y Seguridad Social',
         specialty: 'despidos arbitrarios, liquidación de beneficios sociales, hostigamiento laboral, accidentes de trabajo y negociación de convenios colectivos',
-        intro: '¡Hola! Es un gusto saludarle. Soy la **Dra. Valentina**, abogada especialista en **Derecho Laboral y Seguridad Social** en el Bufete Hardman.',
+        intro: '¡Hola! Es un gusto saludarle. Soy la **Dra. Valentina**, abogada especialista en **Derecho Laboral y Seguridad Social** en Hardman.',
       },
       sebastian: {
         name: 'Dr. Sebastián',
         title: 'Especialista en Derecho Penal y Procesal Penal',
         specialty: 'defensa penal técnica, denuncias ante la Fiscalía, prisiones preventivas, hábeas corpus y delitos económicos',
-        intro: '¡Hola! Le doy la bienvenida. Soy el **Dr. Sebastián**, especialista en **Derecho Penal y Defensa Procesal** en el Bufete Hardman.',
+        intro: '¡Hola! Le doy la bienvenida. Soy el **Dr. Sebastián**, especialista en **Derecho Penal y Defensa Procesal** en Hardman.',
       },
       diego: {
         name: 'Dr. Diego',
         title: 'Especialista en Derecho Civil, Obligaciones y Contratos',
         specialty: 'contratos civiles y comerciales, procesos de desalojo, cobro de acreencias, prescripción adquisitiva e indemnizaciones por daños y perjuicios',
-        intro: '¡Hola! Un cordial saludo. Soy el **Dr. Diego**, especialista en **Derecho Civil, Obligaciones y Contratos** en el Bufete Hardman.',
+        intro: '¡Hola! Un cordial saludo. Soy el **Dr. Diego**, especialista en **Derecho Civil, Obligaciones y Contratos** en Hardman.',
       },
       adriana: {
         name: 'Dra. Adriana',
         title: 'Especialista en Derecho Corporativo y Societario',
         specialty: 'constitución de empresas, acuerdos de accionistas, fusiones y adquisiciones, gobierno corporativo y contratos mercantiles',
-        intro: '¡Hola! Bienvenida/o a mi despacho. Soy la **Dra. Adriana**, especialista en **Derecho Corporativo y Societario** en el Bufete Hardman.',
+        intro: '¡Hola! Bienvenida/o a mi despacho. Soy la **Dra. Adriana**, especialista en **Derecho Corporativo y Societario** en Hardman.',
       },
       rodrigo: {
         name: 'Dr. Rodrigo',
         title: 'Especialista en Derecho Minero, Ambiental y Recursos Naturales',
         specialty: 'concesiones mineras, permisos ambientales (EIA, DIA), servidumbres mineras y procedimientos sancionadores ante OEFA y OSINERGMIN',
-        intro: '¡Hola! Un saludo atento. Soy el **Dr. Rodrigo**, especialista en **Derecho Minero, Ambiental y Recursos Naturales** en el Bufete Hardman.',
+        intro: '¡Hola! Un saludo atento. Soy el **Dr. Rodrigo**, especialista en **Derecho Minero, Ambiental y Recursos Naturales** en Hardman.',
       },
       camila: {
         name: 'Dra. Camila',
         title: 'Especialista en Derecho de Familia y Sucesiones',
         specialty: 'pensiones de alimentos, tenencia y régimen de visitas, divorcios (notarial, judicial o municipal), sucesiones intestadas y división y partición de bienes',
-        intro: '¡Hola! Le extiendo un cálido saludo. Soy la **Dra. Camila**, especialista en **Derecho de Familia y Sucesiones** en el Bufete Hardman.',
+        intro: '¡Hola! Le extiendo un cálido saludo. Soy la **Dra. Camila**, especialista en **Derecho de Familia y Sucesiones** en Hardman.',
       },
       fernanda: {
         name: 'Dra. Fernanda',
         title: 'Especialista en Derecho Tributario y Aduanero',
         specialty: 'reclamaciones y apelaciones ante SUNAT y Tribunal Fiscal, fiscalizaciones tributarias, levantamiento de embargos y planeamiento fiscal legal',
-        intro: '¡Hola! Qué tal. Soy la **Dra. Fernanda**, abogada especialista en **Derecho Tributario y Fiscalidad** en el Bufete Hardman.',
+        intro: '¡Hola! Qué tal. Soy la **Dra. Fernanda**, abogada especialista en **Derecho Tributario y Fiscalidad** en Hardman.',
       },
       marco: {
         name: 'Dr. Marco',
         title: 'Especialista en Derecho Administrativo y Contrataciones del Estado',
         specialty: 'licitaciones y contratos con el Estado (OSCE), recursos de apelación ante el Tribunal de Contrataciones, procedimientos administrativos sancionadores y reclamos ante entidades públicas',
-        intro: '¡Hola! Le doy una cordial bienvenida a mi despacho. Soy el **Dr. Marco**, especialista en **Derecho Administrativo y Contrataciones del Estado** en el Bufete Hardman.',
+        intro: '¡Hola! Le doy una cordial bienvenida a mi despacho. Soy el **Dr. Marco**, especialista en **Derecho Administrativo y Contrataciones del Estado** en Hardman.',
       },
     };
 
@@ -686,7 +686,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         name: 'Asesor Legal',
         title: 'Especialista en Derecho Peruano',
         specialty: 'asesoría jurídica estratégica y redacción legal',
-        intro: '¡Hola! Le doy la bienvenida a mi despacho legal en el Bufete Hardman.',
+        intro: '¡Hola! Le doy la bienvenida a mi despacho legal en Hardman.',
       };
       assistantMessage = `${prof.intro}\n\nMe encuentro a su completa disposición para evaluar su caso y brindarle asesoría jurídica estratégica conforme a la normativa peruana vigente al 2026.\n\nEn mi especialidad atiendo materias como: **${prof.specialty}**.\n\n¿En qué asunto o situación jurídica le puedo asesorar el día de hoy?`;
 
@@ -862,7 +862,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               'Authorization': `Bearer ${openrouterKey}`,
               'Content-Type': 'application/json',
               'HTTP-Referer': 'https://fiscalia-t0bl.onrender.com',
-              'X-Title': 'Bufete Fiscalia IA',
+              'X-Title': 'Hardman',
             },
             body: JSON.stringify({
               model: openrouterModel,
@@ -1364,7 +1364,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
 
       const isGreeting = /^(hola|buenas|buenos d[ií]as|buenas tardes|buenas noches|saludos|hello|hi)[\s!.?]*$/i.test(latestUserMessage.trim());
       if (isGreeting) {
-        assistantMessage = `¡Hola! Soy **${info.name}**, especialista en **${info.role}** en el Bufete Hardman.\n\nHe recibido su comunicación y me encuentro a su completa disposición para evaluar su caso y brindarle asesoría legal estratégica conforme a la normativa peruana vigente.\n\n¿En qué asunto o situación jurídica le puedo asesorar el día de hoy?`;
+        assistantMessage = `¡Hola! Soy **${info.name}**, especialista en **${info.role}** en Hardman.\n\nHe recibido su comunicación y me encuentro a su completa disposición para evaluar su caso y brindarle asesoría legal estratégica conforme a la normativa peruana vigente.\n\n¿En qué asunto o situación jurídica le puedo asesorar el día de hoy?`;
       } else {
         assistantMessage = [
           `Estimado cliente: He recepcionado su consulta respecto a su caso en el área de **${info.role}**.`,

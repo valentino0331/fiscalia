@@ -1,6 +1,6 @@
 /**
  * 🛡️ Blindaje de Código, Anti-Robo de Propiedad Intelectual & Anti-Tamper
- * Bufete IA / JurisClaude LegalTech
+ * Hardman LegalTech
  */
 
 export function initClientSecurityShield() {
@@ -13,7 +13,7 @@ export function initClientSecurityShield() {
 
   console.log('%c⚠️ ¡ADVERTENCIA DE SEGURIDAD & PROPIEDAD INTELECTUAL! ⚠️', bannerStyleTitle);
   console.log(
-    '%cEl código fuente, arquitectura, prompts jurídicos y modelos de esta plataforma son propiedad exclusiva y confidencial de Bufete IA / JurisClaude.\n' +
+    '%cEl código fuente, arquitectura, prompts jurídicos y modelos de esta plataforma son propiedad exclusiva y confidencial de Hardman.\n' +
     'Cualquier intento de descompilación, ingeniería inversa, scraping, inyección o extracción no autorizada está penado bajo la Ley N° 30096 (Ley de Delitos Informáticos) y el Decreto Legislativo N° 822 (Ley sobre el Derecho de Autor).',
     bannerStyleBody
   );

@@ -2,7 +2,7 @@
  * SISTEMA PERUANO DE INFORMACIÓN JURÍDICA (SPIJ) & CORTE SUPREMA DE JUSTICIA
  * Compendio Normativo y Jurisprudencial Vinculante por Especialista Legal
  *
- * Segmentado estrictamente según la especialidad de cada uno de los 8 abogados del bufete:
+ * Segmentado estrictamente según la especialidad de cada uno de los 8 abogados de Hardman:
  * - sebastian: Derecho Penal y Procesal Penal (Corte Suprema, NCPP, CP)
  * - valentina: Derecho Laboral (Plenos Supremos Laborales, NLPT Ley 32155, SUNAFIL)
  * - diego: Derecho Civil e Inmobiliario (Plenos Casatorios Civiles, Desalojo Ley 30933)

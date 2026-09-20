@@ -55,7 +55,7 @@ interface ComplianceData {
 // Respaldo estático inmediato si la API está inicializando o en offline
 const FALLBACK_COMPLIANCE: ComplianceData = {
   timestamp: new Date().toISOString(),
-  platformName: 'Bufete IA / JurisClaude LegalTech SaaS',
+  platformName: 'HARDMAN LegalTech SaaS',
   jurisdiction: 'República del Perú & Estándares Internacionales',
   overallComplianceScore: 100,
   complianceStatus: 'PLENAMENTE CUMPLIDO & CERTIFICABLE',

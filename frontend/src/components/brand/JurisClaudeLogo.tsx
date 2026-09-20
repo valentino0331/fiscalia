@@ -6,11 +6,12 @@ interface HardmanLogoProps {
   onClick?: () => void
 }
 
-export function JurisClaudeSymbol() {
+export function HardmanSymbol() {
   return null
 }
+export const JurisClaudeSymbol = HardmanSymbol
 
-export default function JurisClaudeLogo({
+export function HardmanLogo({
   size = 'md',
   className = '',
   onClick,
@@ -87,4 +88,7 @@ export default function JurisClaudeLogo({
     </div>
   )
 }
+
+export const JurisClaudeLogo = HardmanLogo
+export default HardmanLogo
 

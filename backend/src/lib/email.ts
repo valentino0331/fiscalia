@@ -23,7 +23,7 @@ export async function sendWelcomeCredentialsEmail(params: WelcomeEmailParams): P
     return false;
   }
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Hardman Bufete IA <notificaciones@hardman.lat>';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Hardman <notificaciones@hardman.lat>';
   const planLabel = params.plan === 'senior' ? 'Plan Senior Ilimitado' : 'Plan Junior';
   const queriesLabel = params.plan === 'senior' ? 'Consultas Ilimitadas con los 8 Agentes' : '50 Consultas Mensuales';
   const greetingName = params.name ? `Dr(a). ${params.name}` : 'Estimado(a) Colega';
@@ -49,7 +49,7 @@ export async function sendWelcomeCredentialsEmail(params: WelcomeEmailParams): P
                 HARDMAN
               </h1>
               <p style="margin:6px 0 0;font-size:12px;letter-spacing:1.5px;color:#a0a5b1;text-transform:uppercase;">
-                Bufete Jurídico con Inteligencia Artificial
+                Plataforma Jurídica con Inteligencia Artificial
               </p>
             </td>
           </tr>
@@ -91,7 +91,7 @@ export async function sendWelcomeCredentialsEmail(params: WelcomeEmailParams): P
                 <tr>
                   <td align="center" bgcolor="#d4af37" style="border-radius:10px;background-color:#d4af37;padding:0;">
                     <a href="${params.loginUrl}" target="_blank" style="display:inline-block;padding:16px 38px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;font-weight:800;color:#000000 !important;text-decoration:none;border-radius:10px;text-transform:uppercase;letter-spacing:1px;background-color:#d4af37;border:1px solid #d4af37;">
-                      <span style="color:#000000 !important;font-weight:800;">INGRESAR A MI BUFETE VIRTUAL &rarr;</span>
+                      <span style="color:#000000 !important;font-weight:800;">INGRESAR A HARDMAN &rarr;</span>
                     </a>
                   </td>
                 </tr>
@@ -165,7 +165,7 @@ export async function sendSubscriptionUpdatedEmail(params: SubscriptionUpdatedEm
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return false;
 
-  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Hardman Bufete IA <notificaciones@hardman.lat>';
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'Hardman <notificaciones@hardman.lat>';
   const planLabel = params.plan === 'senior' ? 'Plan Senior Ilimitado' : 'Plan Junior';
   const greetingName = params.name ? `Dr(a). ${params.name}` : 'Estimado(a) Colega';
 

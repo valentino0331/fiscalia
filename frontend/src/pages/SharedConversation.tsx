@@ -7,7 +7,7 @@ import { ArrowRight, ExternalLink } from 'lucide-react'
 import { api } from '@/lib/api'
 import { getAgent } from '@/lib/agents'
 import { SpijBadge, injectSpijBadges, SPIJ_VERIFIED_HREF } from '@/lib/spijBadge'
-import JurisClaudeLogo from '@/components/brand/JurisClaudeLogo'
+import HardmanLogo from '@/components/brand/HardmanLogo'
 
 function safeTime(ts?: string): string {
   if (!ts) return ''
@@ -72,7 +72,7 @@ export default function SharedConversation() {
     <div className="min-h-screen flex flex-col" style={{ background: '#111111' }}>
       {/* Header */}
       <header className="h-14 flex items-center justify-between px-4 md:px-8 border-b flex-shrink-0" style={{ background: '#111111', borderColor: '#2a2a2a' }}>
-        <JurisClaudeLogo size="sm" />
+        <HardmanLogo size="sm" />
         <div className="flex items-center gap-3">
           {agent && (
             <div className="flex items-center gap-2">

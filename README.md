@@ -1,6 +1,6 @@
-# Bufete IA
+# Hardman
 
-Plataforma SaaS de asistentes jurídicos especializados en derecho peruano, potenciados por Claude (Anthropic).
+Plataforma SaaS de asistentes jurídicos especializados en derecho peruano con Inteligencia Artificial.
 
 ## Requisitos previos
 

@@ -587,7 +587,7 @@ adminRouter.get('/compliance', requireAuth, requireAdmin, async (_, res) => {
 
     const report = {
       timestamp: new Date().toISOString(),
-      platformName: 'Bufete IA / JurisClaude LegalTech SaaS',
+      platformName: 'HARDMAN LegalTech SaaS',
       jurisdiction: 'República del Perú & Estándares Internacionales',
       overallComplianceScore: 100,
       complianceStatus: 'PLENAMENTE CUMPLIDO & CERTIFICABLE',
