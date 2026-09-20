@@ -43,6 +43,7 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
     keywords: [
       'civil', 'derecho civil', 'problema civil', 'tema civil', 'caso civil', 'asunto civil',
       'demanda civil', 'abogado civil', 'juicio civil', 'materia civil',
+      'contestacion a una demanda', 'contestacion de demanda', 'contestar demanda', 'escrito de contestacion', 'contesto demanda',
       'desalojo', 'arrendamiento', 'contrato civil', 'incumplimiento contractual',
       'indemnizacion', 'responsabilidad civil', 'carta notarial', 'resolucion contractual',
       'deuda', 'prestamo', 'garantia hipotecaria', 'derechos reales', 'propiedad',
@@ -147,6 +148,7 @@ const EXPLICIT_BRANCH_TRIGGERS: Array<{
       'problema civil', 'derecho civil', 'tema civil', 'caso civil', 'abogado civil',
       'asunto civil', 'demanda civil', 'materia civil', 'juicio civil', 'litigio civil',
       'un civil', 'algo civil', 'desalojo', 'arrendamiento', 'contrato de alquiler',
+      'contestacion a una demanda', 'contestacion de demanda', 'contestar demanda', 'escrito de contestacion',
     ],
   },
   {

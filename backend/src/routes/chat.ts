@@ -767,9 +767,14 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         'hazme un escrito', 'haz un escrito', 'prepara una demanda', 'redacta una demanda',
         'demanda de', 'interponer demanda', 'formular demanda', 'denuncia penal',
         'carta notarial', 'contrato de', 'minuta de', 'recurso de apelacion', 'recurso de apelación',
-        'contestacion de demanda', 'contestación de demanda', 'medida cautelar', 'habeas corpus',
-        'amparo', 'querella', 'bloque document', 'generar documento', 'generar escrito',
-        'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo'
+        'contestacion de demanda', 'contestación de demanda', 'contestacion a una demanda', 'contestación a una demanda',
+        'contestar demanda', 'escrito de contestacion', 'escrito de contestación',
+        'medida cautelar', 'habeas corpus', 'amparo', 'querella', 'bloque document',
+        'generar documento', 'generar escrito', 'genera un escrito', 'genera escrito',
+        'genera documento', 'genera una demanda', 'genera un contrato', 'genera una carta',
+        'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo',
+        'genera', 'generar', 'hazme un', 'haz una', 'haz un', 'escribe un', 'escribe una',
+        'modelo de', 'formato de', 'borrador de', 'proyecto de escrito'
       ];
       return docKeywords.some(kw => t.includes(kw));
     };
@@ -805,7 +810,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     };
 
     const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
-    const effectiveSystemPrompt = fullSystemPrompt;
+    let effectiveSystemPrompt = fullSystemPrompt;
+    if (isDocRequest) {
+      effectiveSystemPrompt += '\n\n════════════════════════════════════════\nORDEN SUPREMA DE GENERACIÓN DE ESCRITO / DOCUMENTO:\nEl usuario ha solicitado formalmente redactar o generar un escrito o documento legal.\nREDACTA DE INMEDIATO EL ESCRITO COMPLETO Y PROFESIONAL dentro del bloque ```document.\nESTÁ CATEGÓRICAMENTE PROHIBIDO rechazar esta petición o responder con frases de descarte como "Mi función en el sistema Hardman es exclusivamente...". Si faltan datos particulares del caso, redacta el escrito formal completo empleando campos editables entre corchetes (ej. [DEMANDADO], [EXPEDIENTE N°], [JUZGADO]) para que el usuario tenga su modelo listo para presentar en el acto.\n════════════════════════════════════════';
+    }
 
     const formattedMessages = [
       { role: 'system', content: effectiveSystemPrompt },
