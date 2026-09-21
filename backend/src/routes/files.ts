@@ -140,16 +140,16 @@ filesRouter.post(
           const pdfParseModule = await import('pdf-parse');
           const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
 
-          // Silenciar warnings repetitivos de fuentes tipográficas de pdf.js para no saturar la consola ni la memoria
-          const originalWarn = console.warn;
-          console.warn = (...args: any[]) => {
+          // Silenciar warnings repetitivos de fuentes de pdf.js (pdf.js usa console.log internamente para emitirlos)
+          const originalLog = console.log;
+          console.log = (...args: any[]) => {
             if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
-            originalWarn(...args);
+            originalLog(...args);
           };
 
           // Limitar a máximo 35 páginas para proteger la memoria RAM del servidor (evita caídas por Out of Memory en expedientes gigantes)
           const data = await pdfParse(file.buffer, { max: 35 });
-          console.warn = originalWarn;
+          console.log = originalLog;
 
           const text = (data.text || '').trim();
           pageCount = data.numpages || null;
