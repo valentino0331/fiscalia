@@ -6,6 +6,7 @@ import { db } from '../db';
 import { subscriptions, users, questionUsageLogs } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sendWelcomeCredentialsEmail, sendSubscriptionUpdatedEmail } from '../lib/email';
+import { sendTelegramPurchaseNotification, sendTelegramCancellationNotification } from '../lib/telegram';
 import { invalidateUserSubscriptionCache } from '../middleware/subscription';
 
 export const webhooksRouter = Router();
@@ -121,6 +122,17 @@ webhooksRouter.post('/hotmart', async (req, res) => {
         ? rawBuyerName.trim().slice(0, 100) || null
         : null;
 
+      const rawPhone =
+        data?.buyer?.checkout_phone ||
+        data?.buyer?.phone ||
+        data?.buyer?.phone_number ||
+        data?.buyer?.cellphone ||
+        body?.phone ||
+        body?.phone_number ||
+        (body?.phone_local_code ? `${body.phone_local_code}${body.phone_number || ''}` : null);
+      const buyerPhone: string | null = typeof rawPhone === 'string' && rawPhone.trim() ? rawPhone.trim() : null;
+      const currency = data?.purchase?.price?.currency_value || data?.purchase?.original_offer_price?.currency_value || 'S/';
+
       let generatedPassword = '';
       const isNewUser = !user;
 
@@ -206,6 +218,25 @@ webhooksRouter.post('/hotmart', async (req, res) => {
       } catch (emailErr) {
         console.error('[Hotmart Webhook] Error al enviar email de bienvenida:', emailErr);
       }
+
+      // Notificar a Telegram en tiempo real con credenciales y datos del cliente
+      try {
+        await sendTelegramPurchaseNotification({
+          email,
+          name: buyerName || user.name,
+          plan: assignedPlan,
+          password: isNewUser ? generatedPassword : null,
+          isNewUser,
+          price: priceVal,
+          currency: String(currency),
+          transaction,
+          phone: buyerPhone,
+          loginUrl,
+          event,
+        });
+      } catch (tgErr) {
+        console.error('[Hotmart Webhook] Error enviando notificación a Telegram:', tgErr);
+      }
     }
 
     if (
@@ -219,6 +250,18 @@ webhooksRouter.post('/hotmart', async (req, res) => {
           .set({ status: event === 'PURCHASE_REFUNDED' ? 'refunded' : 'cancelled', updatedAt: new Date() })
           .where(eq(subscriptions.userId, user.id));
         console.log(`[Hotmart] Suscripción ${event === 'PURCHASE_REFUNDED' ? 'reembolsada' : 'cancelada'}: ${email}`);
+
+        // Notificar cancelación o reembolso a Telegram
+        try {
+          await sendTelegramCancellationNotification({
+            email,
+            name: user.name,
+            event,
+            transaction,
+          });
+        } catch (tgErr) {
+          console.error('[Hotmart Webhook] Error notificando cancelación a Telegram:', tgErr);
+        }
       }
     }
 
