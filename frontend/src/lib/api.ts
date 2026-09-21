@@ -52,8 +52,8 @@ async function uploadFile<T>(path: string, file: File, onRetry?: (attempt: numbe
 
     try {
       const controller = new AbortController()
-      // Timeout generoso: 120s para expedientes de hasta 35MB y 300 págs en Render
-      const timeoutId = setTimeout(() => controller.abort(), 120000)
+      // Timeout generoso: 180s para expedientes de hasta 100MB y 500 págs en Render
+      const timeoutId = setTimeout(() => controller.abort(), 180000)
 
       let res: Response
       try {

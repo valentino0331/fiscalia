@@ -518,7 +518,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       ))
       .map((m: any) => ({
         role: m.role as 'user' | 'assistant',
-        content: m.content.slice(0, 300000) as string,
+        content: m.content.slice(0, 600000) as string,
         // ConversationMessage schema requires timestamp — usar el existente o generar uno
         timestamp: typeof m.timestamp === 'string' ? m.timestamp : new Date().toISOString(),
       }));
@@ -837,14 +837,14 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       });
     };
 
-    // Con saldo activo en OpenRouter y expedientes extensos (100-300 págs), otorgamos hasta 120s de margen
-    const MAX_AI_WAIT_MS = requiresHighCapacity ? 120000 : 75000;
+    // Con saldo activo en OpenRouter y expedientes extensos (100-500 págs), otorgamos hasta 180s de margen
+    const MAX_AI_WAIT_MS = requiresHighCapacity ? 180000 : 75000;
 
-    // Tokens generosos: 8192 para escritos y expedientes completos, 4096 para consultas estándar
-    const maxTokens = requiresHighCapacity ? 8192 : 4096;
+    // Tokens generosos: 12288 para escritos y expedientes completos, 4096 para consultas estándar
+    const maxTokens = requiresHighCapacity ? 12288 : 4096;
 
     // ─────────────────────────────────────────────────────────────
-    // 1. PRIORIDAD 1: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
+    // 1. PRIORIDAD 1: OpenRouter (Gemini 2.5 Flash / DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
     if (!assistantMessage && openrouterKey) {
@@ -852,13 +852,22 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       const sanitizedEnvModel = process.env.OPENROUTER_MODEL
         ? process.env.OPENROUTER_MODEL.replace(/:free$/, '').trim()
         : null;
-      const rawOrModels = [
-        'deepseek/deepseek-chat',
-        sanitizedEnvModel,
-        'google/gemini-2.5-flash',
-        'meta-llama/llama-3.3-70b-instruct',
-        'anthropic/claude-3.5-haiku',
-      ].filter(Boolean) as string[];
+      // Para expedientes masivos (100MB / hasta 500 págs), priorizamos Gemini 2.5 Flash (1M tokens de contexto) y DeepSeek V3
+      const rawOrModels = hasLargeDoc
+        ? [
+            'google/gemini-2.5-flash',
+            'deepseek/deepseek-chat',
+            sanitizedEnvModel,
+            'anthropic/claude-3.5-sonnet',
+            'meta-llama/llama-3.3-70b-instruct',
+          ].filter(Boolean) as string[]
+        : [
+            'deepseek/deepseek-chat',
+            sanitizedEnvModel,
+            'google/gemini-2.5-flash',
+            'meta-llama/llama-3.3-70b-instruct',
+            'anthropic/claude-3.5-haiku',
+          ].filter(Boolean) as string[];
       const candidateModels = [...new Set(rawOrModels)];
 
       for (const openrouterModel of candidateModels) {
@@ -871,7 +880,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         try {
           console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 50000 : 30000);
+          const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 65000 : 30000);
+
+          // DeepSeek soporta hasta 8192 output tokens; Gemini/Claude soportan hasta 12288+
+          const modelMaxTokens = openrouterModel.includes('deepseek') ? Math.min(8192, maxTokens) : maxTokens;
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -885,7 +897,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               model: openrouterModel,
               messages: formattedMessages,
               temperature: 0.2,
-              max_tokens: maxTokens,
+              max_tokens: modelMaxTokens,
               stream: isStream,
             }),
             signal: controller.signal,
@@ -941,7 +953,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // 2. PRIORIDAD 2: Groq LPUs (Inferencia ultra-rápida 300+ tok/s, latencia < 300ms)
     // ─────────────────────────────────────────────────────────────
     if (abortIfStreamCorrupted()) return;
-    if (!assistantMessage && groqKey) {
+    if (!assistantMessage && groqKey && (!hasLargeDoc || latestUserMessage.length < 30000)) {
       console.log('[AI Engine] Evaluando proveedor Groq LPUs...');
       const groqCandidates = [
         'llama-3.3-70b-versatile',
