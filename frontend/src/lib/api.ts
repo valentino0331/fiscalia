@@ -52,8 +52,8 @@ async function uploadFile<T>(path: string, file: File, onRetry?: (attempt: numbe
 
     try {
       const controller = new AbortController()
-      // Timeout generoso: 90s para archivos grandes (8MB PDF puede tardar ~60s en cold start de Render)
-      const timeoutId = setTimeout(() => controller.abort(), 90000)
+      // Timeout generoso: 120s para expedientes de hasta 35MB y 300 págs en Render
+      const timeoutId = setTimeout(() => controller.abort(), 120000)
 
       let res: Response
       try {
@@ -98,7 +98,7 @@ async function uploadFile<T>(path: string, file: File, onRetry?: (attempt: numbe
 
       // Error definitivo (no recuperable o agotó reintentos)
       if (isAbort) {
-        throw new Error('El archivo tardó demasiado en procesarse. Por favor intenta de nuevo o comprime el PDF.')
+        throw new Error('El expediente tardó demasiado en procesarse en el servidor. Por favor intenta de nuevo o súbelo por cuadernos procesales.')
       }
       throw err
     }

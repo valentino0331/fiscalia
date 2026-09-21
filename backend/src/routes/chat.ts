@@ -507,7 +507,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // Sanear mensajes: filtrar sólo role user/assistant con contenido string
-    // Límite 60k chars para soportar PDFs grandes (8MB ~ 80k chars extraídos, truncar en cliente a 80k)
+    // Límite generoso de 300k chars para expedientes completos de 100-300 págs (modelos OpenRouter/Gemini soportan 128k-1M tokens)
     const sanitizedMessages = messages
       .filter((m: any) => (
         m &&
@@ -518,7 +518,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       ))
       .map((m: any) => ({
         role: m.role as 'user' | 'assistant',
-        content: m.content.slice(0, 60000) as string,
+        content: m.content.slice(0, 300000) as string,
         // ConversationMessage schema requires timestamp — usar el existente o generar uno
         timestamp: typeof m.timestamp === 'string' ? m.timestamp : new Date().toISOString(),
       }));
@@ -810,7 +810,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return p;
     };
 
+    const hasLargeDoc = latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
+      recentMessages.some((m: any) => typeof m.content === 'string' && m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---'));
     const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
+    const requiresHighCapacity = isDocRequest || hasLargeDoc;
     let effectiveSystemPrompt = fullSystemPrompt;
     if (isDocRequest) {
       effectiveSystemPrompt += '\n\n════════════════════════════════════════\nORDEN SUPREMA DE GENERACIÓN DE ESCRITO / DOCUMENTO:\nEl usuario ha solicitado formalmente redactar o generar un escrito o documento legal.\nREDACTA DE INMEDIATO EL ESCRITO COMPLETO Y PROFESIONAL dentro del bloque ```document.\nESTÁ CATEGÓRICAMENTE PROHIBIDO rechazar esta petición o responder con frases de descarte como "Mi función en el sistema Hardman es exclusivamente...". Si faltan datos particulares del caso, redacta el escrito formal completo empleando campos editables entre corchetes (ej. [DEMANDADO], [EXPEDIENTE N°], [JUZGADO]) para que el usuario tenga su modelo listo para presentar en el acto.\n════════════════════════════════════════';
@@ -834,11 +837,11 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       });
     };
 
-    const MAX_AI_WAIT_MS = 55000; // Extendido para análisis de documentos grandes
+    // Con saldo activo en OpenRouter y expedientes extensos (100-300 págs), otorgamos hasta 120s de margen
+    const MAX_AI_WAIT_MS = requiresHighCapacity ? 120000 : 75000;
 
-    // Documentos y escritos legales completos requieren más tokens de salida
-    // 4096 es insuficiente para demandas/contratos (pueden superar 6k–10k tokens)
-    const maxTokens = isDocRequest ? 8192 : 4096;
+    // Tokens generosos: 8192 para escritos y expedientes completos, 4096 para consultas estándar
+    const maxTokens = requiresHighCapacity ? 8192 : 4096;
 
     // ─────────────────────────────────────────────────────────────
     // 1. PRIORIDAD 1: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
@@ -852,6 +855,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       const rawOrModels = [
         'deepseek/deepseek-chat',
         sanitizedEnvModel,
+        'google/gemini-2.5-flash',
         'meta-llama/llama-3.3-70b-instruct',
         'anthropic/claude-3.5-haiku',
       ].filter(Boolean) as string[];
@@ -867,7 +871,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         try {
           console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 25000);
+          const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 50000 : 30000);
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -1077,6 +1081,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               ],
               generationConfig: {
                 temperature: 0.1,
+                maxOutputTokens: maxTokens,
               }
             };
 

@@ -1285,7 +1285,7 @@ export default function Chat() {
   }
 
   const handleFileSelect = async (file: File) => {
-    const MAX_MB = 25
+    const MAX_MB = 35
     if (file.size > MAX_MB * 1024 * 1024) {
       setAttachedFile(file)
       setExtractError(`El archivo supera el límite de ${MAX_MB}MB. Se recomienda comprimir el PDF o subirlo por cuadernos procesales.`)
@@ -1379,10 +1379,10 @@ export default function Chat() {
     const controller = new AbortController()
     abortControllerRef.current = controller
 
-    // Documentos adjuntos o redacción de escritos requieren más tiempo (hasta 90s)
+    // Documentos adjuntos o redacción de escritos requieren más tiempo (hasta 130s con IA en OpenRouter)
     const hasDocument = !!extractedText || fullContent.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---')
     const isWritingRequest = /redacta|redactar|elabora|demanda|denuncia|carta notarial|contrato|recurso de apelaci/i.test(trimmed)
-    const watchdogMs = (hasDocument || isWritingRequest) ? 90000 : 45000
+    const watchdogMs = (hasDocument || isWritingRequest) ? 130000 : 60000
     let watchdogTimer: NodeJS.Timeout | null = setTimeout(() => {
       if (controller && !controller.signal.aborted) {
         console.warn(`[Chat] Watchdog timeout: cancelando petición tras ${watchdogMs / 1000}s sin respuesta`)

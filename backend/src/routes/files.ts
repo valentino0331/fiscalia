@@ -3,7 +3,7 @@ import multer, { MulterError } from 'multer';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
 
-const MAX_SIZE_MB = 15;
+const MAX_SIZE_MB = 35;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -132,8 +132,8 @@ filesRouter.post(
           };
 
           let totalChars = 0;
-          const MAX_EXPEDIENTE_PAGES = 150;
-          const MAX_CHARS_LIMIT = 120000;
+          const MAX_EXPEDIENTE_PAGES = 300;
+          const MAX_CHARS_LIMIT = 250000;
 
           const customPagerender = async (pageData: any): Promise<string> => {
             if (totalChars >= MAX_CHARS_LIMIT) {
@@ -188,8 +188,8 @@ filesRouter.post(
           extractedText = '[Aviso del Expediente]: Este archivo parece ser un escaneo o fotocopia sin capa de texto digital seleccionable. Para que nuestros especialistas jurídicos puedan analizar tu caso con la máxima precisión legal, por favor sube el documento en formato Word (.docx) o un PDF con texto seleccionable.';
         }
 
-        if (extractedText && extractedText.length > 80000) {
-          extractedText = extractedText.slice(0, 80000) + `\n\n[Documento muy extenso — se muestran los primeros 80,000 caracteres de ${extractedText.length.toLocaleString()} totales]`;
+        if (extractedText && extractedText.length > 250000) {
+          extractedText = extractedText.slice(0, 250000) + `\n\n[Documento muy extenso — se muestran los primeros 250,000 caracteres de ${extractedText.length.toLocaleString()} totales]`;
         }
       } else if (
         mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
@@ -198,8 +198,8 @@ filesRouter.post(
         const mammoth = await import('mammoth');
         const result = await mammoth.extractRawText({ buffer: file.buffer });
         extractedText = result.value || '';
-        if (extractedText.length > 80000) {
-          extractedText = extractedText.slice(0, 80000) + '\n\n[Documento muy extenso — texto truncado]';
+        if (extractedText.length > 250000) {
+          extractedText = extractedText.slice(0, 250000) + '\n\n[Documento muy extenso — texto truncado a 250,000 caracteres]';
         }
       } else if (
         mime === 'application/msword' ||
