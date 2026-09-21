@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Zap, CheckCircle2, ArrowRight, MessageCircle } from 'lucide-react'
+import { X, Zap, CheckCircle2, ArrowRight } from 'lucide-react'
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -16,7 +16,7 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
 
   const isSenior = usage?.limit === null || usage?.plan === 'senior' || usage?.plan === 'pro'
   const used = usage?.questionsUsed || 0
-  const limit = usage?.limit || 50
+  const limit = usage?.limit || (isSenior ? 250 : 50)
   const remaining = Math.max(0, limit - used)
   const percent = Math.min(100, Math.round((used / limit) * 100))
 
@@ -50,13 +50,35 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                   <span className="text-[9px] font-bold uppercase tracking-widest text-[#c9a84c] block">
                     MEMBRESÍA ACTIVA
                   </span>
-                  <h3 className="text-xl font-light text-white">Plan Senior Ilimitado</h3>
+                  <h3 className="text-xl font-light text-white">Plan Senior (250 Consultas)</h3>
                 </div>
               </div>
 
               <p className="text-xs text-white/60 leading-relaxed font-light">
-                Disfrutas de capacidad total sin restricciones: consultas ilimitadas a los 8 especialistas, generación de documentos Word (.docx) con membrete oficial de tu estudio y soporte prioritario directo.
+                Disfrutas de capacidad total para tu litigio activo: hasta 250 consultas mensuales a los 8 especialistas, generación de documentos Word (.docx) con membrete oficial de tu estudio y análisis normativo avanzado.
               </p>
+
+              {/* Progress bar de consumo de 250 consultas */}
+              <div className="p-4 rounded-xl border space-y-3" style={{ background: '#1c1c1c', borderColor: '#2e2e2e' }}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-white/60">Consultas este mes:</span>
+                  <span className="font-semibold text-white">
+                    {used} / {limit} <span className="text-white/40 font-normal">({remaining} restantes)</span>
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${percent}%`,
+                      background: percent >= 80 ? '#ef4444' : percent >= 60 ? '#f59e0b' : '#c9a84c',
+                    }}
+                  />
+                </div>
+                <p className="text-[10px] text-white/40 leading-snug">
+                  * Las 250 consultas se renuevan automáticamente al inicio de tu periodo mensual.
+                </p>
+              </div>
 
               <div className="p-4 rounded-xl border space-y-2.5" style={{ background: '#1c1c1c', borderColor: '#2e2e2e' }}>
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-white/80">
@@ -65,7 +87,7 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                 <ul className="space-y-1.5 text-xs text-white/70">
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={13} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Consultas y análisis normativo 100% ilimitados</span>
+                    <span>Hasta 250 consultas y análisis normativo al mes</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={13} className="text-[#c9a84c] flex-shrink-0" />
@@ -73,20 +95,17 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={13} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Soporte prioritario por WhatsApp: <strong>929 725 274</strong></span>
+                    <span>Subida de expedientes completos y carpetas fiscales (hasta 30 MB)</span>
                   </li>
                 </ul>
               </div>
 
-              <a
-                href="https://wa.me/51929725274?text=Hola%20Hardman%20IA,%20soy%20miembro%20Senior%20y%20necesito%20asistencia%20legal%20prioritaria."
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-3 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-2 transition-all bg-[#25D366] hover:bg-[#20ba59] text-white shadow-lg shadow-[#25D366]/20"
+              <button
+                onClick={onClose}
+                className="w-full py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider flex items-center justify-center transition-all border border-white/10 hover:border-white/20 text-white/80 hover:text-white bg-white/5 hover:bg-white/10"
               >
-                <MessageCircle size={16} />
-                Contactar a mi Asesor Senior por WhatsApp
-              </a>
+                Cerrar
+              </button>
             </div>
           ) : (
             /* Junior status & upgrade card */
@@ -157,7 +176,7 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-[#c9a84c] flex-shrink-0" />
-                    <span>Soporte VIP prioritario por WhatsApp directo (929 725 274)</span>
+                    <span>Atención técnica y soporte preferencial para litigio activo</span>
                   </li>
                 </ul>
 
