@@ -68,27 +68,26 @@ filesRouter.post(
       const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
       const rawCandidates = [
         process.env.GEMINI_MODEL,
-        'gemini-2.5-flash',
-        'gemini-2.0-flash',
+        'gemini-3.6-flash',
       ].filter(Boolean) as string[];
       const geminiModelCandidates = [...new Set(rawCandidates)];
       let extractedText = '';
       let pageCount: number | null = null;
 
-      // Helper para visión y OCR vía OpenRouter (Prioridad 1)
+      // Helper para visión y OCR de imágenes vía OpenRouter (Prioridad 1)
       const extractWithOpenRouterVision = async (base64Data: string, mimeType: string, promptText: string): Promise<string> => {
         if (!openrouterKey) return '';
         const visionModels = [
           process.env.OPENROUTER_VISION_MODEL,
-          'google/gemini-2.0-flash-001',
-          'meta-llama/llama-3.2-11b-vision-instruct',
+          'google/gemini-2.5-flash',
+          'google/gemini-3.6-flash',
         ].filter(Boolean) as string[];
 
         for (const vModel of visionModels) {
           try {
-            console.log(`[Files OpenRouter] Analizando con modelo de visión ${vModel}...`);
+            console.log(`[Files OpenRouter] Analizando imagen con modelo ${vModel}...`);
             const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), 25000);
+            const timer = setTimeout(() => controller.abort(), 35000);
             const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
               method: 'POST',
               headers: {
@@ -151,42 +150,37 @@ filesRouter.post(
           console.warn('[Files] Error en pdf-parse digital:', pdfErr);
         }
 
-        // 2. Si es un PDF escaneado (fotocopia sin texto digital) y pesa <= 20MB, recurrir a visión/OCR
-        if (!extractedText) {
+        // 2. Si es un PDF escaneado (fotocopia sin texto digital) y pesa <= 20MB, recurrir a Gemini con timeout suficiente (60s)
+        if (!extractedText && geminiKey) {
           const fileSizeMB = file.size / (1024 * 1024);
           if (fileSizeMB <= 20) {
             const base64 = file.buffer.toString('base64');
             const legalPrompt = 'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.';
 
-            // Intento 1: OpenRouter Vision (Prioridad)
-            if (openrouterKey) {
-              extractedText = await extractWithOpenRouterVision(base64, 'application/pdf', legalPrompt);
-            }
-
-            // Intento 2: Gemini Nativo (Respaldo)
-            if (!extractedText && geminiKey) {
-              const genAI = new GoogleGenerativeAI(geminiKey);
-              for (const modelName of geminiModelCandidates) {
-                if (extractedText) break;
-                try {
-                  const model = genAI.getGenerativeModel({ model: modelName });
-                  const result = await withTimeout(
-                    model.generateContent([
-                      {
-                        inlineData: {
-                          mimeType: 'application/pdf',
-                          data: base64,
-                        },
+            const genAI = new GoogleGenerativeAI(geminiKey);
+            for (const modelName of geminiModelCandidates) {
+              if (extractedText) break;
+              try {
+                const model = genAI.getGenerativeModel({ model: modelName });
+                const result = await withTimeout(
+                  model.generateContent([
+                    {
+                      inlineData: {
+                        mimeType: 'application/pdf',
+                        data: base64,
                       },
-                      legalPrompt,
-                    ]),
-                    30000,
-                    `Files PDF ${modelName}`
-                  );
-                  extractedText = result.response.text() || '';
-                } catch (gemErr) {
-                  console.warn(`[Files] Gemini (${modelName}) error:`, gemErr);
+                    },
+                    legalPrompt,
+                  ]),
+                  60000,
+                  `Files PDF ${modelName}`
+                );
+                extractedText = result.response.text() || '';
+                if (extractedText) {
+                  console.log(`[Files Gemini] Éxito extrayendo PDF escaneado con ${modelName} (${extractedText.length} caracteres)`);
                 }
+              } catch (gemErr) {
+                console.warn(`[Files] Gemini (${modelName}) error:`, gemErr);
               }
             }
           }
@@ -238,10 +232,13 @@ filesRouter.post(
                   },
                   imgPrompt,
                 ]),
-                15000,
+                30000,
                 `Files Image ${modelName}`
               );
               extractedText = result.response.text() || '';
+              if (extractedText) {
+                console.log(`[Files Gemini] Éxito analizando imagen con ${modelName} (${extractedText.length} caracteres)`);
+              }
             } catch (imgErr) {
               console.warn(`[Files Image] Gemini (${modelName}) error:`, imgErr);
             }
