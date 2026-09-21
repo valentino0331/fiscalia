@@ -13,6 +13,7 @@ export const webhooksRouter = Router();
 // Whitelist de eventos Hotmart válidos que procesamos
 const VALID_HOTMART_EVENTS = new Set([
   'PURCHASE_APPROVED',
+  'PURCHASE_COMPLETE',
   'SUBSCRIPTION_REACTIVATED',
   'PURCHASE_CANCELLED',
   'SUBSCRIPTION_CANCELLATION',
@@ -23,8 +24,38 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 webhooksRouter.post('/hotmart', async (req, res) => {
   try {
-    const { event, data } = req.body || {};
-    const hottok = req.headers['x-hotmart-hottok'] || req.body?.hottok || data?.hottok;
+    const body = req.body || {};
+    let event = body.event;
+    let data = body.data;
+
+    // Soportar tanto Webhook 2.0 (estándar) como Webhook 1.0 (legacy plano)
+    if (!event && body.status) {
+      const statusMap: Record<string, string> = {
+        approved: 'PURCHASE_APPROVED',
+        complete: 'PURCHASE_COMPLETE',
+        completed: 'PURCHASE_COMPLETE',
+        refunded: 'PURCHASE_REFUNDED',
+        canceled: 'PURCHASE_CANCELLED',
+        cancelled: 'PURCHASE_CANCELLED',
+      };
+      event = statusMap[String(body.status).toLowerCase()] || String(body.status).toUpperCase();
+      data = {
+        buyer: {
+          email: body.email,
+          name: body.first_name ? `${body.first_name} ${body.last_name || ''}`.trim() : (body.name || null),
+        },
+        purchase: {
+          transaction: body.transaction,
+          price: { value: Number(body.price || 0) },
+          offer: { code: body.off || body.offer || '' },
+        },
+        subscription: {
+          plan: { name: body.plan_name || body.prod_name || '' },
+        },
+      };
+    }
+
+    const hottok = req.headers['x-hotmart-hottok'] || body?.hottok || data?.hottok;
     const secret = process.env.HOTMART_SECRET?.trim();
 
     if (!secret || typeof hottok !== 'string' || !hottok.trim()) {
@@ -72,7 +103,7 @@ webhooksRouter.post('/hotmart', async (req, res) => {
 
     let user = await db.query.users.findFirst({ where: eq(users.email, email) });
 
-    if (event === 'PURCHASE_APPROVED' || event === 'SUBSCRIPTION_REACTIVATED') {
+    if (event === 'PURCHASE_APPROVED' || event === 'PURCHASE_COMPLETE' || event === 'SUBSCRIPTION_REACTIVATED') {
       const periodEnd = new Date();
       periodEnd.setDate(periodEnd.getDate() + 30);
 
