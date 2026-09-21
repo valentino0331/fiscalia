@@ -1,6 +1,5 @@
 import { Router, Response, NextFunction } from 'express';
 import multer, { MulterError } from 'multer';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
 
@@ -52,31 +51,16 @@ filesRouter.post(
         : 'archivo_subido';
 
       const mime = resolveMime(file.mimetype, safeOriginalName);
-      const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-      const withTimeout = <T>(promise: Promise<T>, ms: number, errorLabel: string): Promise<T> => {
-        let timeoutId: NodeJS.Timeout;
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          timeoutId = setTimeout(() => {
-            reject(new Error(`[Timeout] ${errorLabel} excedió el límite de ${ms}ms`));
-          }, ms);
-        });
-        return Promise.race([promise, timeoutPromise]).finally(() => {
-          clearTimeout(timeoutId);
-        });
-      };
-
       const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
-      const rawCandidates = [
-        process.env.GEMINI_MODEL,
-        'gemini-3.6-flash',
-      ].filter(Boolean) as string[];
-      const geminiModelCandidates = [...new Set(rawCandidates)];
       let extractedText = '';
       let pageCount: number | null = null;
 
-      // Helper para visión y OCR de imágenes vía OpenRouter (Prioridad 1)
+      // Helper para visión y OCR de imágenes vía OpenRouter (100% OpenRouter)
       const extractWithOpenRouterVision = async (base64Data: string, mimeType: string, promptText: string): Promise<string> => {
-        if (!openrouterKey) return '';
+        if (!openrouterKey) {
+          console.warn('[Files OpenRouter] OPENROUTER_API_KEY no configurado');
+          return '';
+        }
         const visionModels = [
           process.env.OPENROUTER_VISION_MODEL,
           'google/gemini-2.5-flash',
@@ -121,7 +105,7 @@ filesRouter.post(
               const data: any = await res.json();
               const text = data?.choices?.[0]?.message?.content?.trim() || '';
               if (text) {
-                console.log(`[Files OpenRouter] Éxito extrayendo con ${vModel} (${text.length} caracteres)`);
+                console.log(`[Files OpenRouter] Éxito extrayendo imagen con ${vModel} (${text.length} caracteres)`);
                 return text;
               }
             } else {
@@ -135,19 +119,18 @@ filesRouter.post(
       };
 
       if (mime === 'application/pdf') {
-        // 1. PRIORIDAD: Extracción digital instantánea y local con pdf-parse
+        // 1. Extracción digital instantánea y local con pdf-parse (hasta 150 páginas con streaming per-page)
         try {
           const pdfParseModule = await import('pdf-parse');
           const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
 
-          // Silenciar warnings repetitivos de fuentes de pdf.js (pdf.js usa console.log internamente para emitirlos)
+          // Silenciar warnings de fuentes tipográficas de pdf.js
           const originalLog = console.log;
           console.log = (...args: any[]) => {
             if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
             originalLog(...args);
           };
 
-          // Soporte para expedientes jurídicos extensos (hasta 150 páginas) con liberación inmediata de RAM por página
           let totalChars = 0;
           const MAX_EXPEDIENTE_PAGES = 150;
           const MAX_CHARS_LIMIT = 120000;
@@ -201,44 +184,8 @@ filesRouter.post(
           console.warn('[Files] Error en pdf-parse digital:', pdfErr);
         }
 
-        // 2. Si es un PDF puramente escaneado (sin texto digital), intentar OCR rápido (15s máx) para no congelar al usuario
-        if (!extractedText && geminiKey) {
-          const fileSizeMB = file.size / (1024 * 1024);
-          if (fileSizeMB <= 20) {
-            const base64 = file.buffer.toString('base64');
-            const legalPrompt = 'Eres un asistente jurídico peruano. Extrae y transcribe con fidelidad todo el contenido relevante de este documento legal: resoluciones, artículos, considerandos, partes procesales, fechas, montos, plazos, pretensiones y decisiones. Si hay tablas, mantenlas. Responde en español y conserva la estructura del documento.';
-
-            const genAI = new GoogleGenerativeAI(geminiKey);
-            for (const modelName of geminiModelCandidates) {
-              if (extractedText) break;
-              try {
-                const model = genAI.getGenerativeModel({ model: modelName });
-                const result = await withTimeout(
-                  model.generateContent([
-                    {
-                      inlineData: {
-                        mimeType: 'application/pdf',
-                        data: base64,
-                      },
-                    },
-                    legalPrompt,
-                  ]),
-                  15000,
-                  `Files PDF ${modelName}`
-                );
-                extractedText = result.response.text() || '';
-                if (extractedText) {
-                  console.log(`[Files Gemini] Éxito extrayendo PDF escaneado con ${modelName} (${extractedText.length} caracteres)`);
-                }
-              } catch (gemErr: any) {
-                console.warn(`[Files] Gemini (${modelName}) no disponible para este escaneo:`, gemErr?.message || gemErr);
-              }
-            }
-          }
-        }
-
         if (!extractedText) {
-          extractedText = '[Aviso]: Este archivo parece ser un escaneo o fotocopia sin capa de texto digital legible. Para que nuestros especialistas jurídicos puedan analizar tu caso con la máxima precisión legal, por favor sube el documento en formato Word (.docx) o un PDF con texto seleccionable.';
+          extractedText = '[Aviso del Expediente]: Este archivo parece ser un escaneo o fotocopia sin capa de texto digital seleccionable. Para que nuestros especialistas jurídicos puedan analizar tu caso con la máxima precisión legal, por favor sube el documento en formato Word (.docx) o un PDF con texto seleccionable.';
         }
 
         if (extractedText && extractedText.length > 80000) {
@@ -265,43 +212,12 @@ filesRouter.post(
         const base64 = file.buffer.toString('base64');
         const imgPrompt = 'Analiza esta imagen con detalle. Si contiene texto, documentos, resoluciones o expedientes legales, transcríbelos completos con precisión. Si es una foto de un documento, extrae todo el texto visible. Responde en español.';
 
-        // Intento 1: OpenRouter Vision (Prioridad)
         if (openrouterKey) {
           extractedText = await extractWithOpenRouterVision(base64, mime, imgPrompt);
         }
 
-        // Intento 2: Gemini Nativo (Respaldo)
-        if (!extractedText && geminiKey) {
-          const genAI = new GoogleGenerativeAI(geminiKey);
-          for (const modelName of geminiModelCandidates) {
-            if (extractedText) break;
-            try {
-              const model = genAI.getGenerativeModel({ model: modelName });
-              const result = await withTimeout(
-                model.generateContent([
-                  {
-                    inlineData: {
-                      mimeType: mime,
-                      data: base64,
-                    },
-                  },
-                  imgPrompt,
-                ]),
-                30000,
-                `Files Image ${modelName}`
-              );
-              extractedText = result.response.text() || '';
-              if (extractedText) {
-                console.log(`[Files Gemini] Éxito analizando imagen con ${modelName} (${extractedText.length} caracteres)`);
-              }
-            } catch (imgErr) {
-              console.warn(`[Files Image] Gemini (${modelName}) error:`, imgErr);
-            }
-          }
-        }
-
         if (!extractedText) {
-          extractedText = 'No se pudo analizar la imagen.';
+          extractedText = 'No se pudo analizar la imagen vía OpenRouter. Por favor verifica que la imagen sea legible o intenta en formato PDF/Word.';
         }
       } else {
         return res.status(400).json({
