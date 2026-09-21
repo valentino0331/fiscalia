@@ -135,15 +135,29 @@ filesRouter.post(
       };
 
       if (mime === 'application/pdf') {
-        // 1. PRIORIDAD: Extracción digital instantánea y local con pdf-parse (sin latencia de red ni errores 503)
+        // 1. PRIORIDAD: Extracción digital instantánea y local con pdf-parse
         try {
           const pdfParseModule = await import('pdf-parse');
           const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
-          const data = await pdfParse(file.buffer, { max: 0 });
+
+          // Silenciar warnings repetitivos de fuentes tipográficas de pdf.js para no saturar la consola ni la memoria
+          const originalWarn = console.warn;
+          console.warn = (...args: any[]) => {
+            if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
+            originalWarn(...args);
+          };
+
+          // Limitar a máximo 35 páginas para proteger la memoria RAM del servidor (evita caídas por Out of Memory en expedientes gigantes)
+          const data = await pdfParse(file.buffer, { max: 35 });
+          console.warn = originalWarn;
+
           const text = (data.text || '').trim();
           pageCount = data.numpages || null;
           if (text.length >= 50) {
             extractedText = text;
+            if (pageCount && pageCount > 35) {
+              extractedText += `\n\n[Nota: Se extrajeron las primeras 35 páginas de ${pageCount} totales para optimizar la precisión jurídica].`;
+            }
             console.log(`[Files] Extracción digital instantánea con pdf-parse (${extractedText.length} caracteres, ${pageCount} págs)`);
           }
         } catch (pdfErr) {
