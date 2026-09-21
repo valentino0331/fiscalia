@@ -172,3 +172,273 @@ export async function sendTelegramCancellationNotification(
     return false;
   }
 }
+
+export async function sendTelegramMessage(
+  chatId: string | number,
+  textHtml: string,
+  inlineKeyboard?: Array<Array<{ text: string; url: string }>>
+): Promise<boolean> {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token) {
+    console.warn('[Telegram] TELEGRAM_BOT_TOKEN no configurado');
+    return false;
+  }
+
+  try {
+    const payload: any = {
+      chat_id: chatId,
+      text: textHtml,
+      parse_mode: 'HTML',
+    };
+
+    if (inlineKeyboard && inlineKeyboard.length > 0) {
+      payload.reply_markup = {
+        inline_keyboard: inlineKeyboard,
+      };
+    }
+
+    const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = (await response.json()) as any;
+    if (!data?.ok) {
+      console.error('[Telegram] Error en sendMessage:', data);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('[Telegram] Excepción enviando mensaje:', error);
+    return false;
+  }
+}
+
+function formatClientTitle(rawName?: string | null): string {
+  if (!rawName || !rawName.trim()) return 'Dr(a). Colega Abogado(a)';
+  const trimmed = rawName.trim();
+  const lower = trimmed.toLowerCase();
+  if (
+    lower.startsWith('dr.') ||
+    lower.startsWith('dra.') ||
+    lower.startsWith('dr ') ||
+    lower.startsWith('dra ') ||
+    lower.startsWith('abog.') ||
+    lower.startsWith('abogada') ||
+    lower.startsWith('abogado')
+  ) {
+    return trimmed;
+  }
+  return `Dr(a). ${trimmed}`;
+}
+
+async function handleClientesCommand(chatId: string | number): Promise<void> {
+  try {
+    const { db } = await import('../db');
+    const { users, subscriptions } = await import('../db/schema');
+    const { desc } = await import('drizzle-orm');
+
+    const allUsers = await db.query.users.findMany({
+      orderBy: [desc(users.createdAt)],
+      limit: 35,
+    });
+
+    if (!allUsers || allUsers.length === 0) {
+      await sendTelegramMessage(
+        chatId,
+        `📋 <b>TUS CLIENTES REGISTRADOS EN HARDMAN:</b>\n━━━━━━━━━━━━━━━━━━━━\n<i>No hay clientes registrados en la base de datos todavía.</i>`
+      );
+      return;
+    }
+
+    const allSubs = await db.query.subscriptions.findMany();
+    const subMap = new Map<string, typeof allSubs[0]>();
+    for (const sub of allSubs) {
+      subMap.set(sub.userId, sub);
+    }
+
+    const now = new Date();
+    const lines: string[] = [
+      `📋 <b>TUS CLIENTES REGISTRADOS EN HARDMAN:</b>`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+    ];
+
+    allUsers.forEach((u, index) => {
+      const sub = subMap.get(u.id);
+      const titleName = formatClientTitle(u.name);
+
+      let planBadge = '📘 Junior';
+      if (sub) {
+        if (sub.plan === 'senior') {
+          planBadge = '⭐ Senior';
+        } else if (sub.plan === 'pro') {
+          planBadge = '⚡ Pro';
+        } else if (sub.plan === 'pro-trial') {
+          planBadge = '⏳ Prueba';
+        } else if (sub.plan === 'junior') {
+          planBadge = '📘 Junior';
+        } else {
+          planBadge = `📘 ${sub.plan}`;
+        }
+      }
+
+      let statusBadge = 'Activo';
+      if (sub) {
+        if (sub.status === 'active') {
+          if (sub.currentPeriodEnd && new Date(sub.currentPeriodEnd) < now) {
+            statusBadge = 'Vencido';
+          } else {
+            statusBadge = 'Activo';
+          }
+        } else if (sub.status === 'refunded') {
+          statusBadge = 'Reembolsado';
+        } else if (sub.status === 'cancelled') {
+          statusBadge = 'Cancelado';
+        } else if (sub.status === 'inactive') {
+          statusBadge = 'Inactivo';
+        } else {
+          statusBadge = sub.status;
+        }
+      }
+
+      lines.push(`${index + 1}. ${escapeHtml(titleName)}`);
+      lines.push(`   📧 <code>${escapeHtml(u.email)}</code> | ${planBadge} | ${statusBadge}`);
+    });
+
+    lines.push(`━━━━━━━━━━━━━━━━━━━━`);
+    lines.push(`💡 Para enviar acceso a un cliente escribe:\n<code>/clave correo@gmail.com</code>`);
+
+    await sendTelegramMessage(chatId, lines.join('\n'));
+  } catch (err) {
+    console.error('[Telegram] Error consultando clientes:', err);
+    await sendTelegramMessage(chatId, '❌ Ocurrió un error al consultar los clientes en la base de datos.');
+  }
+}
+
+async function handleClaveCommand(chatId: string | number, text: string): Promise<void> {
+  const parts = text.trim().split(/\s+/);
+  const targetEmail = parts[1];
+
+  if (!targetEmail || !targetEmail.includes('@')) {
+    await sendTelegramMessage(
+      chatId,
+      `⚠️ <b>Uso correcto:</b>\n<code>/clave correo@gmail.com</code>\n\n<i>Escribe el comando seguido del correo del cliente para generarle un nuevo acceso temporal.</i>`
+    );
+    return;
+  }
+
+  const cleanEmail = targetEmail.toLowerCase().trim();
+
+  try {
+    const { db } = await import('../db');
+    const { users } = await import('../db/schema');
+    const { eq } = await import('drizzle-orm');
+    const crypto = await import('crypto');
+    const bcrypt = await import('bcrypt');
+
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, cleanEmail),
+    });
+
+    if (!user) {
+      await sendTelegramMessage(
+        chatId,
+        `❌ <b>Cliente no encontrado</b>\n━━━━━━━━━━━━━━━━━━━━\nNo existe ningún usuario registrado con el correo:\n<code>${escapeHtml(cleanEmail)}</code>\n\n💡 Escribe <code>/clientes</code> para ver la lista completa.`
+      );
+      return;
+    }
+
+    const uniquePin = crypto.randomInt(100000, 999999);
+    const newPassword = `Hardman-${uniquePin}!`;
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await db.update(users).set({ passwordHash }).where(eq(users.id, user.id));
+
+    const clientName = formatClientTitle(user.name);
+    const baseUrl = (process.env.FRONTEND_URL || 'https://hardman.lat').replace(/\/$/, '');
+    const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(user.email)}`;
+
+    const waText = `¡Hola ${clientName}! 👋\n\nAquí tiene sus credenciales de acceso a Hardman Bufete IA:\n\n🌐 Portal de Acceso: ${loginUrl}\n📧 Usuario: ${user.email}\n🔑 Contraseña: ${newPassword}\n\n¡Bienvenido a su bufete legal con Inteligencia Artificial!`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(waText)}`;
+
+    const messageHtml = [
+      `🔑 <b>NUEVO ACCESO GENERADO:</b>`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `👤 ${escapeHtml(clientName)}`,
+      `📧 <code>${escapeHtml(user.email)}</code>`,
+      `🔑 Contraseña: <code>${escapeHtml(newPassword)}</code>`,
+      `🌐 <b>Portal:</b> ${loginUrl}`,
+      `━━━━━━━━━━━━━━━━━━━━`,
+      `📲 Envíaselo por WhatsApp con este botón directo:`,
+    ].join('\n');
+
+    await sendTelegramMessage(chatId, messageHtml, [
+      [
+        { text: '💬 Enviar por WhatsApp al Cliente', url: waUrl },
+        { text: '🌐 Abrir Portal Hardman', url: loginUrl },
+      ],
+    ]);
+  } catch (err) {
+    console.error('[Telegram] Error generando clave:', err);
+    await sendTelegramMessage(chatId, '❌ Ocurrió un error al actualizar la contraseña del usuario.');
+  }
+}
+
+async function handleAyudaCommand(chatId: string | number): Promise<void> {
+  const messageHtml = [
+    `⚖️ <b>BOT DE CONTROL - HARDMAN BUFETE IA</b>`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `Hola Valentino, este bot gestiona las ventas y accesos de tus clientes:`,
+    ``,
+    `📋 <b>Comandos disponibles:</b>`,
+    `• <code>/clientes</code> - Lista de clientes registrados, planes y estados.`,
+    `• <code>/clave correo@gmail.com</code> - Genera nueva clave y botón de WhatsApp directo.`,
+    `• <code>/ayuda</code> - Ver este menú de ayuda.`,
+    `━━━━━━━━━━━━━━━━━━━━`,
+    `🔔 <i>Las notificaciones de compras en Hotmart llegarán automáticamente aquí en tiempo real.</i>`,
+  ].join('\n');
+
+  await sendTelegramMessage(chatId, messageHtml);
+}
+
+export async function handleTelegramWebhookUpdate(body: any): Promise<void> {
+  const message = body?.message || body?.edited_message;
+  if (!message || !message.text) return;
+
+  const text = String(message.text).trim();
+  const chatId = message.chat?.id;
+  const authorizedChatId = process.env.TELEGRAM_CHAT_ID;
+
+  if (!authorizedChatId || String(chatId) !== String(authorizedChatId)) {
+    console.warn(`[Telegram Bot] Acceso no autorizado denegado para chat_id: ${chatId}`);
+    if (chatId) {
+      await sendTelegramMessage(
+        chatId,
+        '⛔ <b>Acceso Denegado:</b> Este bot es privado y exclusivo para el administrador de Hardman.'
+      );
+    }
+    return;
+  }
+
+  const firstWord = text.split(/\s+/)[0].toLowerCase();
+
+  if (firstWord === '/clientes' || firstWord.startsWith('/clientes@') || firstWord === '/usuarios') {
+    await handleClientesCommand(chatId);
+  } else if (firstWord === '/clave' || firstWord.startsWith('/clave@') || firstWord === '/password') {
+    await handleClaveCommand(chatId, text);
+  } else if (
+    firstWord === '/start' ||
+    firstWord.startsWith('/start@') ||
+    firstWord === '/ayuda' ||
+    firstWord.startsWith('/ayuda@') ||
+    firstWord === '/help'
+  ) {
+    await handleAyudaCommand(chatId);
+  } else {
+    await sendTelegramMessage(
+      chatId,
+      `❓ Comando no reconocido: <code>${escapeHtml(firstWord)}</code>\n\nEscribe <code>/clientes</code> para ver tus usuarios o <code>/ayuda</code> para ver los comandos.`
+    );
+  }
+}

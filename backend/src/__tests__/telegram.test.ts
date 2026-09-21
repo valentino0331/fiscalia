@@ -81,4 +81,73 @@ describe('Telegram Notifications Module', () => {
     expect(payload.text).toContain('REEMBOLSO SOLICITADO');
     expect(payload.text).toContain('cancel@example.com');
   });
+
+  it('sends direct Telegram message using sendTelegramMessage', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = 'mock-bot-token';
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      json: async () => ({ ok: true, result: { message_id: 200 } }),
+    } as any);
+
+    const { sendTelegramMessage } = await import('../lib/telegram');
+    const result = await sendTelegramMessage('123456', '<b>Test Message</b>', [
+      [{ text: 'Click Here', url: 'https://example.com' }],
+    ]);
+
+    expect(result).toBe(true);
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [, options] = fetchSpy.mock.calls[0] as [string, any];
+    const payload = JSON.parse(options.body);
+    expect(payload.chat_id).toBe('123456');
+    expect(payload.text).toBe('<b>Test Message</b>');
+    expect(payload.reply_markup.inline_keyboard[0][0].text).toBe('Click Here');
+  });
+
+  it('rejects unauthorized chat_id in handleTelegramWebhookUpdate', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = 'mock-bot-token';
+    process.env.TELEGRAM_CHAT_ID = '999999999';
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      json: async () => ({ ok: true }),
+    } as any);
+
+    const { handleTelegramWebhookUpdate } = await import('../lib/telegram');
+    await handleTelegramWebhookUpdate({
+      message: {
+        chat: { id: 111111111 },
+        text: '/clientes',
+      },
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [, options] = fetchSpy.mock.calls[0] as [string, any];
+    const payload = JSON.parse(options.body);
+    expect(payload.chat_id).toBe(111111111);
+    expect(payload.text).toContain('Acceso Denegado');
+  });
+
+  it('responds with help message when /ayuda is requested by authorized user', async () => {
+    process.env.TELEGRAM_BOT_TOKEN = 'mock-bot-token';
+    process.env.TELEGRAM_CHAT_ID = '999999999';
+
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      json: async () => ({ ok: true }),
+    } as any);
+
+    const { handleTelegramWebhookUpdate } = await import('../lib/telegram');
+    await handleTelegramWebhookUpdate({
+      message: {
+        chat: { id: 999999999 },
+        text: '/ayuda',
+      },
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const [, options] = fetchSpy.mock.calls[0] as [string, any];
+    const payload = JSON.parse(options.body);
+    expect(payload.chat_id).toBe(999999999);
+    expect(payload.text).toContain('BOT DE CONTROL - HARDMAN BUFETE IA');
+    expect(payload.text).toContain('/clientes');
+    expect(payload.text).toContain('/clave');
+  });
 });
+

@@ -6,7 +6,11 @@ import { db } from '../db';
 import { subscriptions, users, questionUsageLogs } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
 import { sendWelcomeCredentialsEmail, sendSubscriptionUpdatedEmail } from '../lib/email';
-import { sendTelegramPurchaseNotification, sendTelegramCancellationNotification } from '../lib/telegram';
+import {
+  sendTelegramPurchaseNotification,
+  sendTelegramCancellationNotification,
+  handleTelegramWebhookUpdate,
+} from '../lib/telegram';
 import { invalidateUserSubscriptionCache } from '../middleware/subscription';
 
 export const webhooksRouter = Router();
@@ -272,3 +276,16 @@ webhooksRouter.post('/hotmart', async (req, res) => {
     res.status(500).json({ error: 'Error procesando webhook' });
   }
 });
+
+// Endpoint para recibir comandos e interactividad del Bot de Telegram (@hardman_alertas_bot)
+webhooksRouter.post('/telegram', async (req, res) => {
+  // Telegram requiere un 200 OK rápido para no reintentar envíos
+  res.status(200).json({ ok: true });
+
+  try {
+    await handleTelegramWebhookUpdate(req.body);
+  } catch (error) {
+    console.error('[Telegram Webhook] Error procesando actualización:', error);
+  }
+});
+
