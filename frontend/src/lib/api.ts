@@ -39,27 +39,72 @@ async function request<T>(
   return res.json()
 }
 
-async function uploadFile<T>(path: string, file: File): Promise<T> {
+async function uploadFile<T>(path: string, file: File, onRetry?: (attempt: number, total: number) => void): Promise<T> {
   const token = getToken()
-  const formData = new FormData()
-  formData.append('file', file)
+  const MAX_ATTEMPTS = 3
 
-  const headers: Record<string, string> = {}
-  if (token) headers['Authorization'] = `Bearer ${token}`
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const formData = new FormData()
+    formData.append('file', file)
 
-  const res = await fetch(`${API_URL}${path}`, {
-    method: 'POST',
-    headers,
-    body: formData,
-  })
-  if (!res.ok) {
-    if (res.status === 401) {
-      handleUnauthorized()
+    const headers: Record<string, string> = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    try {
+      const controller = new AbortController()
+      // Timeout generoso: 90s para archivos grandes (8MB PDF puede tardar ~60s en cold start de Render)
+      const timeoutId = setTimeout(() => controller.abort(), 90000)
+
+      let res: Response
+      try {
+        res = await fetch(`${API_URL}${path}`, {
+          method: 'POST',
+          headers,
+          body: formData,
+          signal: controller.signal,
+        })
+      } finally {
+        clearTimeout(timeoutId)
+      }
+
+      if (!res.ok) {
+        if (res.status === 401) {
+          handleUnauthorized()
+          const err = await res.json().catch(() => ({ error: 'No autorizado' }))
+          throw new Error(err.error || 'HTTP 401')
+        }
+        // Errores 4xx no recuperables: no reintentar
+        if (res.status >= 400 && res.status < 500) {
+          const err = await res.json().catch(() => ({ error: `Error ${res.status}` }))
+          throw new Error(err.error || `HTTP ${res.status}`)
+        }
+        // Errores 5xx: reintentar
+        const err = await res.json().catch(() => ({ error: `Error del servidor (${res.status})` }))
+        throw new Error(err.error || `HTTP ${res.status}`)
+      }
+
+      return res.json()
+    } catch (err: any) {
+      const isAbort = err?.name === 'AbortError'
+      const isRetryable = isAbort || err?.message?.includes('fetch') || err?.message?.includes('network') || err?.message?.includes('Failed to fetch') || err?.message?.includes('500') || err?.message?.includes('502') || err?.message?.includes('503') || err?.message?.includes('504')
+
+      if (isRetryable && attempt < MAX_ATTEMPTS) {
+        const delayMs = Math.pow(2, attempt - 1) * 1500 // 1.5s, 3s
+        console.warn(`[API] uploadFile: intento ${attempt}/${MAX_ATTEMPTS} fallido (${err?.message}). Reintentando en ${delayMs}ms...`)
+        onRetry?.(attempt + 1, MAX_ATTEMPTS)
+        await new Promise((r) => setTimeout(r, delayMs))
+        continue
+      }
+
+      // Error definitivo (no recuperable o agotó reintentos)
+      if (isAbort) {
+        throw new Error('El archivo tardó demasiado en procesarse. Por favor intenta de nuevo o comprime el PDF.')
+      }
+      throw err
     }
-    const err = await res.json().catch(() => ({ error: 'Error desconocido' }))
-    throw new Error(err.error || `HTTP ${res.status}`)
   }
-  return res.json()
+
+  throw new Error('No se pudo procesar el archivo después de varios intentos.')
 }
 
 export const api = {
@@ -315,15 +360,16 @@ export const api = {
   },
 
   files: {
-    extract: (file: File) =>
+    extract: (file: File, onRetry?: (attempt: number, total: number) => void) =>
       uploadFile<{
         text: string
         fileName: string
         fileType: string
         fileSize: number
         pageCount: number | null
-      }>('/files/extract', file),
+      }>('/files/extract', file, onRetry),
   },
+
 
   admin: {
     stats: () =>

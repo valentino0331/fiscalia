@@ -497,6 +497,7 @@ export default function Chat() {
   const [extracting, setExtracting] = useState(false)
   const [extractError, setExtractError] = useState<string | null>(null)
   const [pageCount, setPageCount] = useState<number | null>(null)
+  const [extractRetryInfo, setExtractRetryInfo] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const [speechSupported, setSpeechSupported] = useState(true)
@@ -1294,16 +1295,21 @@ export default function Chat() {
     }
     setAttachedFile(file)
     setExtractError(null)
+    setExtractRetryInfo(null)
     setPageCount(null)
     setExtracting(true)
     saveAttachmentLocally(file).catch(() => {})
     try {
-      const result = await api.files.extract(file)
+      const result = await api.files.extract(file, (attempt, total) => {
+        setExtractRetryInfo(`Reintentando… intento ${attempt}/${total}`)
+      })
       setExtractedText(result.text)
       setPageCount(result.pageCount ?? null)
+      setExtractRetryInfo(null)
     } catch (err: any) {
       setExtractError(err.message || 'Error al procesar el archivo')
       setExtractedText(null)
+      setExtractRetryInfo(null)
     } finally {
       setExtracting(false)
     }
@@ -1314,6 +1320,7 @@ export default function Chat() {
     setExtractedText(null)
     setExtractError(null)
     setExtracting(false)
+    setExtractRetryInfo(null)
     setPageCount(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (imageInputRef.current) imageInputRef.current.value = ''
@@ -1372,13 +1379,18 @@ export default function Chat() {
     const controller = new AbortController()
     abortControllerRef.current = controller
 
+    // Documentos adjuntos o redacción de escritos requieren más tiempo (hasta 90s)
+    const hasDocument = !!extractedText || fullContent.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---')
+    const isWritingRequest = /redacta|redactar|elabora|demanda|denuncia|carta notarial|contrato|recurso de apelaci/i.test(trimmed)
+    const watchdogMs = (hasDocument || isWritingRequest) ? 90000 : 45000
     let watchdogTimer: NodeJS.Timeout | null = setTimeout(() => {
       if (controller && !controller.signal.aborted) {
-        console.warn('[Chat] Watchdog timeout: cancelando petición tras 40s sin respuesta')
+        console.warn(`[Chat] Watchdog timeout: cancelando petición tras ${watchdogMs / 1000}s sin respuesta`)
         controller.abort()
         setLoading(false)
       }
-    }, 40000)
+    }, watchdogMs)
+
 
     try {
       await api.chat.sendStream(
@@ -2110,7 +2122,7 @@ export default function Chat() {
                     <p className="text-[11px] font-normal text-white truncate">{attachedFile.name}</p>
                     <p className="text-[9px] font-light" style={{ color: extractError ? '#ff6464' : 'rgba(255,255,255,0.40)' }}>
                       {extracting
-                        ? `Procesando${attachedFile.size > 5 * 1024 * 1024 ? ' archivo grande...' : '...'}`
+                        ? (extractRetryInfo || `Procesando${attachedFile.size > 5 * 1024 * 1024 ? ' archivo grande…' : '…'}`)
                         : extractError
                         ? extractError
                         : (() => {

@@ -506,7 +506,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return res.status(400).json({ error: 'Mensajes requeridos' });
     }
 
-    // Sanear mensajes: filtrar sólo role user/assistant con contenido string, limitar a 20k chars por msg
+    // Sanear mensajes: filtrar sólo role user/assistant con contenido string
+    // Límite 60k chars para soportar PDFs grandes (8MB ~ 80k chars extraídos, truncar en cliente a 80k)
     const sanitizedMessages = messages
       .filter((m: any) => (
         m &&
@@ -517,7 +518,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       ))
       .map((m: any) => ({
         role: m.role as 'user' | 'assistant',
-        content: m.content.slice(0, 20000) as string,
+        content: m.content.slice(0, 60000) as string,
         // ConversationMessage schema requires timestamp — usar el existente o generar uno
         timestamp: typeof m.timestamp === 'string' ? m.timestamp : new Date().toISOString(),
       }));
@@ -833,7 +834,11 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       });
     };
 
-    const MAX_AI_WAIT_MS = 45000;
+    const MAX_AI_WAIT_MS = 55000; // Extendido para análisis de documentos grandes
+
+    // Documentos y escritos legales completos requieren más tokens de salida
+    // 4096 es insuficiente para demandas/contratos (pueden superar 6k–10k tokens)
+    const maxTokens = isDocRequest ? 8192 : 4096;
 
     // ─────────────────────────────────────────────────────────────
     // 1. PRIORIDAD 1: OpenRouter (Llama 3.3 70B & DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
@@ -876,7 +881,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               model: openrouterModel,
               messages: formattedMessages,
               temperature: 0.2,
-              max_tokens: 4096,
+              max_tokens: maxTokens,
               stream: isStream,
             }),
             signal: controller.signal,
@@ -957,7 +962,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               model: groqModel,
               messages: formattedMessages,
               temperature: 0.2,
-              max_tokens: 4096,
+              max_tokens: maxTokens,
               stream: isStream,
             }),
             signal: controller.signal,
@@ -1174,7 +1179,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
               model: oaiModel,
               messages: formattedMessages,
               temperature: 0.2,
-              max_tokens: 4096,
+              max_tokens: maxTokens,
               stream: isStream,
             }),
             signal: controller.signal,
@@ -1243,7 +1248,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
             model: 'deepseek-chat',
             messages: formattedMessages,
             temperature: 0.2,
-            max_tokens: 4096,
+            max_tokens: maxTokens,
             stream: isStream,
           }),
           signal: controller.signal,
@@ -1302,7 +1307,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         if (isStream) {
           const stream = anthropic.messages.stream({
             model: modelToUse,
-            max_tokens: 4096,
+            max_tokens: maxTokens,
             system: effectiveSystemPrompt,
             messages: recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
           });
@@ -1328,11 +1333,11 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
           const response = await withTimeout(
             anthropic.messages.create({
               model: modelToUse,
-              max_tokens: 4096,
+              max_tokens: maxTokens,
               system: effectiveSystemPrompt,
               messages: recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
             }),
-            18000,
+            30000,
             `Anthropic ${modelToUse}`
           );
           assistantMessage = response.content[0].type === 'text' ? response.content[0].text : '';
