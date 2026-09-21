@@ -1,10 +1,11 @@
 import { Router } from 'express';
-import { sql, eq, desc } from 'drizzle-orm';
+import { sql, eq, and, desc } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { db } from '../db';
 import { users, subscriptions, conversations, questionUsageLogs } from '../db/schema';
 import { requireAuth, requireAdmin } from '../middleware/auth';
+import { invalidateUserSubscriptionCache } from '../middleware/subscription';
 import { metrics } from '../lib/metrics';
 import { getSecurityTelemetry, recordSecurityIncident } from '../middleware/securityShield';
 
@@ -273,9 +274,25 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
         ? Math.max(0, Math.ceil((currentPeriodEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
         : 0;
 
-      const effectivePlan = sub ? sub.plan : (u.isAdmin ? 'pro' : 'normal');
+      const rawPlan = (sub?.plan || '').toLowerCase().trim();
+      const effectivePlan = rawPlan || (u.isAdmin ? 'pro' : 'junior');
       const effectiveStatus = sub ? sub.status : (u.isAdmin ? 'active' : 'inactive');
       const expiresAtIso = sub?.currentPeriodEnd ? new Date(sub.currentPeriodEnd).toISOString() : null;
+
+      const isJunior = effectivePlan === 'junior' || effectivePlan === 'normal';
+      const isSenior = effectivePlan === 'senior';
+      const isPro = effectivePlan === 'pro' || effectivePlan === 'unlimited';
+      const isUnlimited = u.isAdmin || isPro;
+
+      const questionLimit = isUnlimited
+        ? null
+        : isSenior
+        ? 250
+        : 50;
+
+      const questionsRemaining = isUnlimited
+        ? null
+        : Math.max(0, (questionLimit ?? 50) - questionsThisMonth);
 
       return {
         id: u.id,
@@ -285,6 +302,9 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
         createdAt: u.createdAt,
         conversationsCount: convCount,
         questionsThisMonth,
+        questionLimit,
+        questionsRemaining,
+        isUnlimited,
         plan: effectivePlan,
         status: effectiveStatus,
         expiresAt: expiresAtIso,
@@ -293,7 +313,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
           ? {
               id: sub.id,
               status: sub.status,
-              plan: sub.plan, // 'pro' | 'normal' | 'junior'
+              plan: sub.plan,
               currentPeriodEnd: sub.currentPeriodEnd,
               isExpired,
               daysRemaining,
@@ -311,7 +331,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const ALLOWED_PLANS = new Set(['pro', 'normal', 'junior', 'free', 'pro-trial']);
+const ALLOWED_PLANS = new Set(['pro', 'senior', 'junior', 'normal', 'free', 'pro-trial']);
 const ALLOWED_STATUSES = new Set(['active', 'canceled', 'past_due', 'trialing']);
 
 // 2. Eliminar cuenta de usuario (si no renueva o a petición)
@@ -392,10 +412,38 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
       });
     }
 
+    invalidateUserSubscriptionCache(targetId);
+
     res.json({ success: true, message: 'Plan actualizado con éxito' });
   } catch (error: any) {
     console.error('Error updating user plan:', error);
     res.status(500).json({ error: 'Error al actualizar el plan' });
+  }
+});
+
+// 3.1. Reiniciar cuota de consultas del mes para un usuario
+adminRouter.post('/users/:id/reset-usage', requireAuth, requireAdmin, async (req: any, res) => {
+  try {
+    const targetId = req.params.id;
+    if (!targetId || typeof targetId !== 'string' || !UUID_REGEX.test(targetId)) {
+      return res.status(400).json({ error: 'Identificador de usuario inválido' });
+    }
+
+    const nowDate = new Date();
+    const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
+
+    await db.delete(questionUsageLogs).where(
+      and(
+        eq(questionUsageLogs.userId, targetId),
+        eq(questionUsageLogs.monthKey, monthKey)
+      )
+    );
+
+    invalidateUserSubscriptionCache(targetId);
+    res.json({ success: true, message: 'Consultas reiniciadas a 0 para el mes actual' });
+  } catch (error: any) {
+    console.error('Error resetting user usage:', error);
+    res.status(500).json({ error: 'Error al reiniciar consultas del usuario' });
   }
 });
 

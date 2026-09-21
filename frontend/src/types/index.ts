@@ -58,6 +58,9 @@ export interface AdminUserItem {
   createdAt: string
   conversationsCount: number
   questionsThisMonth: number
+  questionLimit?: number | null
+  questionsRemaining?: number | null
+  isUnlimited?: boolean
   plan: string
   status: string
   expiresAt: string | null

@@ -380,6 +380,8 @@ export const api = {
       request<{ success: boolean; message: string }>(`/admin/users/${id}`, { method: 'DELETE' }),
     updateUserPlan: (id: string, data: { plan?: string; addDays?: number; status?: string }) =>
       request<{ success: boolean; message: string }>(`/admin/users/${id}/plan`, { method: 'PATCH', body: JSON.stringify(data) }),
+    resetUserUsage: (id: string) =>
+      request<{ success: boolean; message: string }>(`/admin/users/${id}/reset-usage`, { method: 'POST' }),
     createUser: (data: { email: string; password: string; name?: string; plan?: string; isAdmin?: boolean; durationDays?: number }) =>
       request<{ success: boolean; message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
     compliance: () =>

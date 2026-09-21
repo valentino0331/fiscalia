@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [usersList, setUsersList] = useState<AdminUserItem[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [userSearch, setUserSearch] = useState('')
-  const [userFilter, setUserFilter] = useState<'all' | 'admin' | 'pro' | 'normal' | 'expired'>('all')
+  const [userFilter, setUserFilter] = useState<'all' | 'admin' | 'pro' | 'senior' | 'junior' | 'expired' | 'lowQuota'>('all')
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<AdminUserItem | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   const [newUserEmail, setNewUserEmail] = useState('')
   const [newUserPass, setNewUserPass] = useState('')
   const [newUserName, setNewUserName] = useState('')
-  const [newUserPlan, setNewUserPlan] = useState<'pro' | 'normal'>('normal')
+  const [newUserPlan, setNewUserPlan] = useState<'pro' | 'senior' | 'junior' | 'normal'>('junior')
   const [newUserIsAdmin, setNewUserIsAdmin] = useState(false)
   const [newUserDurationDays, setNewUserDurationDays] = useState(30)
   const [createError, setCreateError] = useState<string | null>(null)
@@ -87,16 +87,38 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleTogglePlan = async (targetId: string, currentPlan: string) => {
+  const handleSetUserPlan = async (targetId: string, newPlan: string) => {
     try {
-      const nextPlan = currentPlan === 'pro' ? 'normal' : 'pro'
-      await api.admin.updateUserPlan(targetId, { plan: nextPlan })
-      setActionNotice(`Plan actualizado a ${nextPlan.toUpperCase()} exitosamente.`)
+      await api.admin.updateUserPlan(targetId, { plan: newPlan })
+      const planLabel = newPlan === 'pro'
+        ? 'PRO (Ilimitado)'
+        : newPlan === 'senior'
+        ? 'SENIOR (250 consultas/mes)'
+        : 'JUNIOR (50 consultas/mes)'
+      setActionNotice(`Plan actualizado a ${planLabel} exitosamente.`)
       setTimeout(() => setActionNotice(null), 4000)
       await Promise.all([fetchUsers(), fetchStats()])
     } catch (err: any) {
       alert(err?.message || 'Error al cambiar plan')
     }
+  }
+
+  const handleResetUserUsage = async (targetId: string, userEmail: string) => {
+    if (!confirm(`¿Deseas reiniciar las consultas de este mes para ${userEmail}? Se restablecerán sus tokens/consultas a 0 consumidas.`)) return
+    try {
+      await api.admin.resetUserUsage(targetId)
+      setActionNotice(`Consultas reiniciadas a 0 para ${userEmail}. Cuota mensual restablecida.`)
+      setTimeout(() => setActionNotice(null), 4000)
+      await Promise.all([fetchUsers(), fetchStats()])
+    } catch (err: any) {
+      alert(err?.message || 'Error al reiniciar consultas')
+    }
+  }
+
+  const handleTogglePlan = async (targetId: string, currentPlan: string) => {
+    const p = currentPlan.toLowerCase()
+    const nextPlan = p === 'pro' ? 'senior' : p === 'senior' ? 'junior' : 'pro'
+    await handleSetUserPlan(targetId, nextPlan)
   }
 
   const handleCreateUser = async (e: React.FormEvent) => {
@@ -169,18 +191,45 @@ export default function AdminDashboard() {
         u.id.toLowerCase().includes(q)
       if (!matchesSearch) return false
 
+      const p = (u.plan || '').toLowerCase()
+      const isPro = (p === 'pro' || u.isUnlimited) && !u.isAdmin
+      const isSenior = p === 'senior' && !u.isAdmin
+      const isJunior = (p === 'junior' || p === 'normal' || (!isPro && !isSenior)) && !u.isAdmin
+      const isExpired = typeof u.daysRemaining === 'number' && u.daysRemaining <= 0
+      const limit = u.questionLimit ?? (isSenior ? 250 : isJunior ? 50 : 250)
+      const remaining = u.questionsRemaining !== undefined && u.questionsRemaining !== null
+        ? u.questionsRemaining
+        : Math.max(0, limit - (u.questionsThisMonth || 0))
+      const isLowQuota = !u.isAdmin && !isPro && remaining <= Math.max(5, Math.round(limit * 0.15))
+
       if (userFilter === 'admin') return u.isAdmin
-      if (userFilter === 'pro') return u.plan === 'pro' && !u.isAdmin
-      if (userFilter === 'normal') return u.plan === 'normal' && !u.isAdmin
-      if (userFilter === 'expired') return typeof u.daysRemaining === 'number' && u.daysRemaining <= 0
+      if (userFilter === 'pro') return isPro
+      if (userFilter === 'senior') return isSenior
+      if (userFilter === 'junior') return isJunior
+      if (userFilter === 'expired') return isExpired
+      if (userFilter === 'lowQuota') return isLowQuota
       return true
     })
   }, [usersList, userSearch, userFilter])
 
   const totalUsersCount = usersList.length
   const adminUsersCount = usersList.filter((u) => u.isAdmin).length
-  const proUsersCount = usersList.filter((u) => u.plan === 'pro' && !u.isAdmin).length
-  const normalUsersCount = usersList.filter((u) => u.plan === 'normal' && !u.isAdmin).length
+  const proUsersCount = usersList.filter((u) => ((u.plan || '').toLowerCase() === 'pro' || u.isUnlimited) && !u.isAdmin).length
+  const seniorUsersCount = usersList.filter((u) => (u.plan || '').toLowerCase() === 'senior' && !u.isAdmin).length
+  const juniorUsersCount = usersList.filter((u) => {
+    const p = (u.plan || '').toLowerCase()
+    return (p === 'junior' || p === 'normal' || (p !== 'pro' && p !== 'senior')) && !u.isAdmin
+  }).length
+  const expiredUsersCount = usersList.filter((u) => typeof u.daysRemaining === 'number' && u.daysRemaining <= 0).length
+  const lowQuotaUsersCount = usersList.filter((u) => {
+    const p = (u.plan || '').toLowerCase()
+    if (u.isAdmin || p === 'pro' || u.isUnlimited) return false
+    const limit = u.questionLimit ?? (p === 'senior' ? 250 : 50)
+    const remaining = u.questionsRemaining !== undefined && u.questionsRemaining !== null
+      ? u.questionsRemaining
+      : Math.max(0, limit - (u.questionsThisMonth || 0))
+    return remaining <= Math.max(5, Math.round(limit * 0.15))
+  }).length
 
   const handleLogout = () => {
     logout()
@@ -478,34 +527,41 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
               className="space-y-6"
             >
               {/* 4 Cards Summary */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
                 <AdminCard
-                  title="Total de Cuentas"
+                  title="Total Cuentas"
                   value={totalUsersCount.toString()}
-                  hint="Cuentas en Neon PostgreSQL"
+                  hint="Base de datos oficial"
                   icon={<Users size={18} style={{ color: '#c9a84c' }} />}
-                  trend="Base de datos oficial"
+                  trend="Neon PostgreSQL"
                 />
                 <AdminCard
-                  title="Administradores"
-                  value={adminUsersCount.toString()}
-                  hint="Control total y acceso vitalicio"
-                  icon={<Shield size={18} style={{ color: '#f59e0b' }} />}
-                  trend="Vitalicio / Panel Admin"
-                />
-                <AdminCard
-                  title="Cuentas PRO"
+                  title="Plan PRO"
                   value={proUsersCount.toString()}
-                  hint="Sin límites de preguntas"
+                  hint="Consultas Ilimitadas"
                   icon={<Crown size={18} style={{ color: '#c9a84c' }} />}
-                  trend="⚡ Consultas Ilimitadas"
+                  trend="⚡ Sin restricciones"
                 />
                 <AdminCard
-                  title="Cuentas Normales"
-                  value={normalUsersCount.toString()}
-                  hint="Límite: 50 consultas/mes"
-                  icon={<Zap size={18} style={{ color: '#38bdf8' }} />}
-                  trend="Control de cuota activo"
+                  title="Plan Senior"
+                  value={seniorUsersCount.toString()}
+                  hint="250 consultas / mes"
+                  icon={<Sparkles size={18} style={{ color: '#a855f7' }} />}
+                  trend="Plan Avanzado"
+                />
+                <AdminCard
+                  title="Plan Junior"
+                  value={juniorUsersCount.toString()}
+                  hint="50 consultas / mes"
+                  icon={<Users size={18} style={{ color: '#38bdf8' }} />}
+                  trend="Plan Base"
+                />
+                <AdminCard
+                  title="Alerta de Cuota"
+                  value={lowQuotaUsersCount.toString()}
+                  hint={`${expiredUsersCount} cuentas vencidas`}
+                  icon={<AlertTriangle size={18} style={{ color: lowQuotaUsersCount > 0 ? '#ef4444' : '#10b981' }} />}
+                  trend={lowQuotaUsersCount > 0 ? "⚠️ Clientes por agotarse" : "Cuotas en orden"}
                 />
               </div>
 
@@ -540,10 +596,12 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     {(
                       [
                         { key: 'all', label: `Todos (${totalUsersCount})` },
-                        { key: 'admin', label: `Admins (${adminUsersCount})` },
                         { key: 'pro', label: `PRO (${proUsersCount})` },
-                        { key: 'normal', label: `Normales (${normalUsersCount})` },
-                        { key: 'expired', label: 'Vencidas' },
+                        { key: 'senior', label: `Senior (${seniorUsersCount})` },
+                        { key: 'junior', label: `Junior (${juniorUsersCount})` },
+                        { key: 'lowQuota', label: `Por Agotarse (${lowQuotaUsersCount})` },
+                        { key: 'expired', label: `Vencidas (${expiredUsersCount})` },
+                        { key: 'admin', label: `Admins (${adminUsersCount})` },
                       ] as const
                     ).map((tab) => (
                       <button
@@ -551,7 +609,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                         onClick={() => setUserFilter(tab.key)}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all whitespace-nowrap ${
                           userFilter === tab.key
-                            ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
+                            ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40 font-semibold'
                             : 'bg-[#222222] text-white/50 hover:text-white border border-[#2a2a2a]'
                         }`}
                       >
@@ -620,7 +678,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                           <th className="py-3 px-3">Estado</th>
                           <th className="py-3 px-3">Fecha Creación</th>
                           <th className="py-3 px-3">Vencimiento (1 Mes)</th>
-                          <th className="py-3 px-3">Límite / Consultas Mes</th>
+                          <th className="py-3 px-3">Tokens & Consultas Restantes</th>
                           <th className="py-3 px-3 text-right">Acciones</th>
                         </tr>
                       </thead>
@@ -629,8 +687,15 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                           const isCurrentUser = user?.email === u.email
                           const isLifetime = typeof u.daysRemaining === 'number' && u.daysRemaining > 300
                           const isExpired = typeof u.daysRemaining === 'number' && u.daysRemaining <= 0
-                          const isNormal = u.plan === 'normal' && !u.isAdmin
-                          const limitMax = 50
+                          const p = (u.plan || '').toLowerCase()
+                          const isPro = (p === 'pro' || u.isUnlimited) && !u.isAdmin
+                          const isSenior = p === 'senior' && !u.isAdmin
+                          const isJunior = (p === 'junior' || p === 'normal' || (!isPro && !isSenior)) && !u.isAdmin
+                          const isUnlimited = u.isAdmin || isPro
+                          const limitMax = u.questionLimit ?? (isSenior ? 250 : isJunior ? 50 : 250)
+                          const remaining = u.questionsRemaining !== undefined && u.questionsRemaining !== null
+                            ? u.questionsRemaining
+                            : Math.max(0, limitMax - (u.questionsThisMonth || 0))
                           const usagePercent = Math.min(Math.round(((u.questionsThisMonth || 0) / limitMax) * 100), 100)
 
                           return (
@@ -643,15 +708,25 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                     style={{
                                       background: u.isAdmin
                                         ? 'rgba(245,158,11,0.15)'
-                                        : u.plan === 'pro'
+                                        : isPro
                                         ? 'rgba(201,168,76,0.15)'
+                                        : isSenior
+                                        ? 'rgba(168,85,247,0.15)'
                                         : 'rgba(56,189,248,0.15)',
-                                      color: u.isAdmin ? '#f59e0b' : u.plan === 'pro' ? '#c9a84c' : '#38bdf8',
+                                      color: u.isAdmin
+                                        ? '#f59e0b'
+                                        : isPro
+                                        ? '#c9a84c'
+                                        : isSenior
+                                        ? '#c084fc'
+                                        : '#38bdf8',
                                       border: `1px solid ${
                                         u.isAdmin
                                           ? 'rgba(245,158,11,0.3)'
-                                          : u.plan === 'pro'
+                                          : isPro
                                           ? 'rgba(201,168,76,0.3)'
+                                          : isSenior
+                                          ? 'rgba(168,85,247,0.3)'
                                           : 'rgba(56,189,248,0.3)'
                                       }`,
                                     }}
@@ -682,16 +757,63 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                     <Shield size={11} />
                                     ADMINISTRADOR
                                   </span>
-                                ) : u.plan === 'pro' ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#c9a84c]/15 text-[#c9a84c] border border-[#c9a84c]/30">
-                                    <Crown size={11} />
-                                    PLAN PRO
-                                  </span>
+                                ) : isPro ? (
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-[#c9a84c]/15 text-[#c9a84c] border border-[#c9a84c]/30">
+                                      <Crown size={11} />
+                                      PLAN PRO
+                                    </span>
+                                    <div>
+                                      <select
+                                        value="pro"
+                                        onChange={(e) => handleSetUserPlan(u.id, e.target.value)}
+                                        className="text-[9px] px-1.5 py-0.5 rounded bg-[#222222] text-white/70 border border-[#2a2a2a] hover:border-[#c9a84c] focus:outline-none cursor-pointer"
+                                        title="Cambiar plan del cliente"
+                                      >
+                                        <option value="pro">PRO (Ilimitado)</option>
+                                        <option value="senior">Cambiar a Senior (250)</option>
+                                        <option value="junior">Cambiar a Junior (50)</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                ) : isSenior ? (
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                                      <Sparkles size={11} />
+                                      PLAN SENIOR
+                                    </span>
+                                    <div>
+                                      <select
+                                        value="senior"
+                                        onChange={(e) => handleSetUserPlan(u.id, e.target.value)}
+                                        className="text-[9px] px-1.5 py-0.5 rounded bg-[#222222] text-white/70 border border-[#2a2a2a] hover:border-[#c9a84c] focus:outline-none cursor-pointer"
+                                        title="Cambiar plan del cliente"
+                                      >
+                                        <option value="senior">Senior (250 consultas)</option>
+                                        <option value="junior">Cambiar a Junior (50)</option>
+                                        <option value="pro">Cambiar a PRO (Ilimitado)</option>
+                                      </select>
+                                    </div>
+                                  </div>
                                 ) : (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/30">
-                                    <Users size={11} />
-                                    PLAN NORMAL
-                                  </span>
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium bg-sky-500/10 text-sky-300 border border-sky-500/30">
+                                      <Users size={11} />
+                                      PLAN JUNIOR
+                                    </span>
+                                    <div>
+                                      <select
+                                        value="junior"
+                                        onChange={(e) => handleSetUserPlan(u.id, e.target.value)}
+                                        className="text-[9px] px-1.5 py-0.5 rounded bg-[#222222] text-white/70 border border-[#2a2a2a] hover:border-[#c9a84c] focus:outline-none cursor-pointer"
+                                        title="Cambiar plan del cliente"
+                                      >
+                                        <option value="junior">Junior (50 consultas)</option>
+                                        <option value="senior">Cambiar a Senior (250)</option>
+                                        <option value="pro">Cambiar a PRO (Ilimitado)</option>
+                                      </select>
+                                    </div>
+                                  </div>
                                 )}
                               </td>
 
@@ -758,35 +880,62 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                               </td>
 
                               {/* Limit / Consumption */}
-                              <td className="py-3.5 px-3 min-w-[140px]">
-                                {isNormal ? (
-                                  <div className="space-y-1">
-                                    <div className="flex items-center justify-between text-[10px]">
-                                      <span className="text-sky-300 font-medium">
-                                        {u.questionsThisMonth} / {limitMax} preguntas
+                              <td className="py-3.5 px-3 min-w-[150px]">
+                                {isUnlimited ? (
+                                  <div>
+                                    <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
+                                      <Zap size={12} />
+                                      Ilimitado
+                                    </span>
+                                    <p className="text-[9px] text-white/40">
+                                      {u.questionsThisMonth} consultas realizadas
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between text-[11px]">
+                                      <span
+                                        className={`font-semibold flex items-center gap-1 ${
+                                          remaining === 0
+                                            ? 'text-rose-400'
+                                            : remaining <= Math.max(5, Math.round(limitMax * 0.15))
+                                            ? 'text-amber-400'
+                                            : 'text-emerald-400'
+                                        }`}
+                                      >
+                                        <Target size={11} />
+                                        {remaining} restantes
                                       </span>
-                                      <span className="text-white/40">{usagePercent}%</span>
+                                      <span className="text-[10px] text-white/40 font-mono">
+                                        {u.questionsThisMonth}/{limitMax}
+                                      </span>
                                     </div>
                                     <div className="w-full h-1.5 rounded-full bg-[#222222] overflow-hidden">
                                       <div
                                         className="h-full rounded-full transition-all"
                                         style={{
                                           width: `${Math.max(usagePercent, 4)}%`,
-                                          background: usagePercent >= 90 ? '#ef4444' : '#38bdf8',
+                                          background:
+                                            usagePercent >= 90
+                                              ? '#ef4444'
+                                              : usagePercent >= 75
+                                              ? '#f59e0b'
+                                              : '#38bdf8',
                                         }}
                                       />
                                     </div>
-                                    <p className="text-[9px] text-white/30">Límite mensual activo</p>
-                                  </div>
-                                ) : (
-                                  <div>
-                                    <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
-                                      <Zap size={12} />
-                                      Ilimitado
-                                    </span>
-                                    <p className="text-[9px] text-white/30">
-                                      {u.questionsThisMonth} consultas este mes
-                                    </p>
+                                    <div className="flex items-center justify-between text-[9px]">
+                                      <span className={remaining === 0 ? 'text-rose-400 font-medium' : 'text-white/30'}>
+                                        {remaining === 0 ? '¡Cuota agotada!' : `${usagePercent}% consumido`}
+                                      </span>
+                                      <button
+                                        onClick={() => handleResetUserUsage(u.id, u.email)}
+                                        className="text-[9px] text-sky-400 hover:text-sky-300 underline font-light"
+                                        title="Reiniciar cuota mensual a 0 consultas consumidas"
+                                      >
+                                        Reiniciar
+                                      </button>
+                                    </div>
                                   </div>
                                 )}
                               </td>
@@ -803,14 +952,14 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                     +30 días
                                   </button>
 
-                                  {/* Toggle Plan (Normal <-> PRO) */}
-                                  {!u.isAdmin && (
+                                  {/* Reset monthly quota */}
+                                  {!u.isAdmin && !isUnlimited && (
                                     <button
-                                      onClick={() => handleTogglePlan(u.id, u.plan)}
-                                      className="px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors bg-[#222222] hover:bg-[#2a2a2a] text-white/70 hover:text-[#c9a84c] border-[#2a2a2a]"
-                                      title={`Cambiar a ${u.plan === 'pro' ? 'Normal' : 'PRO'}`}
+                                      onClick={() => handleResetUserUsage(u.id, u.email)}
+                                      className="px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors bg-[#222222] hover:bg-[#2a2a2a] text-white/70 hover:text-sky-300 border-[#2a2a2a]"
+                                      title="Reiniciar cuota de consultas del mes a 0"
                                     >
-                                      {u.plan === 'pro' ? 'A Normal' : 'A PRO'}
+                                      Reiniciar
                                     </button>
                                   )}
 
@@ -1656,11 +1805,12 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     <label className="block text-[11px] font-medium text-white/70 mb-1">Plan Asignado</label>
                     <select
                       value={newUserPlan}
-                      onChange={(e) => setNewUserPlan(e.target.value as 'pro' | 'normal')}
+                      onChange={(e) => setNewUserPlan(e.target.value as any)}
                       className="w-full px-3 py-2 rounded-xl text-[12px] bg-[#222222] border border-[#2a2a2a] text-white focus:outline-none focus:border-[#c9a84c]"
                     >
-                      <option value="normal">Normal / Junior (Límite 50 preguntas/mes)</option>
-                      <option value="pro">PRO Ilimitado (Sin límites de consultas)</option>
+                      <option value="junior">Plan Junior (Límite 50 consultas/mes)</option>
+                      <option value="senior">Plan Senior (Límite 250 consultas/mes)</option>
+                      <option value="pro">Plan PRO (Consultas Ilimitadas)</option>
                     </select>
                   </div>
 
