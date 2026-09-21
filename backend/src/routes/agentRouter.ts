@@ -7,6 +7,8 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
   valentina: {
     label: 'Laboral',
     keywords: [
+      'laboral', 'derecho laboral', 'problema laboral', 'demanda laboral', 'caso laboral',
+      'contestacion de demanda laboral', 'escrito laboral', 'apelacion laboral',
       'despido', 'despido arbitrario', 'despido nulo', 'liquidacion', 'cts', 'gratificacion',
       'vacaciones truncas', 'planilla', 'sunafil', 'renuncia', 'beneficios sociales',
       'hostigamiento laboral', 'contrato de trabajo', 'sueldo', 'salario', 'trabajador',
@@ -43,7 +45,7 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
     keywords: [
       'civil', 'derecho civil', 'problema civil', 'tema civil', 'caso civil', 'asunto civil',
       'demanda civil', 'abogado civil', 'juicio civil', 'materia civil',
-      'contestacion a una demanda', 'contestacion de demanda', 'contestar demanda', 'escrito de contestacion', 'contesto demanda',
+      'contestacion de demanda civil', 'contestar demanda civil', 'escrito de contestacion civil',
       'desalojo', 'arrendamiento', 'contrato civil', 'incumplimiento contractual',
       'indemnizacion', 'responsabilidad civil', 'carta notarial', 'resolucion contractual',
       'deuda', 'prestamo', 'garantia hipotecaria', 'derechos reales', 'propiedad',
@@ -148,7 +150,7 @@ const EXPLICIT_BRANCH_TRIGGERS: Array<{
       'problema civil', 'derecho civil', 'tema civil', 'caso civil', 'abogado civil',
       'asunto civil', 'demanda civil', 'materia civil', 'juicio civil', 'litigio civil',
       'un civil', 'algo civil', 'desalojo', 'arrendamiento', 'contrato de alquiler',
-      'contestacion a una demanda', 'contestacion de demanda', 'contestar demanda', 'escrito de contestacion',
+      'contestacion de demanda civil', 'contestar demanda civil',
     ],
   },
   {
@@ -275,8 +277,55 @@ export function suggestAgentTransfer(
   const normalizedInput = normalize(userText);
   if (!normalizedInput || normalizedInput.length < 5) return null;
 
-  // 1. REGLA DE TRANSFERENCIA EXPLÍCITA DIRECTA (Máxima prioridad)
-  // Si el usuario dice "tengo un problema civil", "tema laboral", "consulta familiar", etc.
+  // 0. GUARDA ANTI-DEFLEXIÓN Y PROTECCIÓN DE ESCRITOS / DOCUMENTOS
+  // Si el usuario está enviando o solicitando un escrito, o revisando un borrador propio
+  // ("el que yo realicé", "mi escrito", "revisa este escrito", "adjunto", etc.), NUNCA transferir.
+  // El especialista que recibió la solicitud/documento debe asumir la responsabilidad de atenderlo.
+  const isDocumentOrDraftReview =
+    normalizedInput.includes('el que yo realice') ||
+    normalizedInput.includes('el que yo realize') ||
+    normalizedInput.includes('el que realice') ||
+    normalizedInput.includes('el que realize') ||
+    normalizedInput.includes('el que hice') ||
+    normalizedInput.includes('el que redacte') ||
+    normalizedInput.includes('mi escrito') ||
+    normalizedInput.includes('este escrito') ||
+    normalizedInput.includes('mi borrador') ||
+    normalizedInput.includes('este borrador') ||
+    normalizedInput.includes('revisa este') ||
+    normalizedInput.includes('revisa mi') ||
+    normalizedInput.includes('revisar mi') ||
+    normalizedInput.includes('corrige mi') ||
+    normalizedInput.includes('corregir mi') ||
+    normalizedInput.includes('pasa a limpio') ||
+    normalizedInput.includes('formato de escrito') ||
+    normalizedInput.includes('solicito un escrito') ||
+    normalizedInput.includes('solicitando un escrito') ||
+    normalizedInput.includes('hacer escritos') ||
+    normalizedInput.includes('hacer un escrito') ||
+    normalizedInput.includes('hazme el escrito') ||
+    normalizedInput.includes('dame el escrito') ||
+    normalizedInput.includes('sumilla') ||
+    normalizedInput.includes('petitorio') ||
+    normalizedInput.includes('otrosi digo') ||
+    normalizedInput.includes('por tanto') ||
+    userText.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---');
+
+  if (isDocumentOrDraftReview) {
+    return null;
+  }
+
+  // 1. CHEQUEO PRIORITARIO DEL AGENTE ACTUAL
+  // Si la consulta ya contiene conceptos clave del especialista en el que se encuentra el usuario,
+  // NO lo transferimos a otro especialista, garantizando continuidad de atención.
+  const currentRule = AGENT_ROUTING_RULES[currentAgentId];
+  const currentCheck = currentRule ? scoreTopic(normalizedInput, currentRule.keywords) : { score: 0, hits: [] };
+  if (currentCheck.score >= 1) {
+    return null;
+  }
+
+  // 2. REGLA DE TRANSFERENCIA EXPLÍCITA DIRECTA
+  // Si el usuario dice inequívocamente "tengo un problema civil", "tema laboral", "consulta familiar", etc.
   for (const item of EXPLICIT_BRANCH_TRIGGERS) {
     if (item.agentId !== currentAgentId) {
       for (const phrase of item.triggers) {
@@ -293,7 +342,7 @@ export function suggestAgentTransfer(
     }
   }
 
-  // 2. Si Sebastián (Penal) está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, no transferir salvo trigger explícito
+  // 3. Si Sebastián (Penal) está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, no transferir
   if (currentAgentId === 'sebastian') {
     const penalTriggers = [
       'plazo', 'proceso', 'penal', 'fiscal', 'investigacion', 'prision', 'juicio', 'delito',
@@ -304,14 +353,6 @@ export function suggestAgentTransfer(
     if (penalTriggers.some((t) => normalizedInput.includes(t))) {
       return null;
     }
-  }
-
-  const currentRule = AGENT_ROUTING_RULES[currentAgentId];
-  const currentCheck = currentRule ? scoreTopic(normalizedInput, currentRule.keywords) : { score: 0, hits: [] };
-
-  // Si la consulta contiene conceptos clave del agente actual, no transferir
-  if (currentCheck.score >= 1) {
-    return null;
   }
 
   const ranking = Object.entries(AGENT_ROUTING_RULES)

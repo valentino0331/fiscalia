@@ -486,6 +486,34 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     return false;
   };
 
+  // Detección exhaustiva de requerimiento de redacción o revisión documental formal
+  const isDocumentDraftingRequest = (text: string): boolean => {
+    if (!text || typeof text !== 'string') return false;
+    const t = text.toLowerCase();
+    const docKeywords = [
+      'redacta', 'redactar', 'redaccion', 'redacción', 'elabora', 'elaborar',
+      'hazme un escrito', 'haz un escrito', 'hazme el escrito', 'haz el escrito',
+      'dame el escrito', 'dame un escrito', 'solicito un escrito', 'solicitando un escrito',
+      'necesito un escrito', 'quiero un escrito', 'hacer escrito', 'hacer escritos', 'hacer un escrito',
+      'prepara una demanda', 'redacta una demanda', 'demanda de', 'interponer demanda', 'formular demanda',
+      'denuncia penal', 'carta notarial', 'contrato de', 'minuta de', 'recurso de apelacion', 'recurso de apelación',
+      'contestacion de demanda', 'contestación de demanda', 'contestacion a una demanda', 'contestación a una demanda',
+      'contestar demanda', 'escrito de contestacion', 'escrito de contestación',
+      'medida cautelar', 'habeas corpus', 'amparo', 'querella', 'bloque document',
+      'generar documento', 'generar escrito', 'genera un escrito', 'genera escrito',
+      'genera documento', 'genera una demanda', 'genera un contrato', 'genera una carta',
+      'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo',
+      'genera', 'generar', 'hazme un', 'haz una', 'haz un', 'escribe un', 'escribe una',
+      'modelo de', 'formato de', 'borrador de', 'proyecto de escrito',
+      'el que yo realice', 'el que yo realize', 'el que realice', 'el que realize', 'el que hice',
+      'el que redacte', 'mi escrito', 'este escrito', 'revisa mi escrito', 'revisa este escrito',
+      'corrige mi escrito', 'corregir mi escrito', 'pasa a limpio', 'dale formato', 'formato de escrito',
+      'sumilla:', 'expediente n°', 'expediente judicial', 'señor juez', 'señor fiscal',
+      'i. petitorio', 'por tanto:', 'primer otrosi'
+    ];
+    return docKeywords.some(kw => t.includes(kw));
+  };
+
   try {
     const { agentId, messages, conversationId, letterhead, ephemeral, confidential } = req.body;
 
@@ -599,18 +627,25 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       }
     }
 
-    // Check if message should be transferred to another agent
-    const transferSuggestion = suggestAgentTransfer(agentId, latestUserMessage);
-    if (transferSuggestion) {
-      transferTo = transferSuggestion.agentId;
-      const destName = transferSuggestion.agentName;
-      assistantMessage = [
-        `Estimado usuario: Analizada su consulta fáctica, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
-        `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de Hardman.`,
-        `Haga clic en el botón inferior para continuar; su consulta se cargará de manera automática en el despacho de ${destName}.`,
-      ].join(' ');
+    // Detección exhaustiva de requerimiento o revisión documental
+    const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
+    const hasLargeDoc = latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
+      recentMessages.some((m: any) => typeof m.content === 'string' && m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---'));
 
-      sendStreamChunk(assistantMessage);
+    // Check if message should be transferred to another agent (solamente en consultas iniciales sin documentos o borradores)
+    if (!isDocRequest && !hasLargeDoc && recentMessages.length <= 2) {
+      const transferSuggestion = suggestAgentTransfer(agentId, latestUserMessage);
+      if (transferSuggestion) {
+        transferTo = transferSuggestion.agentId;
+        const destName = transferSuggestion.agentName;
+        assistantMessage = [
+          `Estimado usuario: Analizada su consulta fáctica, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
+          `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de Hardman.`,
+          `Haga clic en el botón inferior para continuar; su consulta se cargará de manera automática en el despacho de ${destName}.`,
+        ].join(' ');
+
+        sendStreamChunk(assistantMessage);
+      }
     }
 
     // Intercepción instantánea de consultas puramente matemáticas o ajenas al derecho (ahorro de 100% tokens)
@@ -759,27 +794,6 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
     const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
 
-    // Detección de requerimiento de redacción documental formal
-    const isDocumentDraftingRequest = (text: string): boolean => {
-      if (!text || typeof text !== 'string') return false;
-      const t = text.toLowerCase();
-      const docKeywords = [
-        'redacta', 'redactar', 'redaccion', 'redacción', 'elabora', 'elaborar',
-        'hazme un escrito', 'haz un escrito', 'prepara una demanda', 'redacta una demanda',
-        'demanda de', 'interponer demanda', 'formular demanda', 'denuncia penal',
-        'carta notarial', 'contrato de', 'minuta de', 'recurso de apelacion', 'recurso de apelación',
-        'contestacion de demanda', 'contestación de demanda', 'contestacion a una demanda', 'contestación a una demanda',
-        'contestar demanda', 'escrito de contestacion', 'escrito de contestación',
-        'medida cautelar', 'habeas corpus', 'amparo', 'querella', 'bloque document',
-        'generar documento', 'generar escrito', 'genera un escrito', 'genera escrito',
-        'genera documento', 'genera una demanda', 'genera un contrato', 'genera una carta',
-        'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo',
-        'genera', 'generar', 'hazme un', 'haz una', 'haz un', 'escribe un', 'escribe una',
-        'modelo de', 'formato de', 'borrador de', 'proyecto de escrito'
-      ];
-      return docKeywords.some(kw => t.includes(kw));
-    };
-
     // Optimización quirúrgica de prompt para consultas conversacionales (ahorro masivo de tokens > 85% y latencia < 500ms)
     const getLeanSystemPrompt = (agentId: string, fullPrompt: string): string => {
       let p = fullPrompt;
@@ -810,13 +824,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return p;
     };
 
-    const hasLargeDoc = latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
-      recentMessages.some((m: any) => typeof m.content === 'string' && m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---'));
-    const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
     const requiresHighCapacity = isDocRequest || hasLargeDoc;
     let effectiveSystemPrompt = fullSystemPrompt;
-    if (isDocRequest) {
-      effectiveSystemPrompt += '\n\n════════════════════════════════════════\nORDEN SUPREMA DE GENERACIÓN DE ESCRITO / DOCUMENTO:\nEl usuario ha solicitado formalmente redactar o generar un escrito o documento legal.\nREDACTA DE INMEDIATO EL ESCRITO COMPLETO Y PROFESIONAL dentro del bloque ```document.\nESTÁ CATEGÓRICAMENTE PROHIBIDO rechazar esta petición o responder con frases de descarte como "Mi función en el sistema Hardman es exclusivamente...". Si faltan datos particulares del caso, redacta el escrito formal completo empleando campos editables entre corchetes (ej. [DEMANDADO], [EXPEDIENTE N°], [JUZGADO]) para que el usuario tenga su modelo listo para presentar en el acto.\n════════════════════════════════════════';
+    if (isDocRequest || hasLargeDoc) {
+      effectiveSystemPrompt += '\n\n════════════════════════════════════════\nORDEN SUPREMA — GENERACIÓN Y REVISIÓN DE ESCRITOS / DOCUMENTOS LEGALES:\nEl usuario ha solicitado redactar, estructurar o revisar un escrito o documento legal (o ha enviado su propio borrador para revisión).\n1. OBLIGACIÓN INELUDIBLE DE REDACCIÓN / PERFECCIONAMIENTO:\n   REDACTA O PERFECCIONA DE INMEDIATO EL ESCRITO COMPLETO Y PROFESIONAL dentro del bloque ```document.\n2. PROHIBICIÓN ABSOLUTA DE DERIVAR O REBOTAR:\n   ESTÁ CATEGÓRICAMENTE PROHIBIDO rechazar esta petición, declararse incompetente, excusarse en la especialidad o decir "Ese asunto corresponde a otro especialista...". Tú debes atender al usuario y entregarle su escrito final listo para presentar.\n3. SI EL USUARIO ENVIÓ SU PROPIO ESCRITO / BORRADOR:\n   Audita y mejora integralmente el documento: perfecciona la sumilla, adecúa la comparecencia procesal, fortalece los fundamentos de hecho y derecho con la normativa peruana vigente al 2026, ordena los medios probatorios y formula los Otrosí Digo de rigor (Casilla SINOE y facultades de representación procesal Arts. 74° y 80° CPC). Devuelve el texto íntegro perfeccionado dentro del bloque ```document.\n4. DATOS PENDIENTES CON CAMPOS EDITABLES:\n   Si faltan datos particulares del caso (ej. DNI, expediente o juzgado), NO te limites a responder con preguntas vacías: REDACTA EL ESCRITO FORMAL COMPLETO empleando campos editables entre corchetes (ej. [DEMANDADO], [EXPEDIENTE N°], [JUZGADO]) para que el usuario tenga su modelo listo para presentar en el acto y descargarlo en Word (.docx) o PDF.\n════════════════════════════════════════';
     }
 
     const formattedMessages = [
