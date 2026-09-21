@@ -190,7 +190,7 @@ filesRouter.post(
 
           const text = (data.text || '').trim();
           pageCount = data.numpages || null;
-          if (text.length >= 50) {
+          if (text.length > 0) {
             extractedText = text;
             if (pageCount && pageCount > MAX_EXPEDIENTE_PAGES) {
               extractedText += `\n\n[Nota del Expediente: Se procesaron las primeras ${MAX_EXPEDIENTE_PAGES} páginas de un total de ${pageCount} para garantizar la máxima profundidad de análisis sin comprometer la respuesta].`;
@@ -201,7 +201,7 @@ filesRouter.post(
           console.warn('[Files] Error en pdf-parse digital:', pdfErr);
         }
 
-        // 2. Si es un PDF escaneado (fotocopia sin texto digital) y pesa <= 20MB, recurrir a Gemini con timeout suficiente (60s)
+        // 2. Si es un PDF puramente escaneado (sin texto digital), intentar OCR rápido (15s máx) para no congelar al usuario
         if (!extractedText && geminiKey) {
           const fileSizeMB = file.size / (1024 * 1024);
           if (fileSizeMB <= 20) {
@@ -223,18 +223,22 @@ filesRouter.post(
                     },
                     legalPrompt,
                   ]),
-                  60000,
+                  15000,
                   `Files PDF ${modelName}`
                 );
                 extractedText = result.response.text() || '';
                 if (extractedText) {
                   console.log(`[Files Gemini] Éxito extrayendo PDF escaneado con ${modelName} (${extractedText.length} caracteres)`);
                 }
-              } catch (gemErr) {
-                console.warn(`[Files] Gemini (${modelName}) error:`, gemErr);
+              } catch (gemErr: any) {
+                console.warn(`[Files] Gemini (${modelName}) no disponible para este escaneo:`, gemErr?.message || gemErr);
               }
             }
           }
+        }
+
+        if (!extractedText) {
+          extractedText = '[Aviso]: Este archivo parece ser un escaneo o fotocopia sin capa de texto digital legible. Para que nuestros especialistas jurídicos puedan analizar tu caso con la máxima precisión legal, por favor sube el documento en formato Word (.docx) o un PDF con texto seleccionable.';
         }
 
         if (extractedText && extractedText.length > 80000) {
