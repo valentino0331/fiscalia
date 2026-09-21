@@ -147,18 +147,55 @@ filesRouter.post(
             originalLog(...args);
           };
 
-          // Limitar a máximo 35 páginas para proteger la memoria RAM del servidor (evita caídas por Out of Memory en expedientes gigantes)
-          const data = await pdfParse(file.buffer, { max: 35 });
+          // Soporte para expedientes jurídicos extensos (hasta 150 páginas) con liberación inmediata de RAM por página
+          let totalChars = 0;
+          const MAX_EXPEDIENTE_PAGES = 150;
+          const MAX_CHARS_LIMIT = 120000;
+
+          const customPagerender = async (pageData: any): Promise<string> => {
+            if (totalChars >= MAX_CHARS_LIMIT) {
+              if (typeof pageData.cleanup === 'function') pageData.cleanup();
+              return '';
+            }
+            try {
+              const textContent = await pageData.getTextContent({
+                normalizeWhitespace: true,
+                disableCombineTextItems: false,
+              });
+              let lastY: any;
+              let pageText = '';
+              for (const item of textContent.items) {
+                if (lastY === item.transform[5] || !lastY) {
+                  pageText += item.str;
+                } else {
+                  pageText += '\n' + item.str;
+                }
+                lastY = item.transform[5];
+              }
+              totalChars += pageText.length;
+              if (typeof pageData.cleanup === 'function') {
+                pageData.cleanup();
+              }
+              return pageText;
+            } catch {
+              return '';
+            }
+          };
+
+          const data = await pdfParse(file.buffer, {
+            max: MAX_EXPEDIENTE_PAGES,
+            pagerender: customPagerender,
+          });
           console.log = originalLog;
 
           const text = (data.text || '').trim();
           pageCount = data.numpages || null;
           if (text.length >= 50) {
             extractedText = text;
-            if (pageCount && pageCount > 35) {
-              extractedText += `\n\n[Nota: Se extrajeron las primeras 35 páginas de ${pageCount} totales para optimizar la precisión jurídica].`;
+            if (pageCount && pageCount > MAX_EXPEDIENTE_PAGES) {
+              extractedText += `\n\n[Nota del Expediente: Se procesaron las primeras ${MAX_EXPEDIENTE_PAGES} páginas de un total de ${pageCount} para garantizar la máxima profundidad de análisis sin comprometer la respuesta].`;
             }
-            console.log(`[Files] Extracción digital instantánea con pdf-parse (${extractedText.length} caracteres, ${pageCount} págs)`);
+            console.log(`[Files] Extracción digital de expediente con pdf-parse (${extractedText.length} caracteres, ${pageCount} págs)`);
           }
         } catch (pdfErr) {
           console.warn('[Files] Error en pdf-parse digital:', pdfErr);
