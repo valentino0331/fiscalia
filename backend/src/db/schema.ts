@@ -1,4 +1,23 @@
-import { pgTable, text, timestamp, uuid, jsonb, index, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, jsonb, index, boolean, integer, real } from 'drizzle-orm/pg-core';
+import { customType } from 'drizzle-orm/pg-core';
+
+// pgvector custom type for Drizzle ORM
+const vector = (name: string, dimensions: number) =>
+  customType<{ data: number[]; driverData: string }>({
+    dataType() {
+      return `vector(${dimensions})`;
+    },
+    toDriver(value: number[]): string {
+      return `[${value.join(',')}]`;
+    },
+    fromDriver(value: string): number[] {
+      return value
+        .replace(/^\[|\]$/g, '')
+        .split(',')
+        .map(Number);
+    },
+  })(name);
+
 
 type ConversationMessage = {
   role: string;
@@ -100,5 +119,31 @@ export const questionUsageLogs = pgTable(
   },
   (table) => ({
     userMonthIdx: index('idx_question_usage_user_month').on(table.userId, table.monthKey),
+  })
+);
+
+// ── RAG: Legal Chunks Vector Store ──
+// Stores chunked text of Peruvian legal codes with 768-dim embeddings (Gemini text-embedding-004)
+export const legalChunks = pgTable(
+  'legal_chunks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // Which specialist this chunk is most relevant to (or 'all' for universal)
+    specialistId: text('specialist_id').notNull().default('all'),
+    // Source legal code (e.g. 'CC', 'CPC', 'CP', 'NCPP', 'LPAG', 'LPCL')
+    sourceCode: text('source_code').notNull(),
+    // Book/Title/Chapter reference
+    section: text('section'),
+    // Article numbers referenced in this chunk (e.g. 'Art. 667-669')
+    articles: text('articles'),
+    // The actual text content of the legal article(s)
+    content: text('content').notNull(),
+    // 768-dimensional embedding vector (Gemini text-embedding-004)
+    embedding: vector('embedding', 768).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (table) => ({
+    specialistIdx: index('idx_legal_chunks_specialist').on(table.specialistId),
+    sourceCodeIdx: index('idx_legal_chunks_source').on(table.sourceCode),
   })
 );

@@ -13,6 +13,8 @@ import { suggestAgentTransfer } from './agentRouter';
 import { metrics } from '../lib/metrics';
 import { generateSpeech } from '../lib/tts';
 import { getSpijLegalGrounding, JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
+import { getRagContext } from '../lib/ragEngine';
+
 import { chatRateLimiter, audioRateLimiter } from '../middleware/rateLimit';
 import { encryptConversationMessages, encryptTitle } from '../lib/encryption';
 import { detectPromptExtractionThreat, recordSecurityIncident } from '../middleware/securityShield';
@@ -790,9 +792,21 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       }
     }
 
-    // Inyección inteligente de doctrina y normas actualizadas del SPIJ y Corte Suprema
-    const legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
+    // ─── RAG: Inyección de artículos verificados del corpus legal peruano ────────
+    // 1. RAG (pgvector) — busca los artículos más similares a la consulta del usuario
+    // 2. Fallback: spijLegalEngine estático — si RAG falla o está vacío
+    let legalGrounding: string | null = null;
+    try {
+      legalGrounding = await getRagContext(agentId, latestUserMessage);
+    } catch (ragErr: any) {
+      console.warn('[RAG] getRagContext falló, usando spijLegalEngine como fallback:', ragErr?.message);
+    }
+    // Fallback al motor estático si RAG no retornó contexto
+    if (!legalGrounding) {
+      legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
+    }
     const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
+
 
     // Optimización quirúrgica de prompt para consultas conversacionales (ahorro masivo de tokens > 85% y latencia < 500ms)
     const getLeanSystemPrompt = (agentId: string, fullPrompt: string): string => {
