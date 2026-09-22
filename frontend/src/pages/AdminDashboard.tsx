@@ -8,7 +8,7 @@ import {
   AlertTriangle, ArrowUpRight, Copy, Check, Download, Zap, PieChart,
   Server, Gauge, Database, Lock, CheckCheck, RefreshCcw,
   Trash2, UserPlus, Calendar, Clock, Crown, ShieldAlert, CheckCircle, X, Search,
-  Key, UserCheck, AlertCircle, ShieldCheck, Scale
+  Key, UserCheck, AlertCircle, ShieldCheck, Scale, Eye, EyeOff
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
@@ -48,6 +48,31 @@ export default function AdminDashboard() {
   const [newUserDurationDays, setNewUserDurationDays] = useState(30)
   const [createError, setCreateError] = useState<string | null>(null)
   const [actionNotice, setActionNotice] = useState<string | null>(null)
+
+  // ── Modo Privacidad / Captura (Ocultar correos para capturas de pantalla) ──
+  const [hideEmails, setHideEmails] = useState(() => {
+    return localStorage.getItem('admin_hide_emails') === 'true'
+  })
+
+  const toggleHideEmails = () => {
+    setHideEmails((prev) => {
+      const next = !prev
+      localStorage.setItem('admin_hide_emails', String(next))
+      return next
+    })
+  }
+
+  const maskEmail = (email: string) => {
+    if (!email) return ''
+    const atIdx = email.indexOf('@')
+    if (atIdx === -1) return '••••••••'
+    const userPart = email.slice(0, atIdx)
+    const domainPart = email.slice(atIdx + 1)
+    const userPrefix = userPart.slice(0, Math.min(2, userPart.length))
+    const dotIdx = domainPart.lastIndexOf('.')
+    const ext = dotIdx !== -1 ? domainPart.slice(dotIdx) : '.com'
+    return `${userPrefix}••••••@••••${ext}`
+  }
 
   const fetchUsers = async () => {
     try {
@@ -309,7 +334,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
           </button>
           <div className="w-px h-4 hidden sm:block" style={{ background: '#2a2a2a' }} />
           <p className="text-[11px] font-light hidden md:block" style={{ color: 'rgba(255,255,255,0.40)' }}>
-            {user?.email}
+            {hideEmails ? maskEmail(user?.email || '') : user?.email}
           </p>
           <button
             onClick={handleLogout}
@@ -621,6 +646,18 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
 
                 <div className="flex items-center gap-2 justify-end">
                   <button
+                    onClick={toggleHideEmails}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[11px] font-medium border transition-all ${
+                      hideEmails
+                        ? 'bg-[#c9a84c]/20 border-[#c9a84c] text-[#c9a84c] shadow-sm shadow-[#c9a84c]/10'
+                        : 'border-[#2a2a2a] bg-[#222222] text-white/60 hover:text-white hover:border-[#3a3a3a]'
+                    }`}
+                    title={hideEmails ? 'Mostrar correos reales' : 'Ocultar correos para captura de pantalla (Modo Privacidad)'}
+                  >
+                    {hideEmails ? <EyeOff size={13} className="text-[#c9a84c]" /> : <Eye size={13} />}
+                    <span>{hideEmails ? 'Correos Ocultos' : 'Ocultar Correos'}</span>
+                  </button>
+                  <button
                     onClick={fetchUsers}
                     disabled={loadingUsers}
                     className="p-2 rounded-xl border border-[#2a2a2a] bg-[#222222] text-white/60 hover:text-white transition-colors"
@@ -653,9 +690,17 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                       Visualización de roles, fecha de creación, vencimiento a 1 mes, consumo de consultas y control de baja.
                     </p>
                   </div>
-                  <span className="text-[11px] text-white/40">
-                    Mostrando {filteredUsers.length} de {usersList.length} cuentas
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {hideEmails && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-medium bg-[#c9a84c]/15 text-[#c9a84c] border border-[#c9a84c]/30">
+                        <EyeOff size={10} />
+                        Modo Captura (Correos Ocultos)
+                      </span>
+                    )}
+                    <span className="text-[11px] text-white/40">
+                      Mostrando {filteredUsers.length} de {usersList.length} cuentas
+                    </span>
+                  </div>
                 </div>
 
                 {loadingUsers && usersList.length === 0 ? (
@@ -731,11 +776,17 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                       }`,
                                     }}
                                   >
-                                    {u.email.slice(0, 2).toUpperCase()}
+                                    {hideEmails ? (
+                                      <UserCheck size={14} />
+                                    ) : (
+                                      u.email.slice(0, 2).toUpperCase()
+                                    )}
                                   </div>
                                   <div className="min-w-0">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className="text-white font-medium truncate">{u.email}</span>
+                                      <span className="text-white font-medium truncate">
+                                        {hideEmails ? maskEmail(u.email) : u.email}
+                                      </span>
                                       {isCurrentUser && (
                                         <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/30">
                                           Tú
@@ -744,7 +795,11 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                     </div>
                                     <div className="flex items-center gap-2 text-[9px] text-white/30 font-mono">
                                       <span>ID: {u.id.slice(0, 8)}...</span>
-                                      {u.name && <span className="text-white/50">{u.name}</span>}
+                                      {u.name && (
+                                        <span className="text-white/50">
+                                          {hideEmails ? `${u.name.slice(0, 1)}••••` : u.name}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
