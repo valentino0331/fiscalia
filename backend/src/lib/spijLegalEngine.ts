@@ -388,6 +388,25 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Herramienta de cabecera al contestar el traslado de acusación fiscal y solicitar el sobreseimiento o devolver la acusación.',
   },
 
+  {
+    code: 'Acuerdo Plenario N° 05-2009/CJ-116',
+    specialistId: 'sebastian',
+    court: 'V Pleno Jurisdiccional Penal - Corte Suprema',
+    title: 'Proceso Especial de Terminación Anticipada: beneficio premial y acumulación (Arts. 468-471 NCPP)',
+    category: 'Derecho Procesal Penal / Procesos Especiales',
+    keywords: [
+      'terminacion anticipada', 'acuerdo de terminacion anticipada', 'beneficio de un sexto', 'reduccion de pena',
+      'confesion sincera', 'art 468 ncpp', 'art 471 ncpp', 'acuerdo plenario 05-2009', 'pena consensuada'
+    ],
+    keyPrinciples: [
+      'La terminación anticipada procede en la investigación preparatoria hasta antes de formularse acusación fiscal.',
+      'Otorga el beneficio premial tasado de reducción de una sexta parte (1/6) de la pena corporal, acumulable a la confesión sincera (Art. 161 NCPP) cuando no esté prohibida legalmente.',
+      'El acuerdo consensuado vincula al Juez respecto de la pena acordada, salvo que vulnere el principio de legalidad o resulte desproporcionada.'
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 12 al 24 sobre aplicación uniforme del beneficio premial de reducción de pena en terminación anticipada.',
+    legalApplication: 'Estratégico en solicitudes de audiencia de terminación anticipada para pactar penas suspendidas o reducidas con la Fiscalía.'
+  },
+
   // ── VALENTINA: LABORAL ADICIONALES SPIJ ──
   {
     code: 'VII Pleno Jurisdiccional Supremo Laboral y Previsional',
@@ -423,6 +442,26 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     ],
     bindingGrounds: 'Conclusiones plenarias N° 2 y 3 del IX Pleno Supremo Laboral.',
     legalApplication: 'Invocable en demandas de reconocimiento de contrato de trabajo a plazo indeterminado y cobro de reintegros.',
+  },
+
+  {
+    code: 'Pleno Jurisdiccional Nacional Laboral y Casación N° 12437-2016 Lima',
+    specialistId: 'valentina',
+    court: 'Corte Suprema de Justicia de la República',
+    title: 'Actos de hostilidad laboral equiparables al despido y procedimiento de emplazamiento previo (Art. 30 D.S. 003-97-TR)',
+    category: 'Derecho Laboral / Hostilidad',
+    keywords: [
+      'hostilidad laboral', 'actos de hostilidad', 'cese de hostilidad', 'reduccion de remuneracion',
+      'traslado perjudicial', 'falta de pago oportuno', 'carta notarial de hostilidad', 'art 30 lpcl',
+      'hostigamiento sexual laboral'
+    ],
+    keyPrinciples: [
+      'Las causales de hostilidad laboral están taxativamente señaladas en el Art. 30 del D.S. 003-97-TR (falta de pago de remuneración, reducción inmotivada de sueldo o categoría, traslado perjudicial, hostigamiento sexual Ley 27942).',
+      'Exige emplazamiento previo ineludible por CARTA NOTARIAL otorgando el plazo legal de 6 DÍAS NATURALES para descargos o enmienda de la conducta.',
+      'Vencido el plazo sin rectificación del empleador, el trabajador puede accionar judicialmente para el cese de hostilidad o darse por despedido y demandar la indemnización por despido arbitrario del Art. 38 LPCL.'
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Laboral sobre rigor procedimental de imputación de actos de hostilidad previa a la demanda.',
+    legalApplication: 'Obligatorio en cartas notariales de imputación de hostilidad laboral y demandas judiciales laborales de cese o indemnización.'
   },
 
   // ── DIEGO: CIVIL & INMOBILIARIO ADICIONALES SPIJ ──
@@ -482,6 +521,44 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Obligatorio en demandas de Exclusión de Heredero por Indignidad, Justificación o Contradicción de Desheredación y contestación de demandas hereditarias.',
   },
 
+  {
+    code: 'II Pleno Casatorio Civil (Casación N° 2229-2008 Lambayeque)',
+    specialistId: 'diego',
+    court: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Prescripción adquisitiva de dominio (Usucapión - Art. 950 Código Civil)',
+    category: 'Derecho Civil / Derechos Reales',
+    keywords: [
+      'usucapion', 'prescripcion adquisitiva', 'prescripcion adquisitiva de dominio', 'art 950',
+      'posesion continua', 'posesion pacifica', 'posesion publica', 'justo titulo', 'buena fe',
+      'coposesion', 'segundo pleno casatorio', 'ii pleno casatorio'
+    ],
+    keyPrinciples: [
+      'La usucapión extraordinaria requiere posesión continua, pacífica, pública y a título de propietario por 10 años (Art. 950 primer párrafo CC).',
+      'La usucapión ordinaria requiere 5 años de posesión con justo título y buena fe (Art. 950 segundo párrafo CC).',
+      'La coposesión homogénea no habilita a un coposeedor a usucapir individualmente la totalidad del bien contra los demás coposeedores.',
+      'La sentencia judicial de prescripción adquisitiva es declarativa, reconociendo el derecho nacido con el cumplimiento del plazo legal.'
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Vinculante - Reglas 1 a 6 sobre presupuestos fácticos y probatorios del Art. 950 del Código Civil.',
+    legalApplication: 'Obligatorio en demandas de Prescripción Adquisitiva de Dominio, reconvenciones y oposiciones de usucapión frente a demandas de desalojo o reivindicación.'
+  },
+  {
+    code: 'I Pleno Casatorio Civil (Casación N° 1465-2007 Cajamarca)',
+    specialistId: 'diego',
+    court: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Transacción extrajudicial y excepción de conclusión del proceso (Arts. 1302 CC y 446 inc. 10 CPC)',
+    category: 'Derecho Civil / Obligaciones y Contratos',
+    keywords: [
+      'transaccion', 'transaccion extrajudicial', 'cosa juzgada civil', 'excepcion de transaccion',
+      'art 1302', 'art 446 cpc', 'primer pleno casatorio', 'i pleno casatorio', 'danos transados'
+    ],
+    keyPrinciples: [
+      'La transacción extrajudicial celebrada con las formalidades del Art. 1302 del Código Civil tiene mérito de cosa juzgada entre las partes.',
+      'Procede amparar la excepción de conclusión del proceso por transacción (Art. 446 inc. 10 CPC) si los conceptos demandados ya fueron objeto de liquidación y finiquito expreso.'
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Vinculante sobre oponibilidad procesal de acuerdos transaccionales frente a demandas de indemnización por daños.',
+    legalApplication: 'Vital para formular Excepción de Transacción en contestaciones de demanda cuando la controversia ya fue resuelta extrajudicialmente.'
+  },
+
   // ── CAMILA: FAMILIA ADICIONALES SPIJ ──
   {
     code: 'Casación N° 3784-2019 Lima (Doctrina Jurisprudencial de Alimentos)',
@@ -519,6 +596,43 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Fundamental para exigir al Juzgado de Familia el dictado inmediato de medidas de retiro del agresor e impedimento de acercamiento.',
   },
 
+  {
+    code: 'III Pleno Casatorio Civil (Casación N° 4664-2010 Puno)',
+    specialistId: 'camila',
+    court: 'Salas Civiles y de Familia de la Corte Suprema de Justicia',
+    title: 'Divorcio por causal de separación de hecho e indemnización al cónyuge perjudicado (Arts. 333 inc. 12 y 345-A CC)',
+    category: 'Derecho de Familia / Divorcio',
+    keywords: [
+      'separacion de hecho', 'divorcio por separacion de hecho', 'tercer pleno casatorio', 'iii pleno casatorio',
+      'conyuge perjudicado', 'indemnizacion divorcio', 'art 333 inc 12', 'art 345-a', 'adjudicacion preferente',
+      'alimentos divorcio', 'causales de divorcio'
+    ],
+    keyPrinciples: [
+      'En el proceso de divorcio por separación de hecho (Art. 333 inc. 12 CC), el Juez tiene la obligación de pronunciarse de oficio sobre la indemnización o adjudicación preferente a favor del cónyuge más perjudicado (Art. 345-A CC).',
+      'Es requisito de procedencia ineludible que el demandante se encuentre al día en el pago de las pensiones alimenticias fijadas o pactadas.',
+      'Plazos legales de separación ininterrumpida: mínimo 2 años si no existen hijos menores de edad y 4 años si existen hijos menores.'
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Vinculante - Reglas 1 a 6 sobre tutela económica obligatoria al cónyuge inocente perjudicado en el divorcio.',
+    legalApplication: 'Indispensable en toda demanda y contestación de Divorcio por Separación de Hecho para solicitar o contradecir la indemnización del Art. 345-A CC.'
+  },
+  {
+    code: 'VIII Pleno Casatorio Civil (Casación N° 3006-2015 Junín)',
+    specialistId: 'camila',
+    court: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Disposición unilateral de bienes sociales por un solo cónyuge (Art. 315 Código Civil)',
+    category: 'Derecho de Familia / Régimen Patrimonial Conyugal',
+    keywords: [
+      'sociedad de gananciales', 'disposicion unilateral', 'bien social', 'art 315', 'octavo pleno casatorio',
+      'viii pleno casatorio', 'venta bien conyugal', 'nulidad venta conyuge', 'patrimonio autonomo'
+    ],
+    keyPrinciples: [
+      'La disposición o gravamen de un bien social celebrado por uno solo de los cónyuges sin la intervención, poder ni consentimiento del otro adolece de NULIDAD ABSOLUTA por falta de manifestación de voluntad (Art. 219 inc. 1 CC).',
+      'El cónyuge preterido tiene legitimidad activa para demandar la nulidad del acto jurídico de compraventa, hipoteca o gravamen del bien social.'
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Vinculante sobre ineficacia y nulidad absoluta de actos de disposición unilateral de bienes gananciales.',
+    legalApplication: 'Obligatorio en demandas de Nulidad de Acto Jurídico cuando uno de los cónyuges vendió o hipotecó bienes de la sociedad conyugal a espaldas del otro.'
+  },
+
   // ── MARCO: ADMINISTRATIVO ADICIONALES SPIJ ──
   {
     code: 'Casación Vinculante N° 8453-2014 Lima',
@@ -537,6 +651,25 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     ],
     bindingGrounds: 'Fundamentos Jurídicos 11 al 18 (garantía del plazo razonable en el ius puniendi estatal).',
     legalApplication: 'Esencial para solicitar la caducidad y archivo definitivo de procedimientos sancionadores iniciados por ministerios o municipalidades.',
+  },
+
+  {
+    code: 'Precedente Vinculante Tribunal del Servicio Civil & Casación N° 1803-2017 Lima',
+    specialistId: 'marco',
+    court: 'Corte Suprema y Tribunales Administrativos',
+    title: 'Régimen de nulidad de oficio (Art. 213) y silencio administrativo positivo (Arts. 38 y 39 TUO LPAG D.S. 006-2026-JUS)',
+    category: 'Derecho Administrativo',
+    keywords: [
+      'nulidad de oficio', 'plazo de nulidad de oficio', 'silencio administrativo positivo', 'silencio positivo',
+      'silencio administrativo negativo', 'art 213 lpag', 'art 38 lpag', 'aprobacion ficta', '2 anos nulidad de oficio'
+    ],
+    keyPrinciples: [
+      'La facultad de la Administración para declarar la NULIDAD DE OFICIO de sus propios actos administrativos prescribe fatalmente a los 2 AÑOS desde que quedaron consentidos (Art. 213 TUO LPAG D.S. 006-2026-JUS).',
+      'Vencido el plazo de 2 años, la entidad pierde la potestad de anulación interna y solo puede demandar la lesividad del acto ante el Poder Judicial dentro de los 3 años siguientes.',
+      'El Silencio Administrativo Positivo genera la aprobación ficta inmediata al vencimiento del plazo legal de 30 días hábiles, constituyendo título ejecutable de pleno derecho.'
+    ],
+    bindingGrounds: 'Doctrina Administrativa de observancia obligatoria sobre seguridad jurídica, límites de anulación y efectos de la aprobación ficta.',
+    legalApplication: 'Fundamental para deducir prescripción de la nulidad de oficio que pretenda iniciar una municipalidad o ministerio contra licencias o autorizaciones.'
   },
 
   // ── FERNANDA: TRIBUTARIO ADICIONALES SPIJ ──
@@ -840,6 +973,22 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       'Habilita la semilibertad al cumplir un tercio o la mitad de la pena según el tipo de delito, y liberación condicional a los dos tercios. La redención de pena por trabajo o educación computa a razón de 2 días de labor por 1 de pena (casos agravados 3x1 o 4x1).',
   },
 
+  {
+    lawCode: 'Código Penal (D. Leg. 635) Arts. 384°, 387°, 393°-398°, 400° y D. Leg. 1243',
+    specialistId: 'sebastian',
+    date: 'Vigente 2026',
+    affectedCode: 'Delitos contra la Administración Pública y Corrupción de Funcionarios ("Muerte Civil")',
+    articles: ['Art. 384 CP', 'Art. 387 CP', 'Art. 393 CP', 'Art. 394 CP', 'Art. 399 CP', 'Art. 400 CP', 'D. Leg. 1243'],
+    keywords: [
+      'colusion', 'colusion simple', 'colusion agravada', 'peculado', 'peculado doloso', 'peculado culposo',
+      'cohecho', 'cohecho pasivo', 'cohecho activo', 'soborno', 'trafico de influencias', 'negociacion incompatible',
+      'inhabilitacion perpetua', 'muerte civil'
+    ],
+    summary: 'Tipificación canónica y penas en delitos de Corrupción y Delitos contra la Administración Pública:',
+    practicalImpact:
+      'Colusión (Art. 384 CP): concertación ilegal en contratos u obras; agravada si causa perjuicio patrimonial (pena de 6 a 15 años). Peculado (Art. 387 CP): apropiación de caudales públicos confiados por razón del cargo (pena de 4 a 8 años, agravada de 8 a 12 años). Cohecho pasivo propio (Art. 393 CP: solicitud o recepción de soborno a cambio de faltar al deber). Tráfico de influencias (Art. 400 CP: invocación de influencias a cambio de dádiva). Aplica inhabilitación perpetua bajo la Ley de Muerte Civil (D. Leg. 1243).'
+  },
+
   // ── VALENTINA (LABORAL REFORMA SPIJ) ──
   {
     lawCode: 'Leyes N° 27735 y 30334 (Gratificaciones) & Ley N° 31572 (Teletrabajo)',
@@ -851,6 +1000,21 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     summary: 'Inafectación permanente de gratificaciones legales y derechos laborales en teletrabajo:',
     practicalImpact:
       'Las gratificaciones de Fiestas Patrias y Navidad se pagan libres de descuentos de AFP/ONP y se adiciona la bonificación extraordinaria del 9% (Essalud) o 6.75% (EPS). En teletrabajo rige la desconexión digital de mínimo 12 horas continuas y compensación económica de luz e internet.',
+  },
+
+  {
+    lawCode: 'Decreto Legislativo N° 650 (CTS) y Decreto Legislativo N° 713 (Vacaciones e Indemnización)',
+    specialistId: 'valentina',
+    date: 'Vigente 2026',
+    affectedCode: 'Compensación por Tiempo de Servicios y Descansos Remunerados Laborales',
+    articles: ['D. Leg. 650', 'D.S. 001-97-TR', 'D. Leg. 713', 'D.S. 012-92-TR', 'Art. 24 D. Leg. 713', 'Art. 30 D.S. 003-97-TR'],
+    keywords: [
+      'cts', 'compensacion por tiempo de servicios', 'deposito de cts', 'vacaciones', 'triple vacacional',
+      'indemnizacion vacacional', 'record vacacional', 'hostilidad laboral', 'carta de hostilidad', 'falta de pago sueldo'
+    ],
+    summary: 'Régimen de CTS semestral intangible (D. Leg. 650) e Indemnización Vacacional Triple (Art. 24 D. Leg. 713):',
+    practicalImpact:
+      'Los depósitos de CTS son semestrales e intangibles (mayo y noviembre), embargables hasta 50% solo por alimentos. El derecho vacacional es de 30 días continuos por año de servicios; si el empleador no otorga el descanso dentro del año posterior al de su adquisición, adeuda la "Triple Vacacional" del Art. 24 D. Leg. 713 (1 por trabajo hecho, 1 por descanso no gozado y 1 por indemnización neta adicional).'
   },
 
   // ── DIEGO (CIVIL REFORMA SPIJ) ──
@@ -881,6 +1045,22 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       'Las causales de exclusión por indignidad corresponden OBLIGATORIA Y EXCLUSIVAMENTE AL ARTÍCULO 667° DEL CÓDIGO CIVIL (7 incisos: 1. Homicidio doloso/tentativa; 2. Delito doloso; 3. Denuncia calumniosa con pena de cárcel; 4. Coacción o violencia en testamento; 5. Falsificación o destrucción de testamento; 6. Sentencia firme por violencia familiar Ley 31643; 7. Reiterado incumplimiento de alimentos debidos Ley 31643). Requiere proceso de conocimiento y sentencia judicial firme (Art. 668 CC). NUNCA CONFUNDIR CON EL ARTÍCULO 725° CC, el cual norma únicamente el Tercio de Libre Disposición para causantes con hijos o cónyuge.',
   },
 
+  {
+    lawCode: 'Código Civil (D. Leg. 295) Arts. 219°, 1321°, 1969°-1985° y CPC Art. 720°',
+    specialistId: 'diego',
+    date: 'Vigente 2026',
+    affectedCode: 'Nulidad de Acto Jurídico, Responsabilidad Civil por Daños y Ejecución de Garantías Reales',
+    articles: ['Art. 219 CC', 'Art. 221 CC', 'Art. 1321 CC', 'Art. 1969 CC', 'Art. 1970 CC', 'Art. 1985 CC', 'Art. 1097 CC', 'Art. 720 CPC'],
+    keywords: [
+      'nulidad de acto juridico', 'anulabilidad', 'art 219', 'art 221', 'danos y perjuicios', 'indemnizacion',
+      'dano moral', 'lucro cesante', 'dano emergente', 'art 1969', 'art 1970', 'art 1985', 'responsabilidad civil',
+      'hipoteca', 'ejecucion de garantias', 'art 720 cpc', 'remate judicial'
+    ],
+    summary: 'Régimen sustantivo de Nulidad de Acto Jurídico (Art. 219 CC), Indemnización Integral de Daños (Art. 1985 CC) y Ejecución de Hipoteca (Art. 720 CPC):',
+    practicalImpact:
+      'Art. 219 CC consagra 8 causales taxativas de nulidad absoluta (falta de manifestación de voluntad, fin ilícito, objeto imposible, simulación absoluta, inobservancia de forma solemne, etc.). En responsabilidad extracontractual (Art. 1969/1970 CC), la indemnización comprende lucro cesante, daño emergente, daño a la persona y daño moral (Art. 1985 CC). En ejecución de hipoteca (Art. 1097 CC), el mandato de ejecución otorga 3 días para pago del saldo deudor bajo apercibimiento de remate judicial (Art. 720 CPC).'
+  },
+
   // ── CAMILA (FAMILIA REFORMA SPIJ) ──
   {
     lawCode: 'Ley N° 28970 (REDAM) y Ley N° 29227 (Divorcio Rápido)',
@@ -894,6 +1074,22 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       'Inscripción de oficio en el REDAM tras adeudar 3 cuotas sucesivas o alternadas, bloqueando trámites bancarios, notariales y acceso a cargos públicos. En divorcio rápido, con mutuo acuerdo y cese de vida común, el divorcio ulterior se declara en menos de 90 días naturales ante notario o municipio.',
   },
 
+  {
+    lawCode: 'Ley N° 28457 (modificada por Ley 30628) y Código Civil Arts. 315°, 318°-326°, 333°',
+    specialistId: 'camila',
+    date: 'Vigente 2026',
+    affectedCode: 'Filiación Extramatrimonial sin Tasas, Liquidación de Sociedad Conyugal y Causales de Divorcio',
+    articles: ['Ley 28457', 'Ley 30628', 'Art. 315 CC', 'Art. 318 CC', 'Art. 326 CC', 'Art. 333 CC', 'Art. 345-A CC'],
+    keywords: [
+      'filiacion', 'filiacion extramatrimonial', 'prueba de adn', 'demanda de paternidad', 'sociedad de gananciales',
+      'liquidacion de gananciales', 'bienes conyugales', 'union de hecho', 'convivencia', 'causales de divorcio',
+      'adulterio', 'abandono de hogar', 'violencia psicologica divorcio'
+    ],
+    summary: 'Proceso célere de filiación con prueba de ADN (Ley 28457/30628) y liquidación de gananciales (Arts. 318-326 CC):',
+    practicalImpact:
+      'En filiación extramatrimonial no se pagan tasas judiciales y el demandado tiene 10 días para formular oposición sujeta a prueba biológica de ADN; si no se opone o no asiste a la toma de muestra, el juez declara judicialmente la paternidad en el acto y fija alimentos (Ley 28457). En la sociedad conyugal, la disposición de bienes requiere intervención de ambos (Art. 315 CC); las uniones de hecho propias originan sociedad de bienes (Art. 326 CC).'
+  },
+
   // ── MARCO (ADMINISTRATIVO REFORMA SPIJ) ──
   {
     lawCode: 'Ley N° 27584 (TUO Proceso Contencioso Administrativo D.S. 011-2019-JUS)',
@@ -905,6 +1101,21 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     summary: 'Control judicial de resoluciones ministeriales, municipales y de organismos reguladores:',
     practicalImpact:
       'Plazo perentorio de caducidad de 3 meses para interponer la demanda judicial tras la notificación del acto que agota la vía administrativa. Procede la pretensión de nulidad total o parcial, restablecimiento del derecho vulnerado e indemnización por daños.',
+  },
+
+  {
+    lawCode: 'Decreto Supremo N° 006-2026-JUS (TUO LPAG) Arts. 217°-220° y Arts. 248°-252°',
+    specialistId: 'marco',
+    date: 'Vigente 2026',
+    affectedCode: 'Régimen de Recursos Administrativos y Principios del Procedimiento Sancionador (PAS)',
+    articles: ['D.S. 006-2026-JUS', 'Art. 217 LPAG', 'Art. 219 LPAG', 'Art. 220 LPAG', 'Art. 248 LPAG', 'Art. 252 LPAG'],
+    keywords: [
+      'recurso de reconsideracion', 'recurso de apelacion', 'plazo de apelacion administrativo', '15 dias habiles',
+      'potestad sancionadora', 'procedimiento administrativo sancionador', 'pas', 'prescripcion pas', 'tipicidad pas'
+    ],
+    summary: 'Plazo fatal de 15 días hábiles para impugnaciones y prescripción de 4 años del PAS en el TUO LPAG D.S. 006-2026-JUS:',
+    practicalImpact:
+      'Los recursos de Reconsideración (con nueva prueba) y Apelación deben interponerse en el plazo perentorio e improrrogable de 15 DÍAS HÁBILES; la administración tiene 30 días hábiles para resolver. En el PAS rigen los principios de tipicidad, razonabilidad y no confiscatoriedad (Art. 248 TUO LPAG); la potestad sancionadora prescribe a los 4 años contados desde la comisión de la falta (Art. 252).'
   },
 
   // ── FERNANDA (TRIBUTARIO REFORMA SPIJ) ──

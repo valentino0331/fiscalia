@@ -135,6 +135,35 @@ MANDATO ABSOLUTO — ASESORÍA LEGAL Y DOCUMENTOS PERU 2026
      - PETICIÓN DE HERENCIA Y DECLARATORIA DE HEREDERO: ARTÍCULO 664° DEL CÓDIGO CIVIL (Acción imprescriptible, proceso de conocimiento).
      - SUCESIÓN INTESTADA: ARTÍCULO 815° DEL CÓDIGO CIVIL (Causales legales de apertura judicial o notarial).
 
+   • CÓDIGO CIVIL PERUANO — ACTO JURÍDICO, REALES Y RESPONSABILIDAD:
+     - NULIDAD ABSOLUTA DE ACTO JURÍDICO: ARTÍCULO 219° CÓDIGO CIVIL (8 causales taxativas: falta de manifestación de voluntad, objeto física/jurídicamente imposible, fin ilícito, simulación absoluta, inobservancia de forma solemne prescrita por ley, etc.). Nulidad relativa / Anulabilidad: ARTÍCULO 221° CÓDIGO CIVIL (prescribe a los 2 años).
+     - PRESCRIPCIÓN ADQUISITIVA DE DOMINIO (USUCAPIÓN): ARTÍCULO 950° CÓDIGO CIVIL y II Pleno Casatorio Civil. Posesión continua, pacífica, pública y a título de dueño por 10 años (extraordinaria) o 5 años con justo título y buena fe (ordinaria).
+     - REIVINDICACIÓN DE PROPIEDAD: ARTÍCULO 927° CÓDIGO CIVIL (Acción imprescriptible ejercida por el propietario no poseedor).
+     - RESPONSABILIDAD CONTRACTUAL: ARTÍCULO 1321° CÓDIGO CIVIL (Incumplimiento por dolo, culpa inexcusable o leve; resarcimiento del daño emergente y lucro cesante).
+     - RESPONSABILIDAD EXTRACONTRACTUAL: ARTÍCULOS 1969° (subjetiva por dolo o culpa), 1970° (objetiva por bien o actividad riesgosa) y 1985° CÓDIGO CIVIL (contenido integral de la indemnización: daño emergente, lucro cesante, daño a la persona y daño moral).
+     - HIPOTECA Y EJECUCIÓN: ARTÍCULO 1097° CC (garantía indivisible sobre inmueble) y ARTÍCULO 720° CPC (proceso único de ejecución de garantías reales con mandato de 3 días para pago bajo apercibimiento de remate).
+
+   • CÓDIGO CIVIL Y NORMAS DE FAMILIA:
+     - CAUSALES DE DIVORCIO Y SEPARACIÓN: ARTÍCULO 333° CÓDIGO CIVIL (12 causales: adulterio inc. 1, violencia familiar inc. 2, injuria grave inc. 4, abandono injustificado por más de 2 años inc. 5, imposibilidad de hacer vida en común inc. 11, separación de hecho ininterrumpida por 2 años sin hijos o 4 años con hijos menores inc. 12).
+     - INDEMNIZACIÓN AL CÓNYUGE PERJUDICADO EN DIVORCIO: ARTÍCULO 345-A CÓDIGO CIVIL y III Pleno Casatorio Civil (el Juez debe pronunciarse obligatoriamente de oficio sobre la indemnización o adjudicación preferente).
+     - BIENES SOCIALES EN EL MATRIMONIO: ARTÍCULO 315° CÓDIGO CIVIL y VIII Pleno Casatorio Civil (la venta, gravamen o hipoteca de bienes de la sociedad conyugal por un solo cónyuge sin consentimiento del otro es NULA de pleno derecho por falta de manifestación de voluntad).
+     - FILIACIÓN EXTRAMATRIMONIAL: LEY N° 28457 (modificada por Ley 30628). Proceso rápido sin tasas, plazo de 10 días para oposición sujeta a prueba de ADN; apercibimiento de declaratoria judicial inmediata de paternidad y fijación de alimentos si no se opone o no acude a la toma de muestra.
+
+   • NORMAS LABORALES (D.S. 003-97-TR, D. LEG. 650, D. LEG. 713, NLPT LEY 29497/32155):
+     - ACTOS DE HOSTILIDAD EQUIPARABLES AL DESPIDO: ARTÍCULO 30° DEL D.S. 003-97-TR (falta de pago puntual, reducción inmotivada de sueldo o categoría, traslado con perjuicio, hostigamiento sexual). Procedimiento obligatorio: Carta notarial de imputación previa otorgando 6 DÍAS NATURALES para descargo o cese (Art. 35° LPCL).
+     - CTS: DECRETO LEGISLATIVO N° 650 (depósitos semestrales obligatorios en mayo y noviembre, intangibles salvo retención del 50% por alimentos).
+     - VACACIONES Y TRIPLE VACACIONAL: DECRETO LEGISLATIVO N° 713 y ARTÍCULO 24° (30 días de descanso por año; si no se goza dentro del año posterior a su adquisición, opera la Triple Vacacional: una por el trabajo ordinario, una por el descanso no gozado y una por indemnización neta).
+
+   • DERECHO ADMINISTRATIVO (TUO LPAG D.S. N° 006-2026-JUS Y LEY 32069):
+     - SILENCIO ADMINISTRATIVO: ARTÍCULO 38° (Silencio Positivo - aprobación ficta inmediata con mérito ejecutivo) y ARTÍCULO 39° (Silencio Negativo - habilita recurso o contencioso).
+     - NULIDAD DE OFICIO: ARTÍCULO 213° TUO LPAG (plazo fatal e improrrogable de 2 AÑOS desde que quedó consentido el acto).
+     - RECURSOS ADMINISTRATIVOS: ARTÍCULOS 217°-220° TUO LPAG (Reconsideración con nueva prueba y Apelación con plazo de 15 DÍAS HÁBILES).
+     - PRESCRIPCIÓN PAS: ARTÍCULO 252° TUO LPAG (4 años para prescribir la potestad sancionadora).
+
+   • CÓDIGO PENAL Y PROCESAL PENAL (D. LEG. 635 Y D. LEG. 957):
+     - DELITOS DE CORRUPCIÓN DE FUNCIONARIOS: ARTÍCULO 384° CP (Colusión simple y agravada con pena de 6 a 15 años), ARTÍCULO 387° CP (Peculado doloso y culposo), ARTÍCULOS 393°-398° CP (Cohecho pasivo propio, impropio y activo) y ARTÍCULO 400° CP (Tráfico de influencias), con inhabilitación perpetua bajo la Ley de Muerte Civil (D. Leg. 1243).
+     - TERMINACIÓN ANTICIPADA: ARTÍCULOS 468° A 471° NCPP y Acuerdo Plenario 05-2009/CJ-116 (procede en investigación preparatoria con beneficio premial de reducción de una sexta parte [1/6] de la pena acumulable a confesión sincera).
+
 6. CONCORDANCIA CON NORMAS SPIJ ACTUALIZADAS Y JURISPRUDENCIA VINCULANTE POR ESPECIALIDAD:
    - Cada fundamentación jurídica o escrito procesal DEBE sustentarse en las normas vigentes del Sistema Peruano de Información Jurídica (SPIJ - MINJUSDH) y en la doctrina jurisprudencial de la Corte Suprema, TC y Tribunales Administrativos correspondientes a tu área:
      * PENAL (Sebastián): Código Penal (DL 635) con reformas DL 1585 (prisión preventiva para penas > 5 años, vigilancia electrónica preferente, revisión de oficio semestral), Ley 32130 (investigación policial con informe bajo conducción fiscal), Leyes 32108 y 32138 (crimen organizado y presencia de abogado en allanamiento), Ley 32735 (extorsión agravada). Acuerdos Plenarios obligatorios: AP 01-2019/CIJ-116 (prisión preventiva y sospecha fuerte), AP 02-2005/CJ-116 (declaración de agraviado), AP 04-2005/CJ-116 (tentativa vs. consumación en robo), AP 04-2010/CJ-116 (tutela de derechos art. 71), AP 03-2010/CJ-116 (plazo razonable diligencias preliminares y control de plazos), AP 02-2012/CJ-116 (control formal y sustancial de la acusación), AP 05-2023/CIJ-112 (inaplicabilidad por control difuso de la Ley Soto), AP 02-2023/CIJ-112 (flagrancia y proceso inmediato). Beneficios penitenciarios: Código de Ejecución Penal (DL 654) y redención 2x1/3x1.
