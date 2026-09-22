@@ -460,6 +460,27 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     bindingGrounds: 'Reglas vinculantes 1 a 12 del X Pleno Casatorio Civil sobre el ejercicio del Art. 194 CPC.',
     legalApplication: 'Invocable para cuestionar resoluciones judiciales que incorporan pruebas de oficio sin correr traslado previo ni motivar su excepcionalidad.',
   },
+  {
+    code: 'Casación N° 4922-2015 Cusco y Casación 2157-2016 Lima',
+    specialistId: 'diego',
+    court: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Exclusión de la Sucesión por Indignidad (Art. 667 CC) vs. Desheredación (Art. 742 CC) y Legítima (Art. 725 CC)',
+    category: 'Derecho Civil / Sucesiones',
+    keywords: [
+      'indignidad', 'causales de indignidad', 'exclusion por indignidad', 'indigno',
+      'desheredacion', 'desheredar', 'herencia', 'testamento', 'legitima', 'tercio de libre disposicion',
+      'libre disposicion', 'art 667', 'art 668', 'art 669', 'art 724', 'art 725', 'art 726', 'peticion de herencia',
+      'sucesion intestada', 'heredero forzoso', 'sucesiones'
+    ],
+    keyPrinciples: [
+      'Las causales de exclusión de la sucesión por indignidad están taxativamente tipificadas en el ARTÍCULO 667° DEL CÓDIGO CIVIL (modificado por Ley 31643), no admitiendo analogía ni extensión.',
+      'La indignidad no opera de pleno derecho: exige declaración judicial mediante sentencia firme en proceso de conocimiento (Art. 668° CC) y caduca al año de haber entrado el indigno en posesión de los bienes.',
+      'DISTINCIÓN DOGMÁTICA VITAL: El ARTÍCULO 725° DEL CÓDIGO CIVIL regula exclusivamente el TERCIO DE LIBRE DISPOSICIÓN de quien tiene hijos u otros descendientes o cónyuge. NUNCA debe confundirse el Art. 725° con la indignidad (Art. 667°).',
+      'La desheredación (Arts. 742° y ss. CC) es facultad privativa testamentaria del causante respecto de herederos forzosos, mientras que la acción de indignidad es promovida tras el fallecimiento del causante por los llamados a la sucesión.'
+    ],
+    bindingGrounds: 'Doctrina jurisprudencial uniforme de la Corte Suprema sobre causales taxativas de exclusión por indignidad (Art. 667 CC) y deslinde con legítima sucesoria (Art. 725 CC).',
+    legalApplication: 'Obligatorio en demandas de Exclusión de Heredero por Indignidad, Justificación o Contradicción de Desheredación y contestación de demandas hereditarias.',
+  },
 
   // ── CAMILA: FAMILIA ADICIONALES SPIJ ──
   {
@@ -843,6 +864,21 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     summary: 'Mérito ejecutivo de recibos de mantenimiento y resolución automática de contratos:',
     practicalImpact:
       'Las liquidaciones de cuotas impagas emitidas por la Junta de Propietarios constituyen título ejecutivo judicial. En contratos patrimoniales, la cláusula resolutoria expresa (Art. 1430 CC) permite dar por resuelto el contrato de pleno derecho mediante simple comunicación fehaciente sin esperar plazo de 15 días.',
+  },
+  {
+    lawCode: 'Ley N° 31643 y Artículos 667°, 668°, 669° Código Civil',
+    specialistId: 'diego',
+    date: 'Vigente 2026',
+    affectedCode: 'Código Civil (Libro IV: Sucesiones - Indignidad, Desheredación y Legítima)',
+    articles: ['Art. 667 CC', 'Art. 668 CC', 'Art. 669 CC', 'Art. 724 CC', 'Art. 725 CC', 'Art. 726 CC', 'Art. 742 CC', 'Art. 744 CC', 'Art. 747 CC', 'Ley 31643'],
+    keywords: [
+      'indignidad', 'causales de indignidad', 'exclusion por indignidad', 'indigno',
+      'desheredacion', 'desheredar', 'herencia', 'testamento', 'legitima', 'tercio de libre disposicion',
+      'libre disposicion', 'art 667', 'art 725', 'art 668', 'art 726', 'violencia familiar herencia', 'alimentos herencia'
+    ],
+    summary: 'Régimen taxativo de causales de indignidad (Art. 667 CC) reformado por Ley 31643 y deslinde con legítima (Art. 725 CC):',
+    practicalImpact:
+      'Las causales de exclusión por indignidad corresponden OBLIGATORIA Y EXCLUSIVAMENTE AL ARTÍCULO 667° DEL CÓDIGO CIVIL (7 incisos: 1. Homicidio doloso/tentativa; 2. Delito doloso; 3. Denuncia calumniosa con pena de cárcel; 4. Coacción o violencia en testamento; 5. Falsificación o destrucción de testamento; 6. Sentencia firme por violencia familiar Ley 31643; 7. Reiterado incumplimiento de alimentos debidos Ley 31643). Requiere proceso de conocimiento y sentencia judicial firme (Art. 668 CC). NUNCA CONFUNDIR CON EL ARTÍCULO 725° CC, el cual norma únicamente el Tercio de Libre Disposición para causantes con hijos o cónyuge.',
   },
 
   // ── CAMILA (FAMILIA REFORMA SPIJ) ──

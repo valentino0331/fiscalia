@@ -46,50 +46,15 @@ export function hasLegalReferences(text: string): boolean {
 
 /**
  * Injects markdown tokens for the verified SPIJ badge inline after legal citations,
- * preserving code blocks and pre-existing markdown links.
+ * preserving text integrity.
+ *
+ * NOTE: Blind regex injection of "⚖️ Verificado SPIJ 2026" onto arbitrary AI output
+ * is disabled to prevent false verification claims (e.g. stamping "Verificado SPIJ 2026"
+ * on unverified or hallucinated article numbers). Only explicit verified tags or genuine
+ * SPIJ modal entries carry the official certification.
  */
 export function injectSpijBadges(text: string): string {
   if (!text) return text
-
-  // 1. Protect code blocks (```code``` and `inline`)
-  const codeBlocks: string[] = []
-  let processed = text.replace(/(```[\s\S]*?```|`[^`]+`)/g, (m) => {
-    codeBlocks.push(m)
-    return `__CODE_BLOCK_${codeBlocks.length - 1}__`
-  })
-
-  // 2. Protect existing markdown links [text](url)
-  const links: string[] = []
-  processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (m) => {
-    links.push(m)
-    return `__LINK_BLOCK_${links.length - 1}__`
-  })
-
-  // 3. Comprehensive legal citation regex covering Peruvian statutory & jurisprudential citations:
-  // - Articles: Art. 268, Artículos 139 inc 3, Arts. 74 y 80 CPC, etc.
-  // - Decrees: D.L. 1585, D.Leg. 1297, Decreto Legislativo 768, etc.
-  // - Laws: Ley N° 30364, Ley 29497, etc.
-  // - Casaciones: Cas. 626-2013-Moquegua, Casación 2195-2011, etc.
-  // - Codes: CPP, NCPP, CPC, CC, etc.
-  const LEGAL_REGEX = /(?:(?:(?:Art(?:ículo|s|iculo)?\.?|Arts\.?)\s*\d+[º°\w\-]*(?:\s*(?:del?|al?|inc(?:iso)?\.?\s*\d*|num(?:eral)?\.?\s*\d*|y|e|\,)*\s*(?:N?CPP|CPC|CC|C\.C\.|C\.P\.P\.|C\.P\.C\.|NLPT|LPCL|LPAG|LGS|Constitución|Código\s+Civil|Código\s+Procesal\s+Penal|Código\s+Procesal\s+Civil|Código\s+Penal|CP|C\.P\.))*)|(?:(?:D\.?\s*L\.?(?:eg)?\.?|Decreto\s+Legislativo)\s*(?:N[°º.]?|N°|Nº)?\s*\d+)|(?:Ley\s*(?:N[°º.]?|N°|Nº)?\s*\d+)|(?:Cas(?:\.|ación|acion)?\s*(?:N[°º.]?|N°|Nº)?\s*\d+(?:[-–/]\d+)*(?:\s*[-–/]\s*[A-Za-zñÑáéíóúÁÉÍÓÚ]+)?)|(?:\b(?:N?CPP|CPC|CC)\b|(?:\b(?:D\.Leg\.|D\.L\.|Art\.|Arts\.|Ley\s*N[°º.]\s*\d*|Cas\.))))/gi
-
-  // Debounce badge insertion within short proximity (e.g. 25 chars) to prevent excessive clustering
-  let lastBadgeEnd = -100
-  const BADGE_MD = ` [⚖️ Verificado SPIJ 2026](${SPIJ_VERIFIED_HREF})`
-
-  processed = processed.replace(LEGAL_REGEX, (match, offset) => {
-    if (offset - lastBadgeEnd < 25) {
-      return match
-    }
-    lastBadgeEnd = offset + match.length
-    return match + BADGE_MD
-  })
-
-  // 4. Restore existing links
-  processed = processed.replace(/__LINK_BLOCK_(\d+)__/g, (_, idx) => links[Number(idx)])
-
-  // 5. Restore code blocks
-  processed = processed.replace(/__CODE_BLOCK_(\d+)__/g, (_, idx) => codeBlocks[Number(idx)])
-
-  return processed
+  // Prevent blind automatic fabrication of SPIJ verification badges onto unverified text
+  return text
 }
