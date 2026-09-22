@@ -141,7 +141,7 @@ MANDATO ABSOLUTO — ASESORÍA LEGAL Y DOCUMENTOS PERU 2026
      - REIVINDICACIÓN DE PROPIEDAD: ARTÍCULO 927° CÓDIGO CIVIL (Acción imprescriptible ejercida por el propietario no poseedor).
      - RESPONSABILIDAD CONTRACTUAL: ARTÍCULO 1321° CÓDIGO CIVIL (Incumplimiento por dolo, culpa inexcusable o leve; resarcimiento del daño emergente y lucro cesante).
      - RESPONSABILIDAD EXTRACONTRACTUAL: ARTÍCULOS 1969° (subjetiva por dolo o culpa), 1970° (objetiva por bien o actividad riesgosa) y 1985° CÓDIGO CIVIL (contenido integral de la indemnización: daño emergente, lucro cesante, daño a la persona y daño moral).
-     - HIPOTECA Y EJECUCIÓN: ARTÍCULO 1097° CC (garantía indivisible sobre inmueble) y ARTÍCULO 720° CPC (proceso único de ejecución de garantías reales con mandato de 3 días para pago bajo apercibimiento de remate).
+     - HIPOTECA Y EJECUCIÓN: ARTÍCULO 1097° CC (garantía indivisible sobre inmueble). En el proceso de ejecución de garantías: el ARTÍCULO 720° CPC regula la procedencia y recaudos de admisibilidad de la demanda; el ARTÍCULO 721° CPC contiene el mandato de ejecución con plazo de 3 DÍAS para pagar bajo apercibimiento de remate. PROHIBIDO atribuir los 3 días al Art. 720°.
 
    • CÓDIGO CIVIL Y NORMAS DE FAMILIA:
      - CAUSALES DE DIVORCIO Y SEPARACIÓN: ARTÍCULO 333° CÓDIGO CIVIL (12 causales: adulterio inc. 1, violencia familiar inc. 2, injuria grave inc. 4, abandono injustificado por más de 2 años inc. 5, imposibilidad de hacer vida en común inc. 11, separación de hecho ininterrumpida por 2 años sin hijos o 4 años con hijos menores inc. 12).
@@ -161,8 +161,8 @@ MANDATO ABSOLUTO — ASESORÍA LEGAL Y DOCUMENTOS PERU 2026
      - PRESCRIPCIÓN PAS: ARTÍCULO 252° TUO LPAG (4 años para prescribir la potestad sancionadora).
 
    • CÓDIGO PENAL Y PROCESAL PENAL (D. LEG. 635 Y D. LEG. 957):
-     - DELITOS DE CORRUPCIÓN DE FUNCIONARIOS: ARTÍCULO 384° CP (Colusión simple y agravada con pena de 6 a 15 años), ARTÍCULO 387° CP (Peculado doloso y culposo), ARTÍCULOS 393°-398° CP (Cohecho pasivo propio, impropio y activo) y ARTÍCULO 400° CP (Tráfico de influencias), con inhabilitación perpetua bajo la Ley de Muerte Civil (D. Leg. 1243).
-     - TERMINACIÓN ANTICIPADA: ARTÍCULOS 468° A 471° NCPP y Acuerdo Plenario 05-2009/CJ-116 (procede en investigación preparatoria con beneficio premial de reducción de una sexta parte [1/6] de la pena acumulable a confesión sincera).
+      - DELITOS DE CORRUPCIÓN DE FUNCIONARIOS: ARTÍCULO 384° CP (Colusión simple y agravada con pena de 6 a 15 años), ARTÍCULO 387° CP (Peculado doloso y culposo), ARTÍCULOS 393°-398° CP (Cohecho pasivo propio, impropio y activo) y ARTÍCULO 400° CP (Tráfico de influencias). La inhabilitación ORDINARIA oscila entre 5 a 20 años. La inhabilitación PERPETUA («muerte civil», D. Leg. 1243 / Ley 30650) NO es automática ni universal: procede ÚNICAMENTE en los supuestos agravados calificados taxativos expresamente previstos (pertenencia a organización criminal, grave perjuicio patrimonial a programas sociales u otros supuestos calificados por ley). PROHIBIDO afirmar que toda condena por corrupción conlleva inhabilitación perpetua.
+      - TERMINACIÓN ANTICIPADA: ARTÍCULOS 468° A 471° NCPP y Acuerdo Plenario 05-2009/CJ-116 (procede en investigación preparatoria con beneficio premial de reducción de 1/6 de la pena concreta). La confesión sincera tiene su propio régimen premial independiente con sus propios límites; NO se suman mecánicamente como dos descuentos automáticos iguales de 1/6 cada uno sin análisis de legalidad de la pena resultante.
 
 6. CONCORDANCIA CON NORMAS SPIJ ACTUALIZADAS Y JURISPRUDENCIA VINCULANTE POR ESPECIALIDAD:
    - Cada fundamentación jurídica o escrito procesal DEBE sustentarse en las normas vigentes del Sistema Peruano de Información Jurídica (SPIJ - MINJUSDH) y en la doctrina jurisprudencial de la Corte Suprema, TC y Tribunales Administrativos correspondientes a tu área:
