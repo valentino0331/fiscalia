@@ -61,11 +61,116 @@ function setCachedEmbedding(text: string, vector: number[]): void {
   embeddingCache.set(key, { vector, expiresAt: Date.now() + CACHE_TTL_MS });
 }
 
+interface EmbeddingModelCandidate {
+  endpoint: string;
+  model: string;
+  hasOutputDims: boolean;
+}
+
+const CANDIDATE_MODELS: EmbeddingModelCandidate[] = [
+  // 1. Current state-of-the-art embedding model
+  {
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent',
+    model: 'models/gemini-embedding-001',
+    hasOutputDims: true,
+  },
+  // 2. v1 endpoint for text-embedding-004
+  {
+    endpoint: 'https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent',
+    model: 'models/text-embedding-004',
+    hasOutputDims: false,
+  },
+  // 3. v1beta endpoint for text-embedding-004
+  {
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent',
+    model: 'models/text-embedding-004',
+    hasOutputDims: false,
+  },
+  // 4. Legacy embedding-001
+  {
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/embedding-001:embedContent',
+    model: 'models/embedding-001',
+    hasOutputDims: false,
+  },
+];
+
+// Cache the index of the first working candidate model to avoid repeated fail-and-fallback roundtrips
+let cachedWorkingModelIndex = 0;
+
+async function requestGeminiEmbedding(
+  cleanText: string,
+  taskType: 'RETRIEVAL_QUERY' | 'RETRIEVAL_DOCUMENT',
+  geminiKey: string
+): Promise<number[]> {
+  const errors: string[] = [];
+
+  const order = [
+    cachedWorkingModelIndex,
+    ...CANDIDATE_MODELS.map((_, i) => i).filter((i) => i !== cachedWorkingModelIndex),
+  ];
+
+  for (const idx of order) {
+    const candidate = CANDIDATE_MODELS[idx];
+    const url = `${candidate.endpoint}?key=${geminiKey}`;
+
+    const body: Record<string, any> = {
+      model: candidate.model,
+      content: { parts: [{ text: cleanText }] },
+      taskType,
+    };
+
+    if (candidate.hasOutputDims) {
+      body.outputDimensionality = EMBEDDING_DIMENSIONS;
+      body.config = { outputDimensionality: EMBEDDING_DIMENSIONS };
+    }
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const errText = await response.text();
+        errors.push(`[${candidate.model} @ ${response.status}]: ${errText.slice(0, 150)}`);
+        continue;
+      }
+
+      const data = (await response.json()) as { embedding?: { values?: number[] } };
+      let vector: number[] = data?.embedding?.values ?? [];
+
+      if (!Array.isArray(vector) || vector.length === 0) {
+        errors.push(`[${candidate.model}]: vector vacío`);
+        continue;
+      }
+
+      // If dimensions exceed target (e.g. model returned 3072 or 1536), apply Matryoshka truncation + L2 normalization
+      if (vector.length > EMBEDDING_DIMENSIONS) {
+        const sliced = vector.slice(0, EMBEDDING_DIMENSIONS);
+        const norm = Math.sqrt(sliced.reduce((sum, v) => sum + v * v, 0));
+        vector = norm > 0 ? sliced.map((v) => v / norm) : sliced;
+      }
+
+      if (vector.length === EMBEDDING_DIMENSIONS) {
+        cachedWorkingModelIndex = idx;
+        return vector;
+      }
+
+      errors.push(`[${candidate.model}]: dimensión inesperada ${vector.length}`);
+    } catch (err: any) {
+      errors.push(`[${candidate.model}]: ${err.message}`);
+    }
+  }
+
+  throw new Error(`[RAG] Fallaron todos los modelos de embedding de Gemini: ${errors.join(' | ')}`);
+}
+
 // ─── Core Functions ───────────────────────────────────────────────────────────
 
 /**
  * Generates a 768-dimensional embedding vector for the given text
- * using Gemini text-embedding-004 via the REST API.
+ * using Gemini embeddings via REST API with multi-model fallback.
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   const cached = getCachedEmbedding(text);
@@ -76,34 +181,8 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     throw new Error('[RAG] GEMINI_API_KEY no configurada — no se puede generar embedding.');
   }
 
-  const cleanText = text.slice(0, 8000).trim(); // Gemini has 8k char limit for embeddings
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'models/text-embedding-004',
-        content: { parts: [{ text: cleanText }] },
-        taskType: 'RETRIEVAL_QUERY',
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errBody = await response.text();
-    throw new Error(`[RAG] Gemini embedding API error ${response.status}: ${errBody}`);
-  }
-
-  const data = await response.json() as { embedding?: { values?: number[] } };
-  const vector: number[] = data?.embedding?.values ?? [];
-
-  if (!Array.isArray(vector) || vector.length !== EMBEDDING_DIMENSIONS) {
-    throw new Error(
-      `[RAG] Embedding inválido: esperaba ${EMBEDDING_DIMENSIONS} dims, recibió ${vector?.length}`
-    );
-  }
+  const cleanText = text.slice(0, 8000).trim();
+  const vector = await requestGeminiEmbedding(cleanText, 'RETRIEVAL_QUERY', geminiKey);
 
   setCachedEmbedding(text, vector);
   return vector;
@@ -118,33 +197,7 @@ export async function generateDocumentEmbedding(text: string): Promise<number[]>
   if (!geminiKey) throw new Error('[RAG] GEMINI_API_KEY no configurada.');
 
   const cleanText = text.slice(0, 8000).trim();
-
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/text-embedding-004:embedContent?key=${geminiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'models/text-embedding-004',
-        content: { parts: [{ text: cleanText }] },
-        taskType: 'RETRIEVAL_DOCUMENT',
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    const errBody = await response.text();
-    throw new Error(`[RAG] Gemini embedding error ${response.status}: ${errBody}`);
-  }
-
-  const data = await response.json() as { embedding?: { values?: number[] } };
-  const vector: number[] = data?.embedding?.values ?? [];
-
-  if (!Array.isArray(vector) || vector.length !== EMBEDDING_DIMENSIONS) {
-    throw new Error(`[RAG] Embedding de documento inválido: ${vector?.length} dims`);
-  }
-
-  return vector;
+  return requestGeminiEmbedding(cleanText, 'RETRIEVAL_DOCUMENT', geminiKey);
 }
 
 /**
@@ -237,13 +290,31 @@ export async function getRagContext(
     return null;
   }
 
+  // Handle messages with large attached files/expedientes:
+  // Isolate the user's actual question if attached to an extracted document
+  let queryToEmbed = userQuery.trim();
+  if (queryToEmbed.includes('--- FIN DEL DOCUMENTO ---')) {
+    const parts = queryToEmbed.split('--- FIN DEL DOCUMENTO ---');
+    const userInstruction = parts[parts.length - 1].trim();
+    if (userInstruction.length >= 10) {
+      queryToEmbed = userInstruction;
+    }
+  }
+  queryToEmbed = queryToEmbed
+    .replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n?/gi, '')
+    .trim();
+
+  // If user only uploaded the document without prompt, use the first 1000 chars of document content
+  if (queryToEmbed.length < 15) {
+    queryToEmbed = userQuery.replace(/\[Documento adjunto:[^\]]*\]/gi, '').slice(0, 1000).trim();
+  }
+
   // Skip short queries that don't need RAG (greetings, simple questions)
-  const trimmedQuery = userQuery.trim();
-  if (trimmedQuery.length < 20) return null;
+  if (queryToEmbed.length < 15) return null;
 
   try {
     // 1. Generate embedding for the user's query
-    const queryVector = await generateEmbedding(trimmedQuery);
+    const queryVector = await generateEmbedding(queryToEmbed);
 
     // 2. Search for similar legal chunks
     const chunks = await searchSimilarChunks(queryVector, agentId, TOP_K);
