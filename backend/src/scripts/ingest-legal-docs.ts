@@ -348,6 +348,8 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (!sql) return;
+
   // 3. Generate embeddings and insert
   console.log('[3/4] Generando embeddings e insertando en pgvector...');
   console.log(`      (Esto puede tomar ${Math.ceil(allChunks.length * EMBEDDING_DELAY_MS / 60000)} minutos)\n`);

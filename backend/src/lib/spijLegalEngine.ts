@@ -400,7 +400,7 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     ],
     keyPrinciples: [
       'La terminación anticipada procede en la investigación preparatoria hasta antes de formularse acusación fiscal.',
-      'Otorga el beneficio premial tasado de reducción de una sexta parte (1/6) de la pena corporal, acumulable a la confesión sincera (Art. 161 NCPP) cuando no esté prohibida legalmente.',
+      'Otorga el beneficio premial tasado de reducción de una sexta parte (1/6) de la pena corporal; la acumulación con confesión sincera (Art. 161 NCPP) se rige bajo sus propias reglas y límites legales (no procede en flagrancia ni reincidencia, evaluándose individualmente).',
       'El acuerdo consensuado vincula al Juez respecto de la pena acordada, salvo que vulnere el principio de legalidad o resulte desproporcionada.'
     ],
     bindingGrounds: 'Fundamentos Jurídicos 12 al 24 sobre aplicación uniforme del beneficio premial de reducción de pena en terminación anticipada.',
@@ -545,15 +545,15 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     code: 'I Pleno Casatorio Civil (Casación N° 1465-2007 Cajamarca)',
     specialistId: 'diego',
     court: 'Salas Civiles de la Corte Suprema de Justicia',
-    title: 'Transacción extrajudicial y excepción de conclusión del proceso (Arts. 1302 CC y 446 inc. 10 CPC)',
+    title: 'Eficacia de la transacción extrajudicial y excepciones procesales (Arts. 1302 CC y 446 CPC)',
     category: 'Derecho Civil / Obligaciones y Contratos',
     keywords: [
       'transaccion', 'transaccion extrajudicial', 'cosa juzgada civil', 'excepcion de transaccion',
       'art 1302', 'art 446 cpc', 'primer pleno casatorio', 'i pleno casatorio', 'danos transados'
     ],
     keyPrinciples: [
-      'La transacción extrajudicial celebrada con las formalidades del Art. 1302 del Código Civil tiene mérito de cosa juzgada entre las partes.',
-      'Procede amparar la excepción de conclusión del proceso por transacción (Art. 446 inc. 10 CPC) si los conceptos demandados ya fueron objeto de liquidación y finiquito expreso.'
+      'La transacción extrajudicial celebrada con las formalidades del Art. 1302 del Código Civil extingue las obligaciones litigiosas o dudosas y surte efectos vinculantes de cosa juzgada entre las partes.',
+      'Diferenciación procesal rigurosa: La excepción de conclusión del proceso por transacción (Art. 446 inc. 10 CPC) exige en estricto un proceso previo idéntico concluido con transacción judicial homologada; si la transacción es puramente extrajudicial, se hace valer como defensa previa, excepción de falta de interés para obrar o defensa de fondo por extinción obligacional.'
     ],
     bindingGrounds: 'Doctrina Jurisprudencial Vinculante sobre oponibilidad procesal de acuerdos transaccionales frente a demandas de indemnización por daños.',
     legalApplication: 'Vital para formular Excepción de Transacción en contestaciones de demanda cuando la controversia ya fue resuelta extrajudicialmente.'
@@ -608,9 +608,9 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
       'alimentos divorcio', 'causales de divorcio'
     ],
     keyPrinciples: [
-      'En el proceso de divorcio por separación de hecho (Art. 333 inc. 12 CC), el Juez tiene la obligación de pronunciarse de oficio sobre la indemnización o adjudicación preferente a favor del cónyuge más perjudicado (Art. 345-A CC).',
-      'Es requisito de procedencia ineludible que el demandante se encuentre al día en el pago de las pensiones alimenticias fijadas o pactadas.',
-      'Plazos legales de separación ininterrumpida: mínimo 2 años si no existen hijos menores de edad y 4 años si existen hijos menores.'
+      'En divorcio por separación de hecho (Art. 333 inc. 12 CC), el Juez tiene el deber de evaluar de oficio si se ha acreditado en autos un cónyuge más perjudicado por la ruptura y, de verificarse el menoscabo o daño personal/patrimonial, fijar una indemnización o adjudicación preferente (Art. 345-A CC); no opera como una indemnización monetaria automática si no se acredita perjuicio real.',
+      'Es requisito de procedencia sustancial acreditar el cumplimiento o estar al día en el pago de las obligaciones alimentarias fijadas o acordadas con anterioridad (Art. 345-A CC).',
+      'Plazos legales de separación ininterrumpida: mínimo 2 años sin hijos menores o 4 años con hijos menores de edad.'
     ],
     bindingGrounds: 'Doctrina Jurisprudencial Vinculante - Reglas 1 a 6 sobre tutela económica obligatoria al cónyuge inocente perjudicado en el divorcio.',
     legalApplication: 'Indispensable en toda demanda y contestación de Divorcio por Separación de Hecho para solicitar o contradecir la indemnización del Art. 345-A CC.'
@@ -664,9 +664,8 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
       'silencio administrativo negativo', 'art 213 lpag', 'art 38 lpag', 'aprobacion ficta', '2 anos nulidad de oficio'
     ],
     keyPrinciples: [
-      'La facultad de la Administración para declarar la NULIDAD DE OFICIO de sus propios actos administrativos prescribe fatalmente a los 2 AÑOS desde que quedaron consentidos (Art. 213 TUO LPAG D.S. 006-2026-JUS).',
-      'Vencido el plazo de 2 años, la entidad pierde la potestad de anulación interna y solo puede demandar la lesividad del acto ante el Poder Judicial dentro de los 3 años siguientes.',
-      'El Silencio Administrativo Positivo genera la aprobación ficta inmediata al vencimiento del plazo legal de 30 días hábiles, constituyendo título ejecutable de pleno derecho.'
+      'La facultad de la Administración para declarar la NULIDAD DE OFICIO de sus propios actos administrativos prescribe a los 2 AÑOS desde que quedaron consentidos (Art. 213 TUO LPAG D.S. 006-2026-JUS), sujeta a las condiciones y causales legales del artículo 10 y precedentes del TC; vencido el plazo, únicamente cabe acción de lesividad judicial.',
+      'El Silencio Administrativo rige conforme al catálogo de procedimientos: el Silencio Positivo genera aprobación ficta únicamente en los procedimientos de evaluación previa calificados legalmente como tales (Arts. 38 y 39 TUO LPAG D.S. 006-2026-JUS); en los demás casos opera el silencio negativo para habilitar recursos o la vía contenciosa.'
     ],
     bindingGrounds: 'Doctrina Administrativa de observancia obligatoria sobre seguridad jurídica, límites de anulación y efectos de la aprobación ficta.',
     legalApplication: 'Fundamental para deducir prescripción de la nulidad de oficio que pretenda iniciar una municipalidad o ministerio contra licencias o autorizaciones.'
@@ -986,7 +985,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     ],
     summary: 'Tipificación canónica y penas en delitos de Corrupción y Delitos contra la Administración Pública:',
     practicalImpact:
-      'Colusión (Art. 384 CP): concertación ilegal en contratos u obras; agravada si causa perjuicio patrimonial (pena de 6 a 15 años). Peculado (Art. 387 CP): apropiación de caudales públicos confiados por razón del cargo (pena de 4 a 8 años, agravada de 8 a 12 años). Cohecho pasivo propio (Art. 393 CP: solicitud o recepción de soborno a cambio de faltar al deber). Tráfico de influencias (Art. 400 CP: invocación de influencias a cambio de dádiva). Aplica inhabilitación perpetua bajo la Ley de Muerte Civil (D. Leg. 1243).'
+      'Colusión (Art. 384 CP): concertación ilegal en contratos u obras; agravada si causa perjuicio patrimonial (pena de 6 a 15 años). Peculado (Art. 387 CP): apropiación de caudales públicos confiados por razón del cargo (pena de 4 a 8 años, agravada de 8 a 12 años). Cohecho pasivo propio (Art. 393 CP: solicitud o recepción de soborno a cambio de faltar al deber). Tráfico de influencias (Art. 400 CP: invocación de influencias a cambio de dádiva). Las penas de inhabilitación ordinaria oscilan entre 5 a 20 años; la inhabilitación perpetua procede únicamente bajo los supuestos agravados expresamente previstos por ley (D. Leg. 1243 / Ley 30650, como pertenencia a organización criminal o grave daño patrimonial a programas estatales).'
   },
 
   // ── VALENTINA (LABORAL REFORMA SPIJ) ──
@@ -1012,9 +1011,9 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       'cts', 'compensacion por tiempo de servicios', 'deposito de cts', 'vacaciones', 'triple vacacional',
       'indemnizacion vacacional', 'record vacacional', 'hostilidad laboral', 'carta de hostilidad', 'falta de pago sueldo'
     ],
-    summary: 'Régimen de CTS semestral intangible (D. Leg. 650) e Indemnización Vacacional Triple (Art. 24 D. Leg. 713):',
+    summary: 'Régimen de CTS (D. Leg. 650 y Ley 32027/32322 hasta 2026) y Descanso Vacacional con Triple Vacacional (D. Leg. 713):',
     practicalImpact:
-      'Los depósitos de CTS son semestrales e intangibles (mayo y noviembre), embargables hasta 50% solo por alimentos. El derecho vacacional es de 30 días continuos por año de servicios; si el empleador no otorga el descanso dentro del año posterior al de su adquisición, adeuda la "Triple Vacacional" del Art. 24 D. Leg. 713 (1 por trabajo hecho, 1 por descanso no gozado y 1 por indemnización neta adicional).'
+      'Los depósitos ordinarios de CTS son semestrales (mayo y noviembre, D. Leg. 650). Se debe informar que por mandato legal extraordinario (Ley 32027 / Ley 32322) rige la autorización de retiro del 100% de la CTS disponible hasta el 31 de diciembre de 2026. En materia de descanso vacacional (D. Leg. 713), el trabajador goza de 30 días; la triple remuneración vacacional (Art. 24 D. Leg. 713) procede conforme a las condiciones de ley cuando el trabajador ordinario no goza del descanso en el año posterior a su adquisición (no aplica a gerentes o directivos con facultad de fijar su propio descanso).'
   },
 
   // ── DIEGO (CIVIL REFORMA SPIJ) ──
@@ -1049,16 +1048,16 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     lawCode: 'Código Civil (D. Leg. 295) Arts. 219°, 1321°, 1969°-1985° y CPC Art. 720°',
     specialistId: 'diego',
     date: 'Vigente 2026',
-    affectedCode: 'Nulidad de Acto Jurídico, Responsabilidad Civil por Daños y Ejecución de Garantías Reales',
-    articles: ['Art. 219 CC', 'Art. 221 CC', 'Art. 1321 CC', 'Art. 1969 CC', 'Art. 1970 CC', 'Art. 1985 CC', 'Art. 1097 CC', 'Art. 720 CPC'],
+    affectedCode: 'Nulidad de Acto Jurídico, Prescripción (Art. 2001 CC), Responsabilidad Civil y Ejecución Hipotecaria (Arts. 720-721 CPC)',
+    articles: ['Art. 219 CC', 'Art. 221 CC', 'Art. 2001 inc. 1 y 4 CC', 'Art. 1321 CC', 'Art. 1969 CC', 'Art. 1970 CC', 'Art. 1985 CC', 'Art. 1097 CC', 'Art. 720 CPC', 'Art. 721 CPC'],
     keywords: [
       'nulidad de acto juridico', 'anulabilidad', 'art 219', 'art 221', 'danos y perjuicios', 'indemnizacion',
       'dano moral', 'lucro cesante', 'dano emergente', 'art 1969', 'art 1970', 'art 1985', 'responsabilidad civil',
       'hipoteca', 'ejecucion de garantias', 'art 720 cpc', 'remate judicial'
     ],
-    summary: 'Régimen sustantivo de Nulidad de Acto Jurídico (Art. 219 CC), Indemnización Integral de Daños (Art. 1985 CC) y Ejecución de Hipoteca (Art. 720 CPC):',
+    summary: 'Nulidad de Acto Jurídico (Art. 219 CC), Anulabilidad (Art. 221 CC / prescripción 2 años Art. 2001.4 CC), Daños (Art. 1985 CC) y Ejecución Hipotecaria (Arts. 720-721 CPC):',
     practicalImpact:
-      'Art. 219 CC consagra 8 causales taxativas de nulidad absoluta (falta de manifestación de voluntad, fin ilícito, objeto imposible, simulación absoluta, inobservancia de forma solemne, etc.). En responsabilidad extracontractual (Art. 1969/1970 CC), la indemnización comprende lucro cesante, daño emergente, daño a la persona y daño moral (Art. 1985 CC). En ejecución de hipoteca (Art. 1097 CC), el mandato de ejecución otorga 3 días para pago del saldo deudor bajo apercibimiento de remate judicial (Art. 720 CPC).'
+      'El Art. 219 CC regula las causales de nulidad absoluta (prescripción de 10 años conforme al Art. 2001 inc. 1 CC). El Art. 221 CC regula las causales de anulabilidad, cuyo plazo de prescripción de 2 años emana del Art. 2001 inc. 4 CC. En responsabilidad extracontractual (Arts. 1969/1970 CC), la indemnización comprende daño emergente, lucro cesante, daño a la persona y daño moral (Art. 1985 CC). En ejecución de hipoteca (Art. 1097 CC), el Art. 720 CPC regula la procedencia y recaudos de la demanda, mientras que el mandato de ejecución con plazo de 3 días para pago bajo apercibimiento de remate emana del Art. 721 CPC.'
   },
 
   // ── CAMILA (FAMILIA REFORMA SPIJ) ──
@@ -1087,7 +1086,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     ],
     summary: 'Proceso célere de filiación con prueba de ADN (Ley 28457/30628) y liquidación de gananciales (Arts. 318-326 CC):',
     practicalImpact:
-      'En filiación extramatrimonial no se pagan tasas judiciales y el demandado tiene 10 días para formular oposición sujeta a prueba biológica de ADN; si no se opone o no asiste a la toma de muestra, el juez declara judicialmente la paternidad en el acto y fija alimentos (Ley 28457). En la sociedad conyugal, la disposición de bienes requiere intervención de ambos (Art. 315 CC); las uniones de hecho propias originan sociedad de bienes (Art. 326 CC).'
+      'En filiación extramatrimonial (Ley 28457 modificada por Ley 30628) no se pagan tasas; se confiere traslado por 10 días al demandado para oponerse y solicitar prueba biológica de ADN. De no mediar oposición válida en dicho plazo, el juzgado emite declaración judicial de paternidad; de haber oposición, se actúa la pericia de ADN bajo las reglas de la ley y se resuelven acumuladamente los alimentos. En la sociedad conyugal, la disposición de bienes requiere intervención de ambos (Art. 315 CC); las uniones de hecho propias originan sociedad de bienes (Art. 326 CC).'
   },
 
   // ── MARCO (ADMINISTRATIVO REFORMA SPIJ) ──
@@ -1115,7 +1114,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     ],
     summary: 'Plazo fatal de 15 días hábiles para impugnaciones y prescripción de 4 años del PAS en el TUO LPAG D.S. 006-2026-JUS:',
     practicalImpact:
-      'Los recursos de Reconsideración (con nueva prueba) y Apelación deben interponerse en el plazo perentorio e improrrogable de 15 DÍAS HÁBILES; la administración tiene 30 días hábiles para resolver. En el PAS rigen los principios de tipicidad, razonabilidad y no confiscatoriedad (Art. 248 TUO LPAG); la potestad sancionadora prescribe a los 4 años contados desde la comisión de la falta (Art. 252).'
+      'Los recursos de Reconsideración (con nueva prueba) y Apelación deben interponerse en el plazo perentorio e improrrogable de 15 DÍAS HÁBILES; la administración tiene 30 días hábiles para resolver. En el PAS rigen los principios de legalidad, tipicidad, debido procedimiento y presunción de licitud (Art. 248 TUO LPAG D.S. 006-2026-JUS); la prescripción general supletoria de la potestad sancionadora es de 4 años (Art. 252), salvo que leyes especiales establezcan plazos distintos.'
   },
 
   // ── FERNANDA (TRIBUTARIO REFORMA SPIJ) ──
