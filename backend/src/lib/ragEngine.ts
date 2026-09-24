@@ -121,7 +121,6 @@ async function requestGeminiEmbedding(
 
     if (candidate.hasOutputDims) {
       body.outputDimensionality = EMBEDDING_DIMENSIONS;
-      body.config = { outputDimensionality: EMBEDDING_DIMENSIONS };
     }
 
     try {

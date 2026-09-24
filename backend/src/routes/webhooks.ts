@@ -289,3 +289,202 @@ webhooksRouter.post('/telegram', async (req, res) => {
   }
 });
 
+// ============================================================
+// WEBHOOK MERCADO PAGO - ALTA AUTOMÁTICA DE SUSCRIPCIONES
+// ============================================================
+webhooksRouter.post('/mercadopago', async (req, res) => {
+  // Mercado Pago requiere un 200 OK rápido para no reintentar
+  res.status(200).json({ received: true });
+
+  try {
+    const body = req.body || {};
+    const query = req.query || {};
+
+    const paymentId = body?.data?.id || body?.id || query?.id || query?.['data.id'];
+    const topic = body?.type || body?.topic || query?.topic || query?.type;
+
+    console.log(`[Mercado Pago Webhook] Notificación recibida: type=${topic}, id=${paymentId}`);
+
+    if (!paymentId) {
+      return;
+    }
+
+    const mpAccessToken = process.env.MP_ACCESS_TOKEN || 'APP_USR-860346580698964-092404-26ed6c7efb85d1cc17ba8a73c6b0e1d3-3673583324';
+
+    const mpResponse = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      headers: {
+        Authorization: `Bearer ${mpAccessToken}`,
+      },
+    });
+
+    if (!mpResponse.ok) {
+      console.error(`[Mercado Pago Webhook] Error al consultar API de MP (Status ${mpResponse.status}):`, await mpResponse.text());
+      return;
+    }
+
+    const payment = (await mpResponse.json()) as any;
+    const status = payment?.status;
+    const rawEmail = payment?.payer?.email;
+
+    if (!rawEmail || typeof rawEmail !== 'string') {
+      console.warn(`[Mercado Pago Webhook] Pago ${paymentId} sin email de pagador.`);
+      return;
+    }
+
+    const email = rawEmail.toLowerCase().trim();
+    if (!EMAIL_REGEX.test(email)) {
+      console.warn(`[Mercado Pago Webhook] Email inválido recibido: ${email}`);
+      return;
+    }
+
+    const transaction = `MP-${paymentId}`;
+
+    const existingSub = await db.query.subscriptions.findFirst({
+      where: eq(subscriptions.hotmartTransaction, transaction),
+    });
+    if (existingSub && status === 'approved') {
+      console.log(`[Mercado Pago Webhook] Pago ${transaction} ya procesado anteriormente.`);
+      return;
+    }
+
+    let user = await db.query.users.findFirst({ where: eq(users.email, email) });
+
+    if (status === 'approved') {
+      const periodEnd = new Date();
+      periodEnd.setDate(periodEnd.getDate() + 30);
+
+      const priceVal = Number(payment?.transaction_amount || 0);
+      const description = String(payment?.description || '').toLowerCase();
+      const isSenior = priceVal >= 60 || description.includes('senior') || description.includes('69');
+      const assignedPlan: 'junior' | 'senior' = isSenior ? 'senior' : 'junior';
+
+      const firstName = payment?.payer?.first_name || '';
+      const lastName = payment?.payer?.last_name || '';
+      const buyerName = `${firstName} ${lastName}`.trim() || null;
+      const buyerPhone = payment?.payer?.phone?.number || null;
+      const currency = payment?.currency_id === 'PEN' ? 'S/' : (payment?.currency_id || 'S/');
+
+      let generatedPassword = '';
+      const isNewUser = !user;
+
+      if (!user) {
+        const userId = uuidv4();
+        const uniquePin = crypto.randomInt(100000, 999999);
+        generatedPassword = `Hardman-${uniquePin}!`;
+        const passwordHash = await bcrypt.hash(generatedPassword, 12);
+
+        await db.insert(users).values({
+          id: userId,
+          email,
+          passwordHash,
+          name: buyerName,
+          isAdmin: false,
+        });
+
+        user = { id: userId, email, passwordHash, name: buyerName, isAdmin: false, createdAt: new Date() };
+        console.log(`[Mercado Pago] Usuario creado automáticamente: ${email} (Plan: ${assignedPlan})`);
+      }
+
+      await db
+        .insert(subscriptions)
+        .values({
+          id: uuidv4(),
+          userId: user.id,
+          status: 'active',
+          plan: assignedPlan,
+          hotmartTransaction: transaction,
+          currentPeriodEnd: periodEnd,
+        })
+        .onConflictDoUpdate({
+          target: subscriptions.userId,
+          set: {
+            status: 'active',
+            plan: assignedPlan,
+            hotmartTransaction: transaction,
+            currentPeriodEnd: periodEnd,
+            updatedAt: new Date(),
+          },
+        });
+
+      console.log(`[Mercado Pago] Suscripción ${assignedPlan.toUpperCase()} activada: ${email} (tx: ${transaction})`);
+
+      try {
+        const nowDate = new Date();
+        const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
+        await db
+          .delete(questionUsageLogs)
+          .where(
+            and(
+              eq(questionUsageLogs.userId, user.id),
+              eq(questionUsageLogs.monthKey, monthKey)
+            )
+          );
+      } catch (err) {
+        console.error('[Mercado Pago Webhook] Error al reiniciar contador de consultas:', err);
+      }
+      invalidateUserSubscriptionCache(user.id);
+
+      const baseUrl = (process.env.FRONTEND_URL || 'https://hardman.lat').replace(/\/$/, '');
+      const loginUrl = `${baseUrl}/login?email=${encodeURIComponent(email)}`;
+      try {
+        if (isNewUser) {
+          await sendWelcomeCredentialsEmail({
+            to: email,
+            name: buyerName,
+            plan: assignedPlan,
+            password: generatedPassword,
+            loginUrl,
+          });
+        } else {
+          await sendSubscriptionUpdatedEmail({
+            to: email,
+            name: user.name,
+            plan: assignedPlan,
+            loginUrl,
+          });
+        }
+      } catch (emailErr) {
+        console.error('[Mercado Pago Webhook] Error al enviar email de bienvenida:', emailErr);
+      }
+
+      try {
+        await sendTelegramPurchaseNotification({
+          email,
+          name: buyerName || user.name,
+          plan: assignedPlan,
+          password: isNewUser ? generatedPassword : null,
+          isNewUser,
+          price: priceVal,
+          currency: String(currency),
+          transaction,
+          phone: buyerPhone,
+          loginUrl,
+          event: 'PURCHASE_APPROVED (Mercado Pago)',
+        });
+      } catch (tgErr) {
+        console.error('[Mercado Pago Webhook] Error enviando notificación a Telegram:', tgErr);
+      }
+    } else if (status === 'refunded' || status === 'cancelled') {
+      if (user) {
+        await db
+          .update(subscriptions)
+          .set({ status: status === 'refunded' ? 'refunded' : 'cancelled', updatedAt: new Date() })
+          .where(eq(subscriptions.userId, user.id));
+        console.log(`[Mercado Pago] Suscripción ${status}: ${email}`);
+
+        try {
+          await sendTelegramCancellationNotification({
+            email,
+            name: user.name,
+            event: status === 'refunded' ? 'PURCHASE_REFUNDED' : 'PURCHASE_CANCELLED',
+            transaction,
+          });
+        } catch (tgErr) {
+          console.error('[Mercado Pago Webhook] Error notificando cancelación a Telegram:', tgErr);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[Mercado Pago Webhook] Error procesando webhook:', error);
+  }
+});
