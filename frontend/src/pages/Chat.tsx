@@ -1303,8 +1303,14 @@ export default function Chat() {
       const result = await api.files.extract(file, (attempt, total) => {
         setExtractRetryInfo(`Reintentando… intento ${attempt}/${total}`)
       })
-      setExtractedText(result.text)
-      setPageCount(result.pageCount ?? null)
+      if (!result.text || !result.text.trim()) {
+        setExtractError('El archivo no contiene texto legible o es un escaneo sin resolución')
+        setExtractedText(null)
+      } else {
+        setExtractedText(result.text.trim())
+        setPageCount(result.pageCount ?? null)
+        setExtractError(null)
+      }
       setExtractRetryInfo(null)
     } catch (err: any) {
       setExtractError(err.message || 'Error al procesar el archivo')
@@ -1327,6 +1333,8 @@ export default function Chat() {
   }
 
   const sendMessage = useCallback(async () => {
+    // Si aún se está extrayendo texto del archivo, bloquear envío hasta completar
+    if (extracting) return
     const trimmed = input.trim()
     if ((!trimmed && !extractedText && !linkedFolder) || loading || !agent) return
 
@@ -1554,6 +1562,7 @@ export default function Chat() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
+      if (extracting) return
       sendMessage()
     }
   }
@@ -2122,7 +2131,7 @@ export default function Chat() {
                     <p className="text-[11px] font-normal text-white truncate">{attachedFile.name}</p>
                     <p className="text-[9px] font-light" style={{ color: extractError ? '#ff6464' : 'rgba(255,255,255,0.40)' }}>
                       {extracting
-                        ? (extractRetryInfo || `Procesando${attachedFile.size > 5 * 1024 * 1024 ? ' archivo grande…' : '…'}`)
+                        ? (extractRetryInfo || `Extrayendo texto y procesando con IA${attachedFile.size > 5 * 1024 * 1024 ? ' (archivo extenso)…' : '…'}`)
                         : extractError
                         ? extractError
                         : (() => {
@@ -2130,7 +2139,7 @@ export default function Chat() {
                             const sizeStr = sizeMB >= 1 ? `${sizeMB.toFixed(1)} MB` : `${(attachedFile.size / 1024).toFixed(0)} KB`
                             const pageStr = pageCount ? ` · ${pageCount} pág.` : ''
                             const recNotice = sizeMB > 15 ? ' · (Se recomienda <15MB para máxima agilidad)' : ''
-                            return `${sizeStr}${pageStr} · Listo${recNotice}`
+                            return `${sizeStr}${pageStr} · Texto extraído y listo para análisis${recNotice}`
                           })()}
                     </p>
                   </div>
@@ -2803,12 +2812,16 @@ function MessageBubble({
     ? message.content.match(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---\n([\s\S]*?)\n--- FIN DEL DOCUMENTO ---/)?.[1] || null
     : null
 
-  const displayContent = isUser
+  const rawUserContent = isUser
     ? message.content
         .replace(/\[Archivo adjunto:\s*[^\]\n]+\]\n?/gi, '')
         .replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n?/gi, '')
         .trim()
     : message.content
+
+  const displayContent = isUser && hasAttachment && !rawUserContent
+    ? 'Revisar y auditar este documento adjunto.'
+    : rawUserContent
 
   const isVoice = (message as any).isVoice === true
 

@@ -106,5 +106,27 @@ export async function initNewTables() {
     CREATE INDEX IF NOT EXISTS idx_question_usage_user_month ON question_usage_logs(user_id, month_key)
   `;
 
+  // 7. Legal Chunks (RAG Corpus con pgvector)
+  try {
+    await sql`CREATE EXTENSION IF NOT EXISTS vector`;
+    await sql`
+      CREATE TABLE IF NOT EXISTS legal_chunks (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        specialist_id TEXT NOT NULL DEFAULT 'all',
+        source_code TEXT NOT NULL,
+        section TEXT,
+        articles TEXT,
+        content TEXT NOT NULL,
+        embedding vector(768) NOT NULL,
+        created_at TIMESTAMPTZ DEFAULT now()
+      )
+    `;
+    await sql`CREATE INDEX IF NOT EXISTS idx_legal_chunks_specialist ON legal_chunks(specialist_id)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_legal_chunks_source ON legal_chunks(source_code)`;
+  } catch (ragInitErr: any) {
+    console.warn('[DB] Nota sobre vector/legal_chunks (RAG utilizará fallback estático si no está disponible):', ragInitErr?.message || ragInitErr);
+  }
+
   console.log('[DB] Todas las tablas e índices de Neon PostgreSQL verificados correctamente.');
 }
+

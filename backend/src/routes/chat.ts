@@ -511,7 +511,14 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       'el que redacte', 'mi escrito', 'este escrito', 'revisa mi escrito', 'revisa este escrito',
       'corrige mi escrito', 'corregir mi escrito', 'pasa a limpio', 'dale formato', 'formato de escrito',
       'sumilla:', 'expediente n°', 'expediente judicial', 'señor juez', 'señor fiscal',
-      'i. petitorio', 'por tanto:', 'primer otrosi'
+      'i. petitorio', 'por tanto:', 'primer otrosi',
+      // Palabras clave de revisión y auditoría de archivos adjuntos y documentos
+      'revisa', 'revisalo', 'revisar', 'revisalo por favor', 'revises', 'analiza', 'analizalo', 'analízalo',
+      'analizar', 'audita', 'auditalo', 'audítalo', 'auditar', 'documento', 'archivo', 'adjunto',
+      'expediente', 'carpeta fiscal', 'disposicion', 'disposición', 'providencia', 'requerimiento',
+      'cedula', 'cédula', 'resolucion', 'resolución', 'auto', 'sentencia', 'borrador', 'que opinas',
+      'qué opinas', 'que opinas de', 'qué opinas de', 'revisa el documento', 'revises el documento',
+      'necesito que revises', 'documento que te envie', 'documento que te envié'
     ];
     return docKeywords.some(kw => t.includes(kw));
   };
@@ -632,7 +639,11 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // Detección exhaustiva de requerimiento o revisión documental
     const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
     const hasLargeDoc = latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
-      recentMessages.some((m: any) => typeof m.content === 'string' && m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---'));
+      latestUserMessage.includes('[Archivo adjunto:') ||
+      recentMessages.some((m: any) => typeof m.content === 'string' && (
+        m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
+        m.content.includes('[Archivo adjunto:')
+      ));
 
     // Check if message should be transferred to another agent (solamente en consultas iniciales sin documentos o borradores)
     if (!isDocRequest && !hasLargeDoc && recentMessages.length <= 2) {
@@ -653,6 +664,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     // Intercepción instantánea de consultas puramente matemáticas o ajenas al derecho (ahorro de 100% tokens)
     const isTrivialNonLegal = (text: string): boolean => {
       if (!text || typeof text !== 'string') return false;
+      // Si la consulta actual o la conversación tiene un documento adjunto o solicitud de revisión, NUNCA es trivial ni ajena al derecho
+      if (hasLargeDoc || isDocRequest) return false;
       const t = text.trim().toLowerCase();
       const mathRegex = /^(?:cu[aá]nto\s+es\s+|calcula\s+)?(?:\(?\s*\d+\s*[\+\-\*\/xX]\s*\d+\s*\)?|\d+\s*(?:m[aá]s|menos|por|entre)\s*\d+)\s*\??$/i;
       if (mathRegex.test(t)) return true;
@@ -841,12 +854,37 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const requiresHighCapacity = isDocRequest || hasLargeDoc;
     let effectiveSystemPrompt = fullSystemPrompt;
     if (isDocRequest || hasLargeDoc) {
-      effectiveSystemPrompt += '\n\n════════════════════════════════════════\nORDEN SUPREMA — GENERACIÓN Y REVISIÓN DE ESCRITOS / DOCUMENTOS LEGALES:\nEl usuario ha solicitado redactar, estructurar o revisar un escrito o documento legal (o ha enviado su propio borrador para revisión).\n1. OBLIGACIÓN INELUDIBLE DE REDACCIÓN / PERFECCIONAMIENTO:\n   REDACTA O PERFECCIONA DE INMEDIATO EL ESCRITO COMPLETO Y PROFESIONAL dentro del bloque ```document.\n2. PROHIBICIÓN ABSOLUTA DE DERIVAR O REBOTAR:\n   ESTÁ CATEGÓRICAMENTE PROHIBIDO rechazar esta petición, declararse incompetente, excusarse en la especialidad o decir "Ese asunto corresponde a otro especialista...". Tú debes atender al usuario y entregarle su escrito final listo para presentar.\n3. SI EL USUARIO ENVIÓ SU PROPIO ESCRITO / BORRADOR:\n   Audita y mejora integralmente el documento: perfecciona la sumilla, adecúa la comparecencia procesal, fortalece los fundamentos de hecho y derecho con la normativa peruana vigente al 2026, ordena los medios probatorios y formula los Otrosí Digo de rigor (Casilla SINOE y facultades de representación procesal Arts. 74° y 80° CPC). Devuelve el texto íntegro perfeccionado dentro del bloque ```document.\n4. DATOS PENDIENTES CON CAMPOS EDITABLES:\n   Si faltan datos particulares del caso (ej. DNI, expediente o juzgado), NO te limites a responder con preguntas vacías: REDACTA EL ESCRITO FORMAL COMPLETO empleando campos editables entre corchetes (ej. [DEMANDADO], [EXPEDIENTE N°], [JUZGADO]) para que el usuario tenga su modelo listo para presentar en el acto y descargarlo en Word (.docx) o PDF.\n════════════════════════════════════════';
+      const supremeDocDirective = `════════════════════════════════════════
+ORDEN SUPREMA Y PREVALENTE — AUDITORÍA, REVISIÓN DOCUMENTAL Y EXPEDIENTES:
+El usuario ha enviado un documento o expediente para revisión/auditoría o solicita análisis/redacción legal (o hace referencia a un documento o caso enviado previamente en la conversación).
+⛔ PROHIBICIÓN ABSOLUTA DE RECHAZAR O DECIR "Mi función en el sistema Hardman es exclusivamente...":
+ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente o excusarse en la especialidad. La revisión y auditoría de documentos legales es 100% una labor jurídica válida y de máxima prioridad.
+✅ PROCEDE DE INMEDIATO a examinar minuciosamente el contenido del documento adjunto (o del mensaje previo en el historial):
+1. Audita los hechos fácticos, la calificación legal, los posibles vicios procesales, el cómputo de plazos fatales y la validez formal del acto notificado.
+2. Si el documento es una Disposición Fiscal (ej. "No procede formalizar investigación"), Resolución Judicial, Auto, Cédula o Contrato, emite tu diagnóstico procesal riguroso indicando si procede o no, qué recurso o medio de defensa interponer (queja de derecho, apelación, nulidad, tutela de derechos, contestación) y redacta la propuesta o escrito formal completo dentro del bloque \`\`\`document.
+════════════════════════════════════════\n\n`;
+      effectiveSystemPrompt = supremeDocDirective + fullSystemPrompt;
     }
+
+    // Sanitizar historial reciente para evitar contaminación por negativas erróneas previas
+    const sanitizedRecentMessages = recentMessages.map((m: any) => {
+      if (
+        m.role === 'assistant' &&
+        typeof m.content === 'string' &&
+        m.content.includes('Mi función en el sistema Hardman es exclusivamente la asesoría y redacción jurídica') &&
+        (hasLargeDoc || isDocRequest)
+      ) {
+        return {
+          ...m,
+          content: 'Entendido. Procedo de inmediato con la revisión y auditoría jurídica minuciosa del documento proporcionado.',
+        };
+      }
+      return m;
+    });
 
     const formattedMessages = [
       { role: 'system', content: effectiveSystemPrompt },
-      ...recentMessages.map((m: any) => ({ role: m.role, content: m.content })),
+      ...sanitizedRecentMessages.map((m: any) => ({ role: m.role, content: m.content })),
     ];
 
     // Helper de timeout estricto para evitar esperas infinitas

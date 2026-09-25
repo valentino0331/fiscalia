@@ -221,38 +221,42 @@ export async function searchSimilarChunks(
 
   // Use cosine distance (<=> operator) — lower value = more similar
   // We convert to similarity = 1 - distance for readability
-  let rows: any[];
-
-  if (specialistId && specialistId !== 'all') {
-    // Filter by specialist AND 'all' (universal chunks apply to everyone)
-    rows = await sql`
-      SELECT
-        id,
-        specialist_id as "specialistId",
-        source_code as "sourceCode",
-        section,
-        articles,
-        content,
-        1 - (embedding <=> ${vectorStr}::vector) as similarity
-      FROM legal_chunks
-      WHERE specialist_id = ${specialistId} OR specialist_id = 'all'
-      ORDER BY embedding <=> ${vectorStr}::vector
-      LIMIT ${topK}
-    `;
-  } else {
-    rows = await sql`
-      SELECT
-        id,
-        specialist_id as "specialistId",
-        source_code as "sourceCode",
-        section,
-        articles,
-        content,
-        1 - (embedding <=> ${vectorStr}::vector) as similarity
-      FROM legal_chunks
-      ORDER BY embedding <=> ${vectorStr}::vector
-      LIMIT ${topK}
-    `;
+  let rows: any[] = [];
+  try {
+    if (specialistId && specialistId !== 'all') {
+      // Filter by specialist AND 'all' (universal chunks apply to everyone)
+      rows = await sql`
+        SELECT
+          id,
+          specialist_id as "specialistId",
+          source_code as "sourceCode",
+          section,
+          articles,
+          content,
+          1 - (embedding <=> ${vectorStr}::vector) as similarity
+        FROM legal_chunks
+        WHERE specialist_id = ${specialistId} OR specialist_id = 'all'
+        ORDER BY embedding <=> ${vectorStr}::vector
+        LIMIT ${topK}
+      `;
+    } else {
+      rows = await sql`
+        SELECT
+          id,
+          specialist_id as "specialistId",
+          source_code as "sourceCode",
+          section,
+          articles,
+          content,
+          1 - (embedding <=> ${vectorStr}::vector) as similarity
+        FROM legal_chunks
+        ORDER BY embedding <=> ${vectorStr}::vector
+        LIMIT ${topK}
+      `;
+    }
+  } catch (dbErr: any) {
+    // Si la tabla aún no contiene datos o pgvector está inicializando, retornar vacío para fallback inmediato a spijLegalEngine
+    return [];
   }
 
   return rows
