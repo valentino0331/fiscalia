@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Hardman — Lanzamiento Oficial | Acceso Fundador</title>
-<meta name="description" content="Lanzamiento oficial de Hardman. Ocho especialistas jurídicos con inteligencia artificial entrenados en la legislación peruana vigente 2026. 2do mes 100% gratis para los primeros 50 fundadores.">
+<meta name="description" content="Lanzamiento oficial de Hardman. Ocho especialistas jurídicos con inteligencia artificial entrenados en la legislación peruana vigente 2026. Consultas especializadas y análisis de expedientes para abogados y litigantes.">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj4KICA8cmVjdCB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgcng9IjgwIiBmaWxsPSIjMTExMTExIi8+CiAgPHRleHQgeD0iMjU2IiB5PSIzNDAiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBzZXJpZiIgZm9udC1zaXplPSIyODAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjYzlhODRjIj5IPC90ZXh0Pgo8L3N2Zz4K">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2197,35 +2197,12 @@ footer {
   <div class="container">
     
     <div class="section-head">
-      <div class="eyebrow">Membresía Exclusiva de Lanzamiento</div>
+      <div class="eyebrow">Planes y Membresías</div>
       <div class="eyebrow-divider"></div>
-      <h2 class="section-title">Elige tu plan. <em>Bloquea tu tarifa para siempre.</em></h2>
+      <h2 class="section-title">Elige tu plan. <em>Potencia tu ejercicio profesional.</em></h2>
       <p class="section-subtitle">
-        Al completarse los 50 cupos fundadores, el precio sube al valor regular de mercado. Tu cuota queda congelada de por vida.
+        Acceso completo e ilimitado según el plan a los 8 agentes especializados con IA jurídica entrenada en el derecho peruano.
       </p>
-    </div>
-
-    <!-- TARJETA DE OFERTA ACTIVA Y DINÁMICA (2DO MES GRATIS) -->
-    <div class="launch-offer-card" id="launchOffer">
-      <div class="offer-content">
-        <div class="offer-left">
-          <div class="offer-badge">
-            Beneficio de Lanzamiento · Primeros 50 Miembros
-          </div>
-          <h3 class="offer-headline">
-            Tu <strong>2do mes es 100% GRATIS</strong> en cualquier plan
-          </h3>
-          <p class="offer-subtext">
-            Pagas tu 1er mes hoy como fundador y recibes 60 días ininterrumpidos de acceso. Sin contratos ni permanencias.
-          </p>
-        </div>
-
-        <div class="offer-right-calculator" id="offerCalculator">
-          <div class="calc-label" id="calcPlanLabel">Plan Seleccionado: Senior</div>
-          <div class="calc-state" id="calcSavings">Ahorras S/ 69 · <span>2° Mes S/ 0</span></div>
-          <div class="calc-note" id="calcNote">Pagas S/ 69 hoy por 2 meses completos</div>
-        </div>
-      </div>
     </div>
 
     <!-- COMPARATIVA DE PLANES: JUNIOR VS SENIOR -->
@@ -2240,14 +2217,6 @@ footer {
             <span class="currency-symbol">S/</span>
             <span class="price-number">39</span>
             <span class="price-billing-cycle">/ mes</span>
-          </div>
-
-          <!-- RECUADRO DEL 2DO MES GRATIS -->
-          <div class="founder-bonus-box">
-            <span class="bonus-icon">💎</span>
-            <span class="bonus-text">
-              <strong>2° Mes 100% Gratis:</strong> Pagas S/ 39 y disfrutas 60 días completos.
-            </span>
           </div>
         </div>
 
@@ -2276,7 +2245,7 @@ footer {
           </li>
           <li>
             <span class="feature-check check-junior">✓</span>
-            <span>Tarifa de lanzamiento <strong>bloqueada para siempre</strong></span>
+            <span>Tarifa preferencial <strong>bloqueada para siempre</strong></span>
           </li>
         </ul>
 
@@ -2300,14 +2269,6 @@ footer {
             <span class="currency-symbol">S/</span>
             <span class="price-number">69</span>
             <span class="price-billing-cycle">/ mes</span>
-          </div>
-
-          <!-- RECUADRO DEL 2DO MES GRATIS -->
-          <div class="founder-bonus-box">
-            <span class="bonus-icon">💎</span>
-            <span class="bonus-text">
-              <strong>2° Mes 100% Gratis:</strong> Ahorras S/ 69 netos en tu segundo mes como fundador.
-            </span>
           </div>
         </div>
 
@@ -2527,31 +2488,15 @@ if (aiShowcase && aiWindow && window.innerWidth > 900) {
 
 // REACTIVIDAD DINÁMICA DE LA OFERTA AL INTERACTUAR CON PLANES
 function focusPlan(planName) {
-  var offerCard = document.getElementById('launchOffer');
-  var calcPlanLabel = document.getElementById('calcPlanLabel');
-  var calcSavings = document.getElementById('calcSavings');
-  var calcNote = document.getElementById('calcNote');
   var cardJr = document.getElementById('cardJunior');
   var cardSr = document.getElementById('cardSenior');
 
   if (planName === 'junior') {
-    cardJr.classList.add('active-selected');
-    cardSr.classList.remove('active-selected');
-
-    calcPlanLabel.textContent = 'Plan Seleccionado: Junior';
-    calcSavings.innerHTML = 'Ahorras S/ 39 · <span>2° Mes S/ 0</span>';
-    calcNote.textContent = 'Pagas S/ 39 hoy por 2 meses completos';
-
-    offerCard.style.boxShadow = '0 15px 45px rgba(201, 168, 76, 0.2), inset 0 0 30px rgba(201, 168, 76, 0.08)';
+    if (cardJr) cardJr.classList.add('active-selected');
+    if (cardSr) cardSr.classList.remove('active-selected');
   } else {
-    cardSr.classList.add('active-selected');
-    cardJr.classList.remove('active-selected');
-
-    calcPlanLabel.textContent = 'Plan Seleccionado: Senior';
-    calcSavings.innerHTML = 'Ahorras S/ 69 · <span>2° Mes S/ 0</span>';
-    calcNote.textContent = 'Pagas S/ 69 hoy por 2 meses completos';
-
-    offerCard.style.boxShadow = '0 20px 65px rgba(201, 168, 76, 0.35), inset 0 0 45px rgba(201, 168, 76, 0.15)';
+    if (cardSr) cardSr.classList.add('active-selected');
+    if (cardJr) cardJr.classList.remove('active-selected');
   }
 }
 

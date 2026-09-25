@@ -304,9 +304,6 @@ export default function Account() {
                         </span>
                       )}
                     </div>
-                    <div className="inline-block px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-400 font-semibold">
-                      🎁 1er mes gratis para fundadores
-                    </div>
                     <p className="text-[11px] text-white/50 leading-snug">
                       Ideal para litigantes individuales y bachilleres que necesitan soporte legal automatizado.
                     </p>
@@ -352,9 +349,6 @@ export default function Account() {
                           ACTUAL
                         </span>
                       )}
-                    </div>
-                    <div className="inline-block px-2 py-0.5 rounded bg-gold-500/10 border border-gold-500/20 text-[10px] text-gold-400 font-semibold">
-                      🎁 1er mes gratis para fundadores
                     </div>
                     <p className="text-[11px] text-white/50 leading-snug">
                       Para abogados litigantes y estudios que exigen máxima capacidad y atención directa.
