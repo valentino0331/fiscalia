@@ -488,6 +488,22 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     return false;
   };
 
+  // Detección de solicitudes de continuación de respuestas previas cortadas o incompletas
+  const isContinuationRequest = (text: string): boolean => {
+    if (!text || typeof text !== 'string') return false;
+    const t = text.toLowerCase().trim();
+    const contRegex = /^(?:contin[uú]a|sigue|prosigue|completa|termina|continua\b|continúa\b|seguir\b|completar\b|terminar\b|te quedaste|quedaste a mitad|incomplet[oa]|no has terminado|falta\b|contin[uú]e|favor de continuar)/i;
+    return contRegex.test(t) ||
+      t.includes('te detuviste') ||
+      t.includes('quedó cortad') ||
+      t.includes('quedo cortad') ||
+      t.includes('se cortó') ||
+      t.includes('se corto') ||
+      t.includes('clasificación niza') ||
+      t.includes('clasificacion niza') ||
+      t.includes('lo que sigue');
+  };
+
   // Detección exhaustiva de requerimiento de redacción o revisión documental formal
   const isDocumentDraftingRequest = (text: string): boolean => {
     if (!text || typeof text !== 'string') return false;
@@ -507,6 +523,9 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo',
       'genera', 'generar', 'hazme un', 'haz una', 'haz un', 'escribe un', 'escribe una',
       'modelo de', 'formato de', 'borrador de', 'proyecto de escrito',
+      // Informes legales, dictámenes y marcas
+      'informe', 'informes', 'informe legal', 'informe juridico', 'informe jurídico', 'dictamen', 'dictamen legal', 'opinion legal', 'opinión legal',
+      'registro de marca', 'indecopi', 'signos distintivos', 'clasificacion de niza', 'clasificación de niza', 'niza',
       'el que yo realice', 'el que yo realize', 'el que realice', 'el que realize', 'el que hice',
       'el que redacte', 'mi escrito', 'este escrito', 'revisa mi escrito', 'revisa este escrito',
       'corrige mi escrito', 'corregir mi escrito', 'pasa a limpio', 'dale formato', 'formato de escrito',
@@ -518,7 +537,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       'expediente', 'carpeta fiscal', 'disposicion', 'disposición', 'providencia', 'requerimiento',
       'cedula', 'cédula', 'resolucion', 'resolución', 'auto', 'sentencia', 'borrador', 'que opinas',
       'qué opinas', 'que opinas de', 'qué opinas de', 'revisa el documento', 'revises el documento',
-      'necesito que revises', 'documento que te envie', 'documento que te envié'
+      'necesito que revises', 'documento que te envie', 'documento que te envié',
+      // Continuaciones y completación
+      'continua', 'continúa', 'continuar', 'sigue', 'seguir', 'completa', 'completar', 'termina', 'terminar',
+      'te quedaste', 'quedaste a mitad', 'incompleto', 'incompleta', 'no has terminado', 'falta'
     ];
     return docKeywords.some(kw => t.includes(kw));
   };
@@ -636,8 +658,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       }
     }
 
-    // Detección exhaustiva de requerimiento o revisión documental
-    const isDocRequest = isDocumentDraftingRequest(latestUserMessage);
+    // Detección exhaustiva de requerimiento o revisión documental y continuación
+    const isContinuation = isContinuationRequest(latestUserMessage);
+    const isDocRequest = isContinuation || isDocumentDraftingRequest(latestUserMessage) ||
+      recentMessages.slice(-4).some((m: any) => m.role === 'user' && typeof m.content === 'string' && isDocumentDraftingRequest(m.content));
     const hasLargeDoc = latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
       latestUserMessage.includes('[Archivo adjunto:') ||
       recentMessages.some((m: any) => typeof m.content === 'string' && (
@@ -853,7 +877,19 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
 
     const requiresHighCapacity = isDocRequest || hasLargeDoc;
     let effectiveSystemPrompt = fullSystemPrompt;
-    if (isDocRequest || hasLargeDoc) {
+    if (isContinuation) {
+      const continuationDirective = `════════════════════════════════════════
+ORDEN SUPREMA Y PREVALENTE — CONTINUACIÓN DE RESPUESTA INTERRUMPIDA:
+El usuario ha solicitado expresamente continuar, completar o finalizar una respuesta, informe jurídico o escrito que se quedó cortado o inconcluso.
+⛔ PROHIBICIÓN TOTAL DE REPETIR DESDE EL INICIO:
+- ESTÁ TERMINANTEMENTE PROHIBIDO volver a escribir el título, la introducción, los antecedentes, el marco legal o cualquier sección que ya fue entregada en los mensajes anteriores.
+- NO pierdas tiempo ni tokens disculpándote ampliamente ni repitiendo párrafos ya enviados.
+✅ INSTRUCCIÓN OBLIGATORIA DE CONTINUACIÓN FLUIDA:
+- Retoma DIRECTAMENTE y con absoluta precisión en el punto, sección, tabla o párrafo exacto donde se detuvo el mensaje previo (por ejemplo, si se interrumpió en "IV. CLASIFICACIÓN DE NIZA" o en la cabecera de la tabla de clases, entrega de inmediato la tabla de clases completa con su descripción, fundamentación de conexidad/especialidad y clases pertinentes).
+- Continúa de corrido con todas las secciones restantes que falten hasta concluir la totalidad del informe o escrito legal (ej. Análisis de registrabilidad, Riesgo de confusión/asociación con marcas preexistentes, Procedimiento y tasas ante INDECOPI, Conclusiones y Recomendaciones finales).
+════════════════════════════════════════\n\n`;
+      effectiveSystemPrompt = continuationDirective + effectiveSystemPrompt;
+    } else if (isDocRequest || hasLargeDoc) {
       const supremeDocDirective = `════════════════════════════════════════
 ORDEN SUPREMA Y PREVALENTE — AUDITORÍA, REVISIÓN DOCUMENTAL Y EXPEDIENTES:
 El usuario ha enviado un documento o expediente para revisión/auditoría o solicita análisis/redacción legal (o hace referencia a un documento o caso enviado previamente en la conversación).
@@ -901,10 +937,10 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
     };
 
     // Con saldo activo en OpenRouter y expedientes extensos (100-500 págs), otorgamos hasta 180s de margen
-    const MAX_AI_WAIT_MS = requiresHighCapacity ? 180000 : 75000;
+    const MAX_AI_WAIT_MS = requiresHighCapacity ? 180000 : 90000;
 
-    // Tokens generosos: 12288 para escritos y expedientes completos, 4096 para consultas estándar
-    const maxTokens = requiresHighCapacity ? 12288 : 4096;
+    // Tokens generosos: 16384 para escritos, informes y expedientes completos, 8192 para consultas estándar
+    const maxTokens = requiresHighCapacity ? 16384 : 8192;
 
     // ─────────────────────────────────────────────────────────────
     // 1. PRIORIDAD 1: OpenRouter (Gemini 2.5 Flash / DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
@@ -943,7 +979,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
         try {
           console.log(`[AI Engine] Intentando OpenRouter (${openrouterModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 65000 : 30000);
+          const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 90000 : 45000);
 
           // DeepSeek soporta hasta 8192 output tokens; Gemini/Claude soportan hasta 12288+
           const modelMaxTokens = openrouterModel.includes('deepseek') ? Math.min(8192, maxTokens) : maxTokens;
@@ -1029,7 +1065,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
         try {
           console.log(`[AI Engine] Intentando Groq (${groqModel})...`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 12000);
+          const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 45000 : 25000);
 
           const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
@@ -1139,7 +1175,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
           try {
             console.log(`[AI Engine] Intentando Gemini Nativo REST (${geminiModelName}) ${isStream ? '[STREAMING]' : '[SYNC]'}...`);
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 40000);
+            const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 90000 : 45000);
 
             const geminiEndpoint = isStream ? 'streamGenerateContent?alt=sse&' : 'generateContent?';
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModelName}:${geminiEndpoint}key=${currentGeminiKey}`;

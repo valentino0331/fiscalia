@@ -1389,7 +1389,7 @@ export default function Chat() {
 
     // Documentos adjuntos o redacción de escritos requieren más tiempo (hasta 180s con IA en OpenRouter / Gemini)
     const hasDocument = !!extractedText || fullContent.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---')
-    const isWritingRequest = /redacta|redactar|elabora|demanda|denuncia|carta notarial|contrato|recurso de apelaci/i.test(trimmed)
+    const isWritingRequest = /redacta|redactar|elabora|demanda|denuncia|carta notarial|contrato|recurso de apelaci|informe|dictamen|niza|indecopi|continua|continúa|completa/i.test(trimmed)
     const watchdogMs = (hasDocument || isWritingRequest) ? 180000 : 60000
     let watchdogTimer: NodeJS.Timeout | null = setTimeout(() => {
       if (controller && !controller.signal.aborted) {
