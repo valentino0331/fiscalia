@@ -1067,6 +1067,9 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), requiresHighCapacity ? 45000 : 25000);
 
+          // Groq Llama-3.3 tiene límite de 8,000 max_tokens de salida
+          const groqMaxTokens = Math.min(8000, maxTokens);
+
           const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -1077,7 +1080,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
               model: groqModel,
               messages: formattedMessages,
               temperature: 0.2,
-              max_tokens: maxTokens,
+              max_tokens: groqMaxTokens,
               stream: isStream,
             }),
             signal: controller.signal,
