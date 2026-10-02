@@ -55,9 +55,15 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
 
     let questionsUsed = 0;
 
-    // Usar la tabla de logs inmutables — O(1) para usuarios con muchas conversaciones
+    // Usar la tabla de logs inmutables filtrada por el ciclo de 30 días de suscripción
     const now = new Date();
-    const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
+    const periodStart = sub?.currentPeriodStart
+      ? new Date(sub.currentPeriodStart)
+      : sub?.currentPeriodEnd
+      ? new Date(new Date(sub.currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
+      : sub?.createdAt
+      ? new Date(sub.createdAt)
+      : new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
     try {
       const logCountResult = await db
@@ -66,15 +72,14 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
         .where(
           and(
             eq(questionUsageLogs.userId, req.userId!),
-            eq(questionUsageLogs.monthKey, monthKey)
+            sql`${questionUsageLogs.createdAt} >= ${periodStart.toISOString()}`
           )
         );
       questionsUsed = Number(logCountResult[0]?.count || 0);
     } catch (logErr) {
       console.warn('[Account] question_usage_logs no disponible o error al consultar, aplicando fallback:', logErr);
-      // Fallback: conteo histórico de mensajes de usuario en conversaciones del mes actual
+      // Fallback: conteo histórico de mensajes de usuario en conversaciones del ciclo actual
       try {
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const userConversations = await db.query.conversations.findMany({
           where: eq(conversations.userId, req.userId!),
           columns: { messages: true, createdAt: true },
@@ -87,8 +92,8 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
               if (m.role === 'user') {
                 const msgDate = m.timestamp ? new Date(m.timestamp) : null;
                 if (msgDate) {
-                  if (msgDate >= startOfMonth) questionsUsed++;
-                } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
+                  if (msgDate >= periodStart) questionsUsed++;
+                } else if (conv.createdAt && conv.createdAt >= periodStart) {
                   questionsUsed++;
                 }
               }

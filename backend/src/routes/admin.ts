@@ -224,7 +224,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
     const now = new Date();
     const monthKey = `${now.getFullYear()}-${now.getMonth()}`;
 
-    // Obtener en lote todas las suscripciones, conteos de conversaciones y uso del mes en 3 consultas paralelas
+    // Obtener en lote todas las suscripciones, conteos de conversaciones y uso del periodo en 3 consultas paralelas
     const [allSubs, convCounts, usageCounts] = await Promise.all([
       db.query.subscriptions.findMany({
         orderBy: [desc(subscriptions.createdAt)],
@@ -242,7 +242,10 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
           count: sql<number>`count(*)::int`,
         })
         .from(questionUsageLogs)
-        .where(eq(questionUsageLogs.monthKey, monthKey))
+        .leftJoin(subscriptions, eq(subscriptions.userId, questionUsageLogs.userId))
+        .where(
+          sql`${questionUsageLogs.createdAt} >= COALESCE(${subscriptions.currentPeriodStart}, ${subscriptions.currentPeriodEnd} - INTERVAL '30 days', ${subscriptions.createdAt}, NOW() - INTERVAL '30 days')`
+        )
         .groupBy(questionUsageLogs.userId),
     ]);
 
@@ -398,7 +401,10 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
     };
     if (plan) updatedFields.plan = String(plan).toLowerCase();
     if (status) updatedFields.status = String(status).toLowerCase();
-    if (addDays) updatedFields.currentPeriodEnd = newPeriodEnd;
+    if (addDays) {
+      updatedFields.currentPeriodEnd = newPeriodEnd;
+      updatedFields.currentPeriodStart = now;
+    }
 
     if (sub) {
       await db.update(subscriptions).set(updatedFields).where(eq(subscriptions.id, sub.id));
@@ -408,6 +414,7 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
         userId: targetId,
         status: (status && String(status).toLowerCase()) || 'active',
         plan: (plan && String(plan).toLowerCase()) || 'pro',
+        currentPeriodStart: now,
         currentPeriodEnd: addDays ? newPeriodEnd : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
       });
     }
@@ -421,7 +428,7 @@ adminRouter.patch('/users/:id/plan', requireAuth, requireAdmin, async (req: any,
   }
 });
 
-// 3.1. Reiniciar cuota de consultas del mes para un usuario
+// 3.1. Reiniciar cuota de consultas del ciclo para un usuario
 adminRouter.post('/users/:id/reset-usage', requireAuth, requireAdmin, async (req: any, res) => {
   try {
     const targetId = req.params.id;
@@ -429,18 +436,19 @@ adminRouter.post('/users/:id/reset-usage', requireAuth, requireAdmin, async (req
       return res.status(400).json({ error: 'Identificador de usuario inválido' });
     }
 
-    const nowDate = new Date();
-    const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
+    const now = new Date();
 
-    await db.delete(questionUsageLogs).where(
-      and(
-        eq(questionUsageLogs.userId, targetId),
-        eq(questionUsageLogs.monthKey, monthKey)
-      )
-    );
+    // Actualizar currentPeriodStart al momento actual para iniciar su ciclo de 30 días fresco
+    await db
+      .update(subscriptions)
+      .set({ currentPeriodStart: now, updatedAt: now })
+      .where(eq(subscriptions.userId, targetId));
+
+    // Limpiar registros de uso del usuario para garantizar reseteo total
+    await db.delete(questionUsageLogs).where(eq(questionUsageLogs.userId, targetId));
 
     invalidateUserSubscriptionCache(targetId);
-    res.json({ success: true, message: 'Consultas reiniciadas a 0 para el mes actual' });
+    res.json({ success: true, message: 'Consultas reiniciadas a 0 para el ciclo de suscripción actual' });
   } catch (error: any) {
     console.error('Error resetting user usage:', error);
     res.status(500).json({ error: 'Error al reiniciar consultas del usuario' });
@@ -490,12 +498,14 @@ adminRouter.post('/users', requireAuth, requireAdmin, async (req: any, res) => {
       isAdmin: Boolean(isAdmin),
     });
 
-    const periodEnd = new Date(Date.now() + cleanDurationDays * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const periodEnd = new Date(now.getTime() + cleanDurationDays * 24 * 60 * 60 * 1000);
     await db.insert(subscriptions).values({
       id: uuidv4(),
       userId: newUserId,
       status: 'active',
       plan: cleanPlan,
+      currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
     });
 

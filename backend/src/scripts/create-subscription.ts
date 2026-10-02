@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { eq } from 'drizzle-orm';
-import * as schema from './src/db/schema';
+import * as schema from '../db/schema';
 
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL no está configurada.');
@@ -13,7 +13,7 @@ const db = drizzle(sql, { schema });
 const email = process.argv[2];
 
 if (!email) {
-  console.log('Uso: npx tsx create-subscription.ts correo@dominio.com');
+  console.log('Uso: npm run create-subscription correo@dominio.com');
   process.exit(1);
 }
 
@@ -24,6 +24,7 @@ async function activateSubscription() {
     process.exit(1);
   }
 
+  const now = new Date();
   const periodEnd = new Date();
   periodEnd.setDate(periodEnd.getDate() + 30);
 
@@ -34,16 +35,18 @@ async function activateSubscription() {
       status: 'active',
       plan: 'pro',
       hotmartTransaction: `manual-${Date.now()}`,
+      currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
-      updatedAt: new Date(),
+      updatedAt: now,
     })
     .onConflictDoUpdate({
       target: schema.subscriptions.userId,
       set: {
         status: 'active',
         plan: 'pro',
+        currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
-        updatedAt: new Date(),
+        updatedAt: now,
       },
     });
 

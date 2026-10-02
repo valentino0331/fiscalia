@@ -45,6 +45,7 @@ export const subscriptions = pgTable(
     status: text('status').notNull().default('inactive'),
     plan: text('plan').notNull().default('pro'),
     hotmartTransaction: text('hotmart_transaction'),
+    currentPeriodStart: timestamp('current_period_start', { withTimezone: true }),
     currentPeriodEnd: timestamp('current_period_end', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
@@ -119,6 +120,7 @@ export const questionUsageLogs = pgTable(
   },
   (table) => ({
     userMonthIdx: index('idx_question_usage_user_month').on(table.userId, table.monthKey),
+    userCreatedIdx: index('idx_question_usage_user_created').on(table.userId, table.createdAt),
   })
 );
 

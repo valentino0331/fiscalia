@@ -67,4 +67,29 @@ describe('Subscription & Plan Limits Logic', () => {
     expect(resolvePlan('Plan Junior Abogados', '', 0)).toBe('junior');
     expect(resolvePlan('Plan Senior Ilimitado', '', 0)).toBe('senior');
   });
+
+  it('determines individual user billing cycle start (30 days from purchase) regardless of calendar month boundary', () => {
+    const getPeriodStart = (currentPeriodStart: Date | null, currentPeriodEnd: Date | null, createdAt: Date) => {
+      if (currentPeriodStart) return currentPeriodStart;
+      if (currentPeriodEnd) return new Date(currentPeriodEnd.getTime() - 30 * 24 * 60 * 60 * 1000);
+      return createdAt;
+    };
+
+    // User purchased on Sept 21 -> expires Oct 21. On Oct 1st, their period start is still Sept 21
+    const purchaseDate = new Date('2026-09-21T10:00:00Z');
+    const expiryDate = new Date('2026-10-21T10:00:00Z');
+    const start = getPeriodStart(purchaseDate, expiryDate, purchaseDate);
+
+    expect(start.toISOString()).toBe('2026-09-21T10:00:00.000Z');
+
+    // A question made on Sept 25 falls inside the cycle
+    const questionDate = new Date('2026-09-25T14:00:00Z');
+    expect(questionDate >= start).toBe(true);
+
+    // User purchased on Sept 28 -> expires Oct 28
+    const purchase28 = new Date('2026-09-28T10:00:00Z');
+    const expiry28 = new Date('2026-10-28T10:00:00Z');
+    const start28 = getPeriodStart(null, expiry28, purchase28);
+    expect(start28.toISOString()).toBe('2026-09-28T10:00:00.000Z');
+  });
 });

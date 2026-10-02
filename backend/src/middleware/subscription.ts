@@ -8,12 +8,13 @@ import { AuthRequest } from './auth';
 interface CachedSubscription {
   plan: string;
   status: string;
+  periodStartIso: string;
   expiresAt: number;
 }
 
 interface CachedUsage {
   count: number;
-  monthKey: string;
+  periodStartIso: string;
   expiresAt: number;
 }
 
@@ -79,8 +80,9 @@ export const requireSubscription = async (
   // 1. Revisar caché de suscripción (TTL 60s)
   let cachedSub = subCache.get(userId);
   let plan = cachedSub && cachedSub.expiresAt > nowMs ? cachedSub.plan : null;
+  let periodStartIso = cachedSub && cachedSub.expiresAt > nowMs ? cachedSub.periodStartIso : '';
 
-  if (!plan) {
+  if (!plan || !periodStartIso) {
     let sub = await db.query.subscriptions.findFirst({
       where: and(
         eq(subscriptions.userId, userId),
@@ -97,12 +99,14 @@ export const requireSubscription = async (
 
       if (!existingSub) {
         try {
-          const periodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+          const now = new Date();
+          const periodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
           await db.insert(subscriptions).values({
             id: uuidv4(),
             userId,
             status: 'active',
             plan: 'junior',
+            currentPeriodStart: now,
             currentPeriodEnd: periodEnd,
           });
           sub = {
@@ -111,9 +115,10 @@ export const requireSubscription = async (
             status: 'active',
             plan: 'junior',
             hotmartTransaction: null,
+            currentPeriodStart: now,
             currentPeriodEnd: periodEnd,
-            createdAt: new Date(),
-            updatedAt: new Date(),
+            createdAt: now,
+            updatedAt: now,
           };
         } catch (err) {
           console.error('Error creating founder-trial subscription:', err);
@@ -124,10 +129,21 @@ export const requireSubscription = async (
     }
 
     plan = sub?.plan || 'junior';
+    const periodStartDate = sub?.currentPeriodStart
+      ? new Date(sub.currentPeriodStart)
+      : sub?.currentPeriodEnd
+      ? new Date(new Date(sub.currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
+      : sub?.createdAt
+      ? new Date(sub.createdAt)
+      : new Date(nowMs - 30 * 24 * 60 * 60 * 1000);
+
+    periodStartIso = periodStartDate.toISOString();
+
     pruneCache(subCache);
     subCache.set(userId, {
       plan,
       status: sub?.status || 'active',
+      periodStartIso,
       expiresAt: nowMs + 60 * 1000, // 60s TTL
     });
   }
@@ -140,51 +156,48 @@ export const requireSubscription = async (
     ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
     : parseInt(process.env.SENIOR_QUESTION_LIMIT || '250', 10);
 
-  const nowDate = new Date();
-  const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
-
-  // 2. Revisar caché de conteo mensual (TTL 60s)
-  let monthlyQuestions: number;
+  // 2. Revisar caché de conteo del periodo de suscripción (TTL 60s)
+  let cycleQuestions: number;
   const cachedUsage = usageCache.get(userId);
 
-  if (cachedUsage && cachedUsage.monthKey === monthKey && cachedUsage.expiresAt > nowMs) {
-    monthlyQuestions = cachedUsage.count;
+  if (cachedUsage && cachedUsage.periodStartIso === periodStartIso && cachedUsage.expiresAt > nowMs) {
+    cycleQuestions = cachedUsage.count;
   } else {
-    // 1. Consultar conteo desde la tabla de logs inmutables (O(1) en RAM)
+    const periodStartDate = new Date(periodStartIso);
+    // 1. Consultar conteo desde la tabla de logs inmutables filtrado por el inicio del periodo de facturación
     const logCountResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(questionUsageLogs)
       .where(
         and(
           eq(questionUsageLogs.userId, userId),
-          eq(questionUsageLogs.monthKey, monthKey)
+          sql`${questionUsageLogs.createdAt} >= ${periodStartDate.toISOString()}`
         )
       );
 
     let loggedCount = Number(logCountResult[0]?.count || 0);
 
     if (loggedCount > 0) {
-      monthlyQuestions = loggedCount;
+      cycleQuestions = loggedCount;
     } else {
-      // Fallback: conteo histórico de conversaciones si aún no hay logs registrados para este mes
+      // Fallback: conteo histórico de conversaciones si aún no hay logs registrados para este periodo
       // Limitado a las últimas 200 conversaciones para evitar cargar JSONB ilimitado
-      const startOfMonth = new Date(nowDate.getFullYear(), nowDate.getMonth(), 1);
       const userConversations = await db.query.conversations.findMany({
         where: eq(conversations.userId, userId),
         columns: { messages: true, createdAt: true },
         limit: 200,
       });
 
-      monthlyQuestions = 0;
+      cycleQuestions = 0;
       for (const conv of userConversations) {
         if (Array.isArray(conv.messages)) {
           for (const m of conv.messages as any[]) {
             if (m.role === 'user') {
               const msgDate = m.timestamp ? new Date(m.timestamp) : null;
               if (msgDate) {
-                if (msgDate >= startOfMonth) monthlyQuestions++;
-              } else if (conv.createdAt && conv.createdAt >= startOfMonth) {
-                monthlyQuestions++;
+                if (msgDate >= periodStartDate) cycleQuestions++;
+              } else if (conv.createdAt && conv.createdAt >= periodStartDate) {
+                cycleQuestions++;
               }
             }
           }
@@ -194,21 +207,21 @@ export const requireSubscription = async (
 
     pruneCache(usageCache);
     usageCache.set(userId, {
-      count: monthlyQuestions,
-      monthKey,
+      count: cycleQuestions,
+      periodStartIso,
       expiresAt: nowMs + 60 * 1000, // 60s TTL
     });
   }
 
-  if (monthlyQuestions >= LIMIT) {
+  if (cycleQuestions >= LIMIT) {
     const errorMsg = isJunior
-      ? `Has alcanzado el límite de ${LIMIT} consultas mensuales de tu Plan Junior. Actualiza a Plan Senior (S/ 69/mes) para obtener 250 consultas y soporte por WhatsApp prioritario.`
-      : `Has alcanzado el límite mensual de ${LIMIT} consultas de tu Plan Senior. Tu cuota se reiniciará en el próximo ciclo de facturación.`;
+      ? `Has alcanzado el límite de ${LIMIT} consultas de tu periodo en el Plan Junior. Actualiza a Plan Senior (S/ 69/mes) para obtener 250 consultas y soporte por WhatsApp prioritario.`
+      : `Has alcanzado el límite de ${LIMIT} consultas de tu periodo en el Plan Senior. Tu cuota se reiniciará al renovar tu ciclo de facturación.`;
 
     return res.status(403).json({
       error: errorMsg,
       code: 'LIMIT_REACHED',
-      questionsUsed: monthlyQuestions,
+      questionsUsed: cycleQuestions,
       limit: LIMIT,
       plan: isJunior ? 'junior' : 'senior',
     });

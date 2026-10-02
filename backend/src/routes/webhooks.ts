@@ -167,6 +167,7 @@ webhooksRouter.post('/hotmart', async (req, res) => {
           status: 'active',
           plan: assignedPlan,
           hotmartTransaction: transaction,
+          currentPeriodStart: new Date(),
           currentPeriodEnd: periodEnd,
         })
         .onConflictDoUpdate({
@@ -175,6 +176,7 @@ webhooksRouter.post('/hotmart', async (req, res) => {
             status: 'active',
             plan: assignedPlan,
             hotmartTransaction: transaction,
+            currentPeriodStart: new Date(),
             currentPeriodEnd: periodEnd,
             updatedAt: new Date(),
           },
@@ -182,18 +184,11 @@ webhooksRouter.post('/hotmart', async (req, res) => {
 
       console.log(`[Hotmart] Suscripción ${assignedPlan.toUpperCase()} activada: ${email} (tx: ${transaction})`);
 
-      // Resetear uso del mes actual e invalidar caché para que tenga sus consultas frescas de inmediato
+      // Resetear uso del ciclo e invalidar caché para que tenga sus consultas frescas de inmediato
       try {
-        const nowDate = new Date();
-        const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
         await db
           .delete(questionUsageLogs)
-          .where(
-            and(
-              eq(questionUsageLogs.userId, user.id),
-              eq(questionUsageLogs.monthKey, monthKey)
-            )
-          );
+          .where(eq(questionUsageLogs.userId, user.id));
       } catch (err) {
         console.error('[Hotmart Webhook] Error al reiniciar contador de consultas:', err);
       }
@@ -393,6 +388,7 @@ webhooksRouter.post('/mercadopago', async (req, res) => {
           status: 'active',
           plan: assignedPlan,
           hotmartTransaction: transaction,
+          currentPeriodStart: new Date(),
           currentPeriodEnd: periodEnd,
         })
         .onConflictDoUpdate({
@@ -401,6 +397,7 @@ webhooksRouter.post('/mercadopago', async (req, res) => {
             status: 'active',
             plan: assignedPlan,
             hotmartTransaction: transaction,
+            currentPeriodStart: new Date(),
             currentPeriodEnd: periodEnd,
             updatedAt: new Date(),
           },
@@ -409,16 +406,9 @@ webhooksRouter.post('/mercadopago', async (req, res) => {
       console.log(`[Mercado Pago] Suscripción ${assignedPlan.toUpperCase()} activada: ${email} (tx: ${transaction})`);
 
       try {
-        const nowDate = new Date();
-        const monthKey = `${nowDate.getFullYear()}-${nowDate.getMonth()}`;
         await db
           .delete(questionUsageLogs)
-          .where(
-            and(
-              eq(questionUsageLogs.userId, user.id),
-              eq(questionUsageLogs.monthKey, monthKey)
-            )
-          );
+          .where(eq(questionUsageLogs.userId, user.id));
       } catch (err) {
         console.error('[Mercado Pago Webhook] Error al reiniciar contador de consultas:', err);
       }
