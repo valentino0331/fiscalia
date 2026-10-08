@@ -272,6 +272,94 @@ export async function searchSimilarChunks(
     }));
 }
 
+// ─── Native PostgreSQL Text Search (Zero external API dependencies) ─────────
+
+const STOPWORDS = new Set([
+  'para', 'como', 'cuando', 'donde', 'segun', 'sobre', 'este', 'esta',
+  'estos', 'estas', 'cual', 'cuales', 'tiene', 'tienen', 'puede', 'pueden',
+  'debe', 'deben', 'hacer', 'saber', 'decir', 'pero', 'porque', 'entre',
+  'desde', 'hasta', 'hacia', 'contra', 'ante', 'bajo', 'mediante', 'ellos',
+  'ellas', 'usted', 'ustedes', 'nosotros', 'hola', 'buenas', 'buenos', 'dias',
+  'tardes', 'noches', 'favor', 'ayuda', 'asesoria', 'abogado', 'consulta',
+  'quiero', 'informacion', 'explica', 'explicar', 'detalle', 'necesito'
+]);
+
+function extractSearchKeywords(query: string): string[] {
+  return query
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
+}
+
+/**
+ * Búsqueda textual directa en Neon PostgreSQL.
+ * No requiere Gemini ni APIs externas. Funciona 100% con OpenRouter.
+ */
+export async function searchChunksByText(
+  queryText: string,
+  specialistId: string | null,
+  topK: number = TOP_K
+): Promise<LegalChunk[]> {
+  if (!process.env.DATABASE_URL) return [];
+
+  const keywords = extractSearchKeywords(queryText);
+  if (keywords.length === 0) return [];
+
+  const sql = neon(process.env.DATABASE_URL);
+  const mainTerm = keywords[0];
+  const secondTerm = keywords[1] || mainTerm;
+  const thirdTerm = keywords[2] || secondTerm;
+
+  const filterSpecialist = specialistId && specialistId !== 'all' ? specialistId : null;
+
+  try {
+    const rows = await sql`
+      SELECT
+        id,
+        specialist_id as "specialistId",
+        source_code as "sourceCode",
+        section,
+        articles,
+        content
+      FROM legal_chunks
+      WHERE (
+        ${filterSpecialist}::text IS NULL
+        OR specialist_id = ${filterSpecialist}
+        OR specialist_id = 'all'
+      )
+      AND (
+        content ILIKE ${'%' + mainTerm + '%'}
+        OR content ILIKE ${'%' + secondTerm + '%'}
+        OR content ILIKE ${'%' + thirdTerm + '%'}
+        OR articles ILIKE ${'%' + mainTerm + '%'}
+      )
+      ORDER BY (
+        (CASE WHEN specialist_id = ${specialistId || ''} THEN 20 ELSE 0 END) +
+        (CASE WHEN articles ILIKE ${'%' + mainTerm + '%'} THEN 15 ELSE 0 END) +
+        (CASE WHEN content ILIKE ${'%' + mainTerm + '%'} THEN 8 ELSE 0 END) +
+        (CASE WHEN content ILIKE ${'%' + secondTerm + '%'} THEN 5 ELSE 0 END) +
+        (CASE WHEN content ILIKE ${'%' + thirdTerm + '%'} THEN 3 ELSE 0 END)
+      ) DESC
+      LIMIT ${topK}
+    `;
+
+    return rows.map((r: any) => ({
+      id: r.id,
+      specialistId: r.specialistId,
+      sourceCode: r.sourceCode,
+      section: r.section,
+      articles: r.articles,
+      content: r.content,
+      similarity: 0.9,
+    }));
+  } catch (err: any) {
+    return [];
+  }
+}
+
 /**
  * Main RAG function — called from chat.ts before each AI response.
  *
@@ -288,8 +376,8 @@ export async function getRagContext(
   // Skip RAG if disabled via env flag
   if (process.env.RAG_ENABLED === 'false') return null;
 
-  // Skip RAG if no DB or Gemini key
-  if (!process.env.DATABASE_URL || !(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)) {
+  // Skip RAG if no DB configured
+  if (!process.env.DATABASE_URL) {
     return null;
   }
 
@@ -316,11 +404,23 @@ export async function getRagContext(
   if (queryToEmbed.length < 15) return null;
 
   try {
-    // 1. Generate embedding for the user's query
-    const queryVector = await generateEmbedding(queryToEmbed);
+    let chunks: LegalChunk[] = [];
 
-    // 2. Search for similar legal chunks
-    const chunks = await searchSimilarChunks(queryVector, agentId, TOP_K);
+    // 1. Si hay clave de Gemini/Google, intentar búsqueda vectorial semántica
+    const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+    if (hasGeminiKey) {
+      try {
+        const queryVector = await generateEmbedding(queryToEmbed);
+        chunks = await searchSimilarChunks(queryVector, agentId, TOP_K);
+      } catch (embErr: any) {
+        console.warn('[RAG] Búsqueda vectorial Gemini omitida, usando búsqueda nativa en DB:', embErr?.message);
+      }
+    }
+
+    // 2. Búsqueda directa por texto en Neon PostgreSQL (100% compatible con OpenRouter, Zero Gemini)
+    if (chunks.length === 0) {
+      chunks = await searchChunksByText(queryToEmbed, agentId, TOP_K);
+    }
 
     if (chunks.length === 0) return null;
 
