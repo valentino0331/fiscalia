@@ -41,10 +41,11 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function InfoRedirect() {
   useEffect(() => {
-    window.location.replace('/info.html')
+    window.location.replace('/info/')
   }, [])
   return null
 }
+
 
 export default function App() {
   return (
