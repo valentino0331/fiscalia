@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
@@ -10,6 +10,7 @@ const Chat = lazy(() => import('@/pages/Chat'))
 const Account = lazy(() => import('@/pages/Account'))
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'))
 const SharedConversation = lazy(() => import('@/pages/SharedConversation'))
+const LandingPage = lazy(() => import('@/pages/LandingPage'))
 
 function PageFallback() {
   return (
@@ -39,21 +40,15 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return user?.isAdmin ? <>{children}</> : <Navigate to="/dashboard" replace />
 }
 
-function InfoRedirect() {
-  useEffect(() => {
-    window.location.replace('/info')
-  }, [])
-  return null
-}
-
 export default function App() {
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<PageFallback />}>
         <Routes>
-          <Route path="/" element={<Navigate to="/info" replace />} />
-          <Route path="/info" element={<InfoRedirect />} />
-          <Route path="/landing" element={<InfoRedirect />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/info" element={<LandingPage />} />
+          <Route path="/landing" element={<LandingPage />} />
+
 
 
           <Route
