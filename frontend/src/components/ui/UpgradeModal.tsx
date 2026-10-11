@@ -181,7 +181,7 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
                 </ul>
 
                 <a
-                  href="https://pay.hotmart.com/M107246567H?off=ayixxvun"
+                  href="https://pay.hotmart.com/M107246567H?off=ayixxvun&bid=1791731521258"
                   target="_blank"
                   rel="noreferrer"
                   className="w-full py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:opacity-90 shadow-md"

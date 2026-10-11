@@ -378,7 +378,7 @@ export default function Account() {
 
                     {(data?.subscription?.plan === 'junior' || data?.subscription?.plan === 'normal') && (
                       <a
-                        href="https://pay.hotmart.com/M107246567H?off=ayixxvun"
+                        href="https://pay.hotmart.com/M107246567H?off=ayixxvun&bid=1791731521258"
                         target="_blank"
                         rel="noreferrer"
                         className="mt-3 w-full py-2 px-3 rounded-lg text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:opacity-90 shadow-md"
