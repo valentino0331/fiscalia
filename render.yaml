@@ -7,6 +7,9 @@ services:
     publishDir: dist
     routes:
       - type: rewrite
+        source: /
+        destination: /info/index.html
+      - type: rewrite
         source: /info
         destination: /info/index.html
       - type: rewrite
@@ -14,7 +17,7 @@ services:
         destination: /info/*
       - type: redirect
         source: /landing
-        destination: /info
+        destination: /
       - type: rewrite
         source: /*
         destination: /index.html

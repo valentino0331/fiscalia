@@ -1,5 +1,6 @@
+/ /info/index.html 200
 /info /info/index.html 200
 /info/* /info/:splat 200
-/landing /info/index.html 301
+/landing / 301
 /landing/* /info/:splat 301
 /* /index.html 200
