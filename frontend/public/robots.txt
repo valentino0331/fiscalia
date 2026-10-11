@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /info
+Allow: /login
+Disallow: /dashboard
+Disallow: /chat/
+Disallow: /account
+Disallow: /portal-interno
+
+Sitemap: https://hardman.lat/sitemap.xml

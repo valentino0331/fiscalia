@@ -189,7 +189,7 @@ export default function Login() {
         {/* Link a Presentación / Landing Page Oficial */}
         <div className="mt-7 text-center">
           <a
-            href="/info/"
+            href="/info"
             className="inline-flex items-center gap-1.5 text-[11px] text-[#c9a84c]/80 hover:text-[#dfbe63] transition-colors tracking-wide font-light"
           >
             <span>Conocer los 8 abogados con IA de Hardman</span>

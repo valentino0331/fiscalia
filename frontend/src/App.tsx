@@ -41,20 +41,20 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 function InfoRedirect() {
   useEffect(() => {
-    window.location.replace('/info/')
+    window.location.replace('/info')
   }, [])
   return null
 }
-
 
 export default function App() {
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<PageFallback />}>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/info" replace />} />
           <Route path="/info" element={<InfoRedirect />} />
           <Route path="/landing" element={<InfoRedirect />} />
+
 
           <Route
             path="/login"
