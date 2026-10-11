@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
@@ -39,12 +39,22 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return user?.isAdmin ? <>{children}</> : <Navigate to="/dashboard" replace />
 }
 
+function InfoRedirect() {
+  useEffect(() => {
+    window.location.replace('/info.html')
+  }, [])
+  return null
+}
+
 export default function App() {
   return (
     <AnimatePresence mode="wait">
       <Suspense fallback={<PageFallback />}>
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/info" element={<InfoRedirect />} />
+          <Route path="/landing" element={<InfoRedirect />} />
+
           <Route
             path="/login"
             element={

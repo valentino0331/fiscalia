@@ -4,6 +4,27 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/info"
+  to = "/info/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/info/*"
+  to = "/info/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/landing"
+  to = "/info/index.html"
+  status = 301
+
+[[redirects]]
+  from = "/landing/*"
+  to = "/info/:splat"
+  status = 301
+
+[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+

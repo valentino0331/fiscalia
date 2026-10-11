@@ -186,8 +186,19 @@ export default function Login() {
           </button>
         </form>
 
+        {/* Link a Presentación / Landing Page Oficial */}
+        <div className="mt-7 text-center">
+          <a
+            href="/info/"
+            className="inline-flex items-center gap-1.5 text-[11px] text-[#c9a84c]/80 hover:text-[#dfbe63] transition-colors tracking-wide font-light"
+          >
+            <span>Conocer los 8 abogados con IA de Hardman</span>
+            <span aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+
         {/* Footer */}
-        <div className="mt-12 text-center" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.20)' }}>
+        <div className="mt-8 text-center" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.20)' }}>
           © 2026 Hardman · Perú
         </div>
       </div>

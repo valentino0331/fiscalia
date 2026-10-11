@@ -1,0 +1,20 @@
+services:
+  - type: static
+    name: hardman-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm run build
+    publishDir: dist
+    routes:
+      - type: rewrite
+        source: /info
+        destination: /info.html
+      - type: rewrite
+        source: /info/*
+        destination: /info/*
+      - type: redirect
+        source: /landing
+        destination: /info.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
