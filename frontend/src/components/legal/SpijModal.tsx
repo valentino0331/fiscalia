@@ -751,6 +751,21 @@ export const REFORMS: Reform[] = [
     promptTemplate: 'Redacta un recurso de apelación contra el auto de prisión preventiva invocando la reforma del D. Leg. 1585 (Art. 268 modificado y deber de aplicar vigilancia electrónica Art. 268-A).',
   },
   {
+    lawCode: 'Arts. IX T.P., 71.2.c y 80°-85° NCPP',
+    specialistId: 'sebastian',
+    affectedNorm: 'Código Procesal Penal (DL 957) — Defensa Técnica & Abogado',
+    date: 'Vigente 2026',
+    badge: 'DEFENSA TÉCNICA',
+    tags: ['Derecho de Defensa', 'Abogado Defensor', 'Art. 80 NCPP', 'Art. 84 NCPP'],
+    articles: 'Arts. IX T.P., 71.2.c, 80, 84, 85 NCPP (Nota: Art. 62 es Exclusión del Fiscal)',
+    summary:
+      '1. Art. IX Título Preliminar y Art. 80° NCPP: La defensa técnica es un derecho inviolable e irrenunciable.\n' +
+      '2. Art. 71.2.c NCPP: Derecho a ser asistido por abogado defensor desde los primeros actos y en toda diligencia.\n' +
+      '3. Art. 84° NCPP: Prerrogativas y derechos del Abogado Defensor.\n' +
+      '⚠️ ADVERTENCIA: En el NCPP peruano el Art. 62° regula la EXCLUSIÓN DEL FISCAL (reemplazo por Fiscal Superior), no la defensa técnica.',
+    promptTemplate: 'Formula un escrito de personamiento formal y designación de abogado defensor al amparo del Art. IX del Título Preliminar y Arts. 71° num. 2 lit. c y 84° del Código Procesal Penal, solicitando copias de los actuados.',
+  },
+  {
     lawCode: 'Ley N° 32130',
     specialistId: 'sebastian',
     affectedNorm: 'Código Procesal Penal — Investigación Preliminar',

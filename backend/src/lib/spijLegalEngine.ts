@@ -798,6 +798,23 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       '4. Art. 57 CP: Suspensión de pena ampliada hasta 5 años.',
   },
   {
+    lawCode: 'Código Procesal Penal (DL 957) Arts. IX T.P., 71.2.c y 80°-85°',
+    specialistId: 'sebastian',
+    date: 'Vigente 2026',
+    affectedCode: 'Derecho a la Defensa Técnica y Estatuto del Abogado Defensor',
+    articles: ['Art. IX T.P. NCPP', 'Art. 71.2.c NCPP', 'Art. 80 NCPP', 'Art. 84 NCPP', 'Art. 85 NCPP', 'Art. 62 NCPP'],
+    keywords: [
+      'abogado defensor', 'defensa tecnica', 'asistencia tecnica', 'derecho de defensa',
+      'asistencia de abogado', 'art 80', 'art 84', 'art 62', 'exclusion del fiscal'
+    ],
+    summary: 'Régimen canónico del Derecho a la Defensa Técnica y Estatuto del Abogado Defensor:',
+    practicalImpact:
+      '1. Art. IX Título Preliminar y Art. 80° NCPP: La defensa técnica es un derecho fundamental irrenunciable e inviolable desde el inicio de la investigación.\n' +
+      '2. Art. 71° num. 2 lit. c NCPP: Derecho a ser asistido por abogado defensor desde los primeros actos y en toda declaración.\n' +
+      '3. Art. 84° NCPP: Derechos del Abogado Defensor (acceso a la carpeta, interrogar, aportar pruebas, entrevistarse reservadamente).\n' +
+      '⚠️ ADVERTENCIA ANTI-ERROR: El Art. 62° del NCPP trata sobre la EXCLUSIÓN DEL FISCAL (reemplazo por el Fiscal Superior). JAMÁS citar el Art. 62° como derecho de defensa ni como asistencia técnica de abogado.',
+  },
+  {
     lawCode: 'Ley N° 32130',
     specialistId: 'sebastian',
     date: 'Octubre 2024 (Vigente 2026)',
