@@ -211,6 +211,11 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
       expect(marcoPrompt).toContain('JPRD');
       expect(marcoPrompt).toContain('Directiva 002-2025-OECE/CD');
     });
+
+    it('debe emplear la plataforma oficial PLADICOP y no la denominación preliminar PlaciEx', () => {
+      expect(marcoPrompt).toContain('PLADICOP');
+      expect(marcoPrompt).not.toContain('PlaciEx');
+    });
   });
 
   describe('Rodrigo — Derecho Minero y Ambiental', () => {
@@ -224,6 +229,11 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
     it('debe contemplar el marco REINFO y la graduación de multas del OEFA', () => {
       expect(rodrigoPrompt).toContain('REINFO');
       expect(rodrigoPrompt).toContain('OEFA');
+    });
+
+    it('debe consagrar el TUO LPAG D.S. 006-2026-JUS en sus modelos oficiales y prohibir el derogado D.S. 004-2019-JUS', () => {
+      expect(rodrigoPrompt).toContain('D.S. 006-2026-JUS');
+      expect(rodrigoPrompt).toContain('NUNCA cites el D.S. 004-2019-JUS');
     });
   });
 

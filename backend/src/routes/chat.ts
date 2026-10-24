@@ -756,7 +756,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       marco: {
         name: 'Dr. Marco',
         title: 'Especialista en Derecho Administrativo y Contrataciones del Estado',
-        specialty: 'licitaciones y contratos con el Estado (OSCE), recursos de apelación ante el Tribunal de Contrataciones, procedimientos administrativos sancionadores y reclamos ante entidades públicas',
+        specialty: 'licitaciones y contratos con el Estado (OECE bajo la Ley 32069), recursos de apelación ante el Tribunal de Contrataciones Públicas (TCP), procedimientos administrativos sancionadores y reclamos ante entidades públicas',
         intro: '¡Hola! Le doy una cordial bienvenida a mi despacho. Soy el **Dr. Marco**, especialista en **Derecho Administrativo y Contrataciones del Estado** en Hardman.',
       },
     };
@@ -849,7 +849,24 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     if (!legalGrounding) {
       legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
     }
-    const fullSystemPrompt = SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
+    const TEMPORAL_OCTOBER_2026_ANCHOR = `════════════════════════════════════════════════════════════════
+ANCLAJE TEMPORAL Y DOGMÁTICO OFICIAL — OCTUBRE DE 2026 (PERÚ)
+════════════════════════════════════════════════════════════════
+FECHA ACTUAL DE OPERACIÓN: OCTUBRE DE 2026.
+Todas tus respuestas, plazos, cálculos, vías procesales y redacciones de documentos se rigen rigurosamente por el ordenamiento legal peruano vigente a OCTUBRE DE 2026.
+Queda terminantemente prohibido usar normas derogadas o desactualizadas:
+1. TUO LPAG: D.S. N° 006-2026-JUS (derogó formalmente al D.S. 004-2019-JUS).
+2. Contrataciones del Estado: Ley N° 32069 y D.S. N° 001-2026-EF (extinción definitiva del OSCE y Ley 30225; rige OECE, TCP, PLADICOP y JPRD obligatoria).
+3. Indicadores económicos 2026: UIT = S/ 5,500; URP = S/ 550; RMV = S/ 1,230.00 y Asignación Familiar = S/ 123.00 (D.S. N° 015-2026-TR).
+4. Competencia laboral: Ley N° 32155 (Paz Letrado Laboral hasta 70 URP = S/ 38,500 y daños hasta 60 URP = S/ 33,000; Especializados > 70 URP).
+5. Familia: Ley N° 31590 (Tenencia Compartida como regla general preferente sin favoritismo maternal automático) y Ley N° 31464 / Art. 562° CPC (Alimentos sin tasas ni firma obligatoria).
+6. Sucesiones: Art. 667° CC (Causales de indignidad - Ley 31643) vs Art. 725° CC (Tercio de libre disposición).
+7. Ejecución de garantías: Art. 721° CPC (Mandato ejecutivo de 3 días bajo apercibimiento de remate, no Art. 720°).
+8. Garantías Mobiliarias: D.L. N° 1400 y SIGM (derogada la Ley 28677).
+9. Penal: D. Leg. 1585 (Prisión preventiva prognosis de pena > 5 años); Arts. IX T.P., 71.2.c y 80°-85° NCPP para defensa técnica (Art. 62° es exclusión del Fiscal); AP 06-2009/CJ-116 (control formal y sustancial acusación); AP Ext. 02-2012/CJ-116 (tutela e imputación suficiente).
+════════════════════════════════════════════════════════════════\n\n`;
+
+    const fullSystemPrompt = TEMPORAL_OCTOBER_2026_ANCHOR + SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
 
 
     // Optimización quirúrgica de prompt para consultas conversacionales (ahorro masivo de tokens > 85% y latencia < 500ms)

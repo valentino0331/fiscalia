@@ -324,7 +324,7 @@ export const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       icon: Baby,
       badgeColor: '#EC4899',
       category: 'Alimentos',
-      prompt: 'Redacta una demanda de pensión de alimentos con solicitud de medida cautelar de Asignación Anticipada ante el Juzgado de Paz Letrado conforme a la Ley 28439: [demandante, demandado, nombres y edades de los hijos, gastos e ingresos aproximados]',
+      prompt: 'Redacta una demanda de pensión de alimentos con solicitud de medida cautelar de Asignación Anticipada ante el Juzgado de Paz Letrado conforme a la Ley 31464, Ley 28439 y Art. 562° CPC: [demandante, demandado, nombres y edades de los hijos, gastos e ingresos aproximados]',
     },
     {
       label: 'Demanda de Tenencia Compartida y Régimen de Visitas (Ley 31590)',
@@ -384,7 +384,7 @@ export const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       icon: Gavel,
       badgeColor: '#0D9488',
       category: 'Contrataciones OECE',
-      prompt: 'Redacta un recurso de apelación contra el otorgamiento de la buena pro / descalificación de oferta bajo la Ley 32069 dirigido al Tribunal de Contrataciones del Estado (OECE): [postor, entidad convocante, proceso, fundamentos]',
+      prompt: 'Redacta un recurso de apelación contra el otorgamiento de la buena pro / descalificación de oferta bajo la Ley 32069 dirigido al Tribunal de Contrataciones Públicas (TCP) del OECE: [postor, entidad convocante, proceso, fundamentos]',
     },
     {
       label: 'Escrito de Descargo en Procedimiento Sancionador (LPAG Ley 27444)',

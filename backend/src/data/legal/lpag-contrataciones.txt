@@ -78,8 +78,8 @@ La presente Ley regula las actuaciones preparatorias, los procedimientos de sele
 El Organismo Especializado en Contrataciones del Estado (OECE):
 El OECE es el organismo técnico especializado adscrito al Ministerio de Economía y Finanzas que reemplaza al antiguo OSCE (Organismo Supervisor de las Contrataciones del Estado), a partir de la vigencia de la Ley N° 32069 y su Reglamento D.S. 001-2026-EF.
 
-Plataforma de Contrataciones del Estado (PlaciEx):
-La PlaciEx reemplaza al SEACE como plataforma digital oficial de publicación y gestión de procedimientos de contratación pública.
+Plataforma Digital para las Contrataciones Públicas (PLADICOP):
+La PLADICOP reemplaza al SEACE como plataforma digital oficial de publicación, notificación y gestión de procedimientos de contratación pública.
 
 Junta de Prevención y Resolución de Disputas (JPRD):
 Por mandato del artículo [X] de la Ley 32069, la JPRD es obligatoria en contratos de obra pública que superen determinadas cuantías. Resuelve controversias de carácter técnico durante la ejecución del contrato, antes de que se activen los mecanismos de arbitraje o conciliación.

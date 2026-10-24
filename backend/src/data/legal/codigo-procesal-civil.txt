@@ -73,7 +73,7 @@ Ley N° 30933 — Proceso Especial de Desalojo con Intervención Notarial
 La Ley 30933 y su Reglamento (D.S. 013-2019-JUS) regulan el proceso especial de desalojo con intervención notarial. Requisitos:
 - El contrato de arrendamiento debe contener cláusula de allanamiento futuro.
 - Debe identificarse la cuenta bancaria de pago de renta.
-- El contrato debe constar en escritura pública ante Notario.
+- El contrato debe constar en el Formulario Único de Arrendamiento (FUA) o en documento privado con firmas legalizadas notarialmente (o por escritura pública).
 Procedimiento:
 1. El arrendador formula solicitud ante Notario acreditando incumplimiento.
 2. El Notario notifica al arrendatario otorgando 5 días para acreditar pago o contradecir.

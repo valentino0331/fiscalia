@@ -81,7 +81,7 @@ ESPECIALISTA: SEBASTIÁN
 Artículo 268.- Presupuestos de la Prisión Preventiva (Modificado D.Leg. 1585)
 El Juez, a solicitud del Ministerio Público, podrá dictar mandato de prisión preventiva, si atendiendo a los primeros recaudos sea posible determinar la concurrencia de los siguientes presupuestos:
 a) Que existen fundados y graves elementos de convicción para estimar razonablemente la comisión de un delito que vincule al imputado como autor o partícipe del mismo.
-b) Que la sanción a imponerse sea superior a cuatro años de pena privativa de libertad; y,
+b) Que la sanción a imponerse sea superior a cinco años de pena privativa de libertad (modificado por D.Leg. 1585; anteriormente cuatro años); y,
 c) Que el imputado, en razón a sus antecedentes y otras circunstancias del caso particular, permita colegir razonablemente que tratará de eludir la acción de la justicia (peligro de fuga) u obstaculizar la averiguación de la verdad (peligro de obstaculización).
 
 Artículo 269.- Peligro de Fuga
@@ -110,3 +110,23 @@ Sólo tendrá valor probatorio cuando:
 2. Sea prestada libremente y en estado normal de las facultades psíquicas.
 3. Sea prestada ante el Juez o el Fiscal en presencia de su abogado.
 4. Sea sincera y espontánea.
+
+═══════════════════════════════════════════════════════════════
+DERECHO DE DEFENSA TÉCNICA (NCPP 2004 — VIGENTE 2026)
+═══════════════════════════════════════════════════════════════
+
+Artículo IX del Título Preliminar.- Derecho de Defensa
+1. Toda persona tiene derecho inviolable e irrestricto a que se le informe de sus derechos, a que se le comunique de inmediato y detalladamente la imputación formulada en su contra, y a ser asistida por un Abogado Defensor de su elección o, en su caso, por un abogado de oficio, desde que es citada o detenida por la autoridad.
+2. Nadie puede ser obligado o inducido a declarar o a reconocer culpabilidad contra sí mismo, contra su cónyuge, o sus parientes dentro del cuarto grado de consanguinidad o segundo de afinidad.
+3. El proceso penal garantiza, también, el ejercicio de los derechos de información y de participación procesal a la persona agraviada o perjudicada por el delito.
+
+Artículo 71 numeral 2 literal c.- Derechos del Imputado
+Los jueces, los fiscales o la Policía Nacional deben hacer saber al imputado de manera inmediata y comprensible, que tiene derecho a:
+c) Ser asistido desde los primeros actos de investigación por un Abogado Defensor.
+
+Artículos 80° al 85°.- La Defensa Técnica
+- Art. 80°: El derecho a la defensa técnica es irrenunciable y su violación acarrea la nulidad absoluta de los actos procesales (Art. 150° inc. d).
+- Art. 84°: Derechos y deberes del Abogado Defensor.
+- Art. 85°: Reemplazo del abogado defensor inasistente.
+
+PROHIBICIÓN ESTRICTA: El Artículo 62° del NCPP regula la "Exclusión del Fiscal" (reemplazo del Fiscal por el Fiscal Superior), NUNCA el derecho a la defensa técnica.
