@@ -126,22 +126,22 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Imprescindible al deducir o absolver Excepciones de Prescripción de la Acción Penal.',
   },
   {
-    code: 'Acuerdo Plenario N° 02-2023/CIJ-112',
+    code: 'Acuerdo Plenario Extraordinario N° 02-2016/CIJ-116',
     specialistId: 'sebastian',
-    court: 'XII Pleno Jurisdiccional Penal - Corte Suprema',
-    title: 'Flagrancia delictiva, detención policial y proceso inmediato reformado',
-    category: 'Procesal Penal',
+    court: 'II Pleno Jurisdiccional Extraordinario Penal - Corte Suprema',
+    title: 'Proceso penal inmediato reformado, flagrancia y evidencia delictiva (D. Leg. 1194)',
+    category: 'Procesal Penal / Procesos Especiales',
     keywords: [
-      'flagrancia', 'flagrancia delictiva', 'cuasiflagrancia', 'detencion policial',
-      'proceso inmediato', 'registro personal', 'incoacion de proceso inmediato'
+      'proceso inmediato', 'flagrancia', 'cuasiflagrancia', 'detencion policial',
+      'evidencia delictiva', 'd leg 1194', 'incoacion de proceso inmediato', 'audiencia unica de proceso inmediato'
     ],
     keyPrinciples: [
-      'Inmediatez temporal y personal estricta: percepción sensorial directa de la infracción.',
-      'Control de legalidad del registro personal y de las evidencias incautadas por la PNP.',
-      'Presupuestos materiales indispensables para admitir la incoación de Proceso Inmediato.',
+      'Inmediatez temporal y personal estricta: percepción sensorial directa de la infracción para validar la flagrancia constitucional.',
+      'Control riguroso de legalidad del registro personal y de las evidencias incautadas por la Policía Nacional.',
+      'Improcedencia del proceso inmediato ante necesidad de pericias complejas o actos de investigación no actuados en diligencias preliminares.',
     ],
-    bindingGrounds: 'Fundamentos Jurídicos 18 al 26 (estándares de flagrancia y legalidad de la incautación inicial).',
-    legalApplication: 'Clave para oponerse a procesos inmediatos y solicitar nulidades de actas policiales.',
+    bindingGrounds: 'Fundamentos Jurídicos 10 al 23 (doctrina legal vinculante sobre incoación de proceso inmediato y tutela de garantías).',
+    legalApplication: 'Clave para oponerse a procesos inmediatos, requerir remisión a investigación común y deducir nulidades de actas policiales.',
   },
   {
     code: 'STC Exp. N° 01558-2015-PHC/TC & 02098-2010-PA/TC',
@@ -353,39 +353,74 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
 
   // ── SEBASTIÁN: PENAL ADICIONALES SPIJ ──
   {
-    code: 'Acuerdo Plenario N° 03-2010/CJ-116',
+    code: 'Casación Vinculante N° 02-2008/La Libertad',
     specialistId: 'sebastian',
-    court: 'VI Pleno Jurisdiccional Penal - Salas Penales Corte Suprema',
+    court: 'Sala Penal Permanente - Corte Suprema de Justicia',
     title: 'Cómputo del plazo de las diligencias preliminares y control de plazos (Art. 334.2 NCPP)',
     category: 'Procesal Penal / Plazos',
     keywords: [
       'control de plazos', 'diligencias preliminares', 'plazo razonable', 'art 334', 'art 334.2',
-      'vencimiento de plazo', 'fiscalia', 'audiencia de control de plazos'
+      'vencimiento de plazo', 'fiscalia', 'audiencia de control de plazos', 'casacion 02-2008'
     ],
     keyPrinciples: [
-      'Fijación del plazo de diligencias preliminares ordinarias en 60 días, prorrogables a un plazo razonable no superior a 120 días (casos complejos 8 meses).',
-      'Si el fiscal vence el plazo sin formalizar ni archivar, el afectado acude directamente al Juez de Garantías en Audiencia de Control de Plazos.',
-      'El juez ordena conminatoriamente al fiscal dar por concluidas las diligencias preliminares en plazo perentorio de 10 días.',
+      'Autonomía de los plazos de diligencias preliminares e investigación preparatoria formalizada.',
+      'El plazo de diligencias preliminares no puede ser arbitrariamente prolongado ni exceder el plazo razonable fijado por ley.',
+      'Si el fiscal vence el plazo sin formalizar ni archivar, el afectado acude directamente al Juez de Garantías en Audiencia de Control de Plazos para ordenar la conclusión en plazo perentorio de 10 días.',
     ],
-    bindingGrounds: 'Fundamentos Jurídicos 14 al 21 (doctrina legal vinculante sobre plazos máximos en sede fiscal y remedio procesal).',
-    legalApplication: 'Vital para deducir Audiencia de Control de Plazos ante investigaciones fiscales estancadas o arbitrariamente prolongadas.',
+    bindingGrounds: 'Fundamentos Jurídicos 7 al 12 (doctrina jurisprudencial vinculante sobre plazos máximos en sede fiscal y remedio procesal del Art. 334.2 NCPP).',
+    legalApplication: 'Vital para deducir Audiencia de Control de Plazos ante investigaciones preliminares fiscales paralizadas o arbitrariamente prolongadas.',
   },
   {
-    code: 'Acuerdo Plenario N° 02-2012/CJ-116',
+    code: 'Acuerdo Plenario N° 06-2009/CJ-116',
     specialistId: 'sebastian',
-    court: 'VIII Pleno Jurisdiccional Penal - Salas Penales Corte Suprema',
+    court: 'V Pleno Jurisdiccional Penal - Salas Penales Corte Suprema',
     title: 'Control formal y sustancial de la acusación fiscal en etapa intermedia (Art. 350-352 NCPP)',
     category: 'Procesal Penal / Etapa Intermedia',
     keywords: [
       'control de acusacion', 'etapa intermedia', 'sobreseimiento', 'imputacion necesaria',
-      'observacion formal', 'subsanacion de acusacion', 'defensa previa', 'atipicidad'
+      'observacion formal', 'subsanacion de acusacion', 'defensa previa', 'atipicidad', 'acuerdo plenario 06-2009'
     ],
     keyPrinciples: [
-      'El juez de investigación preparatoria ejerce control formal previo (claridad de hechos, tipificación, individualización) devolviendo la acusación si adolece de defectos.',
-      'Control sustancial directo: si los hechos no constituyen delito, falta antijuridicidad o concurre causa de atipicidad manifiesta, el juez dicta Sobreseimiento de oficio o a pedido de parte.',
+      'El juez de investigación preparatoria ejerce control formal previo (claridad de hechos, tipificación, individualización) devolviendo la acusación defectuosa para subsanación fiscal en plazo de 5 días.',
+      'Control sustancial directo: si los hechos no constituyen delito, falta antijuridicidad o concurre causa de atipicidad manifiesta, el juez dicta Sobreseimiento de oficio o a pedido de parte (Art. 344.2 NCPP), evitando el juicio oral.',
     ],
-    bindingGrounds: 'Fundamentos Jurídicos 8 al 15 (alcances del control judicial de la acusación penal).',
+    bindingGrounds: 'Fundamentos Jurídicos 8 al 15 (doctrina legal vinculante sobre el doble control judicial de la acusación penal).',
     legalApplication: 'Herramienta de cabecera al contestar el traslado de acusación fiscal y solicitar el sobreseimiento o devolver la acusación.',
+  },
+  {
+    code: 'Acuerdo Plenario Extraordinario N° 02-2012/CJ-116',
+    specialistId: 'sebastian',
+    court: 'Pleno Jurisdiccional Extraordinario Penal - Salas Penales Corte Suprema',
+    title: 'Audiencia de tutela de derechos e imputación suficiente en la formalización fiscal (Art. 71.4 NCPP)',
+    category: 'Procesal Penal / Tutela de Derechos',
+    keywords: [
+      'tutela de derechos', 'imputacion suficiente', 'imputacion concreta', 'disposicion de formalizacion',
+      'dfip', 'art 71.4', 'precision factica', 'acuerdo plenario 02-2012'
+    ],
+    keyPrinciples: [
+      'Procede la audiencia de tutela de derechos para controlar la omisión o insuficiencia de imputación fáctica circunstanciada en la Disposición de Formalización.',
+      'El Juez de Garantías ordena al Fiscal subsanar y precisar los hechos imputados y la participación atribuida para garantizar el derecho de defensa eficaz.',
+      'La tutela no faculta al juez a archivar o sobreseer la formalización de la investigación, sino a exigir la subsanación de los defectos formales de imputación.',
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 9 al 12 (doctrina legal vinculante sobre tutela de derechos frente a la deficiencia de imputación fiscal).',
+    legalApplication: 'Imprescindible en audiencias de tutela de derechos cuando la fiscalía formaliza con cargos vagos, genéricos o sin individualización de conductas.',
+  },
+  {
+    code: 'Acuerdo Plenario N° 03-2010/CJ-116',
+    specialistId: 'sebastian',
+    court: 'VI Pleno Jurisdiccional Penal - Salas Penales Corte Suprema',
+    title: 'Delito de lavado de activos: autonomía típica y estándar probatorio del delito previo',
+    category: 'Derecho Penal Especial / Lavado de Activos',
+    keywords: [
+      'lavado de activos', 'delito previo', 'delito fuente', 'autonomia tipica', 'prueba indiciaria',
+      'acuerdo plenario 03-2010', 'origen ilicito', 'incremento patrimonial'
+    ],
+    keyPrinciples: [
+      'Autonomía sustantiva y procesal del delito de lavado de activos respecto del delito previo generador de las ganancias ilícitas.',
+      'No se exige condena previa del delito previo; basta acreditar la procedencia delictiva mediante prueba indiciaria y descarte de orígenes lícitos.',
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 8 al 34 (doctrina legal vinculante sobre tipicidad, autonomía y prueba indiciaria en lavado de activos).',
+    legalApplication: 'Esencial para alegatos y defensas penales en investigaciones y procesos por lavado de activos.',
   },
 
   {

@@ -85,7 +85,7 @@ export const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       icon: Scale,
       badgeColor: '#EF4444',
       category: 'Medidas Coercitivas',
-      prompt: 'Redacta un recurso de apelación contra auto de prisión preventiva al amparo del Art. 278 del NCPP, Casación 626-2013-Moquegua y Acuerdo Plenario 01-2017, dirigido al Juez de Investigación Preparatoria para elevación a Sala, acreditando arraigo integral (domiciliario, laboral y familiar), ausencia de peligro procesal y reserva de sustentación oral (Art. 420 CPP): [imputado, delito, juzgado, plazo en meses, fecha notificación]',
+      prompt: 'Redacta un recurso de apelación contra auto de prisión preventiva al amparo del Art. 278 del NCPP, Casación 626-2013-Moquegua y Acuerdos Plenarios N° 01-2019/CIJ-116 y Extraordinario N° 01-2017/CIJ-116, dirigido al Juez de Investigación Preparatoria para elevación a Sala, acreditando arraigo integral (domiciliario, laboral y familiar), ausencia de peligro procesal y reserva de sustentación oral (Art. 420 CPP): [imputado, delito, juzgado, plazo en meses, fecha notificación]',
     },
     {
       label: 'Excepción de Improcedencia de Acción (Art. 6.1.b NCPP)',
