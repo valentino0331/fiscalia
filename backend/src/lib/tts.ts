@@ -254,17 +254,91 @@ export async function generateElevenLabsSpeech(text: string, agentId: string): P
   return Buffer.from(arrayBuffer);
 }
 
-// Función principal de síntesis de voz
+export async function generateGoogleSpeech(text: string, agentId?: string): Promise<Buffer> {
+  const enrichedText = enrichTextForSpeech(text);
+  if (!enrichedText) {
+    throw new Error('Texto vacío para síntesis de voz');
+  }
+
+  // Fragmentar en oraciones naturales de máx 180 caracteres para la API de Google TTS
+  const sentences = enrichedText.match(/[^.!?\n]+[.!?\n]+/g) || [enrichedText];
+  const chunks: string[] = [];
+  let current = '';
+
+  for (const s of sentences) {
+    const trimmed = s.trim();
+    if (!trimmed) continue;
+    if ((current + ' ' + trimmed).length <= 180) {
+      current = current ? `${current} ${trimmed}` : trimmed;
+    } else {
+      if (current) chunks.push(current);
+      if (trimmed.length > 180) {
+        const words = trimmed.split(' ');
+        let sub = '';
+        for (const w of words) {
+          if ((sub + ' ' + w).length <= 180) {
+            sub = sub ? `${sub} ${w}` : w;
+          } else {
+            if (sub) chunks.push(sub);
+            sub = w;
+          }
+        }
+        if (sub) chunks.push(sub);
+        current = '';
+      } else {
+        current = trimmed;
+      }
+    }
+  }
+  if (current) chunks.push(current);
+
+  const buffers: Buffer[] = [];
+  for (const chunk of chunks.slice(0, 10)) {
+    try {
+      const q = encodeURIComponent(chunk);
+      const url = `https://translate.google.com/translate_tts?ie=UTF-8&q=${q}&tl=es-ES&client=tw-ob`;
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Referer': 'https://translate.google.com/',
+        },
+      });
+      if (res.ok) {
+        const ab = await res.arrayBuffer();
+        if (ab.byteLength > 200) {
+          buffers.push(Buffer.from(ab));
+        }
+      }
+    } catch {
+      // Ignorar fragmentos aislados
+    }
+  }
+
+  if (buffers.length > 0) {
+    return Buffer.concat(buffers);
+  }
+
+  throw new Error('No se pudo generar audio mediante Google TTS');
+}
+
+// Función principal de síntesis de voz con alta resiliencia multicanal
 export async function generateSpeech(text: string, agentId: string): Promise<Buffer> {
-  // Si el usuario especificó explícitamente elevenlabs en TTS_PROVIDER y tiene API key activa
+  // 1. ElevenLabs si está configurado
   if (process.env.TTS_PROVIDER === 'elevenlabs' && process.env.ELEVENLABS_API_KEY) {
     try {
       return await generateElevenLabsSpeech(text, agentId);
     } catch (err: any) {
-      console.warn('[TTS] ElevenLabs falló, usando Microsoft Edge Neural TTS como respaldo inmediato:', err?.message || err);
+      console.warn('[TTS] ElevenLabs falló, usando motores de respaldo:', err?.message || err);
     }
   }
 
-  // Microsoft Edge Neural TTS (Predeterminado: 100% gratuito, sin API key, calidad neuronal HD)
-  return await generateEdgeSpeech(text, agentId);
+  // 2. Microsoft Edge Neural TTS
+  try {
+    return await generateEdgeSpeech(text, agentId);
+  } catch (edgeErr: any) {
+    console.warn('[TTS] Edge TTS no disponible en la red (403/200), activando respaldo neuronal Google TTS:', edgeErr?.message || edgeErr);
+  }
+
+  // 3. Respaldo universal garantizado: Google TTS
+  return await generateGoogleSpeech(text, agentId);
 }

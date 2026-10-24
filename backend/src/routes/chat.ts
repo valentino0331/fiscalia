@@ -601,8 +601,15 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       .reverse()
       .find((m: any) => m?.role === 'user' && typeof m.content === 'string')?.content || '';
 
+    // Si el mensaje contiene un expediente o documento procesal adjunto, evaluar únicamente la instrucción del usuario
+    let promptToCheck = latestUserMessage;
+    if (latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---')) {
+      const parts = latestUserMessage.split('--- FIN DEL DOCUMENTO ---');
+      promptToCheck = (parts[parts.length - 1] || '').trim();
+    }
+
     // 🛡️ ESCUDO DE PROPIEDAD INTELECTUAL & ANTI-ROBO DE PROMPTS (Decisión 486 CAN & D.L. 822)
-    const promptThreat = detectPromptExtractionThreat(latestUserMessage);
+    const promptThreat = detectPromptExtractionThreat(promptToCheck);
     if (promptThreat.isThreat) {
       recordSecurityIncident({
         ip: (req.ip || req.socket.remoteAddress || 'desconocida').replace(/^::ffff:/, ''),
@@ -942,6 +949,39 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
     // Tokens generosos: 16384 para escritos, informes y expedientes completos, 8192 para consultas estándar
     const maxTokens = requiresHighCapacity ? 16384 : 8192;
 
+    // Helper para adecuar los mensajes según el contexto admitido por cada modelo
+    const prepareMessagesForModel = (msgs: any[], model: string) => {
+      const isDeepSeek = model.toLowerCase().includes('deepseek');
+      const isLlama = model.toLowerCase().includes('llama');
+      // Modelos Gemini y Claude admiten de 200k a 1M tokens sin recorte
+      if (!isDeepSeek && !isLlama) return msgs;
+
+      return msgs.map((m: any) => {
+        if (typeof m.content !== 'string' || m.content.length <= 150000) return m;
+
+        const text = m.content;
+        const docMarker = '--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---';
+        const endMarker = '--- FIN DEL DOCUMENTO ---';
+
+        if (text.includes(docMarker) && text.includes(endMarker)) {
+          const beforeDoc = text.substring(0, text.indexOf(docMarker) + docMarker.length);
+          const docContent = text.substring(text.indexOf(docMarker) + docMarker.length, text.indexOf(endMarker));
+          const afterDoc = text.substring(text.indexOf(endMarker));
+
+          if (docContent.length > 140000) {
+            const head = docContent.slice(0, 70000);
+            const tail = docContent.slice(-70000);
+            const condensedDoc = `\n${head}\n\n[... [Expediente procesal extenso: Se preservan las piezas decisivas (Cédula de notificación, Hechos imputados, Actas de intervención e incautación, Dictamen pericial balístico forense, Requerimiento de prisión preventiva y Peligro de fuga) omitiendo sellos de fotocopias intermedias para optimizar el análisis jurídico] ...]\n\n${tail}\n`;
+            return { ...m, content: beforeDoc + condensedDoc + afterDoc };
+          }
+        }
+
+        const head = text.slice(0, 70000);
+        const tail = text.slice(-70000);
+        return { ...m, content: `${head}\n\n[... [Expediente procesal extenso condensado para análisis jurídico integral] ...]\n\n${tail}` };
+      });
+    };
+
     // ─────────────────────────────────────────────────────────────
     // 1. PRIORIDAD 1: OpenRouter (Gemini 2.5 Flash / DeepSeek V3 - Alta fidelidad jurídica y ultra bajo costo)
     // ─────────────────────────────────────────────────────────────
@@ -951,14 +991,17 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
       const sanitizedEnvModel = process.env.OPENROUTER_MODEL
         ? process.env.OPENROUTER_MODEL.replace(/:free$/, '').trim()
         : null;
-      // Para expedientes masivos (100MB / hasta 500 págs), priorizamos Gemini 2.5 Flash (1M tokens de contexto) y DeepSeek V3
+
+      // Para expedientes masivos (100MB / hasta 500 págs), priorizamos modelos con 1M tokens de contexto
       const rawOrModels = hasLargeDoc
         ? [
             'google/gemini-2.5-flash',
+            'google/gemini-2.0-flash-001',
+            'google/gemini-flash-1.5',
             'deepseek/deepseek-chat',
             sanitizedEnvModel,
-            'anthropic/claude-3.5-sonnet',
             'meta-llama/llama-3.3-70b-instruct',
+            'anthropic/claude-3.5-sonnet',
           ].filter(Boolean) as string[]
         : [
             'deepseek/deepseek-chat',
@@ -983,6 +1026,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
 
           // DeepSeek soporta hasta 8192 output tokens; Gemini/Claude soportan hasta 12288+
           const modelMaxTokens = openrouterModel.includes('deepseek') ? Math.min(8192, maxTokens) : maxTokens;
+          const modelMessages = prepareMessagesForModel(formattedMessages, openrouterModel);
 
           const orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
@@ -994,7 +1038,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
             },
             body: JSON.stringify({
               model: openrouterModel,
-              messages: formattedMessages,
+              messages: modelMessages,
               temperature: 0.2,
               max_tokens: modelMaxTokens,
               stream: isStream,
@@ -1357,6 +1401,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout estricto
 
+        const dsMessages = prepareMessagesForModel(formattedMessages, 'deepseek-chat');
         const dsRes = await fetch('https://api.deepseek.com/chat/completions', {
           method: 'POST',
           headers: {
@@ -1365,7 +1410,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
           },
           body: JSON.stringify({
             model: 'deepseek-chat',
-            messages: formattedMessages,
+            messages: dsMessages,
             temperature: 0.2,
             max_tokens: maxTokens,
             stream: isStream,

@@ -499,6 +499,9 @@ export default function Chat() {
   const [pageCount, setPageCount] = useState<number | null>(null)
   const [extractRetryInfo, setExtractRetryInfo] = useState<string | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const pendingAutoSendRef = useRef(false)
+  const [pendingAutoSend, setPendingAutoSend] = useState(false)
+  const sendRef = useRef<() => void>()
 
   const [speechSupported, setSpeechSupported] = useState(true)
   const [isRecording, setIsRecording] = useState(false)
@@ -1291,6 +1294,8 @@ export default function Chat() {
       setExtractError(`El archivo supera el límite de ${MAX_MB}MB. Por favor sube un archivo menor a 100MB o divídelo en partes.`)
       setExtractedText(null)
       setExtracting(false)
+      pendingAutoSendRef.current = false
+      setPendingAutoSend(false)
       return
     }
     setAttachedFile(file)
@@ -1306,22 +1311,36 @@ export default function Chat() {
       if (!result.text || !result.text.trim()) {
         setExtractError('El archivo no contiene texto legible o es un escaneo sin resolución')
         setExtractedText(null)
+        pendingAutoSendRef.current = false
+        setPendingAutoSend(false)
       } else {
-        setExtractedText(result.text.trim())
+        const cleanedText = result.text.trim()
+        setExtractedText(cleanedText)
         setPageCount(result.pageCount ?? null)
         setExtractError(null)
+        if (pendingAutoSendRef.current) {
+          pendingAutoSendRef.current = false
+          setPendingAutoSend(false)
+          setTimeout(() => {
+            sendRef.current?.()
+          }, 100)
+        }
       }
       setExtractRetryInfo(null)
     } catch (err: any) {
       setExtractError(err.message || 'Error al procesar el archivo')
       setExtractedText(null)
       setExtractRetryInfo(null)
+      pendingAutoSendRef.current = false
+      setPendingAutoSend(false)
     } finally {
       setExtracting(false)
     }
   }
 
   const clearAttachment = () => {
+    pendingAutoSendRef.current = false
+    setPendingAutoSend(false)
     setAttachedFile(null)
     setExtractedText(null)
     setExtractError(null)
@@ -1333,8 +1352,12 @@ export default function Chat() {
   }
 
   const sendMessage = useCallback(async () => {
-    // Si aún se está extrayendo texto del archivo, bloquear envío hasta completar
-    if (extracting) return
+    // Si aún se está extrayendo texto del archivo, encolar el envío automático para cuando finalice
+    if (extracting) {
+      pendingAutoSendRef.current = true
+      setPendingAutoSend(true)
+      return
+    }
     const trimmed = input.trim()
     if ((!trimmed && !extractedText && !linkedFolder) || loading || !agent) return
 
@@ -1528,7 +1551,11 @@ export default function Chat() {
       ])
       setLoading(false)
     }
-  }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage, scrollToBottom])
+  }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage, scrollToBottom, extracting])
+
+  useEffect(() => {
+    sendRef.current = sendMessage
+  }, [sendMessage])
 
   const handleRetryPrompt = (promptToRetry: string) => {
     if (!promptToRetry) return
@@ -1562,7 +1589,11 @@ export default function Chat() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
-      if (extracting) return
+      if (extracting) {
+        pendingAutoSendRef.current = true
+        setPendingAutoSend(true)
+        return
+      }
       sendMessage()
     }
   }
@@ -2131,7 +2162,9 @@ export default function Chat() {
                     <p className="text-[11px] font-normal text-white truncate">{attachedFile.name}</p>
                     <p className="text-[9px] font-light" style={{ color: extractError ? '#ff6464' : 'rgba(255,255,255,0.40)' }}>
                       {extracting
-                        ? (extractRetryInfo || `Extrayendo texto y procesando con IA${attachedFile.size > 5 * 1024 * 1024 ? ' (archivo extenso)…' : '…'}`)
+                        ? (pendingAutoSend
+                            ? '⏳ Procesando expediente... se enviará automáticamente con tu consulta al terminar'
+                            : (extractRetryInfo || `Extrayendo texto y procesando con IA${attachedFile.size > 5 * 1024 * 1024 ? ' (archivo extenso)…' : '…'}`))
                         : extractError
                         ? extractError
                         : (() => {
@@ -2456,19 +2489,30 @@ export default function Chat() {
                       </motion.button>
                     ) : (
                       <motion.button
-                        onClick={sendMessage}
-                        disabled={(!input.trim() && !extractedText) || extracting || isRecording || isTranscribing}
-                        whileHover={{ scale: (input.trim() || extractedText) ? 1.05 : 1 }}
-                        whileTap={{ scale: (input.trim() || extractedText) ? 0.95 : 1 }}
+                        onClick={() => {
+                          if (extracting) {
+                            pendingAutoSendRef.current = true
+                            setPendingAutoSend(true)
+                            return
+                          }
+                          sendMessage()
+                        }}
+                        disabled={(!input.trim() && !extractedText && !extracting) || isRecording || isTranscribing}
+                        whileHover={{ scale: (input.trim() || extractedText || extracting) ? 1.05 : 1 }}
+                        whileTap={{ scale: (input.trim() || extractedText || extracting) ? 0.95 : 1 }}
                         className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
                         style={{
-                          background: (input.trim() || extractedText) && !extracting ? '#c9a84c' : 'rgba(255,255,255,0.07)',
-                          color: (input.trim() || extractedText) && !extracting ? '#111111' : 'rgba(255,255,255,0.25)',
-                          cursor: (!input.trim() && !extractedText) || extracting ? 'not-allowed' : 'pointer',
+                          background: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#c9a84c' : 'rgba(255,255,255,0.07)',
+                          color: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#111111' : 'rgba(255,255,255,0.25)',
+                          cursor: (!input.trim() && !extractedText && !extracting) ? 'not-allowed' : 'pointer',
                         }}
-                        title="Enviar consulta al abogado"
+                        title={extracting ? (pendingAutoSend ? 'Enviando automáticamente al completar lectura...' : 'Encolar envío automático al completar lectura') : 'Enviar consulta al abogado'}
                       >
-                        <ArrowUp size={15} />
+                        {extracting && pendingAutoSend ? (
+                          <Loader2 size={14} className="animate-spin text-[#111111]" />
+                        ) : (
+                          <ArrowUp size={15} />
+                        )}
                       </motion.button>
                     )}
                   </div>

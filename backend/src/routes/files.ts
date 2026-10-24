@@ -124,11 +124,32 @@ filesRouter.post(
           const pdfParseModule = await import('pdf-parse');
           const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
 
-          // Silenciar warnings de fuentes tipográficas de pdf.js
+          // Silenciar warnings de fuentes tipográficas y TrueType de pdf.js (TT: undefined function, private use area, etc.)
           const originalLog = console.log;
+          const originalWarn = console.warn;
+          const originalError = console.error;
+          const isPdfJSSpam = (arg: any): boolean => {
+            if (typeof arg !== 'string') return false;
+            return (
+              arg.startsWith('Warning:') ||
+              arg.includes('private use area') ||
+              arg.includes('undefined function') ||
+              arg.includes('TT:') ||
+              arg.includes('font')
+            );
+          };
+
           console.log = (...args: any[]) => {
-            if (typeof args[0] === 'string' && args[0].includes('private use area')) return;
+            if (isPdfJSSpam(args[0])) return;
             originalLog(...args);
+          };
+          console.warn = (...args: any[]) => {
+            if (isPdfJSSpam(args[0])) return;
+            originalWarn(...args);
+          };
+          console.error = (...args: any[]) => {
+            if (isPdfJSSpam(args[0])) return;
+            originalError(...args);
           };
 
           let totalChars = 0;
@@ -167,11 +188,17 @@ filesRouter.post(
             }
           };
 
-          const data = await pdfParse(file.buffer, {
-            max: MAX_EXPEDIENTE_PAGES,
-            pagerender: customPagerender,
-          });
-          console.log = originalLog;
+          let data: any;
+          try {
+            data = await pdfParse(file.buffer, {
+              max: MAX_EXPEDIENTE_PAGES,
+              pagerender: customPagerender,
+            });
+          } finally {
+            console.log = originalLog;
+            console.warn = originalWarn;
+            console.error = originalError;
+          }
 
           const text = (data.text || '').trim();
           pageCount = data.numpages || null;

@@ -11,6 +11,9 @@ const Account = lazy(() => import('@/pages/Account'))
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard'))
 const SharedConversation = lazy(() => import('@/pages/SharedConversation'))
 const LandingPage = lazy(() => import('@/pages/LandingPage'))
+const PnpLandingPage = lazy(() => import('@/pages/pnp/PnpLandingPage'))
+const PnpLogin = lazy(() => import('@/pages/pnp/PnpLogin'))
+const PnpDespacho = lazy(() => import('@/pages/pnp/PnpDespacho'))
 
 function PageFallback() {
   return (
@@ -40,6 +43,11 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return user?.isAdmin ? <>{children}</> : <Navigate to="/dashboard" replace />
 }
 
+function PnpProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated } = useAuth()
+  return isAuthenticated ? <>{children}</> : <Navigate to="/pnp/login" replace />
+}
+
 export default function App() {
   return (
     <AnimatePresence mode="wait">
@@ -48,6 +56,19 @@ export default function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/info" element={<LandingPage />} />
           <Route path="/landing" element={<LandingPage />} />
+
+          {/* Rutas Oficiales Hardman PNP */}
+          <Route path="/pnp" element={<PnpLandingPage />} />
+          <Route path="/PNP" element={<Navigate to="/pnp" replace />} />
+          <Route path="/pnp/login" element={<PnpLogin />} />
+          <Route
+            path="/pnp/despacho"
+            element={
+              <PnpProtectedRoute>
+                <PnpDespacho />
+              </PnpProtectedRoute>
+            }
+          />
 
 
 
