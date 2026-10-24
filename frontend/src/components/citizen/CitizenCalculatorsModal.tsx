@@ -592,7 +592,7 @@ Base legal: ${resPres.nombreNorma}`
                     placeholder="2500"
                     className="w-full bg-[#161616] border border-white/10 rounded-lg px-2.5 py-1.5 text-white outline-none focus:border-[#c9a84c]"
                   />
-                  <span className="text-[8px] text-white/30 block mt-1">Si no tiene sueldo fijo, el juez calcula sobre la Remuneración Mínima Vital (S/ 1,130).</span>
+                  <span className="text-[8px] text-white/30 block mt-1">Si no tiene sueldo fijo, el juez calcula sobre la Remuneración Mínima Vital vigente (S/ 1,230 - D.S. N° 015-2026-TR).</span>
                 </div>
 
                 <div>

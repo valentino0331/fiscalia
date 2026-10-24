@@ -890,14 +890,14 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       '3. Juzgados Especializados de Trabajo: Pretensiones que superen las 70 URP.',
   },
   {
-    lawCode: 'Decreto Supremo N° 006-2024-TR',
+    lawCode: 'Decreto Supremo N° 015-2026-TR',
     specialistId: 'valentina',
-    date: 'Enero 2025 - Vigente 2026',
-    affectedCode: 'Remuneración Mínima Vital (RMV)',
-    articles: ['RMV S/ 1,130', 'Asignación Familiar S/ 113'],
-    keywords: ['rmv', 'sueldo minimo', '1130', 'asignacion familiar', '113'],
-    summary: 'Fija la RMV en S/ 1,130 mensuales y la Asignación Familiar en el 10% (S/ 113).',
-    practicalImpact: 'Piso mínimo obligatorio para liquidaciones, CTS, gratificaciones y beneficios laborales.',
+    date: 'Octubre 2026 - Vigente Oficial',
+    affectedCode: 'Remuneración Mínima Vital (RMV) y Asignación Familiar',
+    articles: ['RMV S/ 1,230', 'Asignación Familiar S/ 123'],
+    keywords: ['rmv', 'sueldo minimo', '1230', '1130', 'asignacion familiar', '123'],
+    summary: 'Establece la RMV oficial en S/ 1,230 mensuales y la Asignación Familiar legal en el 10% (S/ 123.00).',
+    practicalImpact: 'Piso mínimo imperativo para liquidaciones laborales, beneficios sociales, cálculo referencial de alimentos y multas.',
   },
 
   // ── DIEGO (CIVIL) ──
