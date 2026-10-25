@@ -631,8 +631,49 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return res.json({ message: refusalNotice });
     }
 
+    // 1. Detectar si existe algún expediente o documento adjunto en TODO el historial de la conversación
+    let pinnedExpedienteBlock = '';
+    for (let i = sanitizedMessages.length - 1; i >= 0; i--) {
+      const c = sanitizedMessages[i].content;
+      if (typeof c === 'string') {
+        if (c.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---')) {
+          const match = c.match(/(\[Archivo adjunto:[^\]]*\]\n)?--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---/);
+          if (match) {
+            pinnedExpedienteBlock = match[0];
+            break;
+          }
+        } else if (c.includes('[CARPETA FISCAL / EXPEDIENTE VINCULADO')) {
+          const match = c.match(/\[CARPETA FISCAL \/ EXPEDIENTE VINCULADO[\s\S]*?Instrucción especial:[^\n]*\n\n/);
+          if (match) {
+            pinnedExpedienteBlock = match[0];
+            break;
+          }
+        }
+      }
+    }
+
     // Ventana deslizante para el prompt: últimos 10 mensajes para evitar latencia de tokens masivos
-    const recentMessages = sanitizedMessages.length > 10 ? sanitizedMessages.slice(-10) : sanitizedMessages;
+    let recentMessages = sanitizedMessages.length > 10 ? sanitizedMessages.slice(-10) : sanitizedMessages;
+
+    // Si había un expediente en un mensaje anterior que quedó fuera de recentMessages, preservarlo intacto
+    if (pinnedExpedienteBlock) {
+      const alreadyInRecent = recentMessages.some((m: any) =>
+        typeof m.content === 'string' && (
+          m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
+          m.content.includes('[CARPETA FISCAL / EXPEDIENTE VINCULADO')
+        )
+      );
+      if (!alreadyInRecent) {
+        recentMessages = [
+          {
+            role: 'user',
+            content: `[EXPEDIENTE JUDICIAL / CARPETA FISCAL VINCULADA A ESTA CONVERSACIÓN]\n${pinnedExpedienteBlock}\n\n[FIN DEL EXPEDIENTE VINCULADO — INSTRUCCIÓN OBLIGATORIA: Analiza y fundamenta tus respuestas y escritos basándote exclusivamente en las fojas y piezas procesales de este expediente]`,
+            timestamp: new Date().toISOString(),
+          },
+          ...recentMessages,
+        ];
+      }
+    }
 
     // Caché en memoria para perfil/memoria de usuario (TTL 5 minutos)
     let memoryBlock = '';
@@ -669,7 +710,8 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     const isContinuation = isContinuationRequest(latestUserMessage);
     const isDocRequest = isContinuation || isDocumentDraftingRequest(latestUserMessage) ||
       recentMessages.slice(-4).some((m: any) => m.role === 'user' && typeof m.content === 'string' && isDocumentDraftingRequest(m.content));
-    const hasLargeDoc = latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
+    const hasLargeDoc = !!pinnedExpedienteBlock ||
+      latestUserMessage.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
       latestUserMessage.includes('[Archivo adjunto:') ||
       recentMessages.some((m: any) => typeof m.content === 'string' && (
         m.content.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---') ||
@@ -866,7 +908,28 @@ Queda terminantemente prohibido usar normas derogadas o desactualizadas:
 9. Penal: D. Leg. 1585 (Prisión preventiva prognosis de pena > 5 años); Arts. IX T.P., 71.2.c y 80°-85° NCPP para defensa técnica (Art. 62° es exclusión del Fiscal); AP 06-2009/CJ-116 (control formal y sustancial acusación); AP Ext. 02-2012/CJ-116 (tutela e imputación suficiente).
 ════════════════════════════════════════════════════════════════\n\n`;
 
-    const fullSystemPrompt = TEMPORAL_OCTOBER_2026_ANCHOR + SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
+    const PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE = `════════════════════════════════════════════════════════════════
+POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACIONES
+════════════════════════════════════════════════════════════════
+1. ORDENAMIENTO JURÍDICO EXCLUSIVO: REPÚBLICA DEL PERÚ.
+   - Todas tus respuestas, análisis procesales, vías de impugnación y redacciones de documentos se rigen RIGUROSAMENTE por el ordenamiento legal peruano vigente.
+   - ⛔ PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes, códigos, artículos o jurisprudencia de México, España, Colombia, Argentina, Chile o cualquier otra jurisdicción foránea.
+   - Cita exclusivamente normas peruanas: Constitución Política del Perú de 1993, Código Penal (D. Leg. 635), Código Procesal Penal (D. Leg. 957), D. Leg. 1585, Código Procesal Civil (D. Leg. 768 / D.S. 003-2024-JUS), Código Procesal Constitucional (Ley 31307), TUO LPAG (D.S. 006-2026-JUS), Ley General de Contrataciones Públicas (Ley 32069 / D.S. 001-2026-EF), Nueva Ley Procesal del Trabajo (Ley 29497 / Ley 32155), y Acuerdos Plenarios y Casaciones Vinculantes de la Corte Suprema del Perú.
+   - ⛔ PROHIBICIÓN DE INVENTAR ARTÍCULOS O NORMAS: Nunca inventes artículos, incisos o casaciones inexistentes.
+
+2. CERO ALUCINACIONES Y FIDELIDAD PROBATORIA RIGUROSA CON EXPEDIENTES:
+   - Cuando el usuario proporciona o vincula un expediente judicial, carpeta fiscal, resolución o documento:
+     * Cita con fidelidad los nombres de las partes, número de expediente/carpeta, juzgado, fiscalía, delito imputado y medios probatorios tal como obran en el expediente aportado.
+     * ⛔ PROHIBICIÓN TOTAL DE INVENTAR HECHOS O PRUEBAS: Jamás inventes declaraciones testimoniales, peritajes ficticios, folios inexistentes ni hechos que no aparezcan en el expediente aportado.
+     * Si para formular una solicitud o escrito (ej. cesación de prisión preventiva bajo el Art. 283° NCPP) se requiere un arraigo sobrevenido o medio probatorio complementario que el abogado aún no ha adjuntado en el texto, consigna la fundamentación jurídica y señala con total claridad: "[Adjuntar aquí: Constancia de arraigo laboral / peritaje técnico correspondiente que acredite este extremo]".
+
+3. ORIENTACIÓN PROFESIONAL ANTE CONSULTAS PREVIAS DE ABOGADOS:
+   - Si un abogado consulta si la IA puede leer su expediente y preparar un escrito (ej. "¿si subo mi expediente y necesito que prepare un escrito x cesación de prisión preventiva también lo hace? ¿o debo explicarle que necesito o quiero realizar?"):
+     * Responde con total seguridad, calidez y rigor técnico confirmando que SÍ: el sistema lee y analiza expedientes completos (en PDF digital, Word o escaneo), extrae la imputación y los fundamentos del auto inicial, evalúa los nuevos elementos de convicción conforme al Art. 283° NCPP y redacta el escrito judicial formal completo listo para presentar al Poder Judicial vía SINOE.
+     * Explícale de forma directa que puede simplemente subir el archivo de su expediente y solicitar la cesación o escrito que requiera, o si lo prefiere, adjuntar además los puntos específicos o nuevos arraigos que desee priorizar.
+════════════════════════════════════════════════════════════════\n\n`;
+
+    const fullSystemPrompt = PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE + TEMPORAL_OCTOBER_2026_ANCHOR + SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
 
 
     // Optimización quirúrgica de prompt para consultas conversacionales (ahorro masivo de tokens > 85% y latencia < 500ms)
@@ -988,7 +1051,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
           if (docContent.length > 140000) {
             const head = docContent.slice(0, 70000);
             const tail = docContent.slice(-70000);
-            const condensedDoc = `\n${head}\n\n[... [Expediente procesal extenso: Se preservan las piezas decisivas (Cédula de notificación, Hechos imputados, Actas de intervención e incautación, Dictamen pericial balístico forense, Requerimiento de prisión preventiva y Peligro de fuga) omitiendo sellos de fotocopias intermedias para optimizar el análisis jurídico] ...]\n\n${tail}\n`;
+            const condensedDoc = `\n${head}\n\n[... [Expediente procesal extenso: Se preservan las actuaciones iniciales y resoluciones finales decisivas del expediente adjunto, omitiendo folios intermedios para optimizar el análisis jurídico] ...]\n\n${tail}\n`;
             return { ...m, content: beforeDoc + condensedDoc + afterDoc };
           }
         }
@@ -1221,8 +1284,11 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
         }
       }
 
+      let geminiFinalUserMessage = latestUserMessage;
       if (validHistory.length > 0 && validHistory[validHistory.length - 1].role === 'user') {
-        validHistory.pop();
+        const lastUser = validHistory.pop()!;
+        const prevText = lastUser.parts.map((p) => p.text).join('\n\n');
+        geminiFinalUserMessage = `${prevText}\n\n${latestUserMessage}`;
       }
 
       const geminiKeys = (geminiKey || '').split(',').map((k: string) => k.trim()).filter(Boolean);
@@ -1251,7 +1317,7 @@ ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente 
                 ...validHistory,
                 {
                   role: 'user',
-                  parts: [{ text: latestUserMessage }]
+                  parts: [{ text: geminiFinalUserMessage }]
                 }
               ],
               generationConfig: {

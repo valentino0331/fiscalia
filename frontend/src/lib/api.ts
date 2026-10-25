@@ -367,7 +367,48 @@ export const api = {
         fileType: string
         fileSize: number
         pageCount: number | null
+        detectedExpediente?: string | null
+        detectedAuthority?: string | null
+        materia?: string
+        suggestedAgentId?: string
       }>('/files/extract', file, onRetry),
+    analyzeScanner: (data: { file?: File; text?: string; fileName?: string }) => {
+      if (data.file) {
+        return uploadFile<{
+          summary: string
+          alertLevel: 'green' | 'yellow' | 'red'
+          alertTitle: string
+          expedienteNumber: string | null
+          authority: string | null
+          materia: string
+          deadlineText: string
+          actionSteps: string[]
+          recommendedAgentId: string
+          recommendedAgentName: string
+          extractedText: string
+          fileName: string
+          pageCount: number | null
+        }>('/files/analyze-scanner', data.file)
+      }
+      return request<{
+        summary: string
+        alertLevel: 'green' | 'yellow' | 'red'
+        alertTitle: string
+        expedienteNumber: string | null
+        authority: string | null
+        materia: string
+        deadlineText: string
+        actionSteps: string[]
+        recommendedAgentId: string
+        recommendedAgentName: string
+        extractedText: string
+        fileName: string
+        pageCount: number | null
+      }>('/files/analyze-scanner', {
+        method: 'POST',
+        body: JSON.stringify({ text: data.text, fileName: data.fileName }),
+      })
+    },
   },
 
 

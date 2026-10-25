@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { SYSTEM_PROMPTS } from '../prompts/agents.js';
-import { JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine.js';
+import {
+  JURISPRUDENCE_COMPENDIUM,
+  NORMATIVE_REFORMS_COMPENDIUM,
+  isCesacionPrisionPreventivaRequest,
+  getSpijLegalGrounding,
+} from '../lib/spijLegalEngine.js';
 
 describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados', () => {
   const agentKeys = ['sebastian', 'valentina', 'diego', 'camila', 'marco', 'fernanda', 'adriana', 'rodrigo'];
@@ -258,6 +263,45 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
       expect(codes).toContain('Acuerdo Plenario Extraordinario N° 02-2012/CJ-116');
       expect(codes).toContain('Acuerdo Plenario N° 03-2010/CJ-116');
       expect(codes).toContain('Acuerdo Plenario N° 05-2009/CJ-116');
+      expect(codes).toContain('Casación N° 626-2013/Moquegua');
+      expect(codes).toContain('Casación N° 391-2011/Piura');
+    });
+  });
+
+  describe('Cesación de Prisión Preventiva & Cero Alucinaciones (Art. 283 NCPP)', () => {
+    it('detecta correctamente consultas de abogados sobre preparación de escritos por cesación de prisión preventiva', () => {
+      // Caso fáctico exacto de la consulta de abogados
+      const userQuery = 'Una consulta más si subo mi expediente y necesito que prepare un escrito x cesación de prisión preventiva tb lo hace?';
+      expect(isCesacionPrisionPreventivaRequest(userQuery)).toBe(true);
+
+      expect(isCesacionPrisionPreventivaRequest('solicito cesación de prisión preventiva por nuevos elementos de convicción')).toBe(true);
+      expect(isCesacionPrisionPreventivaRequest('prepara un escrito de cesacion de prision')).toBe(true);
+      expect(isCesacionPrisionPreventivaRequest('variar prision preventiva a comparecencia')).toBe(true);
+      expect(isCesacionPrisionPreventivaRequest('cesar la prision bajo el art 283 ncpp')).toBe(true);
+    });
+
+    it('genera el sustento legal oficial de SPIJ con Casación 626-2013 Moquegua, Casación 391-2011 Piura y directiva canónica', () => {
+      const userQuery = 'Una consulta más si subo mi expediente y necesito que prepare un escrito x cesación de prisión preventiva tb lo hace?';
+      const grounding = getSpijLegalGrounding('sebastian', userQuery);
+
+      expect(grounding).toContain('Casación N° 626-2013/Moquegua');
+      expect(grounding).toContain('Casación N° 391-2011/Piura');
+      expect(grounding).toContain('Acuerdo Plenario N° 01-2019/CIJ-116');
+      expect(grounding).toContain('Decreto Legislativo N° 1585');
+      expect(grounding).toContain('Art. 283 NCPP');
+      expect(grounding).toContain('DIRECTIVA CANÓNICA PARA CESACIÓN DE PRISIÓN PREVENTIVA');
+      expect(grounding).toContain('SOLICITUD_CESACION_PRISION_PREVENTIVA');
+      expect(grounding).toContain('PROHIBIDO INVENTAR PRUEBAS FALSAS');
+    });
+
+    it('garantiza que el prompt de Sebastián contiene estructura explícita de cesación de prisión preventiva sin invenciones', () => {
+      const sebastianPrompt = SYSTEM_PROMPTS['sebastian'];
+      expect(sebastianPrompt).toContain('CESACIÓN DE PRISIÓN PREVENTIVA:');
+      expect(sebastianPrompt).toContain('SOLICITO CESACIÓN DE PRISIÓN PREVENTIVA POR NUEVOS ELEMENTOS DE CONVICCIÓN');
+      expect(sebastianPrompt).toContain('Casación N° 626-2013/Moquegua');
+      expect(sebastianPrompt).toContain('Casación N° 391-2011/Piura');
+      expect(sebastianPrompt).toContain('Art. 283° del Código Procesal Penal');
+      expect(sebastianPrompt).toContain('Extraer los hechos, delitos y fojas reales del expediente aportado');
     });
   });
 });

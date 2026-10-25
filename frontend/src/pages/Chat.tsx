@@ -523,6 +523,7 @@ export default function Chat() {
   const [isVoiceMessage, setIsVoiceMessage] = useState(false)
   const [deadlineModal, setDeadlineModal] = useState<{ isOpen: boolean; deadlineText?: string }>({ isOpen: false })
   const [scannerOpen, setScannerOpen] = useState(false)
+  const [detectedExpediente, setDetectedExpediente] = useState<string | null>(null)
   const [docGenModal, setDocGenModal] = useState<{ isOpen: boolean; docType: DocType }>({
     isOpen: false,
     docType: 'carta_notarial',
@@ -553,6 +554,35 @@ export default function Chat() {
       linkedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     })
     setFolderModalOpen(false)
+
+    // Extraer automáticamente texto de los documentos vinculados en segundo plano
+    files.slice(0, 8).forEach(async (f) => {
+      try {
+        setLinkedFolder((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            docs: prev.docs.map((d) => (d.name === f.name ? { ...d, status: 'extracting' } : d)),
+          }
+        })
+        const res = await api.files.extract(f)
+        setLinkedFolder((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            docs: prev.docs.map((d) => (d.name === f.name ? { ...d, status: 'ready', extractedText: res.text } : d)),
+          }
+        })
+      } catch (err: any) {
+        setLinkedFolder((prev) => {
+          if (!prev) return null
+          return {
+            ...prev,
+            docs: prev.docs.map((d) => (d.name === f.name ? { ...d, status: 'error', error: err?.message } : d)),
+          }
+        })
+      }
+    })
   }
 
   const handleUnlinkFolder = () => {
@@ -1311,12 +1341,14 @@ export default function Chat() {
       if (!result.text || !result.text.trim()) {
         setExtractError('El archivo no contiene texto legible o es un escaneo sin resolución')
         setExtractedText(null)
+        setDetectedExpediente(null)
         pendingAutoSendRef.current = false
         setPendingAutoSend(false)
       } else {
         const cleanedText = result.text.trim()
         setExtractedText(cleanedText)
         setPageCount(result.pageCount ?? null)
+        setDetectedExpediente(result.detectedExpediente || null)
         setExtractError(null)
         if (pendingAutoSendRef.current) {
           pendingAutoSendRef.current = false
@@ -1330,6 +1362,7 @@ export default function Chat() {
     } catch (err: any) {
       setExtractError(err.message || 'Error al procesar el archivo')
       setExtractedText(null)
+      setDetectedExpediente(null)
       setExtractRetryInfo(null)
       pendingAutoSendRef.current = false
       setPendingAutoSend(false)
@@ -1343,6 +1376,7 @@ export default function Chat() {
     setPendingAutoSend(false)
     setAttachedFile(null)
     setExtractedText(null)
+    setDetectedExpediente(null)
     setExtractError(null)
     setExtracting(false)
     setExtractRetryInfo(null)
@@ -1370,8 +1404,13 @@ export default function Chat() {
     }
 
     if (linkedFolder && linkedFolder.docs.length > 0) {
+      const readyDocs = linkedFolder.docs.filter((d) => d.extractedText && d.extractedText.trim())
+      const docsSummary = readyDocs.length > 0
+        ? readyDocs.map((d) => `--- DOCUMENTO: "${d.name}" ---\n${d.extractedText?.slice(0, 12000)}\n--- FIN "${d.name}" ---`).join('\n\n')
+        : `Documentos vinculados (${linkedFolder.docs.length}): ${linkedFolder.docs.map((d) => d.name).join(', ')}`
       const folderHeader = `[CARPETA FISCAL / EXPEDIENTE VINCULADO (Modo Cowork): "${linkedFolder.folderName}"]\n` +
         `Documentos en expediente (${linkedFolder.docs.length}): ${linkedFolder.docs.map((d) => d.name).join(', ')}\n` +
+        `${docsSummary}\n` +
         `Instrucción especial: Considera todos los documentos de este expediente en tu análisis jurídico.\n\n`
       fullContent = folderHeader + fullContent
     }
@@ -2372,6 +2411,20 @@ export default function Chat() {
                       <span className="hidden sm:inline">IMAGEN</span>
                     </button>
 
+                    {/* Botón Escanear Expediente / Cédula con IA */}
+                    <button
+                      type="button"
+                      onClick={() => setScannerOpen(true)}
+                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer text-[#c9a84c] bg-[#c9a84c]/10 hover:bg-[#c9a84c]/20 border border-[#c9a84c]/30"
+                      title="Escanear Expediente o Cédula Judicial (OCR IA + Detección de Plazos)"
+                    >
+                      <Sparkles size={12} className="text-[#c9a84c]" />
+                      <span>
+                        <span className="sm:hidden">ESCANEAR</span>
+                        <span className="hidden sm:inline">ESCANEAR EXPEDIENTE</span>
+                      </span>
+                    </button>
+
                     {/* Cowork Folder linking button */}
                     <button
                       type="button"
@@ -2535,6 +2588,14 @@ export default function Chat() {
       <DocumentScannerModal
         isOpen={scannerOpen}
         onClose={() => setScannerOpen(false)}
+        currentAgentId={agent?.id}
+        onApplyToChat={(scanRes, contextText) => {
+          setExtractedText(contextText)
+          setDetectedExpediente(scanRes.expedienteNumber || null)
+          if (!input.trim()) {
+            setInput(`Acabo de escanear la resolución sobre "${scanRes.alertTitle}"${scanRes.expedienteNumber ? ` (Expediente: ${scanRes.expedienteNumber})` : ''}. ¿Cómo aconsejas proceder hoy mismo frente al plazo procesal indicado?`)
+          }
+        }}
       />
 
       <CitizenDocumentGeneratorModal

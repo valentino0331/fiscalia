@@ -181,6 +181,8 @@ export default function PnpDespacho() {
   const [inputValue, setInputValue] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [attachedFileName, setAttachedFileName] = useState<string | null>(null)
+  const [attachedFileText, setAttachedFileText] = useState<string | null>(null)
+  const [extractingFile, setExtractingFile] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [downloadingDoc, setDownloadingDoc] = useState<string | null>(null)
 
@@ -427,7 +429,7 @@ export default function PnpDespacho() {
       id: 'usr_' + Date.now(),
       role: 'user',
       content: attachedFileName
-        ? `[Archivo adjunto: ${attachedFileName}]\n\n${textToSend}`
+        ? `[EXPEDIENTE PNP ADJUNTO: "${attachedFileName}"]\n${attachedFileText ? `--- CONTENIDO DEL EXPEDIENTE ---\n${attachedFileText.slice(0, 25000)}\n--- FIN DEL EXPEDIENTE ---\n\n` : ''}${textToSend || 'Por favor analiza este expediente disciplinario PNP conforme a la Ley 30714 y redacta los descargos técnicos correspondientes.'}`
         : textToSend,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       mode,
@@ -437,6 +439,7 @@ export default function PnpDespacho() {
     setMessages(newMessages)
     setInputValue('')
     setAttachedFileName(null)
+    setAttachedFileText(null)
     setIsTyping(true)
 
     if (isListening && recognitionRef.current) {
@@ -673,10 +676,16 @@ export default function PnpDespacho() {
         >
           <span className="flex items-center gap-2 truncate">
             <Paperclip size={13} />
-            <span>Expediente adjunto: <strong>{attachedFileName}</strong></span>
+            <span>
+              Expediente adjunto: <strong>{attachedFileName}</strong>
+              {extractingFile ? ' (⏳ Leyendo con IA...)' : attachedFileText ? ' (✓ Texto extraído)' : ''}
+            </span>
           </span>
           <button
-            onClick={() => setAttachedFileName(null)}
+            onClick={() => {
+              setAttachedFileName(null)
+              setAttachedFileText(null)
+            }}
             className="p-1 hover:text-white cursor-pointer"
           >
             <X size={13} />
@@ -720,7 +729,20 @@ export default function PnpDespacho() {
           ref={fileInputRef}
           onChange={(e) => {
             const file = e.target.files?.[0]
-            if (file) setAttachedFileName(file.name)
+            if (file) {
+              setAttachedFileName(file.name)
+              setExtractingFile(true)
+              api.files.extract(file)
+                .then((res) => {
+                  setAttachedFileText(res.text || null)
+                })
+                .catch((err) => {
+                  console.warn('[PNP] Error extrayendo archivo:', err)
+                })
+                .finally(() => {
+                  setExtractingFile(false)
+                })
+            }
           }}
           accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
           className="hidden"

@@ -70,6 +70,43 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Obligatorio en toda Oposición a Prisión Preventiva, Apelación de Auto o Solicitud de Cesación.',
   },
   {
+    code: 'Casación N° 626-2013/Moquegua',
+    specialistId: 'sebastian',
+    court: 'Sala Penal Permanente de la Corte Suprema de Justicia',
+    title: 'Doctrina jurisprudencial vinculante sobre presupuestos de la prisión preventiva y su cesación',
+    category: 'Procesal Penal / Medidas Coercitivas',
+    keywords: [
+      'casacion 626-2013', 'moquegua', 'prision preventiva', 'cesacion', 'cesacion de prision preventiva',
+      'nuevos elementos de conviccion', 'fumus comissi delicti', 'sospecha grave', 'periculum in mora',
+      'peligro de fuga', 'peligro de obstaculizacion', 'arraigo de calidad', 'proporcionalidad'
+    ],
+    keyPrinciples: [
+      'Establece con carácter vinculante los cinco presupuestos materiales del test de prisión preventiva.',
+      'En la cesación (Art. 283 NCPP), los nuevos elementos de convicción deben enervar los motivos que determinaron la imposición inicial de la medida.',
+      'El juez debe realizar una audiencia contradictoria e inaplazable para examinar si la sospecha grave ha disminuido o si el peligro procesal se ha disipado mediante arraigos comprobados.',
+    ],
+    bindingGrounds: 'Fundamentos Jurídicos 20 al 42 (análisis secuencial de los 5 presupuestos) y FJ 49-54 (estándar probatorio para la cesación).',
+    legalApplication: 'Invocación obligatoria en toda solicitud de cesación de prisión preventiva, recurso de apelación u oposición a la medida.',
+  },
+  {
+    code: 'Casación N° 391-2011/Piura',
+    specialistId: 'sebastian',
+    court: 'Sala Penal Permanente de la Corte Suprema de Justicia',
+    title: 'Principio de mutabilidad procesal y cláusula rebus sic stantibus en la cesación de prisión preventiva',
+    category: 'Procesal Penal / Cesación',
+    keywords: [
+      'casacion 391-2011', 'piura', 'cesacion de prision preventiva', 'rebus sic stantibus',
+      'mutabilidad', 'nuevos elementos', 'variacion de medida', 'comparecencia con restricciones'
+    ],
+    keyPrinciples: [
+      'Rige el principio de variabilidad o mutabilidad de las medidas cautelares bajo la regla "rebus sic stantibus".',
+      'Los nuevos elementos de convicción deben ser sobrevenidos o no haber sido conocidos ni valorados en la audiencia inicial de prisión preventiva.',
+      'Basta con que los nuevos elementos demuestren que no concurren copulativamente todos los requisitos del Art. 268° NCPP para que proceda la inmediata excarcelación con comparecencia restrictiva.',
+    ],
+    bindingGrounds: 'Fundamento Jurídico Cuarto (aplicación estricta de la cláusula rebus sic stantibus y estándar del Art. 283.3 NCPP).',
+    legalApplication: 'Sustento dogmático esencial en solicitudes de cesación de prisión preventiva ante el Juzgado de Investigación Preparatoria.',
+  },
+  {
     code: 'Acuerdo Plenario N° 02-2005/CJ-116',
     specialistId: 'sebastian',
     court: 'I Pleno Jurisdiccional Penal - Corte Suprema',
@@ -789,7 +826,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     date: 'Noviembre 2023 (Vigente 2026)',
     affectedCode: 'Código Procesal Penal (DL 957) & Código Penal (DL 635)',
     articles: ['Art. 268 NCPP', 'Art. 268-A NCPP', 'Art. 283 NCPP', 'Art. 52 CP', 'Art. 57 CP'],
-    keywords: ['dl 1585', 'prision preventiva', '5 anos', 'pena superior a 5 anos', 'vigilancia electronica', 'revision de oficio'],
+    keywords: ['dl 1585', 'prision preventiva', '5 anos', 'pena superior a 5 anos', 'vigilancia electronica', 'revision de oficio', 'cesacion', 'cesacion de prision preventiva', 'art 283', 'articulo 283'],
     summary: 'Reforma de las medidas cautelares y penas:',
     practicalImpact:
       '1. Prisión Preventiva (Art. 268.b NCPP): La pena probable DEBE SUPERAR LOS 5 AÑOS (antes 4 años).\n' +
@@ -1252,6 +1289,21 @@ export function isAuditRequest(query: string): boolean {
 }
 
 /**
+ * Detecta si el usuario solicita cesación de prisión preventiva o variación de medida coercitiva (Art. 283 NCPP)
+ */
+export function isCesacionPrisionPreventivaRequest(query: string): boolean {
+  const norm = normalizeText(query);
+  const cesacionTriggers = [
+    'cesacion de prision', 'cesacion de la prision', 'cesacion', 'cesar la prision', 'cesar prision',
+    'cesacion preventiva', 'cese de prision', 'cesar prision preventiva', 'variacion de prision preventiva',
+    'variar prision preventiva', 'variar prision', 'variar la prision', 'art 283', 'articulo 283',
+    'nuevos elementos de conviccion', 'nuevos elementos', 'rebus sic stantibus',
+    'escrito x cesacion', 'escrito de cesacion', 'escrito por cesacion', 'cesacion de prision preventiva'
+  ];
+  return cesacionTriggers.some((t) => norm.includes(t));
+}
+
+/**
  * Detecta si el usuario solicita preparación para audiencia oral o litigación en estrados
  */
 export function isOralHearingRequest(query: string): boolean {
@@ -1354,6 +1406,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
 
   const isAudit = isAuditRequest(userQuery);
   const isHearing = isOralHearingRequest(userQuery);
+  const isCesacion = isCesacionPrisionPreventivaRequest(userQuery);
 
   if (isDrafting) {
     sections.push('► REGLAS ESTRICTAS PARA LA REDACCIÓN DE ESTE ESCRITO LEGAL:');
@@ -1407,6 +1460,31 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('- Desarrolla la Teoría del Caso en sus 3 niveles (fáctico, jurídico y probatorio sintetizado).');
     sections.push('- Anticipa las 3 preguntas u objeciones más hostiles que formulará el magistrado y brinda la respuesta jurídica contundente con número de Acuerdo Plenario o Casación.');
     sections.push('- Estructura el alegato oral con claridad, ritmo persuasivo y sin fórmulas vacías.');
+  }
+
+  if (isCesacion) {
+    sections.push('► DIRECTIVA CANÓNICA PARA CESACIÓN DE PRISIÓN PREVENTIVA (ART. 283° NCPP, D. LEG. 1585 Y CORTE SUPREMA):');
+    sections.push('- EXIGENCIA DOGMÁTICA VINCULANTE: Al amparo del Art. 283° del Código Procesal Penal (modificado por D. Leg. 1585), Casación 626-2013 Moquegua, Casación 391-2011 Piura y Acuerdo Plenario 01-2019/CIJ-116, la cesación exige que NUEVOS ELEMENTOS DE CONVICCIÓN sobrevenidos o no valorados desvanezcan los motivos iniciales.');
+    sections.push('- DOBLE IMPACTO PROBATORIO OBLIGATORIO:');
+    sections.push('  1. Fumus Comissi Delicti (Sospecha Grave): Demostrar cómo las nuevas diligencias (declaraciones, pericias o documentales) debilitan la imputación inicial (AP 01-2019 FJ 24-27).');
+    sections.push('  2. Periculum Libertatis (Peligro Procesal): Acreditar arraigos de calidad (domiciliario, familiar, laboral) y descartar peligro de fuga u obstaculización (AP 01-2019 FJ 35-48).');
+    sections.push('  3. Principio de Proporcionalidad: Sustitución por Comparecencia con Restricciones (Art. 288° NCPP), Vigilancia Electrónica Personal (Art. 268-A NCPP) o Caución Económica.');
+    sections.push('- FIDELIDAD ESTRICTA AL EXPEDIENTE ADJUNTO: Cita con fidelidad los hechos, delito y fojas del expediente real. PROHIBIDO INVENTAR PRUEBAS FALSAS. Si falta algún comprobante de arraigo por remitir, señala con transparencia: "[Adjuntar aquí: Constancia de arraigo laboral / pericia técnica correspondiente que acredite este extremo]".');
+    sections.push('- SI EL ABOGADO CONSULTA DE FORMA GENERAL O PREVIA: Responde con claridad meridiana confirmando que el sistema lee el expediente completo, detecta la imputación y los cargos, y redacta el escrito formal de cesación listo para presentar ante el Juzgado de Investigación Preparatoria (SINOE), indicándole qué nuevos elementos puede aportar.');
+    sections.push('- SI PIDE EL ESCRITO O ADJUNTA EXPEDIENTE: Redacta de inmediato el escrito judicial formal completo dentro del bloque ```document listo para presentar al Juez de Investigación Preparatoria:');
+    sections.push('  * TÍTULO: SOLICITUD_CESACION_PRISION_PREVENTIVA');
+    sections.push('  * TIPO: ESCRITO JUDICIAL / CUADERNO DE CESACIÓN');
+    sections.push('  * SUMILLA: SOLICITO CESACIÓN DE PRISIÓN PREVENTIVA POR NUEVOS ELEMENTOS DE CONVICCIÓN Y SUSTITUCIÓN POR MANDATO DE COMPARECENCIA CON RESTRICCIONES (O VIGILANCIA ELECTRÓNICA PERSONAL)');
+    sections.push('  * CUADERNO: CESACIÓN DE PRISIÓN PREVENTIVA');
+    sections.push('  * SEÑOR JUEZ DEL JUZGADO DE INVESTIGACIÓN PREPARATORIA DE [CIUDAD]:');
+    sections.push('  * Comparecencia del imputado y abogado patrocinante con datos procesales');
+    sections.push('  * I. PETITORIO: Solicitud expresa de cesación bajo el Art. 283° NCPP y sustitución por comparecencia restrictiva o vigilancia electrónica');
+    sections.push('  * II. ANTECEDENTES PROCESALES: Resolución que dictó la prisión preventiva, fecha y plazo impuesto');
+    sections.push('  * III. NUEVOS ELEMENTOS DE CONVICCIÓN (Cláusula Rebus Sic Stantibus - Casación 391-2011 Piura y Casación 626-2013 Moquegua): Desarrollo pormenorizado respecto a la sospecha grave y los arraigos sobrevenidos');
+    sections.push('  * IV. MEDIDA SUSTITUTIVA PROPUESTA: Detalle de reglas de conducta del Art. 288° NCPP o vigilancia electrónica');
+    sections.push('  * V. FUNDAMENTACIÓN JURÍDICA: Art. 139° inc. 14 de la Constitución, Arts. IX T.P., 253°, 283° y 288° NCPP, D. Leg. 1585, Casaciones 626-2013 Moquegua y 391-2011 Piura, y Acuerdo Plenario 01-2019/CIJ-116');
+    sections.push('  * VI. MEDIOS PROBATORIOS');
+    sections.push('  * POR TANTO y OTROSÍES DIGO (Casilla SINOE, correo, teléfono y facultades procesales).');
   }
 
   sections.push('════════════════════════════════════════════════════════════════');
