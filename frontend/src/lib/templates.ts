@@ -347,6 +347,13 @@ export const SPECIALIST_TEMPLATES: Record<string, DocumentTemplateItem[]> = {
       category: 'Alimentos',
       prompt: 'Redacta una demanda de aumento / reducción de pensión de alimentos conforme al Art. 482 del Código Civil por variación de las necesidades o posibilidades económicas: [partes, sentencia o acta anterior, nuevo monto solicitado]',
     },
+    {
+      label: 'Solicitud de Adopción de Persona Mayor de Edad Capaz (Proceso No Contencioso)',
+      icon: Scale,
+      badgeColor: '#EC4899',
+      category: 'Adopción',
+      prompt: 'Redacta una solicitud de adopción de persona mayor de edad capaz conforme a la Estructura 7 y los Arts. 749° inc. 7, 750°, 751° y 781° al 785° del Código Procesal Civil y Arts. 377° al 385° del Código Civil, en vía de PROCESO NO CONTENCIOSO (NUNCA demanda contenciosa, NUNCA Código de los Niños y Adolescentes ni D. Leg. 1297). Debe incluir comparecencia conjunta de adoptantes y adoptado con su libre asentimiento, acreditación de diferencia de edad >18 años, emplazamiento obligatorio al Ministerio Público (Fiscalía de Familia), anexos médicos y patrimoniales del Art. 782° CPC, cierre con POR LO EXPUESTO y solicitud de oficios dobles a RENIEC: [adoptante(s), DNI, adoptado mayor de edad, DNI, edad del adoptado, estado civil, juzgado de familia]',
+    },
   ],
   fernanda: [
     {

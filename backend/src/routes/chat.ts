@@ -518,6 +518,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       'contestacion de demanda', 'contestación de demanda', 'contestacion a una demanda', 'contestación a una demanda',
       'contestar demanda', 'escrito de contestacion', 'escrito de contestación',
       'medida cautelar', 'habeas corpus', 'amparo', 'querella', 'bloque document',
+      'solicitud de adopcion', 'solicitud de adopción', 'adopcion', 'adopción', 'adopcion de mayor', 'adopción de mayor',
       'generar documento', 'generar escrito', 'genera un escrito', 'genera escrito',
       'genera documento', 'genera una demanda', 'genera un contrato', 'genera una carta',
       'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo',
@@ -916,6 +917,12 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
    - ⛔ PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes, códigos, artículos o jurisprudencia de México, España, Colombia, Argentina, Chile o cualquier otra jurisdicción foránea.
    - Cita exclusivamente normas peruanas: Constitución Política del Perú de 1993, Código Penal (D. Leg. 635), Código Procesal Penal (D. Leg. 957), D. Leg. 1585, Código Procesal Civil (D. Leg. 768 / D.S. 003-2024-JUS), Código Procesal Constitucional (Ley 31307), TUO LPAG (D.S. 006-2026-JUS), Ley General de Contrataciones Públicas (Ley 32069 / D.S. 001-2026-EF), Nueva Ley Procesal del Trabajo (Ley 29497 / Ley 32155), y Acuerdos Plenarios y Casaciones Vinculantes de la Corte Suprema del Perú.
    - ⛔ PROHIBICIÓN DE INVENTAR ARTÍCULOS O NORMAS: Nunca inventes artículos, incisos o casaciones inexistentes.
+   - ⚖️ RIGOR ABSOLUTO EN DERECHO CIVIL, PROCESAL CIVIL Y FAMILIA:
+     * En ADOPCIÓN DE MAYORES DE EDAD (PERSONAS CAPACES): Es exclusivamente un PROCESO NO CONTENCIOSO bajo los Artículos 749° inciso 7, 750°, 751°, 781°, 782°, 783°, 784° y 785° del Código Procesal Civil (CPC); y en lo sustantivo los Artículos 377° a 385° del Código Civil (requisitos del Art. 378°: solvencia moral, diferencia de edad +18 años, asentimiento del adoptado mayor de edad y del cónyuge).
+     * ⛔ PROHIBICIÓN TOTAL: NUNCA califiques la adopción de mayor de edad como demanda contenciosa ni uses fórmulas de juicio contradictorio (la sumilla se titula "SOLICITUD DE ADOPCIÓN DE PERSONA MAYOR DE EDAD CAPAZ" y el cierre es "POR LO EXPUESTO").
+     * ⛔ PROHIBICIÓN TOTAL: NUNCA apliques el Código de los Niños y Adolescentes (Ley 27337) ni el D. Leg. 1297 a mayores de edad (son exclusivos para menores de 0 a 17 años).
+     * ⛔ PROHIBICIÓN TOTAL: NUNCA cites artículos de procesos de conocimiento (Art. 480 CPC), abreviados (Art. 486 CPC) o sumarísimos (Art. 546 CPC) como vía procedimental, ni inventes artículos de adopción en el CPC.
+     * Se debe notificar obligatoriamente al Ministerio Público (Fiscalía Provincial de Familia) conforme al Art. 783° CPC y acompañar los 6 anexos especiales del Art. 782° CPC.
 
 2. CERO ALUCINACIONES Y FIDELIDAD PROBATORIA RIGUROSA CON EXPEDIENTES:
    - Cuando el usuario proporciona o vincula un expediente judicial, carpeta fiscal, resolución o documento:

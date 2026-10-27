@@ -90,7 +90,8 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'patria potestad', 'filiacion', 'sociedad de gananciales', 'separacion de patrimonios',
       'ley 31590', 'ley 30364', 'codigo de los ninos y adolescentes',
       'omision a la asistencia familiar', 'liquidacion de alimentos devengados',
-      'reconocimiento de paternidad', 'autorizacion de viaje de menor'
+      'reconocimiento de paternidad', 'autorizacion de viaje de menor',
+      'adopcion', 'adopción', 'adopcion de mayor', 'adopcion mayor de edad', 'adopcion de personas capaces', 'adoptar'
     ],
   },
   fernanda: {

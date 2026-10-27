@@ -54,19 +54,40 @@ export default function UsageCounterBadge({
 
   if (!usage) return null
 
+  const isDemo = usage.plan === 'demo'
   const isSenior = usage.plan === 'senior' || usage.plan === 'pro'
   const used = usage.questionsUsed
-  const limit = usage.limit || (isSenior ? 250 : 50)
+  const limit = usage.limit ?? (isDemo ? 1 : isSenior ? 250 : 50)
   const remaining = Math.max(0, limit - used)
 
   let dotColor = '#34d17a'
-  const ratio = used / limit
+  const ratio = limit > 0 ? used / limit : 1
   if (ratio >= 0.9) dotColor = '#ef4444'
   else if (ratio >= 0.7) dotColor = '#f59e0b'
 
   return (
     <>
-      {isSenior ? (
+      {isDemo ? (
+        <button
+          type="button"
+          onClick={() => setModalOpen(true)}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border select-none transition-all hover:scale-[1.02] cursor-pointer ${className}`}
+          style={{
+            background: remaining > 0 ? 'rgba(201,168,76,0.12)' : 'rgba(239,68,68,0.12)',
+            borderColor: remaining > 0 ? 'rgba(201,168,76,0.45)' : 'rgba(239,68,68,0.45)',
+          }}
+          title={remaining > 0 ? 'Modo Demo: 1 consulta de prueba disponible.' : 'Modo Demo: Consulta de prueba utilizada. Haz clic para activar un plan.'}
+        >
+          <Zap size={11} className={remaining > 0 ? 'text-[#c9a84c]' : 'text-red-400'} />
+          <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide">
+            {remaining > 0 ? (
+              <span className="text-[#dfbe63]">Demo: <strong>1</strong> consulta de prueba</span>
+            ) : (
+              <span className="text-red-400">Demo finalizada • <strong>Activar Plan</strong></span>
+            )}
+          </span>
+        </button>
+      ) : isSenior ? (
         <button
           type="button"
           onClick={() => setModalOpen(true)}

@@ -8,28 +8,32 @@ interface UpgradeModalProps {
     plan: string
     questionsUsed: number
     limit: number | null
+    isDemo?: boolean
   } | null
+  title?: string
+  subtitle?: string
 }
 
-export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalProps) {
+export default function UpgradeModal({ isOpen, onClose, usage, title, subtitle }: UpgradeModalProps) {
   if (!isOpen) return null
 
+  const isDemo = usage?.plan === 'demo' || usage?.isDemo
   const isSenior = usage?.limit === null || usage?.plan === 'senior' || usage?.plan === 'pro'
   const used = usage?.questionsUsed || 0
-  const limit = usage?.limit || (isSenior ? 250 : 50)
+  const limit = usage?.limit || (isDemo ? 1 : isSenior ? 250 : 50)
   const remaining = Math.max(0, limit - used)
   const percent = Math.min(100, Math.round((used / limit) * 100))
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
           transition={{ duration: 0.2 }}
-          className="w-full max-w-lg rounded-2xl overflow-hidden border shadow-2xl relative"
-          style={{ background: '#161616', borderColor: '#2e2e2e' }}
+          className={`w-full ${isDemo ? 'max-w-2xl' : 'max-w-lg'} rounded-2xl overflow-hidden border shadow-2xl relative max-h-[92vh] overflow-y-auto`}
+          style={{ background: '#141414', borderColor: '#2e2e2e' }}
         >
           {/* Close button */}
           <button
@@ -39,7 +43,140 @@ export default function UpgradeModal({ isOpen, onClose, usage }: UpgradeModalPro
             <X size={16} />
           </button>
 
-          {isSenior ? (
+          {isDemo ? (
+            /* Demo mode upgrade screen: Both Plans with Hotmart buttons */
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="text-center max-w-lg mx-auto">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-[#dfbe63] bg-[#c9a84c]/10 border border-[#c9a84c]/30 mb-3">
+                  <Zap size={12} className="text-[#c9a84c]" />
+                  <span>Modo de Prueba Finalizado</span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-light text-white mb-2">
+                  {title || 'Para seguir usando Hardman debes adquirir uno de nuestros planes'}
+                </h3>
+                <p className="text-xs text-white/60 leading-relaxed font-light">
+                  {subtitle || 'Has utilizado tu consulta de prueba. Elige cualquiera de nuestros dos planes oficiales para redactar demandas, calcular beneficios y analizar expedientes sin límites:'}
+                </p>
+              </div>
+
+              {/* 2 Plans Grid */}
+              <div className="grid sm:grid-cols-2 gap-4 pt-2">
+                {/* Plan Junior */}
+                <div
+                  className="p-5 rounded-xl border flex flex-col justify-between relative"
+                  style={{ background: '#1a1a1a', borderColor: '#2e2e2e' }}
+                >
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-white/60 block mb-1">
+                      Plan Junior
+                    </span>
+                    <div className="flex items-baseline gap-1.5 mb-2">
+                      <span className="text-2xl sm:text-3xl font-bold text-white">S/ 39</span>
+                      <span className="text-xs text-white/40">/ mes</span>
+                    </div>
+                    <p className="text-[11px] text-white/60 font-light mb-4">
+                      Ideal para abogados independientes y recién colegiados.
+                    </p>
+                    <ul className="space-y-2 text-xs text-white/75 mb-6">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#34d17a] mt-0.5 flex-shrink-0" />
+                        <span><strong>50 consultas legales</strong> al mes</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#34d17a] mt-0.5 flex-shrink-0" />
+                        <span>Los 8 especialistas con IA habilitados</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#34d17a] mt-0.5 flex-shrink-0" />
+                        <span>Generador de demandas en Word (.docx)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#34d17a] mt-0.5 flex-shrink-0" />
+                        <span>Análisis de escritos y resoluciones PDF</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <a
+                    href="https://pay.hotmart.com/M107246567H?off=hm1anfcw&bid=1791731581871"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-white border border-white/20 hover:border-[#dfbe63] hover:text-[#dfbe63] bg-white/5"
+                  >
+                    <span>Elegir Plan Junior</span>
+                    <ArrowRight size={13} />
+                  </a>
+                </div>
+
+                {/* Plan Senior (Recomendado) */}
+                <div
+                  className="p-5 rounded-xl border flex flex-col justify-between relative shadow-lg"
+                  style={{
+                    background: 'linear-gradient(180deg, #1f1b13 0%, #151515 100%)',
+                    borderColor: 'rgba(201,168,76,0.5)',
+                  }}
+                >
+                  <div className="absolute -top-2.5 right-4 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider text-black bg-[#c9a84c]">
+                    El más elegido
+                  </div>
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider font-semibold text-[#c9a84c] block mb-1">
+                      Plan Senior
+                    </span>
+                    <div className="flex items-baseline gap-1.5 mb-2">
+                      <span className="text-2xl sm:text-3xl font-bold text-white">S/ 69</span>
+                      <span className="text-xs text-white/40">/ mes</span>
+                    </div>
+                    <p className="text-[11px] text-white/60 font-light mb-4">
+                      Para litigantes y estudios jurídicos con alta carga procesal.
+                    </p>
+                    <ul className="space-y-2 text-xs text-white/75 mb-6">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#c9a84c] mt-0.5 flex-shrink-0" />
+                        <span><strong>250 consultas al mes</strong> (máxima potencia)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#c9a84c] mt-0.5 flex-shrink-0" />
+                        <span>Carpetas fiscales y expedientes (hasta 30 MB)</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#c9a84c] mt-0.5 flex-shrink-0" />
+                        <span>Membrete y marca blanca de tu estudio</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="text-[#c9a84c] mt-0.5 flex-shrink-0" />
+                        <span>Soporte prioritario por WhatsApp</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  <a
+                    href="https://pay.hotmart.com/M107246567H?off=ayixxvun&bid=1791731521258"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full py-2.5 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:opacity-95 shadow-md"
+                    style={{ background: 'linear-gradient(135deg, #dfbe63, #c9a84c)' }}
+                  >
+                    <Zap size={14} />
+                    <span>Elegir Plan Senior</span>
+                    <ArrowRight size={13} />
+                  </a>
+                </div>
+              </div>
+
+              {/* Botón secundario para ver en landing */}
+              <div className="pt-2 text-center">
+                <a
+                  href="/info#planes"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-[11px] text-white/50 hover:text-[#dfbe63] transition-colors underline underline-offset-4"
+                >
+                  Ver comparativa detallada y métodos de pago en hardman.lat &rarr;
+                </a>
+              </div>
+            </div>
+          ) : isSenior ? (
             /* Senior status banner */
             <div className="p-6 sm:p-8 space-y-6">
               <div className="flex items-center gap-3">

@@ -150,9 +150,12 @@ export const requireSubscription = async (
 
   req.userPlan = plan;
 
-  // Plan Junior: 50 consultas / mes | Plan Senior: 250 consultas / mes
+  // Plan Demo: 1 consulta de prueba | Plan Junior: 50 consultas / mes | Plan Senior: 250 consultas / mes
+  const isDemo = plan === 'demo';
   const isJunior = plan === 'junior' || plan === 'normal';
-  const LIMIT = isJunior
+  const LIMIT = isDemo
+    ? 1
+    : isJunior
     ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
     : parseInt(process.env.SENIOR_QUESTION_LIMIT || '250', 10);
 
@@ -214,6 +217,17 @@ export const requireSubscription = async (
   }
 
   if (cycleQuestions >= LIMIT) {
+    if (isDemo) {
+      return res.status(403).json({
+        error: 'Has utilizado tu consulta de prueba en el Modo Demo. Para continuar utilizando los 8 especialistas con IA de Hardman, elige cualquiera de nuestros planes.',
+        code: 'DEMO_LIMIT_REACHED',
+        questionsUsed: cycleQuestions,
+        limit: 1,
+        plan: 'demo',
+        upgradeRequired: true,
+      });
+    }
+
     const errorMsg = isJunior
       ? `Has alcanzado el límite de ${LIMIT} consultas de tu periodo en el Plan Junior. Actualiza a Plan Senior (S/ 69/mes) para obtener 250 consultas y soporte por WhatsApp prioritario.`
       : `Has alcanzado el límite de ${LIMIT} consultas de tu periodo en el Plan Senior. Tu cuota se reiniciará al renovar tu ciclo de facturación.`;

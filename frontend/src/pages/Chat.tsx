@@ -9,7 +9,7 @@ import {
   ThumbsUp, ThumbsDown, CornerDownLeft, RefreshCw,
   Download, Paperclip, Image as ImageIcon,
   X, AlertTriangle, FileText, Loader2, FileDown, Printer,
-  Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2, MessageCircle,
+  Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2, MessageCircle, Zap,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
   Scale, Shield, Gavel, Building2, Search, Edit2, RotateCcw, Folder, FolderCheck, type LucideIcon
@@ -32,6 +32,7 @@ import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
 import LinkedFolderModal, { type LinkedFolderState } from '@/components/chat/LinkedFolderModal'
 import TemplatesModal from '@/components/chat/TemplatesModal'
+import UpgradeModal from '@/components/ui/UpgradeModal'
 import { SPECIALIST_TEMPLATES, type DocumentTemplateItem } from '@/lib/templates'
 
 const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
@@ -590,7 +591,8 @@ export default function Chat() {
     setFolderModalOpen(false)
   }
 
-  const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean } | null>(null)
+  const [usage, setUsage] = useState<{ plan: string; questionsUsed: number; limit: number | null; isAdmin: boolean; isDemo?: boolean } | null>(null)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
   const [shareLoading, setShareLoading] = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [searchParams] = useSearchParams()
@@ -934,6 +936,10 @@ export default function Chat() {
   }
 
   const speakAssistantMessage = async (text: string, messageId: string) => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     stopSpeaking()
     const clean = cleanTextForSpeech(text)
     if (!clean) return
@@ -1197,6 +1203,10 @@ export default function Chat() {
   }
 
   const toggleVoiceInput = () => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     if (isRecording) {
       stopVoiceInput()
     } else {
@@ -1318,6 +1328,10 @@ export default function Chat() {
   }
 
   const handleFileSelect = async (file: File) => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     const MAX_MB = 100
     if (file.size > MAX_MB * 1024 * 1024) {
       setAttachedFile(file)
@@ -1386,6 +1400,10 @@ export default function Chat() {
   }
 
   const sendMessage = useCallback(async () => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     // Si aún se está extrayendo texto del archivo, encolar el envío automático para cuando finalice
     if (extracting) {
       pendingAutoSendRef.current = true
@@ -1539,6 +1557,11 @@ export default function Chat() {
               setLoading(false)
               return
             }
+            const isDemoLimit = err?.code === 'DEMO_LIMIT_REACHED' || err?.message?.includes('DEMO_LIMIT_REACHED') || err?.message?.includes('Modo Demo')
+            if (isDemoLimit) {
+              setUpgradeModalOpen(true)
+              setUsage((prev) => prev ? { ...prev, questionsUsed: 1 } : null)
+            }
             const errorMsg = err.message || 'Hubo un error al procesar tu consulta. Por favor intenta de nuevo.'
             if (!firstChunkReceived) {
               setMessages([
@@ -1577,6 +1600,11 @@ export default function Chat() {
         setLoading(false)
         return
       }
+      const isDemoLimit = err?.code === 'DEMO_LIMIT_REACHED' || err?.message?.includes('DEMO_LIMIT_REACHED') || err?.message?.includes('Modo Demo')
+      if (isDemoLimit) {
+        setUpgradeModalOpen(true)
+        setUsage((prev) => prev ? { ...prev, questionsUsed: 1 } : null)
+      }
       const errorMsg = err.message || 'Hubo un error al procesar tu consulta. Por favor intenta de nuevo.'
       setMessages([
         ...newMessages,
@@ -1597,6 +1625,10 @@ export default function Chat() {
   }, [sendMessage])
 
   const handleRetryPrompt = (promptToRetry: string) => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     if (!promptToRetry) return
     setInput(promptToRetry)
     if (textareaRef.current) {
@@ -1618,6 +1650,10 @@ export default function Chat() {
   }
 
   const handleContinueWriting = () => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     setInput('Por favor continúa con la redacción legal exactamente desde el último punto donde te quedaste, respetando el formato procesal y la numeración.')
     if (textareaRef.current) {
       textareaRef.current.focus()
@@ -1628,6 +1664,10 @@ export default function Chat() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
+      if (limitReached) {
+        setUpgradeModalOpen(true)
+        return
+      }
       if (extracting) {
         pendingAutoSendRef.current = true
         setPendingAutoSend(true)
@@ -1653,6 +1693,10 @@ export default function Chat() {
   }
 
   const insertSuggestion = (text: string) => {
+    if (limitReached) {
+      setUpgradeModalOpen(true)
+      return
+    }
     setIsVoiceMessage(false)
     setInput(text)
     textareaRef.current?.focus()
@@ -1680,8 +1724,9 @@ export default function Chat() {
     ? user.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
     : 'U'
 
+  const isDemo = usage?.plan === 'demo' || (usage as any)?.isDemo || user?.isDemo || user?.email?.includes('evaluador.')
   const isLimited = usage && usage.limit !== null && !usage.isAdmin
-  const limitReached = isLimited && usage!.questionsUsed >= usage!.limit!
+  const limitReached = (isLimited && usage!.questionsUsed >= usage!.limit!) || (isDemo && (usage?.questionsUsed ?? 0) >= 1)
 
   return (
     <div className="fixed inset-0 h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111' }}>
@@ -2040,13 +2085,31 @@ export default function Chat() {
           {/* Limit reached banner */}
           {limitReached && (
             <div
-              className="flex items-center gap-3 px-6 py-3 border-b"
-              style={{ background: 'rgba(255,100,100,0.08)', borderColor: 'rgba(255,100,100,0.15)' }}
+              className="flex items-center justify-between gap-3 px-4 sm:px-6 py-2.5 border-b z-20"
+              style={{
+                background: isDemo
+                  ? 'linear-gradient(90deg, rgba(201,168,76,0.18) 0%, rgba(26,26,26,0.98) 100%)'
+                  : 'rgba(255,100,100,0.08)',
+                borderColor: isDemo ? 'rgba(201,168,76,0.35)' : 'rgba(255,100,100,0.15)',
+              }}
             >
-              <AlertTriangle size={15} style={{ color: '#ff6464' }} />
-              <p className="text-[11px] font-light" style={{ color: '#ff6464' }}>
-                Has alcanzado el límite de {usage!.limit} consultas gratuitas. Suscríbete para consultas ilimitadas.
-              </p>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <AlertTriangle size={15} style={{ color: isDemo ? '#dfbe63' : '#ff6464' }} className="flex-shrink-0" />
+                <p className="text-[11px] sm:text-xs font-light text-white/90 truncate">
+                  {isDemo
+                    ? 'Has utilizado tu consulta de prueba en Modo Demo. Para seguir usando Hardman debes adquirir uno de nuestros planes.'
+                    : `Has alcanzado el límite de ${usage?.limit ?? 50} consultas de tu periodo.`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(true)}
+                className="px-3 py-1.5 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 text-black flex-shrink-0 cursor-pointer shadow-md"
+                style={{ background: 'linear-gradient(135deg, #dfbe63, #c9a84c)' }}
+              >
+                <span>Ver Planes</span>
+                <ArrowRight size={12} />
+              </button>
             </div>
           )}
 
@@ -2347,230 +2410,311 @@ export default function Chat() {
                 </div>
               )}
 
-              {/* Input container */}
-              <div
-                className="rounded-[14px] p-2 sm:p-3 transition-all duration-300 w-full max-w-full box-border overflow-hidden"
-                style={{
-                  background: '#1a1a1a',
-                  border: '1px solid #333333',
-                  opacity: limitReached ? 0.5 : 1,
-                  pointerEvents: limitReached ? 'none' : 'auto',
-                }}
-                onFocus={(e) => {
-                  const container = e.currentTarget
-                  container.style.borderColor = '#c9a84c'
-                  container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
-                  setTimeout(() => {
-                    scrollContainerRef.current?.scrollTo({
-                      top: scrollContainerRef.current.scrollHeight,
-                      behavior: 'smooth',
-                    })
-                  }, 150)
-                }}
-                onBlur={(e) => {
-                  if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                    const container = e.currentTarget
-                    container.style.borderColor = '#333333'
-                    container.style.boxShadow = 'none'
-                  }
-                }}
-              >
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => { setInput(e.target.value); autoResize(); if (isVoiceMessage) setIsVoiceMessage(false) }}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`Escribe o usa el micrófono para ${agent.name}...`}
-                  rows={1}
-                  className="w-full bg-transparent outline-none resize-none text-[16px] sm:text-[13px] font-light leading-relaxed px-1"
+              {/* Input container or Upgrade Banner when limit reached */}
+              {limitReached ? (
+                <div
+                  className="rounded-[14px] p-4 sm:p-5 w-full max-w-full box-border border shadow-2xl relative overflow-hidden"
                   style={{
-                    minHeight: '26px',
-                    maxHeight: '120px',
-                    caretColor: '#c9a84c',
-                    color: '#ffffff',
+                    background: isDemo
+                      ? 'linear-gradient(135deg, rgba(201,168,76,0.14) 0%, rgba(20,20,20,0.98) 100%)'
+                      : 'linear-gradient(135deg, rgba(239,68,68,0.12) 0%, rgba(20,20,20,0.98) 100%)',
+                    borderColor: isDemo ? 'rgba(201,168,76,0.40)' : 'rgba(239,68,68,0.30)',
                   }}
-                />
-
-                <div className="flex items-center justify-between pt-1.5 sm:pt-2 mt-1 gap-1 sm:gap-2 max-w-full" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  {/* Left actions: smooth horizontal scroll only if needed, min-w-0 */}
-                  <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
-                      title="Adjuntar PDF o Word (Máx. 25MB)"
-                    >
-                      <Paperclip size={13} />
-                      <span className="hidden sm:inline">PDF / WORD</span>
-                    </button>
-                    <button
-                      onClick={() => imageInputRef.current?.click()}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
-                      title="Adjuntar imagen"
-                    >
-                      <ImageIcon size={13} />
-                      <span className="hidden sm:inline">IMAGEN</span>
-                    </button>
-
-                    {/* Botón Escanear Expediente / Cédula con IA */}
+                >
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#c9a84c]/20 border border-[#c9a84c]/40 text-[#dfbe63] flex-shrink-0">
+                        <Sparkles size={20} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-white">
+                          {isDemo
+                            ? 'Consulta de prueba completada en Modo Demo'
+                            : 'Límite de consultas alcanzado'}
+                        </h4>
+                        <p className="text-xs text-white/70 font-light mt-0.5">
+                          {isDemo
+                            ? 'Para continuar usando Hardman y desbloquear consultas sin límites, adquiere uno de nuestros planes.'
+                            : 'Has utilizado las consultas de tu periodo. Elige un plan superior para continuar.'}
+                        </p>
+                      </div>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setScannerOpen(true)}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer text-[#c9a84c] bg-[#c9a84c]/10 hover:bg-[#c9a84c]/20 border border-[#c9a84c]/30"
-                      title="Escanear Expediente o Cédula Judicial (OCR IA + Detección de Plazos)"
-                    >
-                      <Sparkles size={12} className="text-[#c9a84c]" />
-                      <span>
-                        <span className="sm:hidden">ESCANEAR</span>
-                        <span className="hidden sm:inline">ESCANEAR EXPEDIENTE</span>
-                      </span>
-                    </button>
-
-                    {/* Cowork Folder linking button */}
-                    <button
-                      type="button"
-                      onClick={() => setFolderModalOpen(true)}
-                      className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer ${
-                        linkedFolder
-                          ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/25'
-                          : 'text-white/50 hover:text-[#c9a84c]'
-                      }`}
-                      title={
-                        linkedFolder
-                          ? `Carpeta vinculada: ${linkedFolder.folderName} (${linkedFolder.docs.length} docs)`
-                          : 'Vincular Carpeta Fiscal / Expediente (Modo Cowork)'
-                      }
-                    >
-                      <Folder size={12} className={linkedFolder ? 'text-emerald-400' : ''} />
-                      <span>
-                        <span className="sm:hidden">{linkedFolder ? 'CARPETA' : 'CARPETA'}</span>
-                        <span className="hidden sm:inline">
-                          {linkedFolder ? linkedFolder.folderName.slice(0, 12) : 'VINCULAR CARPETA'}
-                        </span>
-                      </span>
-                    </button>
-
-                    {/* SPIJ & Acuerdos Plenarios quick button */}
-                    <button
-                      type="button"
-                      onClick={() => setSpijModalOpen(true)}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0"
+                      onClick={() => setUpgradeModalOpen(true)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-black flex items-center gap-2 transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-lg flex-shrink-0"
                       style={{
-                        color: spijModalOpen ? '#c9a84c' : 'rgba(201,168,76,0.90)',
-                        background: spijModalOpen ? 'rgba(201,168,76,0.15)' : 'rgba(201,168,76,0.06)',
-                        border: '1px solid rgba(201,168,76,0.22)',
+                        background: 'linear-gradient(135deg, #dfbe63, #c9a84c)',
+                        boxShadow: '0 4px 18px rgba(201,168,76,0.35)',
                       }}
-                      title="Consultar o insertar Acuerdos Plenarios de la Corte Suprema y Leyes SPIJ"
                     >
-                      <Scale size={12} className="text-[#c9a84c]" />
-                      <span>
-                        <span className="sm:hidden">SPIJ</span>
-                        <span className="hidden sm:inline">SPIJ / PLENOS</span>
-                      </span>
+                      <Zap size={14} fill="#000" />
+                      <span>{isDemo ? 'Ver Planes (Desde S/ 39)' : 'Mejorar Plan'}</span>
+                      <ArrowRight size={14} />
                     </button>
-
-                    {/* Specialist Document Templates (Desktop & Mobile) */}
-                    <button
-                      type="button"
-                      id="btn-plantillas"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        setTemplatesOpen((prev) => !prev)
-                      }}
-                      className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer"
-                      style={{
-                        color: templatesOpen ? '#c9a84c' : 'rgba(201,168,76,0.90)',
-                        background: templatesOpen ? 'rgba(201,168,76,0.18)' : 'rgba(201,168,76,0.06)',
-                        border: '1px solid rgba(201,168,76,0.25)',
-                      }}
-                      title={`Plantillas y modelos legales oficiales de ${agent.name} (${agent.badge})`}
-                    >
-                      <BookOpen size={12} className="text-[#c9a84c]" />
-                      <span>PLANTILLAS</span>
-                    </button>
-                  </div>
-
-                  {/* Right actions: ALWAYS anchored, visible, flex-shrink-0 */}
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto pl-1">
-                    {input.length > 0 && (
-                      <span className="text-[9px] hidden lg:inline" style={{ color: 'rgba(255,255,255,0.30)' }}>
-                        Enter · Shift+Enter
-                      </span>
-                    )}
-
-                    {/* Microphone button */}
-                    <button
-                      type="button"
-                      onClick={toggleVoiceInput}
-                      disabled={isTranscribing}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                      style={
-                        isRecording
-                          ? { background: 'rgba(239,68,68,0.20)', border: '1.5px solid rgba(239,68,68,0.70)', color: '#ef4444', boxShadow: '0 0 10px rgba(239,68,68,0.3)' }
-                          : isTranscribing
-                          ? { background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.40)', color: '#c9a84c' }
-                          : { background: 'rgba(255,255,255,0.07)', border: '1px solid #333333', color: 'rgba(255,255,255,0.60)' }
-                      }
-                      title={isRecording ? 'Detener grabación' : isTranscribing ? 'Transcribiendo audio...' : 'Hablar por micrófono (dictado por voz)'}
-                    >
-                      {isTranscribing ? (
-                        <Loader2 size={13} className="animate-spin text-[#c9a84c]" />
-                      ) : isRecording ? (
-                        <Square size={11} fill="#ef4444" />
-                      ) : (
-                        <Mic size={14} />
-                      )}
-                    </button>
-
-                    {/* Send / Cancel button */}
-                    {loading ? (
-                      <motion.button
-                        type="button"
-                        onClick={cancelConsultation}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 text-[11px] font-medium shadow-md"
-                        style={{
-                          background: 'rgba(239, 68, 68, 0.18)',
-                          border: '1px solid rgba(239, 68, 68, 0.45)',
-                          color: '#f87171',
-                        }}
-                        title="Cancelar consulta en curso"
-                      >
-                        <Square size={11} fill="currentColor" />
-                        <span>Cancelar</span>
-                      </motion.button>
-                    ) : (
-                      <motion.button
-                        onClick={() => {
-                          if (extracting) {
-                            pendingAutoSendRef.current = true
-                            setPendingAutoSend(true)
-                            return
-                          }
-                          sendMessage()
-                        }}
-                        disabled={(!input.trim() && !extractedText && !extracting) || isRecording || isTranscribing}
-                        whileHover={{ scale: (input.trim() || extractedText || extracting) ? 1.05 : 1 }}
-                        whileTap={{ scale: (input.trim() || extractedText || extracting) ? 0.95 : 1 }}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
-                        style={{
-                          background: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#c9a84c' : 'rgba(255,255,255,0.07)',
-                          color: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#111111' : 'rgba(255,255,255,0.25)',
-                          cursor: (!input.trim() && !extractedText && !extracting) ? 'not-allowed' : 'pointer',
-                        }}
-                        title={extracting ? (pendingAutoSend ? 'Enviando automáticamente al completar lectura...' : 'Encolar envío automático al completar lectura') : 'Enviar consulta al abogado'}
-                      >
-                        {extracting && pendingAutoSend ? (
-                          <Loader2 size={14} className="animate-spin text-[#111111]" />
-                        ) : (
-                          <ArrowUp size={15} />
-                        )}
-                      </motion.button>
-                    )}
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div
+                  className="rounded-[14px] p-2 sm:p-3 transition-all duration-300 w-full max-w-full box-border overflow-hidden"
+                  style={{
+                    background: '#1a1a1a',
+                    border: '1px solid #333333',
+                  }}
+                  onFocus={(e) => {
+                    const container = e.currentTarget
+                    container.style.borderColor = '#c9a84c'
+                    container.style.boxShadow = '0 0 0 3px rgba(201,168,76,0.08)'
+                    setTimeout(() => {
+                      scrollContainerRef.current?.scrollTo({
+                        top: scrollContainerRef.current.scrollHeight,
+                        behavior: 'smooth',
+                      })
+                    }, 150)
+                  }}
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                      const container = e.currentTarget
+                      container.style.borderColor = '#333333'
+                      container.style.boxShadow = 'none'
+                    }
+                  }}
+                >
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => { setInput(e.target.value); autoResize(); if (isVoiceMessage) setIsVoiceMessage(false) }}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`Escribe o usa el micrófono para ${agent.name}...`}
+                    rows={1}
+                    className="w-full bg-transparent outline-none resize-none text-[16px] sm:text-[13px] font-light leading-relaxed px-1"
+                    style={{
+                      minHeight: '26px',
+                      maxHeight: '120px',
+                      caretColor: '#c9a84c',
+                      color: '#ffffff',
+                    }}
+                  />
+
+                  <div className="flex items-center justify-between pt-1.5 sm:pt-2 mt-1 gap-1 sm:gap-2 max-w-full" style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                    {/* Left actions: smooth horizontal scroll only if needed, min-w-0 */}
+                    <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
+                      <button
+                        onClick={() => {
+                          if (limitReached) {
+                            setUpgradeModalOpen(true)
+                            return
+                          }
+                          fileInputRef.current?.click()
+                        }}
+                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
+                        title="Adjuntar PDF o Word (Máx. 25MB)"
+                      >
+                        <Paperclip size={13} />
+                        <span className="hidden sm:inline">PDF / WORD</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (limitReached) {
+                            setUpgradeModalOpen(true)
+                            return
+                          }
+                          imageInputRef.current?.click()
+                        }}
+                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
+                        title="Adjuntar imagen"
+                      >
+                        <ImageIcon size={13} />
+                        <span className="hidden sm:inline">IMAGEN</span>
+                      </button>
+
+                      {/* Botón Escanear Expediente / Cédula con IA */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (limitReached) {
+                            setUpgradeModalOpen(true)
+                            return
+                          }
+                          setScannerOpen(true)
+                        }}
+                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer text-[#c9a84c] bg-[#c9a84c]/10 hover:bg-[#c9a84c]/20 border border-[#c9a84c]/30"
+                        title="Escanear Expediente o Cédula Judicial (OCR IA + Detección de Plazos)"
+                      >
+                        <Sparkles size={12} className="text-[#c9a84c]" />
+                        <span>
+                          <span className="sm:hidden">ESCANEAR</span>
+                          <span className="hidden sm:inline">ESCANEAR EXPEDIENTE</span>
+                        </span>
+                      </button>
+
+                      {/* Cowork Folder linking button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (limitReached) {
+                            setUpgradeModalOpen(true)
+                            return
+                          }
+                          setFolderModalOpen(true)
+                        }}
+                        className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer ${
+                          linkedFolder
+                            ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/25'
+                            : 'text-white/50 hover:text-[#c9a84c]'
+                        }`}
+                        title={
+                          linkedFolder
+                            ? `Carpeta vinculada: ${linkedFolder.folderName} (${linkedFolder.docs.length} docs)`
+                            : 'Vincular Carpeta Fiscal / Expediente (Modo Cowork)'
+                        }
+                      >
+                        <Folder size={12} className={linkedFolder ? 'text-emerald-400' : ''} />
+                        <span>
+                          <span className="sm:hidden">{linkedFolder ? 'CARPETA' : 'CARPETA'}</span>
+                          <span className="hidden sm:inline">
+                            {linkedFolder ? linkedFolder.folderName.slice(0, 12) : 'VINCULAR CARPETA'}
+                          </span>
+                        </span>
+                      </button>
+
+                      {/* SPIJ & Acuerdos Plenarios quick button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (limitReached) {
+                            setUpgradeModalOpen(true)
+                            return
+                          }
+                          setSpijModalOpen(true)
+                        }}
+                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0"
+                        style={{
+                          color: spijModalOpen ? '#c9a84c' : 'rgba(201,168,76,0.90)',
+                          background: spijModalOpen ? 'rgba(201,168,76,0.15)' : 'rgba(201,168,76,0.06)',
+                          border: '1px solid rgba(201,168,76,0.22)',
+                        }}
+                        title="Consultar o insertar Acuerdos Plenarios de la Corte Suprema y Leyes SPIJ"
+                      >
+                        <Scale size={12} className="text-[#c9a84c]" />
+                        <span>
+                          <span className="sm:hidden">SPIJ</span>
+                          <span className="hidden sm:inline">SPIJ / PLENOS</span>
+                        </span>
+                      </button>
+
+                      {/* Specialist Document Templates (Desktop & Mobile) */}
+                      <button
+                        type="button"
+                        id="btn-plantillas"
+                        onClick={(e) => {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          if (limitReached) {
+                            setUpgradeModalOpen(true)
+                            return
+                          }
+                          setTemplatesOpen((prev) => !prev)
+                        }}
+                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer"
+                        style={{
+                          color: templatesOpen ? '#c9a84c' : 'rgba(201,168,76,0.90)',
+                          background: templatesOpen ? 'rgba(201,168,76,0.18)' : 'rgba(201,168,76,0.06)',
+                          border: '1px solid rgba(201,168,76,0.25)',
+                        }}
+                        title={`Plantillas y modelos legales oficiales de ${agent.name} (${agent.badge})`}
+                      >
+                        <BookOpen size={12} className="text-[#c9a84c]" />
+                        <span>PLANTILLAS</span>
+                      </button>
+                    </div>
+
+                    {/* Right actions: ALWAYS anchored, visible, flex-shrink-0 */}
+                    <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0 ml-auto pl-1">
+                      {input.length > 0 && (
+                        <span className="text-[9px] hidden lg:inline" style={{ color: 'rgba(255,255,255,0.30)' }}>
+                          Enter · Shift+Enter
+                        </span>
+                      )}
+
+                      {/* Microphone button */}
+                      <button
+                        type="button"
+                        onClick={toggleVoiceInput}
+                        disabled={isTranscribing}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+                        style={
+                          isRecording
+                            ? { background: 'rgba(239,68,68,0.20)', border: '1.5px solid rgba(239,68,68,0.70)', color: '#ef4444', boxShadow: '0 0 10px rgba(239,68,68,0.3)' }
+                            : isTranscribing
+                            ? { background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.40)', color: '#c9a84c' }
+                            : { background: 'rgba(255,255,255,0.07)', border: '1px solid #333333', color: 'rgba(255,255,255,0.60)' }
+                        }
+                        title={isRecording ? 'Detener grabación' : isTranscribing ? 'Transcribiendo audio...' : 'Hablar por micrófono (dictado por voz)'}
+                      >
+                        {isTranscribing ? (
+                          <Loader2 size={13} className="animate-spin text-[#c9a84c]" />
+                        ) : isRecording ? (
+                          <Square size={11} fill="#ef4444" />
+                        ) : (
+                          <Mic size={14} />
+                        )}
+                      </button>
+
+                      {/* Send / Cancel button */}
+                      {loading ? (
+                        <motion.button
+                          type="button"
+                          onClick={cancelConsultation}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="h-8 px-2.5 rounded-lg flex items-center gap-1.5 transition-all duration-200 text-[11px] font-medium shadow-md"
+                          style={{
+                            background: 'rgba(239, 68, 68, 0.18)',
+                            border: '1px solid rgba(239, 68, 68, 0.45)',
+                            color: '#f87171',
+                          }}
+                          title="Cancelar consulta en curso"
+                        >
+                          <Square size={11} fill="currentColor" />
+                          <span>Cancelar</span>
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          onClick={() => {
+                            if (limitReached) {
+                              setUpgradeModalOpen(true)
+                              return
+                            }
+                            if (extracting) {
+                              pendingAutoSendRef.current = true
+                              setPendingAutoSend(true)
+                              return
+                            }
+                            sendMessage()
+                          }}
+                          disabled={(!input.trim() && !extractedText && !extracting) || isRecording || isTranscribing}
+                          whileHover={{ scale: (input.trim() || extractedText || extracting) ? 1.05 : 1 }}
+                          whileTap={{ scale: (input.trim() || extractedText || extracting) ? 0.95 : 1 }}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
+                          style={{
+                            background: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#c9a84c' : 'rgba(255,255,255,0.07)',
+                            color: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#111111' : 'rgba(255,255,255,0.25)',
+                            cursor: (!input.trim() && !extractedText && !extracting) ? 'not-allowed' : 'pointer',
+                          }}
+                          title={extracting ? (pendingAutoSend ? 'Enviando automáticamente al completar lectura...' : 'Encolar envío automático al completar lectura') : 'Enviar consulta al abogado'}
+                        >
+                          {extracting && pendingAutoSend ? (
+                            <Loader2 size={14} className="animate-spin text-[#111111]" />
+                          ) : (
+                            <ArrowUp size={15} />
+                          )}
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2658,6 +2802,12 @@ export default function Chat() {
           />
         )}
       </Suspense>
+
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        usage={usage ? { ...usage, isDemo } : { plan: isDemo ? 'demo' : 'junior', questionsUsed: 1, limit: isDemo ? 1 : 50, isDemo }}
+      />
     </div>
   )
 }

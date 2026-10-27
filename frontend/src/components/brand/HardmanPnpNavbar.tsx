@@ -15,7 +15,8 @@ export default function HardmanPnpNavbar({ onPagarClick }: HardmanPnpNavbarProps
     } else {
       const el = document.getElementById('planes')
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth' })
+        const top = el.getBoundingClientRect().top + window.pageYOffset - 84
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
       } else {
         navigate('/pnp/login')
       }

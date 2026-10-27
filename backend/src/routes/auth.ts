@@ -125,7 +125,8 @@ authRouter.post('/demo-login', authRateLimiter, async (_req, res) => {
       id: uuidv4(),
       userId: demoId,
       status: 'active',
-      plan: 'pro',
+      plan: 'demo',
+      currentPeriodStart: new Date(),
       currentPeriodEnd: periodEnd,
     });
 
@@ -144,6 +145,8 @@ authRouter.post('/demo-login', authRateLimiter, async (_req, res) => {
         role: 'user',
         dni: '45678912',
         isAdmin: false,
+        isDemo: true,
+        plan: 'demo',
       },
     });
   } catch (err) {

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/landing",
+      "destination": "/info/index.html"
+    },
+    {
+      "source": "/landing/(.*)",
+      "destination": "/info/$1"
+    },
+    {
+      "source": "/info",
+      "destination": "/info/index.html"
+    },
+    {
+      "source": "/info/(.*)",
+      "destination": "/info/$1"
+    },
+    {
+      "source": "/",
+      "destination": "/info/index.html"
+    },
+    {
+      "source": "/((?!assets/|brand/|info/|favicon\\.svg|manifest\\.json|robots\\.txt|sitemap\\.xml|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

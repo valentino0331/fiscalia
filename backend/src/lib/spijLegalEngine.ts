@@ -704,6 +704,28 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     bindingGrounds: 'Doctrina Jurisprudencial Vinculante sobre ineficacia y nulidad absoluta de actos de disposición unilateral de bienes gananciales.',
     legalApplication: 'Obligatorio en demandas de Nulidad de Acto Jurídico cuando uno de los cónyuges vendió o hipotecó bienes de la sociedad conyugal a espaldas del otro.'
   },
+  {
+    code: 'Casación N° 4118-2016 Lima / Consulta de Familia Corte Suprema',
+    specialistId: 'camila',
+    court: 'Sala Civil Permanente de la Corte Suprema de Justicia',
+    title: 'Adopción de personas mayores de edad capaces en Proceso No Contencioso (Arts. 781°-785° CPC y 377°-385° CC)',
+    category: 'Derecho de Familia / Adopción de Mayores de Edad',
+    keywords: [
+      'adopcion de mayor', 'adopcion mayor de edad', 'adopcion personas capaces', 'adopcion mayor',
+      'adopcion de personas capaces', 'adoptar mayor de edad', 'adoptar adulto', 'adopcion adulto',
+      'art 781 cpc', 'art 782 cpc', 'art 783 cpc', 'proceso no contencioso adopcion', 'adopcion de personas mayores de edad',
+      'adopcion', 'adopción', 'adoptar'
+    ],
+    keyPrinciples: [
+      'La adopción de personas mayores de edad capaces se tramita con sujeción estricta a la Vía del PROCESO NO CONTENCIOSO bajo los Artículos 749° inciso 7, 750°, 751°, 781°, 782° y 783° del Código Procesal Civil; NUNCA es una demanda contenciosa ni se aplican normas de procesos abreviados o de conocimiento.',
+      'El Código de los Niños y Adolescentes (Ley 27337) y el D. Leg. 1297 son estrictamente inaplicables a mayores de edad; no interviene la Dirección General de Adopciones (DGA).',
+      'Requisitos materiales taxativos (Código Civil): solvencia moral del adoptante (Art. 378 inc. 1), diferencia de edad mínima de 18 años entre adoptante y adoptado (Art. 378 inc. 2), asentimiento del cónyuge del adoptante si fuere casado (Art. 378 inc. 3) y asentimiento libre y expreso del adoptado mayor de edad capaz (Art. 378 inc. 4).',
+      'Anexos especiales obligatorios bajo sanción de inadmisibilidad (Art. 782 CPC): partidas de nacimiento y matrimonio/defunción, declaración jurada de bienes del adoptado y certificados médicos de salud física y mental de adoptante y adoptado.',
+      'La intervención del Ministerio Público (Fiscalía Provincial de Familia) en la audiencia es obligatoria conforme al Art. 783° CPC, concluyendo con la aprobación judicial y la remisión de partes al RENIEC para la nueva partida de nacimiento.',
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Vinculante sobre la competencia exclusiva de los Juzgados de Familia en Procesos No Contenciosos de Adopción de Mayores de Edad.',
+    legalApplication: 'Invocable obligatoriamente en toda Solicitud de Adopción de Persona Mayor de Edad Capaz tramitada ante el Poder Judicial o en la vía notarial (Ley 26662).',
+  },
 
   // ── MARCO: ADMINISTRATIVO ADICIONALES SPIJ ──
   {
@@ -1177,6 +1199,22 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     practicalImpact:
       'En filiación extramatrimonial (Ley 28457 modificada por Ley 30628) no se pagan tasas; se confiere traslado por 10 días al demandado para oponerse y solicitar prueba biológica de ADN. De no mediar oposición válida en dicho plazo, el juzgado emite declaración judicial de paternidad; de haber oposición, se actúa la pericia de ADN bajo las reglas de la ley y se resuelven acumuladamente los alimentos. En la sociedad conyugal, la disposición de bienes requiere intervención de ambos (Art. 315 CC); las uniones de hecho propias originan sociedad de bienes (Art. 326 CC).'
   },
+  {
+    lawCode: 'Código Procesal Civil (Arts. 749° inc. 7, 750°, 751°, 781°-785°) y Código Civil (Arts. 377°-385°)',
+    specialistId: 'camila',
+    date: 'Vigente 2026',
+    affectedCode: 'Adopción de Personas Mayores de Edad Capaces (Proceso No Contencioso y Vía Notarial)',
+    articles: ['Arts. 749 inc. 7 CPC', 'Art. 750 CPC', 'Art. 751 CPC', 'Art. 781 CPC', 'Art. 782 CPC', 'Art. 783 CPC', 'Art. 785 CPC', 'Arts. 377-385 Código Civil', 'Ley 26662 Arts. 21-23'],
+    keywords: [
+      'adopcion de mayor', 'adopcion mayor de edad', 'adopcion personas capaces', 'adopcion mayor',
+      'adopcion de personas capaces', 'adoptar mayor de edad', 'adoptar adulto', 'adopcion adulto',
+      'art 781 cpc', 'art 782 cpc', 'art 783 cpc', 'proceso no contencioso adopcion', 'anexos adopcion',
+      'solicitud de adopcion', 'adopcion notarial', 'diferencia de edad adopcion', 'adopcion', 'adopción'
+    ],
+    summary: 'Régimen procesal no contencioso exclusivo para adopción de mayores de edad y prohibición del CNA:',
+    practicalImpact:
+      'La adopción de personas mayores de edad capaces NO es una demanda contenciosa; se tramita obligatoriamente en la VÍA DEL PROCESO NO CONTENCIOSO ante el Juzgado de Familia (o Juzgado Civil/Mixto) bajo los Arts. 749° inc. 7, 781°, 782° y 783° del CPC, o ante Notario Público bajo la Ley 26662 (Arts. 21°-23°). La sumilla se titula "SOLICITUD", el cierre es "POR LO EXPUESTO" y se notifica al Ministerio Público conforme al Art. 783° CPC. Es obligatorio acompañar los 6 anexos especiales del Art. 782° CPC (partidas, certificado médico de salud física y mental de adoptante y adoptado, declaración jurada de bienes). En el Código Civil (Art. 378°), el adoptante debe ser al menos 18 años mayor que el adoptado y este último debe prestar su asentimiento expreso. Queda terminantemente PROHIBIDO aplicar el Código de los Niños y Adolescentes (Ley 27337) o el D. Leg. 1297 a mayores de edad, así como citar artículos de procesos de conocimiento o abreviados.'
+  },
 
   // ── MARCO (ADMINISTRATIVO REFORMA SPIJ) ──
   {
@@ -1316,6 +1354,20 @@ export function isOralHearingRequest(query: string): boolean {
 }
 
 /**
+ * Detecta si el usuario solicita adopción de personas mayores de edad o personas capaces
+ */
+export function isAdopcionMayorEdadRequest(query: string): boolean {
+  const norm = normalizeText(query);
+  const adopcionTriggers = [
+    'adopcion de mayor', 'adopcion mayor', 'adopcion de adulto', 'adopcion persona capaz',
+    'adopcion de personas capaces', 'adopcion de mayor de edad', 'adoptar mayor de edad',
+    'adoptar a un mayor', 'adoptar mayor', 'adoptar adulto', 'adopcion adulto', 'adopcion',
+    'adopción', 'adoptar'
+  ];
+  return adopcionTriggers.some((t) => norm.includes(t));
+}
+
+/**
  * Busca y extrae los Acuerdos Plenarios y Normas Vigentes relevantes según el especialista y la consulta
  */
 export function findRelevantSpijKnowledge(agentId: string, userQuery: string): {
@@ -1407,6 +1459,36 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
   const isAudit = isAuditRequest(userQuery);
   const isHearing = isOralHearingRequest(userQuery);
   const isCesacion = isCesacionPrisionPreventivaRequest(userQuery);
+  const isAdopcion = (agentId === 'camila' || agentId === 'diego') && isAdopcionMayorEdadRequest(userQuery);
+
+  if (isAdopcion) {
+    sections.push('► DIRECTIVA SUPREMA Y VINCULANTE — ADOPCIÓN DE PERSONAS MAYORES DE EDAD (PERSONAS CAPACES):');
+    sections.push('- NATURALEZA Y VÍA PROCEDIMENTAL EXCLUSIVA: PROCESO NO CONTENCIOSO (Subcapítulo 4 de la Sección Sexta del Código Procesal Civil, Artículos 749° inciso 7, 750°, 751°, 781°, 782°, 783°, 784° y 785° CPC).');
+    sections.push('- SUMILLA EXACTA: "SOLICITUD DE ADOPCIÓN DE PERSONA MAYOR DE EDAD CAPAZ". Jamás la titules como "Demanda Contenciosa".');
+    sections.push('- CIERRE OBLIGATORIO: "POR LO EXPUESTO" (en procesos no contenciosos se utiliza "POR LO EXPUESTO", NUNCA "POR TANTO... declare fundada la demanda").');
+    sections.push('- COMPETENCIA: Señor(a) Juez(a) del Juzgado Especializado de Familia (o Juzgado Civil/Mixto en su defecto) conforme al Art. 750° CPC.');
+    sections.push('- INTERVENCIÓN FISCAL OBLIGATORIA (Art. 783° CPC): Notificación expresa a la Fiscalía Provincial de Familia para su dictamen y participación en audiencia.');
+    sections.push('- REQUISITOS SUSTANTIVOS TAXATIVOS (CÓDIGO CIVIL):');
+    sections.push('  * Art. 377° CC: Por la adopción el adoptado adquiere la calidad de hijo del adoptante y deja de pertenecer a su familia consanguínea.');
+    sections.push('  * Art. 378° inc. 1 CC: Solvencia moral del adoptante.');
+    sections.push('  * Art. 378° inc. 2 CC: La edad del adoptante debe ser por lo menos igual a la suma de la mayoridad y la del hijo por adoptar (diferencia mínima de 18 años entre adoptante y adoptado).');
+    sections.push('  * Art. 378° inc. 3 CC: Asentimiento del cónyuge del adoptante si este fuere casado.');
+    sections.push('  * Art. 378° inc. 4 CC: Asentimiento libre y expreso del adoptado mayor de edad capaz, compareciendo conjuntamente en la solicitud.');
+    sections.push('  * Art. 381° CC: La adopción no admite condición ni plazo.');
+    sections.push('  * Art. 385° CC: La adopción es irrevocable.');
+    sections.push('- ANEXOS ESPECIALES OBLIGATORIOS (ARTÍCULO 782° DEL CÓDIGO PROCESAL CIVIL):');
+    sections.push('  1. Copia certificada de la partida de nacimiento del adoptado y de matrimonio del adoptante (si es casado).');
+    sections.push('  2. Copia certificada de la partida de defunción del cónyuge del adoptante (si fuera viudo).');
+    sections.push('  3. Documento que acredite aprobación de cuentas de administración si el solicitante fue tutor del adoptado.');
+    sections.push('  4. Copia certificada del inventario de bienes del adoptado y testimonio de garantía prestada por el tutor (en su caso).');
+    sections.push('  5. Declaración jurada de no tener bienes el adoptado o relación de los que tenga.');
+    sections.push('  6. Certificado médico de salud mental y física del adoptante y del adoptado.');
+    sections.push('- VÍA NOTARIAL ALTERNATIVA (Art. 785° CPC): Conforme a la Ley N° 26662 (Arts. 21° al 23°), la adopción de personas mayores de edad capaces también puede tramitarse ante Notario Público si existe pleno acuerdo.');
+    sections.push('- ⛔ REGLAS TERMINANTES ANTI-ALUCINACIÓN (CERO ERRORES):');
+    sections.push('  1. PROHIBICIÓN RADICAL DEL CNA: Queda terminantemente PROHIBIDO citar el Código de los Niños y Adolescentes (Ley 27337) o el D. Leg. 1297 para la adopción de personas mayores de edad. No interviene la Dirección General de Adopciones (DGA/MIMP).');
+    sections.push('  2. PROHIBICIÓN DE NORMAS CONTENCIOSAS: Queda terminantemente PROHIBIDO citar artículos de procesos de conocimiento (Art. 480 CPC), abreviados (Art. 486 CPC) o sumarísimos (Art. 546 CPC) como vía procedimental, o inventar artículos inexistentes del CPC.');
+    sections.push('  3. Si el usuario solicita redactar el documento, redacta de inmediato la SOLICITUD completa dentro del bloque ```document cumpliendo con todos los requisitos del Art. 782° CPC.');
+  }
 
   if (isDrafting) {
     sections.push('► REGLAS ESTRICTAS PARA LA REDACCIÓN DE ESTE ESCRITO LEGAL:');

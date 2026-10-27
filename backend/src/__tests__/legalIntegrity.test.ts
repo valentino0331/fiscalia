@@ -4,6 +4,7 @@ import {
   JURISPRUDENCE_COMPENDIUM,
   NORMATIVE_REFORMS_COMPENDIUM,
   isCesacionPrisionPreventivaRequest,
+  isAdopcionMayorEdadRequest,
   getSpijLegalGrounding,
 } from '../lib/spijLegalEngine.js';
 
@@ -152,6 +153,27 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
     it('debe contemplar el apercibimiento judicial de declaración de paternidad en filiación (Ley 28457 / Ley 30628)', () => {
       expect(camilaPrompt).toContain('Ley 28457');
       expect(camilaPrompt).toContain('declaración judicial de paternidad en filiación extramatrimonial');
+    });
+
+    it('debe tramitar la adopción de mayores de edad capaces estrictamente en vía de Proceso No Contencioso (Arts. 749 inc. 7, 781-785 CPC y Arts. 377-385 CC)', () => {
+      expect(camilaPrompt).toContain('GRUPO G — ADOPCIÓN DE PERSONAS MAYORES DE EDAD / PERSONAS CAPACES (Estructura 7)');
+      expect(camilaPrompt).toContain('PROCESO NO CONTENCIOSO');
+      expect(camilaPrompt).toContain('SOLICITUD DE ADOPCIÓN DE PERSONA MAYOR DE EDAD CAPAZ');
+      expect(camilaPrompt).toContain('Arts. 749° inc. 7, 750°, 751°, 781° al 785° CPC');
+      expect(camilaPrompt).toContain('Arts. 377° al 385° Código Civil');
+      expect(camilaPrompt).toContain('POR LO EXPUESTO');
+      expect(camilaPrompt).toContain('Fiscalía Provincial de Familia');
+      expect(camilaPrompt).toContain('Diferencia mínima de edad: el adoptante debe ser por lo menos 18 años mayor');
+      expect(camilaPrompt).toContain('Art. 782° CPC');
+      expect(camilaPrompt).toContain('ESTRUCTURA 7 — ADOPCIÓN DE PERSONA MAYOR DE EDAD CAPAZ — PROCESO NO CONTENCIOSO');
+      expect(camilaPrompt).toContain('camila_modelo7_adopcion.docx');
+    });
+
+    it('debe prohibir tajantemente citar el Código de los Niños y Adolescentes o calificar de demanda contenciosa la adopción de adultos', () => {
+      expect(camilaPrompt).toContain('NUNCA:');
+      expect(camilaPrompt).toContain('Calificar la adopción de un mayor de edad como "DEMANDA" ni como proceso contencioso');
+      expect(camilaPrompt).toContain('Citar el Código de los Niños y Adolescentes (Ley 27337) ni el D. Leg. 1297 en adopción de mayores de edad');
+      expect(camilaPrompt).toContain('Usar "POR TANTO" o pedir "declare fundada la demanda" en adopción de personas capaces');
     });
   });
 
@@ -302,6 +324,33 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
       expect(sebastianPrompt).toContain('Casación N° 391-2011/Piura');
       expect(sebastianPrompt).toContain('Art. 283° del Código Procesal Penal');
       expect(sebastianPrompt).toContain('Extraer los hechos, delitos y fojas reales del expediente aportado');
+    });
+  });
+
+  describe('Adopción de Mayor de Edad Capaz & Cero Alucinaciones (Arts. 781°-785° CPC y Arts. 377°-385° CC)', () => {
+    it('detecta correctamente solicitudes de adopción de personas mayores de edad capaces', () => {
+      expect(isAdopcionMayorEdadRequest('redáctame una demanda de adopción de mayor de edad')).toBe(true);
+      expect(isAdopcionMayorEdadRequest('solicitud de adopcion de persona mayor de edad capaz')).toBe(true);
+      expect(isAdopcionMayorEdadRequest('quiero adoptar a un mayor de edad')).toBe(true);
+      expect(isAdopcionMayorEdadRequest('adopcion de personas capaces')).toBe(true);
+      expect(isAdopcionMayorEdadRequest('proceso no contencioso de adopcion de mayor')).toBe(true);
+    });
+
+    it('genera el sustento legal oficial de SPIJ con Arts. 749 inc. 7, 781-785 CPC, Arts. 377-385 CC y Casación 4118-2016', () => {
+      const userQuery = 'Ingrese a la especialista en derecho de familia para que me redacte una demanda de adopcion de mayor de edad';
+      const grounding = getSpijLegalGrounding('camila', userQuery);
+
+      expect(grounding).toContain('DIRECTIVA SUPREMA Y VINCULANTE — ADOPCIÓN DE PERSONAS MAYORES DE EDAD');
+      expect(grounding).toContain('PROCESO NO CONTENCIOSO');
+      expect(grounding).toContain('Artículos 749° inciso 7');
+      expect(grounding).toContain('781°');
+      expect(grounding).toContain('785°');
+      expect(grounding).toContain('Arts. 377-385');
+      expect(grounding).toContain('Casación N° 4118-2016 Lima');
+      expect(grounding).toContain('PROHIBICIÓN RADICAL');
+      expect(grounding).toContain('Código de los Niños y Adolescentes');
+      expect(grounding).toContain('D. Leg. 1297');
+      expect(grounding).toContain('POR LO EXPUESTO');
     });
   });
 });

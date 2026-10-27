@@ -48,8 +48,11 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
     });
 
     const plan = sub?.plan || (req.isAdmin ? 'pro' : 'junior');
+    const isDemo = plan === 'demo';
     const isJunior = plan === 'junior' || plan === 'normal';
-    const limit = isJunior
+    const limit = isDemo
+      ? 1
+      : isJunior
       ? parseInt(process.env.JUNIOR_QUESTION_LIMIT || '50', 10)
       : parseInt(process.env.SENIOR_QUESTION_LIMIT || '250', 10);
 
@@ -107,8 +110,10 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
 
     res.json({
       plan,
+      isDemo,
       questionsUsed,
       limit,
+      remaining: Math.max(0, limit - questionsUsed),
       isAdmin: req.isAdmin || false,
     });
   } catch (err) {

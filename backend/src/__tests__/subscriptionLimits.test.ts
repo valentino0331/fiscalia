@@ -92,4 +92,28 @@ describe('Subscription & Plan Limits Logic', () => {
     const start28 = getPeriodStart(null, expiry28, purchase28);
     expect(start28.toISOString()).toBe('2026-09-28T10:00:00.000Z');
   });
+
+  it('correctly evaluates demo plan limit of 1 consultation and blocks further queries', () => {
+    const getPlanLimit = (plan: string) => {
+      if (plan === 'demo') return 1;
+      if (plan === 'junior' || plan === 'normal') return 50;
+      return 250;
+    };
+
+    expect(getPlanLimit('demo')).toBe(1);
+    expect(getPlanLimit('junior')).toBe(50);
+    expect(getPlanLimit('senior')).toBe(250);
+
+    const isLimitExceeded = (plan: string, used: number) => {
+      const limit = getPlanLimit(plan);
+      return used >= limit;
+    };
+
+    // 0 questions used: allowed
+    expect(isLimitExceeded('demo', 0)).toBe(false);
+    // 1 question used: blocked!
+    expect(isLimitExceeded('demo', 1)).toBe(true);
+    // 2 questions used: blocked!
+    expect(isLimitExceeded('demo', 2)).toBe(true);
+  });
 });

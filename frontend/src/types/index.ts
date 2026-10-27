@@ -3,6 +3,8 @@ export interface User {
   email: string
   name: string | null
   isAdmin: boolean
+  isDemo?: boolean
+  plan?: string
 }
 
 export interface Agent {

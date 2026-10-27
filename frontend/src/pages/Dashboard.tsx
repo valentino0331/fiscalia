@@ -17,6 +17,7 @@ import CitizenCalculatorsModal from '@/components/citizen/CitizenCalculatorsModa
 import CitizenDocumentGeneratorModal, { type DocType } from '@/components/citizen/CitizenDocumentGeneratorModal'
 import WhereToGoModal from '@/components/citizen/WhereToGoModal'
 import UsageCounterBadge from '@/components/ui/UsageCounterBadge'
+import UpgradeModal from '@/components/ui/UpgradeModal'
 
 const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
 
@@ -66,19 +67,24 @@ export default function Dashboard() {
   const [editingTitle, setEditingTitle] = useState('')
   const [savedMessages, setSavedMessages] = useState<{ id: string; agentId: string; agentName: string; content: string; createdAt: string }[]>([])
   const [savedLoading, setSavedLoading] = useState(false)
-  const [userPlan, setUserPlan] = useState<'junior' | 'senior'>('junior')
+  const [userPlan, setUserPlan] = useState<'junior' | 'senior' | 'demo'>('junior')
+  const [demoUsage, setDemoUsage] = useState<{ questionsUsed: number; limit: number } | null>(null)
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
 
   useEffect(() => {
     api.account.usage()
       .then((data) => {
-        if (data.plan === 'senior' || data.plan === 'pro' || data.limit === null) {
+        if (data.plan === 'demo' || (data as any).isDemo || user?.isDemo) {
+          setUserPlan('demo')
+          setDemoUsage({ questionsUsed: data.questionsUsed, limit: data.limit || 1 })
+        } else if (data.plan === 'senior' || data.plan === 'pro' || data.limit === null) {
           setUserPlan('senior')
         } else {
           setUserPlan('junior')
         }
       })
       .catch(() => {})
-  }, [])
+  }, [user])
 
   const handleStartRename = (conv: Conversation, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -236,9 +242,9 @@ export default function Dashboard() {
               <p className="text-[13px] font-normal text-white max-w-[120px] truncate leading-tight">{user?.name || 'Mi Cuenta'}</p>
               <p
                 className="text-[7px] uppercase tracking-[2px] font-semibold"
-                style={{ color: userPlan === 'senior' ? '#c9a84c' : '#34d17a' }}
+                style={{ color: userPlan === 'demo' ? '#dfbe63' : userPlan === 'senior' ? '#c9a84c' : '#34d17a' }}
               >
-                {userPlan === 'senior' ? 'PLAN SENIOR' : 'PLAN JUNIOR'}
+                {userPlan === 'demo' ? 'MODO DEMO' : userPlan === 'senior' ? 'PLAN SENIOR' : 'PLAN JUNIOR'}
               </p>
             </div>
           </button>
@@ -247,7 +253,7 @@ export default function Dashboard() {
 
           <button
             onClick={() => { logout(); navigate('/login') }}
-            className="hidden md:flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-light transition-colors"
+            className="hidden md:flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-light transition-colors cursor-pointer"
             style={{ color: 'rgba(255,255,255,0.40)' }}
             onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.70)' }}
             onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.40)' }}
@@ -256,6 +262,34 @@ export default function Dashboard() {
           </button>
         </div>
       </header>
+
+      {/* MODO DEMO BANNER */}
+      {userPlan === 'demo' && (
+        <div
+          className="w-full py-2 px-3 sm:px-5 flex items-center justify-between gap-2 border-b select-none z-30"
+          style={{
+            background: 'linear-gradient(90deg, rgba(201,168,76,0.15) 0%, rgba(20,20,20,0.98) 100%)',
+            borderColor: 'rgba(201,168,76,0.30)',
+          }}
+        >
+          <div className="flex items-center gap-2 text-xs">
+            <span className="w-2 h-2 rounded-full bg-[#c9a84c] animate-pulse flex-shrink-0" />
+            <span className="text-[#dfbe63] font-semibold">Modo Demo Activo:</span>
+            <span className="text-white/80 font-light hidden sm:inline">
+              Dispones de 1 consulta de prueba para evaluar a cualquiera de nuestros 8 abogados con IA.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setUpgradeModalOpen(true)}
+            className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-sm text-black flex-shrink-0"
+            style={{ background: 'linear-gradient(135deg, #dfbe63, #c9a84c)' }}
+          >
+            <span>Ver Planes y Precios</span>
+            <ArrowRight size={11} />
+          </button>
+        </div>
+      )}
 
       {/* Body: Sidebar + Content */}
       <div className="flex flex-1 overflow-hidden w-full max-w-full">
@@ -1226,6 +1260,17 @@ export default function Dashboard() {
           />
         )}
       </Suspense>
+
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        usage={{
+          plan: 'demo',
+          questionsUsed: demoUsage?.questionsUsed || 0,
+          limit: 1,
+          isDemo: true,
+        }}
+      />
     </div>
   )
 }
