@@ -600,11 +600,11 @@
     }
 
     .hero p.sub {
-      color: var(--mu);
-      font-size: 1.18rem;
-      line-height: 1.6;
-      margin: 0 auto 28px;
-      max-width: 62ch
+      color: rgba(244, 241, 234, 0.82);
+      font-size: 1.12rem;
+      line-height: 1.55;
+      margin: 0 auto 26px;
+      max-width: 58ch;
     }
 
     .hero-ctas {
@@ -612,30 +612,56 @@
       gap: 14px;
       justify-content: center;
       align-items: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap
+      margin-bottom: 22px;
+      flex-wrap: wrap;
     }
 
     .hero-trust {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 24px;
-      color: var(--mu);
-      font-size: .9rem;
-      flex-wrap: wrap
+      gap: 14px;
+      margin-top: 4px;
+      flex-wrap: wrap;
     }
 
-    .hero-trust span {
+    .hero-trust-badge {
       display: inline-flex;
       align-items: center;
-      gap: 6px
+      gap: 8px;
+      padding: 7px 18px;
+      border-radius: 999px;
+      background: rgba(201, 168, 76, 0.08);
+      border: 1px solid rgba(201, 168, 76, 0.28);
+      color: #f4f1ea;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      transition: all 0.2s ease;
     }
 
-    .hero-trust i {
-      color: var(--ok);
-      font-style: normal;
-      font-weight: 700
+    .hero-trust-badge:hover {
+      background: rgba(201, 168, 76, 0.14);
+      border-color: rgba(201, 168, 76, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .hero-trust-badge .counter {
+      color: #dfbe63;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .hero-trust-badge .badge-pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #dfbe63;
+      box-shadow: 0 0 8px rgba(223, 190, 99, 0.9);
+      display: inline-block;
     }
 
     .video-container-wrap {
@@ -2936,15 +2962,11 @@
         <a href="#faq">PREGUNTAS</a>
       </div>
       <div class="nav-actions">
-        <div class="nav-status">
-          <span class="status-dot"></span>
-          <span>PLATAFORMA ACTIVA 2026</span>
-        </div>
         <a class="nav-login-btn" href="/login" target="_top">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           INICIAR SESIÓN
         </a>
-        <a class="nav-cta-btn buy-nav" href="#planes">PAGAR AHORA &rarr;</a>
+        <a class="nav-cta-btn buy-nav" href="#planes">ACCEDER AHORA &rarr;</a>
       </div>
     </div>
   </nav>
@@ -2960,24 +2982,20 @@
             Inteligencia Artificial Jurídica Peruana • SPIJ 2026
           </div>
           <h1>Hardman: Inteligencia Artificial Jurídica para Abogados en Perú</h1>
-          <p class="sub">Cada caso que rechazas por falta de tiempo es dinero que pierdes. Tu equipo de 8 abogados con IA especializados en derecho peruano que redactan tu demanda en minutos, calculan liquidaciones y analizan el expediente completo con SPIJ 2026. Acepta más casos sin perder tu fin de semana.</p>
+          <p class="sub">No pierdas más clientes ni tus fines de semana redactando a mano. 8 especialistas con IA en derecho peruano que redactan demandas, liquidan y analizan expedientes en minutos con SPIJ 2026.</p>
           <div class="hero-ctas">
             <a class="btn p" href="#planes">Activar mi acceso fundador</a>
             <a class="btn g" href="#incluye">Ver cómo trabaja ↓</a>
           </div>
           <div class="hero-trust">
-            <span><svg class="ico-chk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d17a"
-                stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>+<span class="counter" data-count="500">500</span> abogados peruanos activos</span>
-            <span><svg class="ico-chk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d17a"
-                stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>Formato judicial</span>
-            <span><svg class="ico-chk" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#34d17a"
-                stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12" />
-              </svg>Disponible 24/7 las 24 horas del día</span>
+            <span class="hero-trust-badge">
+              <span class="badge-pulse-dot"></span>
+              +<span class="counter" data-count="500">500</span> abogados peruanos activos
+            </span>
+            <span class="hero-trust-badge">
+              <span class="badge-pulse-dot"></span>
+              Disponible 24/7 las 24 horas del día
+            </span>
           </div>
         </div>
 
