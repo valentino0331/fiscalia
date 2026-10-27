@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, Search, X, Shield, MessageSquare, Clock, FileText, Trash2, Star,
   Sparkles, Calculator, MapPin, ChevronRight,
-  Edit2, Check, Scale
+  Edit2, Check, Scale, Plus, ArrowUp, Zap, Users, Menu
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { AGENTS, getAgent } from '@/lib/agents'
@@ -21,35 +21,127 @@ import UpgradeModal from '@/components/ui/UpgradeModal'
 
 const SpijModal = lazy(() => import('@/components/legal/SpijModal'))
 
-const CATEGORIES = [
-  { id: 'all', label: 'Todos' },
-  { id: 'LABORAL', label: 'Laboral' },
-  { id: 'PENAL', label: 'Penal' },
-  { id: 'CIVIL', label: 'Civil' },
-  { id: 'CORPORATIVO', label: 'Corporativo' },
-  { id: 'MINERO', label: 'Minero' },
-  { id: 'FAMILIA', label: 'Familia' },
-  { id: 'TRIBUTARIO', label: 'Tributario' },
-  { id: 'ADMINISTRATIVO', label: 'Administrativo' },
+export interface LawyerPanelItem {
+  id: string
+  title: string
+  subtitle: string
+  description: string
+  ctaText: string
+  tag: string
+  tagColor: { text: string; border: string; bg: string }
+  isSilhouette?: boolean
+  silhouetteColor?: { bg: string; fill: string }
+}
+
+export const LAWYER_PANEL_DATA: LawyerPanelItem[] = [
+  {
+    id: 'valentina',
+    title: 'Valentina',
+    subtitle: 'DERECHO LABORAL',
+    description: 'Despidos arbitrarios y nulos, beneficios sociales y defensa del trabajador.',
+    ctaText: 'Despidos y contratos',
+    tag: 'LABORAL',
+    tagColor: { text: '#a5b4fc', border: 'rgba(99,102,241,0.35)', bg: 'rgba(99,102,241,0.12)' },
+  },
+  {
+    id: 'sebastian',
+    title: 'Sebastián',
+    subtitle: 'DERECHO PENAL',
+    description: 'Defensa técnica bajo el NCPP, prisión preventiva, cesación y tutela de derechos.',
+    ctaText: 'Defensa penal',
+    tag: 'PENAL',
+    tagColor: { text: '#fca5a5', border: 'rgba(239,68,68,0.35)', bg: 'rgba(239,68,68,0.12)' },
+  },
+  {
+    id: 'diego',
+    title: 'Diego',
+    subtitle: 'DERECHO CIVIL',
+    description: 'Contratos patrimoniales, desalojo express (Ley 30933), derechos reales y garantías.',
+    ctaText: 'Contratos e inmuebles',
+    tag: 'CIVIL',
+    tagColor: { text: '#67e8f9', border: 'rgba(6,182,212,0.35)', bg: 'rgba(6,182,212,0.12)' },
+  },
+  {
+    id: 'adriana',
+    title: 'Adriana',
+    subtitle: 'CORPORATIVO Y SOCIETARIO',
+    description: 'Estructuración societaria (LGS), M&A, contratos y compliance anticorrupción.',
+    ctaText: 'M&A y compliance',
+    tag: 'CORPORATIVO',
+    tagColor: { text: '#c4b5fd', border: 'rgba(139,92,246,0.35)', bg: 'rgba(139,92,246,0.12)' },
+  },
+  {
+    id: 'rodrigo',
+    title: 'Derecho minero',
+    subtitle: 'ESPECIALISTA',
+    description: 'Concesiones y petitorios mineros, servidumbres, pequeña minería y fiscalización ambiental.',
+    ctaText: 'Concesiones y formalización',
+    tag: 'MINERO',
+    tagColor: { text: '#fcd34d', border: 'rgba(245,158,11,0.35)', bg: 'rgba(245,158,11,0.12)' },
+    isSilhouette: true,
+    silhouetteColor: {
+      bg: 'radial-gradient(circle at 50% 60%, rgba(245,158,11,0.22) 0%, rgba(18,17,14,0.98) 75%)',
+      fill: 'rgba(217,160,65,0.45)',
+    },
+  },
+  {
+    id: 'camila',
+    title: 'Derecho de familia',
+    subtitle: 'ESPECIALISTA',
+    description: 'Alimentos, tenencia y régimen de visitas, divorcio, patria potestad y violencia familiar.',
+    ctaText: 'Alimentos y familia',
+    tag: 'FAMILIA',
+    tagColor: { text: '#f9a8d4', border: 'rgba(236,72,153,0.35)', bg: 'rgba(236,72,153,0.12)' },
+    isSilhouette: true,
+    silhouetteColor: {
+      bg: 'radial-gradient(circle at 50% 60%, rgba(236,72,153,0.22) 0%, rgba(22,14,20,0.98) 75%)',
+      fill: 'rgba(215,115,165,0.45)',
+    },
+  },
+  {
+    id: 'fernanda',
+    title: 'Derecho tributario',
+    subtitle: 'ESPECIALISTA',
+    description: 'Fiscalización SUNAT, reclamaciones, fraccionamiento de deudas, IGV y Renta.',
+    ctaText: 'SUNAT y tributos',
+    tag: 'TRIBUTARIO',
+    tagColor: { text: '#6ee7b7', border: 'rgba(16,185,129,0.35)', bg: 'rgba(16,185,129,0.12)' },
+    isSilhouette: true,
+    silhouetteColor: {
+      bg: 'radial-gradient(circle at 50% 60%, rgba(16,185,129,0.22) 0%, rgba(12,22,18,0.98) 75%)',
+      fill: 'rgba(90,180,140,0.45)',
+    },
+  },
+  {
+    id: 'marco',
+    title: 'Derecho administrativo',
+    subtitle: 'ESPECIALISTA',
+    description: 'Procedimiento administrativo, recursos impugnativos, contrataciones con el Estado y responsabilidad funcional.',
+    ctaText: 'Procedimiento y Estado',
+    tag: 'ADMINISTRATIVO',
+    tagColor: { text: '#5eead4', border: 'rgba(13,148,136,0.35)', bg: 'rgba(13,148,136,0.12)' },
+    isSilhouette: true,
+    silhouetteColor: {
+      bg: 'radial-gradient(circle at 50% 60%, rgba(59,130,246,0.22) 0%, rgba(14,18,26,0.98) 75%)',
+      fill: 'rgba(100,145,200,0.45)',
+    },
+  },
+]
+
+export const CANONICAL_RECENT_QUERIES = [
+  { id: 'rec-1', title: 'Cálculo de CTS y vacaciones tru...', agentId: 'valentina' },
+  { id: 'rec-2', title: 'Prisión preventiva: plazo y cesac...', agentId: 'sebastian' },
+  { id: 'rec-3', title: 'Desalojo express · Ley 30933', agentId: 'diego' },
+  { id: 'rec-4', title: 'Constitución de S.A.C. paso a pa...', agentId: 'adriana' },
+  { id: 'rec-5', title: 'Liquidación de pensión de alime...', agentId: 'camila' },
 ]
 
 const SIDEBAR_MAIN = [
-  { id: 'specialists', label: 'Especialistas', icon: Search },
+  { id: 'specialists', label: 'Especialistas', icon: Users },
   { id: 'consultations', label: 'Mis consultas', icon: MessageSquare },
   { id: 'history', label: 'Historial', icon: Clock },
   { id: 'habilidades', label: 'Guardados', icon: Star },
   { id: 'documents', label: 'Documentos', icon: FileText },
-]
-
-const SIDEBAR_SPECS = [
-  { label: 'Derecho Laboral', categoryId: 'LABORAL' },
-  { label: 'Derecho Penal', categoryId: 'PENAL' },
-  { label: 'Derecho Civil', categoryId: 'CIVIL' },
-  { label: 'Derecho Corporativo', categoryId: 'CORPORATIVO' },
-  { label: 'Derecho Minero', categoryId: 'MINERO' },
-  { label: 'Derecho de Familia', categoryId: 'FAMILIA' },
-  { label: 'Derecho Tributario', categoryId: 'TRIBUTARIO' },
-  { label: 'Derecho Administrativo', categoryId: 'ADMINISTRATIVO' },
 ]
 
 export default function Dashboard() {
@@ -198,273 +290,253 @@ export default function Dashboard() {
     } catch {}
   }
 
+  const [promptCase, setPromptCase] = useState('')
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false)
+  const plusMenuRef = useRef<HTMLDivElement>(null)
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    function handleClickOutside(event: globalThis.MouseEvent) {
+      if (plusMenuRef.current && !plusMenuRef.current.contains(event.target as Node)) {
+        setPlusMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleStartPrompt = (targetAgentId?: string) => {
+    const text = promptCase.trim()
+    if (!text) return
+    let agentId = targetAgentId || 'diego'
+    const lower = text.toLowerCase()
+    if (lower.includes('despido') || lower.includes('trabajador') || lower.includes('cts') || lower.includes('laboral') || lower.includes('sunafil')) {
+      agentId = 'valentina'
+    } else if (lower.includes('penal') || lower.includes('prisión') || lower.includes('fiscalía') || lower.includes('delito') || lower.includes('ncpp')) {
+      agentId = 'sebastian'
+    } else if (lower.includes('empresa') || lower.includes('sac') || lower.includes('societario') || lower.includes('compliance') || lower.includes('fusión')) {
+      agentId = 'adriana'
+    } else if (lower.includes('mina') || lower.includes('minero') || lower.includes('ingemmet') || lower.includes('oefa') || lower.includes('reinfo')) {
+      agentId = 'rodrigo'
+    } else if (lower.includes('alimento') || lower.includes('tenencia') || lower.includes('divorcio') || lower.includes('familia')) {
+      agentId = 'camila'
+    } else if (lower.includes('sunat') || lower.includes('tributo') || lower.includes('renta') || lower.includes('igv') || lower.includes('fiscalización')) {
+      agentId = 'fernanda'
+    } else if (lower.includes('administrativo') || lower.includes('oece') || lower.includes('osce') || lower.includes('apelación')) {
+      agentId = 'marco'
+    }
+    navigate(`/chat/${agentId}`, { state: { transferMessage: text } })
+  }
+
+  const handleNewConsulta = () => {
+    setActiveSideItem('specialists')
+    setPromptCase('')
+    const el = document.getElementById('dashboard-case-textarea')
+    if (el) el.focus()
+  }
+
   const initials = user?.name
     ? user.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-    : 'U'
+    : 'AP'
 
   return (
-    <div className="flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111', height: '100dvh', minHeight: '100vh' }}>
-      {/* NAVBAR */}
-      <header
-        className="h-14 flex-shrink-0 flex items-center justify-between gap-1.5 sm:gap-2 px-3 sm:px-4 border-b z-40 max-w-full overflow-hidden"
-        style={{ background: '#111111', borderColor: '#2a2a2a' }}
-      >
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          <HardmanLogo size="sm" />
-        </div>
-
-        <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 justify-end flex-shrink-0">
-          <UsageCounterBadge />
-
-          <button
-            onClick={() => setSpijModalOpen(true)}
-            className="h-8 px-2 sm:px-3 rounded-lg flex items-center gap-1.5 transition-all text-[11px] font-medium hover:opacity-90 active:scale-95 flex-shrink-0"
-            style={{
-              background: 'rgba(201,168,76,0.12)',
-              border: '1px solid rgba(201,168,76,0.30)',
-              color: '#c9a84c',
-            }}
-            title="Base Legal SPIJ (MINJUSDH) y Acuerdos Plenarios Vinculantes de la Corte Suprema"
-          >
-            <Scale size={13} className="text-[#c9a84c]" />
-            <span className="hidden sm:inline font-semibold">SPIJ & Plenos</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[#34d17a] animate-pulse" />
-          </button>
-
-          <button onClick={() => navigate('/account')} className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            <div
-              className="w-[34px] h-[34px] sm:w-[36px] sm:h-[36px] rounded-full flex items-center justify-center text-[10px] sm:text-[11px] font-semibold"
-              style={{ background: 'rgba(201,168,76,0.10)', border: '1px solid rgba(201,168,76,0.25)', color: '#c9a84c' }}
-            >
-              {initials}
-            </div>
-            <div className="text-left hidden sm:block">
-              <p className="text-[13px] font-normal text-white max-w-[120px] truncate leading-tight">{user?.name || 'Mi Cuenta'}</p>
-              <p
-                className="text-[7px] uppercase tracking-[2px] font-semibold"
-                style={{ color: userPlan === 'demo' ? '#dfbe63' : userPlan === 'senior' ? '#c9a84c' : '#34d17a' }}
-              >
-                {userPlan === 'demo' ? 'MODO DEMO' : userPlan === 'senior' ? 'PLAN SENIOR' : 'PLAN JUNIOR'}
-              </p>
-            </div>
-          </button>
-
-          <div className="hidden md:block w-px h-5" style={{ background: '#2a2a2a' }} />
-
-          <button
-            onClick={() => { logout(); navigate('/login') }}
-            className="hidden md:flex items-center gap-1.5 px-2 py-1.5 text-[11px] font-light transition-colors cursor-pointer"
-            style={{ color: 'rgba(255,255,255,0.40)' }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.70)' }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(255,255,255,0.40)' }}
-          >
-            Salir <ArrowRight size={11} />
-          </button>
-        </div>
-      </header>
-
-      {/* MODO DEMO BANNER */}
-      {userPlan === 'demo' && (
+    <div className="flex h-screen w-screen overflow-hidden text-white" style={{ background: '#0a0a0c' }}>
+      {/* MOBILE BACKDROP */}
+      {mobileSidebarOpen && (
         <div
-          className="w-full py-2 px-3 sm:px-5 flex items-center justify-between gap-2 border-b select-none z-30"
-          style={{
-            background: 'linear-gradient(90deg, rgba(201,168,76,0.15) 0%, rgba(20,20,20,0.98) 100%)',
-            borderColor: 'rgba(201,168,76,0.30)',
-          }}
-        >
-          <div className="flex items-center gap-2 text-xs">
-            <span className="w-2 h-2 rounded-full bg-[#c9a84c] animate-pulse flex-shrink-0" />
-            <span className="text-[#dfbe63] font-semibold">Modo Demo Activo:</span>
-            <span className="text-white/80 font-light hidden sm:inline">
-              Dispones de 1 consulta de prueba para evaluar a cualquiera de nuestros 8 abogados con IA.
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setUpgradeModalOpen(true)}
-            className="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer shadow-sm text-black flex-shrink-0"
-            style={{ background: 'linear-gradient(135deg, #dfbe63, #c9a84c)' }}
-          >
-            <span>Ver Planes y Precios</span>
-            <ArrowRight size={11} />
-          </button>
-        </div>
+          onClick={() => setMobileSidebarOpen(false)}
+          className="fixed inset-0 bg-black/70 z-40 md:hidden backdrop-blur-sm"
+        />
       )}
 
-      {/* Body: Sidebar + Content */}
-      <div className="flex flex-1 overflow-hidden w-full max-w-full">
-        {/* SIDEBAR */}
-        <aside
-          className="hidden md:flex w-[220px] flex-shrink-0 flex-col overflow-y-auto border-r"
-          style={{ background: '#1a1a1a', borderColor: '#2a2a2a' }}
-        >
-          <div className="px-4 pt-5 pb-2">
-            <p
-              className="text-[7px] font-bold uppercase mb-3"
-              style={{ letterSpacing: '3px', color: 'rgba(255,255,255,0.30)' }}
-            >
-              PRINCIPAL
-            </p>
-            <div className="space-y-1">
-              {SIDEBAR_MAIN.map((item) => {
-                const isActive = activeSideItem === item.id
-                const Icon = item.icon
-                const count = item.id === 'specialists' ? 8
-                  : item.id === 'consultations' ? convCount
-                  : item.id === 'habilidades' ? savedMessages.length || undefined
-                  : undefined
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      if (item.id === 'documents') {
-                        setDocGenModal({ isOpen: true, docType: 'carta_notarial' })
-                        return
-                      }
-                      setActiveSideItem(item.id)
-                      if (item.id === 'specialists') setSelectedCategory('all')
-                    }}
-                    className="w-full flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-left transition-all duration-200 group relative"
-                    style={{
-                      background: isActive ? 'rgba(201,168,76,0.10)' : 'transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
-                      e.currentTarget.style.transform = 'translateX(2px)'
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) e.currentTarget.style.background = 'transparent'
-                      e.currentTarget.style.transform = 'translateX(0)'
-                    }}
-                  >
-                    {isActive && (
-                      <div
-                        className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r"
-                        style={{ background: '#c9a84c' }}
-                      />
-                    )}
-                    <Icon
-                      size={13}
-                      style={{ color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.40)' }}
-                    />
-                    <span
-                      className="text-[12px] flex-1"
-                      style={{
-                        fontWeight: isActive ? 400 : 300,
-                        color: isActive ? '#ffffff' : 'rgba(255,255,255,0.60)',
-                      }}
-                    >
-                      {item.label}
-                    </span>
-                    {count !== undefined && (
-                      <span
-                        className="text-[10px] px-1.5 py-0.5 rounded"
-                        style={{
-                          background: isActive ? 'rgba(201,168,76,0.10)' : 'rgba(255,255,255,0.07)',
-                          color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.40)',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {count}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
+      {/* LEFT SIDEBAR */}
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-50 md:z-30 w-[230px] flex flex-col flex-shrink-0 transition-transform duration-300 ease-in-out md:translate-x-0 border-r ${
+          mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+        style={{ background: '#0d0e12', borderColor: 'rgba(255,255,255,0.06)' }}
+      >
+        {/* LOGO */}
+        <div className="px-5 pt-6 pb-4">
+          <div className="flex flex-col">
+            <span className="font-extrabold tracking-[0.22em] text-[15px] text-white">HARDMAN</span>
+            <span className="w-8 h-[2px] bg-[#c9a84c] mt-0.5 rounded-full" />
           </div>
+        </div>
 
-          <div className="px-4 pt-4 pb-6">
-            <p
-              className="text-[7px] font-bold uppercase mb-3"
-              style={{ letterSpacing: '3px', color: 'rgba(255,255,255,0.30)' }}
-            >
-              ESPECIALIDADES
-            </p>
-            <div className="space-y-1">
-              {SIDEBAR_SPECS.map((spec) => {
-                const isActive = activeSideItem === 'specialists' && selectedCategory === spec.categoryId
-                return (
-                  <button
-                    key={spec.categoryId}
-                    onClick={() => handleSpecClick(spec.categoryId)}
-                    className="w-full flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-left transition-all duration-200"
-                    style={{ background: isActive ? 'rgba(201,168,76,0.08)' : 'transparent' }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'
-                      e.currentTarget.style.transform = 'translateX(2px)'
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) e.currentTarget.style.background = isActive ? 'rgba(201,168,76,0.08)' : 'transparent'
-                      e.currentTarget.style.transform = 'translateX(0)'
-                    }}
-                  >
-                    <span
-                      className="w-[7px] h-[7px] rounded-full flex-shrink-0"
-                      style={{
-                        background: isActive ? '#c9a84c' : '#34d17a',
-                        boxShadow: isActive ? '0 0 6px rgba(201,168,76,0.6)' : '0 0 4px rgba(52,209,122,0.4)',
-                      }}
-                    />
-                    <span
-                      className="text-[12px] flex-1 truncate"
-                      style={{
-                        fontWeight: isActive ? 500 : 300,
-                        color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.70)',
-                      }}
-                    >
-                      {spec.label}
+        {/* NUEVA CONSULTA BUTTON */}
+        <div className="px-4 mb-4">
+          <button
+            onClick={() => {
+              handleNewConsulta()
+              setMobileSidebarOpen(false)
+            }}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-[12px] font-medium transition-all text-white/90 hover:text-white"
+            style={{
+              background: 'rgba(201,168,76,0.06)',
+              border: '1px solid rgba(201,168,76,0.28)',
+            }}
+          >
+            <Plus size={14} className="text-[#c9a84c]" />
+            <span>Nueva consulta</span>
+          </button>
+        </div>
+
+        {/* SECCIÓN PRINCIPAL */}
+        <div className="px-4 pb-2">
+          <p className="text-[8px] font-bold uppercase mb-2 tracking-[2px] text-white/30">
+            PRINCIPAL
+          </p>
+          <div className="space-y-0.5">
+            {SIDEBAR_MAIN.map((item) => {
+              const isActive = activeSideItem === item.id
+              const Icon = item.icon
+              const count = item.id === 'specialists' ? 8
+                : item.id === 'consultations' ? (convCount || 26)
+                : item.id === 'habilidades' ? savedMessages.length || undefined
+                : undefined
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    if (item.id === 'documents') {
+                      setDocGenModal({ isOpen: true, docType: 'carta_notarial' })
+                      return
+                    }
+                    setActiveSideItem(item.id)
+                    setMobileSidebarOpen(false)
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${
+                    isActive
+                      ? 'bg-white/[0.08] text-white font-medium'
+                      : 'text-white/60 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  <Icon size={14} className={isActive ? 'text-[#c9a84c]' : 'text-white/40'} />
+                  <span className="text-[12px] flex-1">{item.label}</span>
+                  {count !== undefined && (
+                    <span className="text-[9px] px-1.5 py-0.2 rounded bg-white/[0.06] text-white/40 font-mono">
+                      {count}
                     </span>
-                    <span
-                      className="text-[8px] font-semibold uppercase px-1.5 py-0.5 rounded tracking-wider flex-shrink-0"
-                      style={{
-                        background: isActive ? 'rgba(201,168,76,0.15)' : 'rgba(52,209,122,0.10)',
-                        color: isActive ? '#c9a84c' : '#34d17a',
-                      }}
-                    >
-                      {isActive ? 'ACTIVO' : 'EN LÍNEA'}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+                  )}
+                </button>
+              )
+            })}
           </div>
+        </div>
 
+        {/* SECCIÓN RECIENTES */}
+        <div className="px-4 pt-4 pb-2 flex-1 overflow-y-auto">
+          <p className="text-[8px] font-bold uppercase mb-2 tracking-[2px] text-white/30">
+            RECIENTES
+          </p>
+          <div className="space-y-1">
+            {(conversations.length > 0 ? conversations.slice(0, 5) : CANONICAL_RECENT_QUERIES).map((item, idx) => {
+              const title = item.title
+              const isReal = 'id' in item && typeof item.id === 'string' && !item.id.startsWith('rec-')
+              return (
+                <button
+                  key={'id' in item ? item.id : idx}
+                  onClick={() => {
+                    setMobileSidebarOpen(false)
+                    if (isReal) {
+                      navigate(`/chat/${item.agentId}?conv=${item.id}`)
+                    } else {
+                      navigate(`/chat/${item.agentId}`, { state: { transferMessage: title } })
+                    }
+                  }}
+                  className="w-full text-left px-2 py-1.5 rounded text-[11px] text-white/50 hover:text-white/90 hover:bg-white/[0.03] transition-colors truncate block"
+                  title={title}
+                >
+                  {title}
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* FOOTER SIDEBAR: PANEL ADMIN & BRAND */}
+        <div className="p-4 border-t mt-auto" style={{ borderColor: 'rgba(255,255,255,0.06)' }}>
           {user?.isAdmin && (
-            <div className="px-4 pt-4">
-              <button
-                onClick={() => navigate('/portal-interno')}
-                className="w-full flex items-center gap-2.5 px-3 py-[9px] rounded-lg text-left transition-all duration-200"
+            <button
+              onClick={() => navigate('/portal-interno')}
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-[11px] font-medium text-[#c9a84c] bg-[#c9a84c]/10 border border-[#c9a84c]/20 hover:bg-[#c9a84c]/20 transition-all mb-3"
+            >
+              <Shield size={13} />
+              <span>Panel Admin</span>
+            </button>
+          )}
+          <p className="text-[10px] text-white/30 tracking-wider">
+            Hardman · Perú
+          </p>
+        </div>
+      </aside>
+
+      {/* MAIN RIGHT COLUMN */}
+      <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
+        {/* TOP HEADER */}
+        <header
+          className="h-16 flex-shrink-0 flex items-center justify-between px-4 sm:px-8 border-b z-20"
+          style={{ background: '#0a0a0c', borderColor: 'rgba(255,255,255,0.06)' }}
+        >
+          <div className="flex items-center gap-3 md:hidden">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="p-1.5 rounded-lg border border-white/10 text-white/70"
+            >
+              <Menu size={18} />
+            </button>
+            <span className="font-extrabold tracking-[0.2em] text-[13px] text-white">HARDMAN</span>
+          </div>
+
+          <div className="hidden md:block"></div>
+
+          <div className="flex items-center gap-3 ml-auto">
+            {/* Pill Consultas Restantes */}
+            <div
+              onClick={() => setUpgradeModalOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-medium transition-all cursor-pointer hover:border-[#c9a84c]/40 hover:bg-[#c9a84c]/5"
+              style={{
+                background: '#131418',
+                borderColor: 'rgba(255,255,255,0.08)'
+              }}
+              title="Consultas disponibles"
+            >
+              <Zap size={12} className="text-[#c9a84c] fill-[#c9a84c]" />
+              <span className="text-white/70">
+                Consultas <strong className="text-[#dfbe63] font-semibold">{demoUsage ? Math.max(0, (demoUsage.limit || 1) - demoUsage.questionsUsed) : (userPlan === 'senior' ? 250 : 50)}</strong> restantes
+              </span>
+            </div>
+
+            {/* User Badge */}
+            <button
+              onClick={() => navigate('/account')}
+              className="flex items-center gap-2.5 pl-1.5 pr-2 py-1 rounded-full hover:bg-white/5 transition-all text-left"
+            >
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold"
                 style={{
-                  background: 'rgba(201,168,76,0.08)',
-                  border: '1px solid rgba(201,168,76,0.15)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(201,168,76,0.15)'
-                  e.currentTarget.style.borderColor = 'rgba(201,168,76,0.30)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(201,168,76,0.08)'
-                  e.currentTarget.style.borderColor = 'rgba(201,168,76,0.15)'
+                  background: 'rgba(201,168,76,0.12)',
+                  border: '1px solid rgba(201,168,76,0.4)',
+                  color: '#dfbe63'
                 }}
               >
-                <Shield size={14} style={{ color: '#c9a84c' }} />
-                <span className="text-[11px] font-medium" style={{ color: '#c9a84c' }}>
-                  Panel Admin
-                </span>
-              </button>
-            </div>
-          )}
-
-          <div className="mt-auto px-4 py-4 border-t" style={{ borderColor: '#2a2a2a' }}>
-            <p className="text-[10px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.40)', letterSpacing: '1px' }}>
-              Hardman · Perú
-            </p>
+                {initials}
+              </div>
+              <div className="hidden sm:block">
+                <p className="text-[11px] font-medium text-white leading-tight">
+                  {user?.name || 'Administrador'}
+                </p>
+                <p className="text-[8px] font-bold uppercase tracking-wider text-[#c9a84c]">
+                  {userPlan === 'senior' ? 'PLAN SENIOR' : userPlan === 'demo' ? 'MODO DEMO' : 'PLAN JUNIOR'}
+                </p>
+              </div>
+            </button>
           </div>
-        </aside>
+        </header>
 
-        {/* MAIN CONTENT */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden w-full max-w-full px-3.5 sm:px-6 md:px-8 py-3.5 sm:py-4 md:py-6 pb-28 md:pb-8" style={{ overscrollBehavior: 'contain' }}>
+        {/* SCROLLABLE BODY */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-8 py-6">
           <AnimatePresence mode="wait">
             {activeSideItem === 'specialists' && (
               <motion.div
@@ -473,123 +545,152 @@ export default function Dashboard() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
+                className="max-w-6xl mx-auto"
               >
-                {/* Citizen Hero & Problem Navigator */}
-                <div className="mb-8 space-y-4">
-                  <div className="p-5 sm:p-6 rounded-2xl relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(20,20,20,0.95) 70%)', border: '1px solid rgba(201,168,76,0.25)' }}>
-                    <div className="max-w-2xl">
-                      <span className="text-[9px] uppercase font-bold text-[#c9a84c] tracking-widest block mb-2">
-                        PLATAFORMA LEGAL INTELIGENTE · PERÚ 2026
-                      </span>
-                      <h1 className="text-xl sm:text-2xl font-light text-white tracking-wide mb-2">
-                        Hola {user?.name ? user.name.split(' ')[0] : ''}, ¿en qué consulta legal necesitas asistencia?
-                      </h1>
-                      <p className="text-[12px] text-white/70 font-light leading-relaxed mb-4">
-                        Especialistas en 8 ramas del derecho, análisis normativo actualizado y documentos oficiales listos para usar.
-                      </p>
+                {/* Title */}
+                <div className="text-center pt-6 pb-6">
+                  <h1 className="text-3xl sm:text-4xl md:text-[44px] font-light text-white tracking-tight">
+                    ¿En qué puedo <span className="font-serif italic text-[#dfbe63]">ayudarte?</span>
+                  </h1>
+                </div>
 
-                      {/* Quick Action Buttons Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+                {/* Input Box Card */}
+                <div className="max-w-2xl mx-auto mb-10 px-2 sm:px-0">
+                  <div
+                    className="rounded-2xl p-4 transition-all duration-300 relative focus-within:border-[#c9a84c]/45"
+                    style={{
+                      background: '#121316',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 12px 35px rgba(0,0,0,0.6)'
+                    }}
+                  >
+                    <textarea
+                      id="dashboard-case-textarea"
+                      value={promptCase}
+                      onChange={(e) => setPromptCase(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault()
+                          handleStartPrompt()
+                        }
+                      }}
+                      placeholder="Describe tu caso: hechos, fechas y qué necesitas lograr..."
+                      rows={2}
+                      className="w-full bg-transparent text-[13.5px] text-white placeholder-white/40 resize-none outline-none leading-relaxed"
+                    />
+
+                    <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-white/[0.05]">
+                      {/* + Button with Tools Dropdown */}
+                      <div className="relative" ref={plusMenuRef}>
                         <button
-                          onClick={() => setDocGenModal({ isOpen: true, docType: 'carta_notarial' })}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
+                          type="button"
+                          onClick={() => setPlusMenuOpen(!plusMenuOpen)}
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
+                            plusMenuOpen
+                              ? 'bg-[#c9a84c]/20 border-[#c9a84c] text-[#dfbe63]'
+                              : 'border-white/10 hover:border-[#c9a84c]/40 hover:bg-white/5 text-white/60 hover:text-white'
+                          }`}
+                          title="Herramientas y opciones"
                         >
-                          <FileText size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="text-[11px] leading-tight text-left">Generar Documentos</span>
+                          <Plus size={15} />
                         </button>
-                        <button
-                          onClick={() => setScannerOpen(true)}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
-                        >
-                          <Sparkles size={15} className="text-[#c9a84c] flex-shrink-0" />
-                          <span className="text-[11px] leading-tight text-left">Escanear Cédula/PDF</span>
-                        </button>
-                        <button
-                          onClick={() => setCalcModal({ isOpen: true, tab: 'liquidacion' })}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
-                        >
-                          <Calculator size={15} className="text-[#34d17a] flex-shrink-0" />
-                          <span className="text-[11px] leading-tight text-left">Calculadoras S/</span>
-                        </button>
-                        <button
-                          onClick={() => setWhereToGoOpen(true)}
-                          className="flex items-center gap-2 p-2.5 rounded-xl text-[11px] font-medium text-white transition-all bg-[#1a1a1a] hover:bg-white/10 border border-white/15"
-                        >
-                          <MapPin size={15} className="text-[#f59e0b] flex-shrink-0" />
-                          <span className="text-[11px] leading-tight text-left">A Dónde Acudir</span>
-                        </button>
+
+                        {/* Popover Menu with the 4 options user asked to put here */}
+                        <AnimatePresence>
+                          {plusMenuOpen && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                              transition={{ duration: 0.15 }}
+                              className="absolute left-0 bottom-9 mb-1.5 w-56 rounded-xl p-1.5 z-50 shadow-2xl backdrop-blur-xl"
+                              style={{
+                                background: 'rgba(18, 19, 23, 0.98)',
+                                border: '1px solid rgba(201, 168, 76, 0.35)',
+                                boxShadow: '0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(201,168,76,0.12)'
+                              }}
+                            >
+                              <div className="text-[9px] uppercase font-bold text-[#c9a84c] px-3 py-1 tracking-wider border-b border-white/5">
+                                Acciones Rápidas
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => { setPlusMenuOpen(false); setDocGenModal({ isOpen: true, docType: 'carta_notarial' }) }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                              >
+                                <FileText size={13} className="text-[#c9a84c]" />
+                                <span>Generar documentos</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setPlusMenuOpen(false); setScannerOpen(true) }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                              >
+                                <Sparkles size={13} className="text-[#a5b4fc]" />
+                                <span>Escanear cédula / PDF</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setPlusMenuOpen(false); setCalcModal({ isOpen: true, tab: 'liquidacion' }) }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                              >
+                                <Calculator size={13} className="text-[#34d17a]" />
+                                <span>Calculadoras S/</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setPlusMenuOpen(false); setWhereToGoOpen(true) }}
+                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                              >
+                                <MapPin size={13} className="text-[#f59e0b]" />
+                                <span>A dónde acudir</span>
+                              </button>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
                       </div>
+
+                      {/* Up Arrow Send Button */}
+                      <button
+                        type="button"
+                        onClick={() => handleStartPrompt()}
+                        disabled={!promptCase.trim()}
+                        className="w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
+                        style={{
+                          background: 'linear-gradient(135deg, #dfbe63, #c9a84c)',
+                          color: '#111111'
+                        }}
+                        title="Enviar consulta"
+                      >
+                        <ArrowUp size={14} strokeWidth={2.8} />
+                      </button>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between mb-4 pt-2 border-t border-white/5">
-                  <h2
-                    className="text-[11px] font-bold uppercase"
-                    style={{ letterSpacing: '3px', color: 'rgba(255,255,255,0.40)' }}
-                  >
-                    NUESTROS ESPECIALISTAS
+                {/* Specialists Section Header */}
+                <div className="flex items-center gap-2.5 mb-5 px-1 max-w-5xl mx-auto">
+                  <h2 className="text-[11px] font-bold uppercase tracking-[2px] text-white/50">
+                    ESPECIALISTAS
                   </h2>
-                  <div className="hidden sm:flex items-center gap-2 text-[11px]" style={{ color: 'rgba(255,255,255,0.40)' }}>
-                    <span className="w-[7px] h-[7px] rounded-full dot-online" style={{ background: '#34d17a' }} />
-                    <span className="font-light">8 en línea · Respuesta inmediata</span>
+                  <span className="text-white/20">•</span>
+                  <div className="flex items-center gap-1.5 text-[11px] text-white/50 font-normal">
+                    <span className="w-2 h-2 rounded-full bg-[#10b981] animate-pulse" />
+                    <span>8 en línea · respuesta inmediata</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {CATEGORIES.map((cat) => {
-                    const isActive = selectedCategory === cat.id
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={(e) => {
-                          setSelectedCategory(cat.id)
-                          handleRipple(e)
-                        }}
-                        className="flex-shrink-0 whitespace-nowrap min-w-max px-4 py-2 rounded-full text-[12px] font-medium transition-all duration-200"
-                        style={{
-                          background: isActive ? 'rgba(201,168,76,0.15)' : '#222222',
-                          border: `1px solid ${isActive ? '#c9a84c' : '#333333'}`,
-                          color: isActive ? '#c9a84c' : 'rgba(255,255,255,0.60)',
-                          boxShadow: isActive ? '0 0 14px rgba(201,168,76,0.15)' : 'none',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (!isActive) e.currentTarget.style.transform = 'translateY(-1px)'
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                        }}
-                      >
-                        {cat.label}
-                      </button>
-                    )
-                  })}
+                {/* 4x2 Grid of Lawyers */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                  {LAWYER_PANEL_DATA.map((item, index) => (
+                    <LawyerCard key={item.id} item={item} index={index} />
+                  ))}
                 </div>
 
-                {filteredAgents.length === 0 ? (
-                  <div
-                    className="text-center py-16 rounded-xl max-w-md mx-auto p-8"
-                    style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                  >
-                    <h3 className="text-sm font-light text-white mb-1">No se encontraron especialistas</h3>
-                    <p className="text-[11px] font-light mb-4" style={{ color: 'rgba(255,255,255,0.40)' }}>
-                      Intenta con otro término o selecciona otra materia.
-                    </p>
-                    <button
-                      onClick={() => { setSelectedCategory('all'); setSearchQuery('') }}
-                      className="px-4 py-2 rounded-lg text-[11px] font-medium transition-all"
-                      style={{ border: '1px solid #333333', color: '#c9a84c', background: 'rgba(201,168,76,0.10)' }}
-                    >
-                      Ver todos
-                    </button>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {filteredAgents.map((agent, i) => (
-                      <AgentCard key={agent.id} agent={agent} index={i} />
-                    ))}
-                  </div>
-                )}
+                {/* Footer Disclaimer */}
+                <div className="text-center pt-10 pb-6 text-[11px] text-white/35 font-light">
+                  Tus chats no se utilizan para entrenar nuestros modelos. Hardman es una IA y puede cometer errores.
+                </div>
               </motion.div>
             )}
 
@@ -1275,129 +1376,134 @@ export default function Dashboard() {
   )
 }
 
-function AgentCard({ agent, index }: { agent: Agent; index: number }) {
+function LawyerCard({ item, index }: { item: LawyerPanelItem; index: number }) {
   const navigate = useNavigate()
-  const cardRef = useRef<HTMLDivElement>(null)
+  const agent = getAgent(item.id)
   const [isHovered, setIsHovered] = useState(false)
-  const [tilt, setTilt] = useState({ x: 0, y: 0 })
 
-  // Color coding per specialty area
-  const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-    LABORAL: { bg: 'rgba(99,102,241,0.15)', text: '#a5b4fc', border: 'rgba(99,102,241,0.30)' },
-    PENAL: { bg: 'rgba(239,68,68,0.15)', text: '#fca5a5', border: 'rgba(239,68,68,0.30)' },
-    CIVIL: { bg: 'rgba(6,182,212,0.15)', text: '#67e8f9', border: 'rgba(6,182,212,0.30)' },
-    CORPORATIVO: { bg: 'rgba(139,92,246,0.15)', text: '#c4b5fd', border: 'rgba(139,92,246,0.30)' },
-    MINERO: { bg: 'rgba(245,158,11,0.15)', text: '#fcd34d', border: 'rgba(245,158,11,0.30)' },
-    FAMILIA: { bg: 'rgba(236,72,153,0.15)', text: '#f9a8d4', border: 'rgba(236,72,153,0.30)' },
-    TRIBUTARIO: { bg: 'rgba(16,185,129,0.15)', text: '#6ee7b7', border: 'rgba(16,185,129,0.30)' },
-    ADMINISTRATIVO: { bg: 'rgba(13,148,136,0.15)', text: '#5eead4', border: 'rgba(13,148,136,0.30)' },
-  }
-  const badgeColor = BADGE_COLORS[agent.badge] || { bg: 'rgba(201,168,76,0.15)', text: '#c9a84c', border: 'rgba(201,168,76,0.30)' }
-
-  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left) / rect.width - 0.5
-    const y = (e.clientY - rect.top) / rect.height - 0.5
-    setTilt({ x: y * -6, y: x * 6 })
-  }
-
-  const handleMouseLeave = () => {
-    setIsHovered(false)
-    setTilt({ x: 0, y: 0 })
-  }
+  const imageSrc = agent?.image || `/agents/${item.id}.jpg`
 
   return (
     <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: 18 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.05, ease: 'easeOut' }}
-      onMouseMove={handleMouseMove}
+      transition={{ duration: 0.35, delay: index * 0.04, ease: 'easeOut' }}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={handleMouseLeave}
-      onClick={() => navigate(`/chat/${agent.id}`)}
-      className="group cursor-pointer rounded-[16px] overflow-hidden flex flex-col transition-all duration-300"
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={() => navigate(`/chat/${item.id}`)}
+      className="group cursor-pointer rounded-[20px] overflow-hidden flex flex-col justify-between transition-all duration-300 relative select-none"
       style={{
-        background: isHovered ? '#1e1e1e' : '#1a1a1a',
-        border: `1px solid ${isHovered ? 'rgba(201,168,76,0.30)' : '#2a2a2a'}`,
-        transform: isHovered
-          ? `perspective(800px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-6px) scale(1.02)`
-          : 'perspective(800px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)',
-        boxShadow: isHovered ? '0 24px 60px rgba(0,0,0,0.60), 0 0 0 1px rgba(201,168,76,0.10)' : 'none',
-        willChange: 'transform',
+        background: isHovered
+          ? 'linear-gradient(180deg, #1b1d22 0%, #121316 100%)'
+          : 'linear-gradient(180deg, #17181c 0%, #0f1012 100%)',
+        border: `1px solid ${isHovered ? 'rgba(201,168,76,0.38)' : 'rgba(255,255,255,0.07)'}`,
+        boxShadow: isHovered
+          ? '0 16px 36px rgba(0,0,0,0.65), 0 0 20px rgba(201,168,76,0.08)'
+          : '0 4px 18px rgba(0,0,0,0.40)',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
       }}
     >
-      {/* Photo area */}
-      <div className="relative overflow-hidden w-full aspect-[4/3] sm:aspect-[3/4] sm:max-h-[300px]">
-        <img
-          src={agent.image}
-          alt={agent.name}
-          className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
-          style={{ objectPosition: 'top center' }}
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(17,17,17,0.70) 0%, rgba(17,17,17,0.10) 50%, transparent 100%)' }} />
-
-        {/* Specialty badge — color coded */}
-        <div
-          className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[7px] font-bold uppercase"
-          style={{ letterSpacing: '1.5px', color: badgeColor.text, background: badgeColor.bg, border: `1px solid ${badgeColor.border}`, backdropFilter: 'blur(10px)' }}
-        >
-          {agent.badge}
-        </div>
-
-        {/* Online indicator */}
-        <div
-          className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2 py-1 rounded-md text-[9px] font-medium"
-          style={{ background: 'rgba(17,17,17,0.88)', backdropFilter: 'blur(10px)', color: 'rgba(255,255,255,0.70)', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <span className="w-[6px] h-[6px] rounded-full dot-online" style={{ background: '#34d17a' }} />
-          EN LÍNEA
-        </div>
-
-        {/* Hover CTA overlay */}
-        <div
-          className="absolute inset-0 flex items-end justify-center pb-4 transition-opacity duration-300"
-          style={{ opacity: isHovered ? 1 : 0 }}
-        >
-          <div
-            className="px-5 py-2 rounded-full text-[11px] font-semibold flex items-center gap-2"
-            style={{ background: '#c9a84c', color: '#111111', boxShadow: '0 4px 20px rgba(201,168,76,0.40)' }}
-          >
-            Consultar ahora <ArrowRight size={13} />
+      <div>
+        {/* Visual / Image container */}
+        <div className="relative w-full aspect-[4/3.2] overflow-hidden rounded-t-[19px]">
+          {/* Top Tag & Green Status Dot */}
+          <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+            <span
+              className="px-2.5 py-0.5 rounded-md text-[8.5px] font-bold uppercase tracking-[1.4px]"
+              style={{
+                color: item.tagColor.text,
+                background: item.tagColor.bg,
+                border: `1px solid ${item.tagColor.border}`,
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              {item.tag}
+            </span>
+            <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] ring-4 ring-[#10b981]/20 shadow-[0_0_8px_#10b981]" />
           </div>
+
+          {item.isSilhouette ? (
+            <div
+              className="w-full h-full flex items-end justify-center pb-2 relative"
+              style={{
+                background: item.silhouetteColor?.bg || '#15171c',
+              }}
+            >
+              <svg
+                viewBox="0 0 100 100"
+                className="w-28 h-28 opacity-85 transition-transform duration-500 group-hover:scale-105"
+                fill={item.silhouetteColor?.fill || 'rgba(200,200,200,0.4)'}
+              >
+                <circle cx="50" cy="35" r="17" />
+                <path d="M 23 88 C 23 68 35 60 50 60 C 65 60 77 68 77 88 Z" />
+              </svg>
+              {/* Bottom fade */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to top, #17181c 0%, transparent 60%)',
+                }}
+              />
+            </div>
+          ) : (
+            <div className="w-full h-full relative overflow-hidden">
+              <img
+                src={imageSrc}
+                alt={item.title}
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                style={{ objectPosition: 'center 20%' }}
+              />
+              {/* Bottom fade into card body */}
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'linear-gradient(to top, #17181c 0%, rgba(23,24,28,0.3) 45%, transparent 80%)',
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Content Area */}
+        <div className="p-4 pt-2">
+          <h3 className="text-[17px] font-medium text-white leading-tight tracking-tight">
+            {item.title}
+          </h3>
+          <p
+            className="text-[9.5px] font-bold uppercase tracking-[1.4px] mt-1"
+            style={{ color: item.tagColor.text }}
+          >
+            {item.subtitle}
+          </p>
+          <p className="text-[11.5px] text-white/60 font-light leading-relaxed mt-2 line-clamp-2 min-h-[34px]">
+            {item.description}
+          </p>
         </div>
       </div>
 
-      {/* Info area */}
-      <div className="p-4 flex-1 flex flex-col justify-between">
-        <div>
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <h3 className="text-[17px] font-normal text-white leading-tight">{agent.name}</h3>
-              <p className="text-[10px] font-semibold tracking-wider uppercase mt-1" style={{ color: badgeColor.text }}>
-                {agent.role}
-              </p>
-            </div>
-          </div>
-          <p className="text-[11px] font-light leading-relaxed mt-2 line-clamp-2 text-white/60">
-            {agent.description}
-          </p>
-        </div>
-
-        {/* Specialty pills */}
-        <div className="mt-3.5 flex flex-wrap gap-1.5">
-          {(agent.specialty || '').split(',').slice(0, 3).map((s, i) => (
-            <span
-              key={i}
-              className="text-[9px] px-2 py-0.5 rounded-md bg-white/[0.04] text-white/50 border border-white/10"
-            >
-              {s.trim()}
-            </span>
-          ))}
+      {/* Bottom CTA Row */}
+      <div className="px-4 pb-4 pt-1 flex items-center justify-between gap-2">
+        <span
+          className="px-3 py-1.5 rounded-full text-[10.5px] text-white/70 font-light truncate max-w-[78%] transition-colors duration-200"
+          style={{
+            background: 'rgba(255,255,255,0.035)',
+            border: '1px solid rgba(255,255,255,0.08)',
+          }}
+        >
+          {item.ctaText}
+        </span>
+        <div
+          className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-300"
+          style={{
+            border: isHovered ? '1px solid rgba(201,168,76,0.6)' : '1px solid rgba(255,255,255,0.12)',
+            background: isHovered ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.02)',
+            color: isHovered ? '#dfbe63' : 'rgba(255,255,255,0.6)',
+          }}
+        >
+          <ArrowRight size={13} strokeWidth={1.8} />
         </div>
       </div>
     </motion.div>
   )
 }
+
