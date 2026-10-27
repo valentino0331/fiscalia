@@ -68,7 +68,7 @@ export function HardmanLogo({
           fontWeight: 300,
           fontSize: fontSize[size],
           letterSpacing: tracking[size],
-          color: '#c8c0b0',
+          color: '#ffffff',
           textTransform: 'uppercase',
           lineHeight: 1.1,
           paddingLeft: tracking[size], // Compensates trailing letter-spacing to center D perfectly
@@ -80,7 +80,7 @@ export function HardmanLogo({
         style={{
           width: underlineWidth[size],
           height: underlineHeight[size],
-          background: '#6b5f4a',
+          background: '#c9a84c',
           marginTop: '4px',
           borderRadius: '1px',
         }}

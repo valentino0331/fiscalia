@@ -72,59 +72,39 @@ export const LAWYER_PANEL_DATA: LawyerPanelItem[] = [
   },
   {
     id: 'rodrigo',
-    title: 'Derecho minero',
-    subtitle: 'ESPECIALISTA',
+    title: 'Rodrigo',
+    subtitle: 'DERECHO MINERO',
     description: 'Concesiones y petitorios mineros, servidumbres, pequeña minería y fiscalización ambiental.',
     ctaText: 'Concesiones y formalización',
     tag: 'MINERO',
     tagColor: { text: '#fcd34d', border: 'rgba(245,158,11,0.35)', bg: 'rgba(245,158,11,0.12)' },
-    isSilhouette: true,
-    silhouetteColor: {
-      bg: 'radial-gradient(circle at 50% 60%, rgba(245,158,11,0.22) 0%, rgba(18,17,14,0.98) 75%)',
-      fill: 'rgba(217,160,65,0.45)',
-    },
   },
   {
     id: 'camila',
-    title: 'Derecho de familia',
-    subtitle: 'ESPECIALISTA',
+    title: 'Camila',
+    subtitle: 'DERECHO DE FAMILIA',
     description: 'Alimentos, tenencia y régimen de visitas, divorcio, patria potestad y violencia familiar.',
     ctaText: 'Alimentos y familia',
     tag: 'FAMILIA',
     tagColor: { text: '#f9a8d4', border: 'rgba(236,72,153,0.35)', bg: 'rgba(236,72,153,0.12)' },
-    isSilhouette: true,
-    silhouetteColor: {
-      bg: 'radial-gradient(circle at 50% 60%, rgba(236,72,153,0.22) 0%, rgba(22,14,20,0.98) 75%)',
-      fill: 'rgba(215,115,165,0.45)',
-    },
   },
   {
     id: 'fernanda',
-    title: 'Derecho tributario',
-    subtitle: 'ESPECIALISTA',
+    title: 'Fernanda',
+    subtitle: 'DERECHO TRIBUTARIO',
     description: 'Fiscalización SUNAT, reclamaciones, fraccionamiento de deudas, IGV y Renta.',
     ctaText: 'SUNAT y tributos',
     tag: 'TRIBUTARIO',
     tagColor: { text: '#6ee7b7', border: 'rgba(16,185,129,0.35)', bg: 'rgba(16,185,129,0.12)' },
-    isSilhouette: true,
-    silhouetteColor: {
-      bg: 'radial-gradient(circle at 50% 60%, rgba(16,185,129,0.22) 0%, rgba(12,22,18,0.98) 75%)',
-      fill: 'rgba(90,180,140,0.45)',
-    },
   },
   {
     id: 'marco',
-    title: 'Derecho administrativo',
-    subtitle: 'ESPECIALISTA',
+    title: 'Marco',
+    subtitle: 'DERECHO ADMINISTRATIVO',
     description: 'Procedimiento administrativo, recursos impugnativos, contrataciones con el Estado y responsabilidad funcional.',
     ctaText: 'Procedimiento y Estado',
     tag: 'ADMINISTRATIVO',
     tagColor: { text: '#5eead4', border: 'rgba(13,148,136,0.35)', bg: 'rgba(13,148,136,0.12)' },
-    isSilhouette: true,
-    silhouetteColor: {
-      bg: 'radial-gradient(circle at 50% 60%, rgba(59,130,246,0.22) 0%, rgba(14,18,26,0.98) 75%)',
-      fill: 'rgba(100,145,200,0.45)',
-    },
   },
 ]
 
@@ -358,9 +338,20 @@ export default function Dashboard() {
       >
         {/* LOGO */}
         <div className="px-5 pt-6 pb-4">
-          <div className="flex flex-col">
-            <span className="font-extrabold tracking-[0.22em] text-[15px] text-white">HARDMAN</span>
-            <span className="w-8 h-[2px] bg-[#c9a84c] mt-0.5 rounded-full" />
+          <div
+            onClick={() => navigate('/dashboard')}
+            className="inline-flex flex-col items-center cursor-pointer select-none group"
+          >
+            <span
+              className="text-[15px] text-white/90 font-light uppercase tracking-[0.28em]"
+              style={{
+                fontFamily: "'Montserrat', sans-serif",
+                paddingLeft: '0.28em', // Perfectly balances trailing letter-spacing to center D over line
+              }}
+            >
+              HARDMAN
+            </span>
+            <span className="w-5 h-[1.5px] bg-[#c9a84c] mt-1.5 rounded-full opacity-80 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
 
@@ -486,7 +477,7 @@ export default function Dashboard() {
             >
               <Menu size={18} />
             </button>
-            <span className="font-extrabold tracking-[0.2em] text-[13px] text-white">HARDMAN</span>
+            <span className="font-light tracking-[0.25em] text-[13px] text-white/90">HARDMAN</span>
           </div>
 
           <div className="hidden md:block"></div>
@@ -549,8 +540,11 @@ export default function Dashboard() {
               >
                 {/* Title */}
                 <div className="text-center pt-6 pb-6">
-                  <h1 className="text-3xl sm:text-4xl md:text-[44px] font-light text-white tracking-tight">
-                    ¿En qué puedo <span className="font-serif italic text-[#dfbe63]">ayudarte?</span>
+                  <h1
+                    className="text-3xl sm:text-4xl md:text-[40px] font-light text-white tracking-tight"
+                    style={{ fontFamily: "'Montserrat', sans-serif" }}
+                  >
+                    ¿En qué podemos <span className="font-normal text-[#dfbe63]">ayudarte?</span>
                   </h1>
                 </div>
 
@@ -1405,7 +1399,7 @@ function LawyerCard({ item, index }: { item: LawyerPanelItem; index: number }) {
     >
       <div>
         {/* Visual / Image container */}
-        <div className="relative w-full aspect-[4/3.2] overflow-hidden rounded-t-[19px]">
+        <div className="relative w-full aspect-[4/3.2] overflow-hidden rounded-t-[19px] bg-[#141519]">
           {/* Top Tag & Green Status Dot */}
           <div className="absolute top-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
             <span
@@ -1422,46 +1416,21 @@ function LawyerCard({ item, index }: { item: LawyerPanelItem; index: number }) {
             <div className="w-2.5 h-2.5 rounded-full bg-[#10b981] ring-4 ring-[#10b981]/20 shadow-[0_0_8px_#10b981]" />
           </div>
 
-          {item.isSilhouette ? (
+          <div className="w-full h-full relative overflow-hidden">
+            <img
+              src={imageSrc}
+              alt={item.title}
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+              style={{ objectPosition: 'center 20%' }}
+            />
+            {/* Bottom fade into card body */}
             <div
-              className="w-full h-full flex items-end justify-center pb-2 relative"
+              className="absolute inset-0 pointer-events-none"
               style={{
-                background: item.silhouetteColor?.bg || '#15171c',
+                background: 'linear-gradient(to top, #17181c 0%, rgba(23,24,28,0.25) 45%, transparent 80%)',
               }}
-            >
-              <svg
-                viewBox="0 0 100 100"
-                className="w-28 h-28 opacity-85 transition-transform duration-500 group-hover:scale-105"
-                fill={item.silhouetteColor?.fill || 'rgba(200,200,200,0.4)'}
-              >
-                <circle cx="50" cy="35" r="17" />
-                <path d="M 23 88 C 23 68 35 60 50 60 C 65 60 77 68 77 88 Z" />
-              </svg>
-              {/* Bottom fade */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(to top, #17181c 0%, transparent 60%)',
-                }}
-              />
-            </div>
-          ) : (
-            <div className="w-full h-full relative overflow-hidden">
-              <img
-                src={imageSrc}
-                alt={item.title}
-                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                style={{ objectPosition: 'center 20%' }}
-              />
-              {/* Bottom fade into card body */}
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'linear-gradient(to top, #17181c 0%, rgba(23,24,28,0.3) 45%, transparent 80%)',
-                }}
-              />
-            </div>
-          )}
+            />
+          </div>
         </div>
 
         {/* Content Area */}
