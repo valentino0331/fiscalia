@@ -2504,12 +2504,492 @@
       vertical-align: middle
     }
 
-    .fx-zoom-cue svg {
-      width: 13px;
-      height: 13px;
-      stroke: var(--gold);
-      margin-right: 4px;
-      flex-shrink: 0
+    /* ==========================================================================
+       WIDGET INTERACTIVO DEMO ESTILO MAGNAR (HARDMAN 2026)
+       ========================================================================== */
+    .magnar-widget-wrap {
+      max-width: 900px;
+      margin: 38px auto 44px;
+      padding: 0 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .magnar-widget-box {
+      background: radial-gradient(110% 120% at 50% 0%, rgba(28, 25, 18, 0.95) 0%, rgba(13, 13, 13, 0.98) 100%);
+      border: 1px solid rgba(201, 168, 76, 0.35);
+      border-radius: 22px;
+      padding: 26px 28px 22px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85), 0 0 50px rgba(201, 168, 76, 0.12);
+      backdrop-filter: blur(20px);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .magnar-widget-box:hover {
+      border-color: rgba(201, 168, 76, 0.55);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.9), 0 0 60px rgba(201, 168, 76, 0.18);
+    }
+
+    .magnar-widget-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .magnar-tag-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #dfbe63;
+    }
+
+    .magnar-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981;
+      animation: softPulse 2s infinite ease-in-out;
+    }
+
+    .magnar-badge-limit {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(201, 168, 76, 0.12);
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      color: #dfbe63;
+      font-size: 0.76rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    /* Input Frame inspirada en Magnar */
+    .magnar-input-card {
+      background: rgba(22, 22, 22, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px 18px 12px;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .magnar-input-card:focus-within {
+      background: rgba(26, 26, 26, 0.95);
+      border-color: rgba(201, 168, 76, 0.6);
+      box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+    }
+
+    .magnar-textarea {
+      width: 100%;
+      min-height: 60px;
+      max-height: 140px;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #f4f1ea;
+      font-family: inherit;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      resize: none;
+    }
+
+    .magnar-textarea::placeholder {
+      color: rgba(244, 241, 234, 0.45);
+      font-style: normal;
+    }
+
+    .magnar-input-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .magnar-prompt-suggestion-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(201, 168, 76, 0.08);
+      border: 1px solid rgba(201, 168, 76, 0.25);
+      border-radius: 999px;
+      padding: 6px 14px;
+      color: #dfbe63;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .magnar-prompt-suggestion-btn:hover {
+      background: rgba(201, 168, 76, 0.18);
+      border-color: rgba(201, 168, 76, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .magnar-send-button {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #dfbe63, #c9a84c);
+      border: none;
+      color: #0a0a0a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(201, 168, 76, 0.35);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      flex-shrink: 0;
+    }
+
+    .magnar-send-button:hover:not(:disabled) {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 6px 22px rgba(201, 168, 76, 0.5);
+      background: linear-gradient(135deg, #f0d482, #d9b959);
+    }
+
+    .magnar-send-button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Display de Especialistas */
+    .magnar-specialists-container {
+      margin-top: 20px;
+    }
+
+    .magnar-specialists-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: rgba(244, 241, 234, 0.65);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .magnar-specialists-title span.current-name {
+      color: #dfbe63;
+      font-weight: 700;
+      text-transform: none;
+    }
+
+    .magnar-specialists-scroll {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(201, 168, 76, 0.3) transparent;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .magnar-specialists-scroll::-webkit-scrollbar {
+      height: 5px;
+    }
+
+    .magnar-specialists-scroll::-webkit-scrollbar-thumb {
+      background: rgba(201, 168, 76, 0.3);
+      border-radius: 999px;
+    }
+
+    .magnar-spec-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 14px 7px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .magnar-spec-pill:hover {
+      background: rgba(201, 168, 76, 0.08);
+      border-color: rgba(201, 168, 76, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .magnar-spec-pill.active {
+      background: linear-gradient(135deg, rgba(201, 168, 76, 0.22) 0%, rgba(35, 30, 20, 0.8) 100%);
+      border-color: #dfbe63;
+      box-shadow: 0 0 18px rgba(201, 168, 76, 0.25);
+    }
+
+    .magnar-spec-pill-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      flex-shrink: 0;
+      transition: border-color 0.2s;
+    }
+
+    .magnar-spec-pill.active .magnar-spec-pill-avatar {
+      border-color: #dfbe63;
+    }
+
+    .magnar-spec-pill-info {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      line-height: 1.2;
+    }
+
+    .magnar-spec-pill-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .magnar-spec-pill.active .magnar-spec-pill-name {
+      color: #dfbe63;
+    }
+
+    .magnar-spec-pill-area {
+      font-size: 0.72rem;
+      color: rgba(244, 241, 234, 0.55);
+    }
+
+    .magnar-spec-pill.active .magnar-spec-pill-area {
+      color: rgba(244, 241, 234, 0.85);
+    }
+
+    /* Área de Respuesta */
+    .magnar-answer-wrap {
+      margin-top: 24px;
+      border-top: 1px solid rgba(201, 168, 76, 0.25);
+      padding-top: 20px;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .magnar-answer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .magnar-answer-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .magnar-answer-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 2px solid #dfbe63;
+      object-fit: cover;
+      box-shadow: 0 0 14px rgba(201, 168, 76, 0.3);
+    }
+
+    .magnar-answer-spij {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #34d17a;
+      font-weight: 600;
+    }
+
+    .magnar-answer-question-preview {
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid rgba(201, 168, 76, 0.6);
+      padding: 10px 14px;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 16px;
+      font-size: 0.9rem;
+      color: rgba(244, 241, 234, 0.8);
+      font-style: italic;
+    }
+
+    .magnar-answer-content {
+      background: rgba(10, 10, 10, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 20px 22px;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      color: #f4f1ea;
+      max-height: 480px;
+      overflow-y: auto;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
+    .magnar-answer-content p {
+      margin-bottom: 12px;
+    }
+
+    .magnar-answer-cta-bar {
+      margin-top: 20px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(201, 168, 76, 0.15) 0%, rgba(20, 20, 20, 0.9) 100%);
+      border: 1px solid rgba(201, 168, 76, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .magnar-answer-cta-text {
+      text-align: left;
+    }
+
+    .magnar-answer-cta-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .magnar-answer-cta-sub {
+      font-size: 0.84rem;
+      color: rgba(244, 241, 234, 0.7);
+    }
+
+    .magnar-answer-cta-buttons {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* Estado Bloqueado por Máquina / IP */
+    .magnar-lock-box {
+      margin-top: 18px;
+      padding: 24px;
+      border-radius: 16px;
+      background: linear-gradient(145deg, rgba(30, 25, 15, 0.85) 0%, rgba(14, 14, 14, 0.95) 100%);
+      border: 1px solid rgba(201, 168, 76, 0.45);
+      text-align: center;
+    }
+
+    .magnar-lock-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.78rem;
+      padding: 5px 14px;
+      border-radius: 999px;
+      background: rgba(201, 168, 76, 0.14);
+      border: 1px solid rgba(201, 168, 76, 0.35);
+      color: #dfbe63;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .magnar-lock-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+
+    .magnar-lock-desc {
+      font-size: 0.92rem;
+      color: rgba(244, 241, 234, 0.75);
+      max-width: 62ch;
+      margin: 0 auto 18px;
+      line-height: 1.55;
+    }
+
+    .magnar-lock-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Estado de Carga con pulso */
+    .magnar-loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 20px;
+      gap: 14px;
+    }
+
+    .magnar-loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(201, 168, 76, 0.2);
+      border-top-color: #dfbe63;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .magnar-loading-text {
+      font-size: 0.95rem;
+      color: #dfbe63;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .magnar-widget-box {
+        padding: 20px 16px 18px;
+      }
+      .magnar-answer-cta-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .magnar-answer-cta-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+      .magnar-answer-cta-buttons .btn {
+        width: 100%;
+      }
     }
   </style>
   <!-- Lucide Icons Legal Tech Library -->
@@ -2575,6 +3055,116 @@
                 <polyline points="20 6 9 17 4 12" />
               </svg>Garantía incondicional de 7 días</span>
           </div>
+        </div>
+
+        <!-- =========================================================
+             WIDGET DEMO INTERACTIVO ESTILO MAGNAR (HARDMAN 2026)
+             ========================================================= -->
+        <div class="magnar-widget-wrap reveal reveal-delay-1" id="demo-widget">
+          <div class="magnar-widget-box" id="magnar-main-card">
+            <!-- Barra superior del widget -->
+            <div class="magnar-widget-top">
+              <div class="magnar-tag-live">
+                <span class="magnar-pulse-dot"></span>
+                <span>Asistente Jurídico en Vivo • SPIJ 2026</span>
+              </div>
+              <div class="magnar-badge-limit" id="magnar-limit-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                <span id="magnar-limit-text">1 Consulta gratuita de prueba</span>
+              </div>
+            </div>
+
+            <!-- Input estilo Magnar -->
+            <div class="magnar-input-card" id="magnar-input-card">
+              <textarea
+                id="magnar-textarea"
+                class="magnar-textarea"
+                placeholder="Hazme una consulta jurídica compleja para probar la IA..."
+                aria-label="Consulta jurídica para el especialista"
+              ></textarea>
+              <div class="magnar-input-actions">
+                <button type="button" class="magnar-prompt-suggestion-btn" id="magnar-suggest-btn" title="Insertar caso de ejemplo complejo">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                  <span>Probar caso complejo</span>
+                </button>
+                <button type="button" class="magnar-send-button" id="magnar-submit-btn" title="Enviar consulta jurídica">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                    <polyline points="5 12 12 5 19 12"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Display de Especialistas (Selector) -->
+            <div class="magnar-specialists-container" id="magnar-specialists-container">
+              <div class="magnar-specialists-title">
+                <span>Especialista seleccionado:</span>
+                <span class="current-name" id="magnar-selected-name">Diego (Civil & Notarial)</span>
+              </div>
+              <div class="magnar-specialists-scroll" id="magnar-specialists-strip" role="radiogroup" aria-label="Especialistas de Hardman">
+                <!-- Se poblará vía JS con los 8 especialistas -->
+              </div>
+            </div>
+
+            <!-- Estado de Carga -->
+            <div class="magnar-loading-state" id="magnar-loading-state" style="display: none;">
+              <div class="magnar-loading-spinner"></div>
+              <div class="magnar-loading-text" id="magnar-loading-msg">Consultando jurisprudencia y SPIJ 2026...</div>
+            </div>
+
+            <!-- Área de Respuesta de la IA -->
+            <div class="magnar-answer-wrap" id="magnar-answer-wrap" style="display: none;">
+              <div class="magnar-answer-header">
+                <div class="magnar-answer-author">
+                  <img id="magnar-ans-avatar" class="magnar-answer-avatar" src="/info/assets/agents/diego.jpg" alt="Avatar">
+                  <div>
+                    <h4 id="magnar-ans-name" style="font-size: 0.98rem; font-weight: 700; color: #fff;">Diego</h4>
+                    <span id="magnar-ans-area" style="font-size: 0.78rem; color: #dfbe63;">Especialista en Derecho Civil</span>
+                  </div>
+                </div>
+                <div class="magnar-answer-spij">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span>Verificado SPIJ 2026</span>
+                </div>
+              </div>
+              <div class="magnar-answer-question-preview" id="magnar-ans-question-echo"></div>
+              <div class="magnar-answer-content" id="magnar-ans-content"></div>
+              
+              <!-- Barra de conversión inferior -->
+              <div class="magnar-answer-cta-bar">
+                <div class="magnar-answer-cta-text">
+                  <div class="magnar-answer-cta-title">¿Quieres la demanda completa en Word A4 lista para el juzgado?</div>
+                  <div class="magnar-answer-cta-sub">Accede sin límites a los 8 especialistas, análisis de expedientes de 500 páginas y citas con SPIJ.</div>
+                </div>
+                <div class="magnar-answer-cta-buttons">
+                  <a class="btn p" href="#planes">Activar Acceso Completo &rarr;</a>
+                  <a class="btn g" href="/login">Iniciar Sesión</a>
+                </div>
+              </div>
+            </div>
+
+            <!-- Estado Bloqueado Permanente (1 consulta por máquina/IP) -->
+            <div class="magnar-lock-box" id="magnar-lock-box" style="display: none;">
+              <div class="magnar-lock-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                <span>Consulta de Demostración Utilizada</span>
+              </div>
+              <h3 class="magnar-lock-title">Has alcanzado el límite de 1 consulta gratuita para este equipo</h3>
+              <p class="magnar-lock-desc">
+                Esta computadora ya completó su prueba con nuestros especialistas jurídicos. Para continuar redactando demandas en formato Word A4, analizando expedientes completos y citando normas oficiales SPIJ 2026 sin límites, activa tu membresía o ingresa con tu cuenta.
+              </p>
+              <div class="magnar-lock-actions">
+                <a class="btn p" href="#planes">Ver Planes y Precios &rarr;</a>
+                <a class="btn g" href="/login">Iniciar Sesión con mi Cuenta</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin: 44px auto 20px;" class="reveal">
+          <span class="badge-gold">Demostración en Video</span>
+          <h3 style="font-size: 1.35rem; color: #fff; margin-top: 6px;">Recorrido guiado de 2 minutos por la plataforma</h3>
         </div>
 
         <!-- EL VIDEO CON SU TAMAÑO ORIGINAL AMPLIO (max-width: 880px) -->
@@ -3803,6 +4393,377 @@
           document.querySelectorAll('.reveal').forEach(function (el) {
             el.classList.add('active');
           });
+        }
+      })();
+
+      /* ==========================================================================
+         LÓGICA DEL WIDGET DEMO ESTILO MAGNAR (HARDMAN 2026)
+         ========================================================================== */
+      (function initMagnarWidget() {
+        var API_BASE = 'https://fiscalia-t0bl.onrender.com';
+        var STORAGE_KEY = 'hardman_demo_v1_lock';
+        var COOKIE_NAME = 'hardman_demo_locked_v1';
+        var RECORD_KEY = 'hardman_demo_last_query';
+
+        var SPECIALISTS = [
+          {
+            id: 'diego',
+            name: 'Diego',
+            area: 'Civil & Notarial',
+            avatar: '/info/assets/agents/diego.jpg',
+            sample: '¿Cuáles son los presupuestos para demandar la prescripción adquisitiva de dominio según el II Pleno Casatorio Civil y qué pruebas documentales son indispensables?'
+          },
+          {
+            id: 'valentina',
+            name: 'Valentina',
+            area: 'Laboral & Beneficios',
+            avatar: '/info/assets/agents/valentina.jpg',
+            sample: '¿Cómo se liquida la indemnización por despido arbitrario y reintegro de beneficios sociales según el D.L. 728 y la Casación Laboral 1243-2018?'
+          },
+          {
+            id: 'sebastian',
+            name: 'Sebastián',
+            area: 'Penal & Litigación',
+            avatar: '/info/assets/agents/sebastian.jpg',
+            sample: '¿Cuáles son los presupuestos materiales de la prisión preventiva según el Acuerdo Plenario 01-2019/CJ-116 y cómo se desvirtúa el peligro de fuga?'
+          },
+          {
+            id: 'adriana',
+            name: 'Adriana',
+            area: 'Corporativo & M&A',
+            avatar: '/info/assets/agents/adriana.jpg',
+            sample: '¿Qué procedimiento y quórum exige la Ley General de Sociedades para un aumento de capital por capitalización de créditos y junta no presencial?'
+          },
+          {
+            id: 'rodrigo',
+            name: 'Rodrigo',
+            area: 'Minero & Ambiental',
+            avatar: '/info/assets/agents/rodrigo.jpg',
+            sample: '¿Cuáles son los requisitos de admisibilidad y plazos de oposición contra un petitorio minero según el TUO de la Ley General de Minería?'
+          },
+          {
+            id: 'camila',
+            name: 'Camila',
+            area: 'Familia & Sucesiones',
+            avatar: '/info/assets/agents/camila.jpg',
+            sample: '¿Cómo se tramita la demanda de alimentos y la asignación anticipada según el Código de los Niños y Adolescentes cuando no se acredita ingreso fijo?'
+          },
+          {
+            id: 'fernanda',
+            name: 'Fernanda',
+            area: 'Tributario & Fiscal',
+            avatar: '/info/assets/agents/fernanda.jpg',
+            sample: '¿Cuándo prescribe la acción de SUNAT para determinar la obligación tributaria (art. 43 Código Tributario) si no se presentó la declaración jurada anual?'
+          },
+          {
+            id: 'marco',
+            name: 'Marco',
+            area: 'Administrativo & Compras',
+            avatar: '/info/assets/agents/marco.jpg',
+            sample: '¿Cómo deduzco la prescripción del procedimiento administrativo sancionador y el silencio administrativo negativo bajo el TUO de la Ley 27444?'
+          }
+        ];
+
+        var selectedIndex = 0;
+        var isSubmitting = false;
+
+        var textarea = document.getElementById('magnar-textarea');
+        var suggestBtn = document.getElementById('magnar-suggest-btn');
+        var submitBtn = document.getElementById('magnar-submit-btn');
+        var specStrip = document.getElementById('magnar-specialists-strip');
+        var selectedNameEl = document.getElementById('magnar-selected-name');
+        var loadingState = document.getElementById('magnar-loading-state');
+        var loadingMsg = document.getElementById('magnar-loading-msg');
+        var answerWrap = document.getElementById('magnar-answer-wrap');
+        var ansAvatar = document.getElementById('magnar-ans-avatar');
+        var ansName = document.getElementById('magnar-ans-name');
+        var ansArea = document.getElementById('magnar-ans-area');
+        var ansEcho = document.getElementById('magnar-ans-question-echo');
+        var ansContent = document.getElementById('magnar-ans-content');
+        var lockBox = document.getElementById('magnar-lock-box');
+        var inputCard = document.getElementById('magnar-input-card');
+        var limitBadge = document.getElementById('magnar-limit-badge');
+        var limitText = document.getElementById('magnar-limit-text');
+
+        if (!textarea || !submitBtn || !specStrip) return;
+
+        // Detección de Bloqueo por Equipo / IP
+        function isDeviceLocked() {
+          try {
+            if (localStorage.getItem(STORAGE_KEY) === '1') return true;
+            if (document.cookie.indexOf(COOKIE_NAME + '=1') !== -1) return true;
+          } catch (e) {}
+          return false;
+        }
+
+        function lockDevice(record) {
+          try {
+            localStorage.setItem(STORAGE_KEY, '1');
+            if (record) {
+              localStorage.setItem(RECORD_KEY, JSON.stringify(record));
+            }
+            document.cookie = COOKIE_NAME + "=1; max-age=31536000; path=/; SameSite=Lax";
+          } catch (e) {}
+        }
+
+        function applyLockUI(savedRecord) {
+          if (inputCard) {
+            inputCard.style.opacity = '0.45';
+            inputCard.style.pointerEvents = 'none';
+          }
+          if (textarea) {
+            textarea.disabled = true;
+            textarea.placeholder = "Límite de 1 consulta de prueba gratuita utilizado para este dispositivo.";
+          }
+          if (submitBtn) submitBtn.disabled = true;
+          if (limitBadge) {
+            limitBadge.style.background = 'rgba(239, 68, 68, 0.14)';
+            limitBadge.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+            limitBadge.style.color = '#f87171';
+          }
+          if (limitText) {
+            limitText.textContent = 'Límite de 1 consulta alcanzado';
+          }
+          if (lockBox) lockBox.style.display = 'block';
+
+          // Si tenemos la consulta previa guardada, mostrarla para que el usuario recuerde el valor
+          if (savedRecord && savedRecord.answer) {
+            showAnswer(savedRecord.specialist, savedRecord.question, savedRecord.answer, false);
+          }
+        }
+
+        // Renderizar los 8 especialistas en el display horizontal
+        function renderSpecialists() {
+          specStrip.innerHTML = '';
+          SPECIALISTS.forEach(function (spec, idx) {
+            var pill = document.createElement('div');
+            pill.className = 'magnar-spec-pill' + (idx === selectedIndex ? ' active' : '');
+            pill.setAttribute('role', 'radio');
+            pill.setAttribute('aria-checked', idx === selectedIndex ? 'true' : 'false');
+            pill.innerHTML =
+              '<img class="magnar-spec-pill-avatar" src="' + spec.avatar + '" alt="' + spec.name + '" onerror="this.src=\'assets/agents/' + spec.id + '.jpg\'">' +
+              '<div class="magnar-spec-pill-info">' +
+                '<span class="magnar-spec-pill-name">' + spec.name + '</span>' +
+                '<span class="magnar-spec-pill-area">' + spec.area + '</span>' +
+              '</div>';
+
+            pill.addEventListener('click', function () {
+              selectSpecialist(idx);
+            });
+            specStrip.appendChild(pill);
+          });
+        }
+
+        function selectSpecialist(idx) {
+          selectedIndex = idx;
+          var spec = SPECIALISTS[idx];
+          if (selectedNameEl) {
+            selectedNameEl.textContent = spec.name + ' (' + spec.area + ')';
+          }
+          textarea.placeholder = 'Consulta jurídica para ' + spec.name + ' (ej: ' + spec.sample.slice(0, 75) + '...)...';
+
+          // Actualizar clases activas en los pills
+          var pills = specStrip.querySelectorAll('.magnar-spec-pill');
+          pills.forEach(function (p, i) {
+            if (i === idx) {
+              p.classList.add('active');
+              p.setAttribute('aria-checked', 'true');
+              p.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            } else {
+              p.classList.remove('active');
+              p.setAttribute('aria-checked', 'false');
+            }
+          });
+        }
+
+        // Sugerir caso complejo
+        if (suggestBtn) {
+          suggestBtn.addEventListener('click', function () {
+            var spec = SPECIALISTS[selectedIndex];
+            textarea.value = spec.sample;
+            textarea.focus();
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 140) + 'px';
+          });
+        }
+
+        // Autoexpand textarea
+        textarea.addEventListener('input', function () {
+          this.style.height = 'auto';
+          this.style.height = Math.min(this.scrollHeight, 140) + 'px';
+        });
+
+        // Enter para enviar (Shift+Enter para salto de línea)
+        textarea.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendQuery();
+          }
+        });
+
+        if (submitBtn) {
+          submitBtn.addEventListener('click', handleSendQuery);
+        }
+
+        function showAnswer(spec, question, answerText, animate) {
+          if (ansAvatar) {
+            ansAvatar.src = spec.avatar;
+            ansAvatar.onerror = function() { this.src = 'assets/agents/' + spec.id + '.jpg'; };
+          }
+          if (ansName) ansName.textContent = spec.name;
+          if (ansArea) ansArea.textContent = 'Especialista en ' + spec.area;
+          if (ansEcho) ansEcho.textContent = '“' + question + '”';
+
+          if (answerWrap) answerWrap.style.display = 'block';
+
+          if (!animate) {
+            if (ansContent) ansContent.textContent = answerText;
+            return;
+          }
+
+          // Animación suave de aparición o streaming visual
+          if (ansContent) {
+            ansContent.textContent = '';
+            var words = answerText.split(' ');
+            var i = 0;
+            var timer = setInterval(function () {
+              if (i < words.length) {
+                ansContent.textContent += (i === 0 ? '' : ' ') + words[i];
+                i++;
+                if (i % 8 === 0) {
+                  ansContent.scrollTop = ansContent.scrollHeight;
+                }
+              } else {
+                clearInterval(timer);
+                ansContent.scrollTop = ansContent.scrollHeight;
+              }
+            }, 24);
+          }
+
+          // Scroll suave hacia la respuesta
+          setTimeout(function () {
+            answerWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }, 150);
+        }
+
+        async function handleSendQuery() {
+          if (isSubmitting) return;
+
+          // Comprobación de bloqueo
+          if (isDeviceLocked()) {
+            applyLockUI();
+            return;
+          }
+
+          var text = (textarea.value || '').trim();
+          if (text.length < 8) {
+            textarea.focus();
+            textarea.style.borderColor = '#f87171';
+            setTimeout(function () { textarea.style.borderColor = ''; }, 1600);
+            return;
+          }
+
+          var spec = SPECIALISTS[selectedIndex];
+          isSubmitting = true;
+          submitBtn.disabled = true;
+          textarea.disabled = true;
+
+          if (loadingState) {
+            loadingState.style.display = 'flex';
+            if (loadingMsg) {
+              loadingMsg.textContent = spec.name + ' está consultando el SPIJ 2026 y la jurisprudencia aplicable...';
+            }
+          }
+          if (answerWrap) answerWrap.style.display = 'none';
+
+          try {
+            // 1. Obtener sesión demo de 1 consulta
+            var loginRes = await fetch(API_BASE + '/auth/demo-login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!loginRes.ok) {
+              var errData = await loginRes.json().catch(function () { return {}; });
+              throw new Error(errData.error || 'No se pudo iniciar la consulta de prueba.');
+            }
+
+            var loginData = await loginRes.json();
+            var token = loginData.token;
+
+            // 2. Enviar consulta jurídica al agente especialista
+            var chatRes = await fetch(API_BASE + '/chat', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+              },
+              body: JSON.stringify({
+                agentId: spec.id,
+                messages: [
+                  {
+                    role: 'user',
+                    content: text,
+                    timestamp: new Date().toISOString()
+                  }
+                ],
+                stream: false
+              })
+            });
+
+            if (!chatRes.ok) {
+              var chatErr = await chatRes.json().catch(function () { return {}; });
+              if (chatErr.code === 'DEMO_LIMIT_REACHED' || chatRes.status === 403) {
+                lockDevice({
+                  specialist: spec,
+                  question: text,
+                  answer: 'Has alcanzado el límite de 1 consulta de prueba gratuita.'
+                });
+                applyLockUI();
+                return;
+              }
+              throw new Error(chatErr.error || 'Error al conectar con el especialista.');
+            }
+
+            var chatData = await chatRes.json();
+            var answer = chatData.message || 'Respuesta jurídica completada con verificación SPIJ 2026.';
+
+            // 3. Bloquear permanentemente el dispositivo
+            var record = {
+              specialist: spec,
+              question: text,
+              answer: answer,
+              timestamp: Date.now()
+            };
+            lockDevice(record);
+
+            // 4. Mostrar respuesta
+            if (loadingState) loadingState.style.display = 'none';
+            showAnswer(spec, text, answer, true);
+            applyLockUI(record);
+
+          } catch (err) {
+            console.error('[Hardman Demo Error]:', err);
+            if (loadingState) loadingState.style.display = 'none';
+            alert('Aviso: ' + (err.message || 'No se pudo completar la consulta. Por favor, reintenta en unos instantes.'));
+            textarea.disabled = false;
+            submitBtn.disabled = false;
+          } finally {
+            isSubmitting = false;
+          }
+        }
+
+        // Inicialización
+        renderSpecialists();
+        selectSpecialist(0);
+
+        // Chequear bloqueo al cargar la página
+        if (isDeviceLocked()) {
+          var prevRecord = null;
+          try {
+            prevRecord = JSON.parse(localStorage.getItem(RECORD_KEY) || 'null');
+          } catch (e) {}
+          applyLockUI(prevRecord);
         }
       })();
       if (window.lucide && typeof lucide.createIcons === "function") { lucide.createIcons(); }

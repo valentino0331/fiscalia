@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Eye, EyeOff, ArrowRight, Sparkles } from 'lucide-react'
+import { Eye, EyeOff, ArrowRight } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
@@ -11,7 +11,6 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [demoLoading, setDemoLoading] = useState(false)
   const [error, setError] = useState('')
 
   const { login } = useAuth()
@@ -29,20 +28,6 @@ export default function Login() {
       setError(err instanceof Error ? err.message : 'Error al conectar con el servidor')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleDemoLogin = async () => {
-    setError('')
-    setDemoLoading(true)
-    try {
-      const res = await api.auth.demoLogin()
-      login(res.token, { ...res.user, isDemo: true, plan: 'demo' })
-      navigate('/dashboard')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'No se pudo iniciar el modo de demostración')
-    } finally {
-      setDemoLoading(false)
     }
   }
 
@@ -201,51 +186,7 @@ export default function Login() {
           </button>
         </form>
 
-        {/* Separator / Divider */}
-        <div className="w-full flex items-center gap-3 my-5">
-          <div className="flex-1 h-px bg-white/10" />
-          <span className="text-[9px] uppercase tracking-[2px] text-white/35 font-light">
-            O PRUEBA LA PLATAFORMA
-          </span>
-          <div className="flex-1 h-px bg-white/10" />
-        </div>
 
-        {/* Botón Ingresar como Demo */}
-        <button
-          type="button"
-          onClick={handleDemoLogin}
-          disabled={demoLoading || loading}
-          className="group w-full py-3 px-4 rounded-xl text-[10px] uppercase tracking-[2px] font-medium transition-all duration-300 relative overflow-hidden disabled:opacity-40 flex items-center justify-center gap-2.5 cursor-pointer"
-          style={{
-            background: 'linear-gradient(135deg, rgba(201,168,76,0.14) 0%, rgba(20,20,20,0.85) 100%)',
-            border: '1px solid rgba(201,168,76,0.40)',
-            color: '#dfbe63',
-            boxShadow: '0 4px 18px rgba(0,0,0,0.3)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = '#dfbe63'
-            e.currentTarget.style.boxShadow = '0 0 24px rgba(201,168,76,0.22)'
-            e.currentTarget.style.transform = 'translateY(-1px)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'rgba(201,168,76,0.40)'
-            e.currentTarget.style.boxShadow = '0 4px 18px rgba(0,0,0,0.3)'
-            e.currentTarget.style.transform = 'none'
-          }}
-        >
-          {demoLoading ? (
-            <Spinner />
-          ) : (
-            <>
-              <Sparkles size={13} className="text-[#c9a84c] animate-pulse" />
-              <span>Ingresar como Demo (1 Consulta)</span>
-              <ArrowRight size={12} className="opacity-70 group-hover:translate-x-0.5 transition-transform" />
-            </>
-          )}
-        </button>
-        <span className="mt-2 text-[9px] text-white/40 tracking-wide font-light text-center">
-          Acceso instantáneo sin tarjeta ni registro · 8 especialistas
-        </span>
 
         {/* Link a Presentación / Landing Page Oficial */}
         <div className="mt-6 text-center">
