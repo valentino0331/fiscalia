@@ -4,29 +4,11 @@
   "buildCommand": "cd frontend && npm install && npm run build",
   "outputDirectory": "frontend/dist",
   "rewrites": [
-    {
-      "source": "/landing",
-      "destination": "/info/index.html"
-    },
-    {
-      "source": "/landing/(.*)",
-      "destination": "/info/$1"
-    },
-    {
-      "source": "/info",
-      "destination": "/info/index.html"
-    },
-    {
-      "source": "/info/(.*)",
-      "destination": "/info/$1"
-    },
-    {
-      "source": "/",
-      "destination": "/info/index.html"
-    },
-    {
-      "source": "/((?!assets/|brand/|info/|favicon\\.svg|manifest\\.json|robots\\.txt|sitemap\\.xml|.*\\..*).*)",
-      "destination": "/index.html"
-    }
+    { "source": "/", "destination": "/info/index.html" },
+    { "source": "/info", "destination": "/info/index.html" },
+    { "source": "/info/:path*", "destination": "/info/:path*" },
+    { "source": "/landing", "destination": "/info/index.html" },
+    { "source": "/landing/:path*", "destination": "/info/:path*" },
+    { "source": "/:path*", "destination": "/index.html" }
   ]
 }
