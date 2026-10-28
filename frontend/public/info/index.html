@@ -575,7 +575,7 @@
     /* Hero Section: Centered Grand Copy + Full Original Size Video (max-width: 880px) */
     .hero {
       position: relative;
-      padding: 72px 0 94px;
+      padding: 72px 0 76px;
       border: 0;
       background-color: #080808;
       background-image: 
@@ -585,6 +585,14 @@
       background-position: center 20%;
       background-size: cover;
       background-repeat: no-repeat;
+    }
+
+    .sec-demostracion {
+      position: relative;
+      padding: 80px 0 92px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: #090a0d;
+      background-image: radial-gradient(ellipse at 50% 10%, rgba(201, 168, 76, 0.06) 0%, rgba(10, 10, 12, 0.96) 60%, #080808 100%);
     }
 
     .hero-header-wrap {
@@ -2957,7 +2965,7 @@
       <div class="nav-links">
         <a href="#especialistas">ESPECIALISTAS</a>
         <a href="#como">CÓMO FUNCIONA</a>
-        <a href="#top">DEMOSTRACIÓN</a>
+        <a href="#demostracion">DEMOSTRACIÓN</a>
         <a href="#planes">PLANES &amp; PRECIOS</a>
         <a href="#faq">PREGUNTAS</a>
       </div>
@@ -2979,18 +2987,18 @@
         <div class="hero-header-wrap">
           <div class="badge-gold">
             <span class="badge-dot"></span>
-            Inteligencia Artificial Jurídica Peruana • SPIJ 2026
+            Inteligencia Artificial Jurídica Peruana
           </div>
           <h1>Hardman: Inteligencia Artificial Jurídica para Abogados en Perú</h1>
           <p class="sub">No pierdas más clientes ni tus fines de semana redactando a mano. 8 especialistas con IA en derecho peruano que redactan demandas, liquidan y analizan expedientes en minutos con SPIJ 2026.</p>
           <div class="hero-ctas">
             <a class="btn p" href="#planes">Activar mi acceso fundador</a>
-            <a class="btn g" href="#incluye">Ver cómo trabaja ↓</a>
+            <a class="btn g" href="#demostracion">Ver cómo trabaja ↓</a>
           </div>
           <div class="hero-trust">
             <span class="hero-trust-badge">
               <span class="badge-pulse-dot"></span>
-              +<span class="counter" data-count="500">500</span> abogados peruanos activos
+              <span class="counter" data-count="500">500</span> abogados peruanos activos
             </span>
             <span class="hero-trust-badge">
               <span class="badge-pulse-dot"></span>
@@ -3092,10 +3100,17 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div style="text-align: center; margin: 44px auto 20px;" class="reveal">
-          <span class="badge-gold">Demostración en Video</span>
-          <h3 style="font-size: 1.35rem; color: #fff; margin-top: 6px;">Recorrido guiado de 2 minutos por la plataforma</h3>
+    <!-- =========================================================
+         DEMOSTRACIÓN EN VIVO (VIDEO + MÉTRICAS)
+         ========================================================= -->
+    <section id="demostracion" class="sec-demostracion">
+      <div class="w">
+        <div style="text-align: center; margin-bottom: 28px;" class="reveal">
+          <span class="badge-gold">Demostración en vivo</span>
+          <h2 style="font-size: clamp(1.8rem, 3.2vw, 2.4rem); color: #fff; margin-top: 10px;">Recorrido guiado de 2 minutos por la plataforma</h2>
         </div>
 
         <!-- EL VIDEO CON SU TAMAÑO ORIGINAL AMPLIO (max-width: 880px) -->
@@ -3109,7 +3124,7 @@
         </div>
 
         <!-- CINTA DE MÉTRICAS QUE APROVECHA TODO EL ANCHO -->
-        <div class="hero-stats-ribbon reveal reveal-delay-2">
+        <div class="hero-stats-ribbon reveal reveal-delay-2" style="margin-top: 48px;">
           <div class="stat-pill">
             <strong class="counter" data-count="8">8</strong>
             <span>Especialidades Cubiertas</span>
