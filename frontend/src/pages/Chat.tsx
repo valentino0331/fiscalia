@@ -3023,6 +3023,7 @@ function MessageBubble({
         .replace(/^[ \t]*[⏹⬜◻◽▢][ \t]*/gm, '- ')
         .replace(/[⏹⬜◻◽▢]/g, '•')
         .replace(/\[\s*\]/g, '•')
+        .replace(/\*{3,}/g, '')
     : conversationalText
 
   const formattedConversationalText = !isUser && cleanConversationalText
