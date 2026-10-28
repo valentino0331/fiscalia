@@ -965,7 +965,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       if (p.length > 11000) {
         p = p.slice(0, 11000).trim();
       }
-      p += '\n\n════════════════════════════════════════\nINSTRUCCIÓN DE RESPUESTA DIRECTA:\nResponde directamente al usuario con rigor profesional, precisión técnica y sustento en las leyes peruanas vigentes al 2026. Si requiere un escrito formal o demanda, solicita los datos indispensables.';
+      p += '\n\n════════════════════════════════════════\nINSTRUCCIÓN DE RESPUESTA DIRECTA Y PULCRITUD (ESTILO CLAUDE):\nResponde directamente al usuario con rigor profesional, precisión técnica y sustento en las leyes peruanas vigentes al 2026. Si requiere un escrito formal o demanda, solicita los datos indispensables.\nFORMATO PULCRO: Estructura tu respuesta con numeración clara (1., 2.), subtítulos limpios y viñetas ordenadas (-). NUNCA uses triple asterisco (***). No recargues párrafos con negritas innecesarias; resalta únicamente términos jurídicos clave o artículos legales.';
       return p;
     };
 
