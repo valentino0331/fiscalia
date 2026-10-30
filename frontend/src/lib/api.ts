@@ -119,6 +119,11 @@ export const api = {
         '/auth/login',
         { method: 'POST', body: JSON.stringify(data) }
       ),
+    changePassword: (data: { email: string; currentPassword: string; newPassword: string }) =>
+      request<{ token: string; user: UserResponse; message: string; success: boolean }>(
+        '/auth/change-password',
+        { method: 'POST', body: JSON.stringify(data) }
+      ),
     demoLogin: () =>
       request<{ token: string; user: UserResponse }>(
         '/auth/demo-login',

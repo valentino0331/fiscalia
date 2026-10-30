@@ -98,6 +98,58 @@ authRouter.post('/login', authRateLimiter, async (req, res) => {
   }
 });
 
+// Endpoint público para que los usuarios cambien su clave ingresando correo + clave actual + nueva clave
+authRouter.post('/change-password', authRateLimiter, async (req, res) => {
+  try {
+    const { email, currentPassword, newPassword } = req.body;
+    if (!email || !currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Debes completar el correo, la contraseña actual y la nueva contraseña' });
+    }
+
+    const normalizedEmail = String(email).toLowerCase().trim();
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      return res.status(400).json({ error: 'Formato de correo electrónico no válido' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener un mínimo de 6 caracteres' });
+    }
+
+    if (newPassword.length > 128) {
+      return res.status(400).json({ error: 'La nueva contraseña no puede exceder 128 caracteres' });
+    }
+
+    const user = await db.query.users.findFirst({ where: eq(users.email, normalizedEmail) });
+    if (!user) {
+      return res.status(401).json({ error: 'El correo electrónico o la contraseña actual son incorrectos' });
+    }
+
+    const valid = await bcrypt.compare(String(currentPassword), user.passwordHash);
+    if (!valid) {
+      return res.status(401).json({ error: 'La contraseña actual ingresada es incorrecta' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'La nueva contraseña no puede ser idéntica a la anterior' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await db.update(users).set({ passwordHash }).where(eq(users.id, user.id));
+
+    const token = jwt.sign({ userId: user.id, isAdmin: user.isAdmin }, jwtSecret, { expiresIn: jwtExpiresIn, algorithm: 'HS256' });
+
+    return res.json({
+      success: true,
+      message: '¡Contraseña actualizada exitosamente! Iniciando sesión...',
+      token,
+      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.isAdmin },
+    });
+  } catch (error) {
+    console.error('[Auth Change Password Error]:', error);
+    return res.status(500).json({ error: 'Error interno al actualizar la contraseña' });
+  }
+});
+
 authRouter.post('/demo-login', authRateLimiter, async (_req, res) => {
   try {
     // Si explícitamente se deshabilita el modo demo en producción
