@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, type MouseEvent } from 'react'
+import { useState, useEffect, useRef, type MouseEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft, LogOut, User, CheckCircle2,
-  Shield, Zap, Award, Building2, Check
+  Shield, Zap, Award, Building2, Check,
+  KeyRound, Eye, EyeOff, Lock, AlertCircle, Loader2
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
@@ -36,6 +37,17 @@ export default function Account() {
   const [attorneyInfo, setAttorneyInfo] = useState('')
   const [contactInfo, setContactInfo] = useState('')
   const [savedLetterheadMsg, setSavedLetterheadMsg] = useState(false)
+
+  // Estados para Cambio de Contraseña
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showCurrentPass, setShowCurrentPass] = useState(false)
+  const [showNewPass, setShowNewPass] = useState(false)
+  const [showConfirmPass, setShowConfirmPass] = useState(false)
+  const [passLoading, setPassLoading] = useState(false)
+  const [passSuccess, setPassSuccess] = useState<string | null>(null)
+  const [passError, setPassError] = useState<string | null>(null)
 
   const cardRef = useRef<HTMLDivElement>(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
@@ -103,6 +115,46 @@ export default function Account() {
     setContactInfo(resolvedContact)
     setSavedLetterheadMsg(true)
     setTimeout(() => setSavedLetterheadMsg(false), 3000)
+  }
+
+  const handleChangePassword = async (e: FormEvent) => {
+    e.preventDefault()
+    setPassError(null)
+    setPassSuccess(null)
+
+    if (!currentPassword) {
+      setPassError('Por favor ingresa tu contraseña actual')
+      return
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+      setPassError('La nueva contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPassError('La nueva contraseña y su confirmación no coinciden')
+      return
+    }
+
+    if (currentPassword === newPassword) {
+      setPassError('La nueva contraseña debe ser diferente a la contraseña actual')
+      return
+    }
+
+    setPassLoading(true)
+    try {
+      const res = await api.account.changePassword({ currentPassword, newPassword })
+      setPassSuccess(res.message || 'Contraseña actualizada con éxito.')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => setPassSuccess(null), 5000)
+    } catch (err: any) {
+      setPassError(err.message || 'Error al actualizar la contraseña')
+    } finally {
+      setPassLoading(false)
+    }
   }
 
   const handleLogout = () => {
@@ -539,6 +591,144 @@ export default function Account() {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Sección Seguridad y Cambio de Contraseña */}
+              <div
+                className="p-5 rounded-xl border space-y-4"
+                style={{ background: '#161616', borderColor: '#2a2a2a' }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <KeyRound size={16} className="text-[#c9a84c]" />
+                    <h5 className="text-[11px] font-bold uppercase tracking-wider text-white">
+                      Seguridad & Contraseña
+                    </h5>
+                  </div>
+                  <span className="text-[9px] px-2 py-0.5 rounded bg-[#c9a84c]/10 text-[#c9a84c] border border-[#c9a84c]/20 font-semibold flex items-center gap-1">
+                    <Lock size={10} />
+                    Acceso Protegido
+                  </span>
+                </div>
+                <p className="text-[11px] text-white/50 leading-relaxed">
+                  Cambia tu contraseña periódicamente para garantizar la confidencialidad de tus consultas y expedientes legales.
+                </p>
+
+                {passSuccess && (
+                  <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs flex items-center gap-2">
+                    <CheckCircle2 size={14} className="flex-shrink-0 text-emerald-400" />
+                    <span>{passSuccess}</span>
+                  </div>
+                )}
+
+                {passError && (
+                  <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2">
+                    <AlertCircle size={14} className="flex-shrink-0 text-rose-400" />
+                    <span>{passError}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleChangePassword} className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                      Contraseña Actual *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showCurrentPass ? 'text' : 'password'}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        required
+                        className="w-full px-3 py-2 pr-10 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPass(!showCurrentPass)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showCurrentPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Nueva Contraseña * (Mín. 6 caracteres)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showNewPass ? 'text' : 'password'}
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Mínimo 6 caracteres"
+                          minLength={6}
+                          required
+                          className="w-full px-3 py-2 pr-10 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewPass(!showNewPass)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showNewPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] uppercase font-semibold text-white/40 mb-1 tracking-wider">
+                        Confirmar Nueva Contraseña *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPass ? 'text' : 'password'}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Repite la nueva contraseña"
+                          minLength={6}
+                          required
+                          className="w-full px-3 py-2 pr-10 rounded-lg text-xs bg-[#222222] border border-[#333333] text-white placeholder-white/20 focus:outline-none focus:border-[#c9a84c] transition-colors"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPass(!showConfirmPass)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                          tabIndex={-1}
+                        >
+                          {showConfirmPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={passLoading}
+                      className="px-4 py-2 rounded-lg text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        background: '#c9a84c',
+                        color: '#111',
+                      }}
+                    >
+                      {passLoading ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin text-black" />
+                          <span>Actualizando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <KeyRound size={13} />
+                          <span>Guardar Nueva Contraseña</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
               </div>
 
               {user?.isAdmin && (

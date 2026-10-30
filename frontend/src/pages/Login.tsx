@@ -184,6 +184,18 @@ export default function Login() {
               </span>
             )}
           </button>
+
+          {/* Recovery assistance link */}
+          <div className="pt-1 text-center">
+            <a
+              href="https://wa.me/51929725274?text=Hola%20Hardman,%20necesito%20restablecer%20la%20contrase%C3%B1a%20de%20mi%20cuenta"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] text-white/40 hover:text-[#c9a84c] transition-colors"
+            >
+              ¿Olvidaste tu contraseña? Solicitar restablecimiento por WhatsApp
+            </a>
+          </div>
         </form>
 
 

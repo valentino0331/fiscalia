@@ -455,6 +455,44 @@ adminRouter.post('/users/:id/reset-usage', requireAuth, requireAdmin, async (req
   }
 });
 
+// 3.2. Restablecer o cambiar la contraseña de un usuario directamente por el Administrador
+adminRouter.patch('/users/:id/password', requireAuth, requireAdmin, async (req: any, res) => {
+  try {
+    const targetId = req.params.id;
+    if (!targetId || typeof targetId !== 'string' || !UUID_REGEX.test(targetId)) {
+      return res.status(400).json({ error: 'Identificador de usuario inválido' });
+    }
+
+    const { newPassword } = req.body;
+    if (!newPassword || typeof newPassword !== 'string' || newPassword.length < 6 || newPassword.length > 128) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener entre 6 y 128 caracteres' });
+    }
+
+    const targetUser = await db.query.users.findFirst({
+      where: eq(users.id, targetId),
+      columns: { id: true, email: true },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+
+    await db.update(users)
+      .set({ passwordHash })
+      .where(eq(users.id, targetId));
+
+    return res.json({
+      success: true,
+      message: `Contraseña para ${targetUser.email} actualizada exitosamente.`,
+    });
+  } catch (error: any) {
+    console.error('[Admin] Error updating user password:', error);
+    return res.status(500).json({ error: 'Error interno al actualizar la contraseña del usuario' });
+  }
+});
+
 // 4. Crear cuenta directamente desde el Panel Admin
 adminRouter.post('/users', requireAuth, requireAdmin, async (req: any, res) => {
   try {

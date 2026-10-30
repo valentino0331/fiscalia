@@ -357,6 +357,11 @@ export const api = {
         limit: number | null
         isAdmin: boolean
       }>('/account/usage'),
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
+      request<{ success: boolean; message: string }>('/account/password', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
   },
 
   files: {
@@ -425,6 +430,11 @@ export const api = {
       request<{ success: boolean; message: string }>(`/admin/users/${id}/reset-usage`, { method: 'POST' }),
     createUser: (data: { email: string; password: string; name?: string; plan?: string; isAdmin?: boolean; durationDays?: number }) =>
       request<{ success: boolean; message: string }>('/admin/users', { method: 'POST', body: JSON.stringify(data) }),
+    updateUserPassword: (id: string, newPassword: string) =>
+      request<{ success: boolean; message: string }>(`/admin/users/${id}/password`, {
+        method: 'PATCH',
+        body: JSON.stringify({ newPassword }),
+      }),
     compliance: () =>
       request<any>('/admin/compliance'),
     security: () =>

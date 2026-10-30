@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import bcrypt from 'bcrypt';
 import { db } from '../db';
 import { users, subscriptions, questionUsageLogs, conversations } from '../db/schema';
 import { eq, and, gt, sql } from 'drizzle-orm';
@@ -119,5 +120,53 @@ accountRouter.get('/usage', requireAuth, async (req: AuthRequest, res) => {
   } catch (err) {
     console.error('[Account] Error al obtener uso del usuario:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+// Endpoint seguro para que el usuario actualice su propia contraseña
+accountRouter.put('/password', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Debes ingresar tu contraseña actual y la nueva contraseña' });
+    }
+
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ error: 'La nueva contraseña debe tener al menos 6 caracteres' });
+    }
+
+    if (newPassword.length > 128) {
+      return res.status(400).json({ error: 'La nueva contraseña no puede exceder 128 caracteres' });
+    }
+
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, req.userId!),
+      columns: { id: true, passwordHash: true, email: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    const isMatch = await bcrypt.compare(String(currentPassword), user.passwordHash);
+    if (!isMatch) {
+      return res.status(400).json({ error: 'La contraseña actual ingresada es incorrecta' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ error: 'La nueva contraseña no puede ser idéntica a la anterior' });
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 12);
+
+    await db.update(users)
+      .set({ passwordHash: newHash })
+      .where(eq(users.id, req.userId!));
+
+    return res.json({ success: true, message: 'Tu contraseña ha sido actualizada exitosamente' });
+  } catch (err) {
+    console.error('[Account] Error al cambiar contraseña de usuario:', err);
+    return res.status(500).json({ error: 'Error interno al actualizar la contraseña' });
   }
 });

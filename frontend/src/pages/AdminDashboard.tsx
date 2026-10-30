@@ -49,6 +49,14 @@ export default function AdminDashboard() {
   const [createError, setCreateError] = useState<string | null>(null)
   const [actionNotice, setActionNotice] = useState<string | null>(null)
 
+  // ── Modal para Restablecer / Cambiar Contraseña ──
+  const [passwordModalUser, setPasswordModalUser] = useState<AdminUserItem | null>(null)
+  const [modalNewPassword, setModalNewPassword] = useState('')
+  const [modalShowPass, setModalShowPass] = useState(true)
+  const [updatingPass, setUpdatingPass] = useState(false)
+  const [passwordModalError, setPasswordModalError] = useState<string | null>(null)
+  const [copiedWhatsappMsg, setCopiedWhatsappMsg] = useState(false)
+
   // ── Modo Privacidad / Captura (Ocultar correos para capturas de pantalla) ──
   const [hideEmails, setHideEmails] = useState(() => {
     return localStorage.getItem('admin_hide_emails') === 'true'
@@ -127,6 +135,50 @@ export default function AdminDashboard() {
       await Promise.all([fetchUsers(), fetchStats()])
     } catch (err: any) {
       alert(err?.message || 'Error al cambiar plan')
+    }
+  }
+
+  const generateSecureRandomPassword = () => {
+    const num = Math.floor(100000 + Math.random() * 900000)
+    return `Hardman-${num}!`
+  }
+
+  const handleOpenPasswordModal = (u: AdminUserItem) => {
+    setPasswordModalUser(u)
+    setModalNewPassword(generateSecureRandomPassword())
+    setModalShowPass(true)
+    setPasswordModalError(null)
+    setCopiedWhatsappMsg(false)
+  }
+
+  const handleSaveUserPassword = async (copyToWhatsapp = false) => {
+    if (!passwordModalUser) return
+    const cleanPass = modalNewPassword.trim()
+    if (!cleanPass || cleanPass.length < 6) {
+      setPasswordModalError('La contraseña debe tener al menos 6 caracteres')
+      return
+    }
+
+    setUpdatingPass(true)
+    setPasswordModalError(null)
+    try {
+      await api.admin.updateUserPassword(passwordModalUser.id, cleanPass)
+
+      if (copyToWhatsapp) {
+        const message = `Estimado(a) Dr(a)., sus credenciales de acceso a Hardman han sido actualizadas:\n\n• Correo: ${passwordModalUser.email}\n• Nueva Contraseña: ${cleanPass}\n• Iniciar Sesión: https://hardman.pe/login\n\nQuedamos a su entera disposición.`
+        await navigator.clipboard.writeText(message)
+        setCopiedWhatsappMsg(true)
+        setActionNotice(`Contraseña actualizada y mensaje copiado al portapapeles para WhatsApp (${passwordModalUser.email}).`)
+      } else {
+        setActionNotice(`Contraseña actualizada correctamente para ${passwordModalUser.email}.`)
+      }
+
+      setTimeout(() => setActionNotice(null), 5000)
+      setPasswordModalUser(null)
+    } catch (err: any) {
+      setPasswordModalError(err.message || 'Error al actualizar la contraseña del usuario')
+    } finally {
+      setUpdatingPass(false)
     }
   }
 
@@ -1055,6 +1107,16 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                     </button>
                                   )}
 
+                                  {/* Change User Password Button */}
+                                  <button
+                                    onClick={() => handleOpenPasswordModal(u)}
+                                    className="px-2 py-1 rounded-lg text-[10px] font-medium border transition-colors bg-[#222222] hover:bg-[#2a2a2a] text-white/70 hover:text-[#c9a84c] border-[#2a2a2a] flex items-center gap-1"
+                                    title="Restablecer o cambiar la contraseña de este usuario"
+                                  >
+                                    <Key size={11} className="text-[#c9a84c]" />
+                                    <span>Clave</span>
+                                  </button>
+
                                   {/* Delete Button */}
                                   <button
                                     onClick={() => setDeleteConfirmUser(u)}
@@ -1816,6 +1878,135 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                     </>
                   )}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para Restablecer / Cambiar Contraseña de Usuario */}
+        {passwordModalUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
+            <div
+              className="w-full max-w-md rounded-2xl border p-6 shadow-2xl relative"
+              style={{ background: '#1c1c1c', borderColor: '#2f2f2f' }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-[#c9a84c]/10 border border-[#c9a84c]/20 text-[#c9a84c]">
+                    <Key size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-[16px] font-medium text-white">Cambiar Contraseña</h3>
+                    <p className="text-[10px] text-white/40">Restablece la clave de acceso de este usuario en la base de datos</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setPasswordModalUser(null)}
+                  className="text-white/40 hover:text-white p-1 cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {passwordModalError && (
+                <div className="mb-4 p-3 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-300 text-[11px] flex items-center gap-2">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span>{passwordModalError}</span>
+                </div>
+              )}
+
+              <div className="p-3.5 rounded-xl bg-[#242424] border border-[#2f2f2f] mb-4 space-y-1.5 text-[11px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40">Usuario / Correo:</span>
+                  <span className="font-semibold text-white truncate max-w-[220px]" title={passwordModalUser.email}>{passwordModalUser.email}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/40">Plan asignado:</span>
+                  <span className="uppercase text-[#c9a84c] font-medium tracking-wider">{passwordModalUser.plan}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3 mb-5">
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-medium text-white/70">Nueva Contraseña *</label>
+                    <button
+                      type="button"
+                      onClick={() => setModalNewPassword(generateSecureRandomPassword())}
+                      className="text-[10px] text-[#dfbe63] hover:text-white font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                      title="Generar nueva clave sugerida"
+                    >
+                      <RefreshCcw size={10} />
+                      <span>Generar Clave Aleatoria</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={modalShowPass ? 'text' : 'password'}
+                      value={modalNewPassword}
+                      onChange={(e) => setModalNewPassword(e.target.value)}
+                      placeholder="Mínimo 6 caracteres"
+                      required
+                      minLength={6}
+                      className="w-full px-3 py-2 pr-10 rounded-xl text-[12px] font-mono bg-[#222222] border border-[#2a2a2a] text-white focus:outline-none focus:border-[#c9a84c]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setModalShowPass(!modalShowPass)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                      tabIndex={-1}
+                    >
+                      {modalShowPass ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => handleSaveUserPassword(true)}
+                  disabled={updatingPass}
+                  className="w-full py-2.5 px-3 rounded-xl text-[11px] font-semibold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all text-black hover:brightness-110 active:scale-95 shadow-md cursor-pointer disabled:opacity-50"
+                  style={{ background: '#25D366' }}
+                  title="Actualiza la clave y copia un mensaje formateado para enviárselo al cliente por WhatsApp"
+                >
+                  {updatingPass ? (
+                    <RefreshCw size={13} className="animate-spin" />
+                  ) : (
+                    <Copy size={13} />
+                  )}
+                  <span>Guardar y Copiar Mensaje para WhatsApp</span>
+                </button>
+
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setPasswordModalUser(null)}
+                    disabled={updatingPass}
+                    className="px-4 py-2 rounded-xl text-[12px] font-medium text-white/70 hover:text-white bg-[#262626] hover:bg-[#303030] transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSaveUserPassword(false)}
+                    disabled={updatingPass}
+                    className="px-4 py-2 rounded-xl text-[12px] font-semibold text-[#111111] bg-[#c9a84c] hover:bg-[#d4b558] transition-all shadow-lg shadow-[#c9a84c]/20 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                  >
+                    {updatingPass ? (
+                      <>
+                        <RefreshCw size={13} className="animate-spin" />
+                        <span>Guardando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check size={13} />
+                        <span>Solo Guardar Clave</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
