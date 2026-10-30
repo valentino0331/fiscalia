@@ -35,7 +35,7 @@ export default function AdminDashboard() {
   const [usersList, setUsersList] = useState<AdminUserItem[]>([])
   const [loadingUsers, setLoadingUsers] = useState(false)
   const [userSearch, setUserSearch] = useState('')
-  const [userFilter, setUserFilter] = useState<'all' | 'admin' | 'pro' | 'senior' | 'junior' | 'expired' | 'lowQuota'>('all')
+  const [userFilter, setUserFilter] = useState<'all' | 'admin' | 'pro' | 'senior' | 'junior' | 'demo' | 'expired' | 'lowQuota'>('all')
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<AdminUserItem | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [createModalOpen, setCreateModalOpen] = useState(false)
@@ -119,6 +119,8 @@ export default function AdminDashboard() {
         ? 'PRO (Ilimitado)'
         : newPlan === 'senior'
         ? 'SENIOR (250 consultas/mes)'
+        : newPlan === 'demo'
+        ? 'DEMO (7 días)'
         : 'JUNIOR (50 consultas/mes)'
       setActionNotice(`Plan actualizado a ${planLabel} exitosamente.`)
       setTimeout(() => setActionNotice(null), 4000)
@@ -219,7 +221,8 @@ export default function AdminDashboard() {
       const p = (u.plan || '').toLowerCase()
       const isPro = (p === 'pro' || u.isUnlimited) && !u.isAdmin
       const isSenior = p === 'senior' && !u.isAdmin
-      const isJunior = (p === 'junior' || p === 'normal' || (!isPro && !isSenior)) && !u.isAdmin
+      const isDemo = (p === 'demo' || (u.email && u.email.toLowerCase().startsWith('evaluador.'))) && !u.isAdmin
+      const isJunior = (p === 'junior' || p === 'normal' || (!isPro && !isSenior && !isDemo)) && !u.isAdmin && !isDemo
       const isExpired = typeof u.daysRemaining === 'number' && u.daysRemaining <= 0
       const limit = u.questionLimit ?? (isSenior ? 250 : isJunior ? 50 : 250)
       const remaining = u.questionsRemaining !== undefined && u.questionsRemaining !== null
@@ -231,6 +234,7 @@ export default function AdminDashboard() {
       if (userFilter === 'pro') return isPro
       if (userFilter === 'senior') return isSenior
       if (userFilter === 'junior') return isJunior
+      if (userFilter === 'demo') return isDemo
       if (userFilter === 'expired') return isExpired
       if (userFilter === 'lowQuota') return isLowQuota
       return true
@@ -241,9 +245,14 @@ export default function AdminDashboard() {
   const adminUsersCount = usersList.filter((u) => u.isAdmin).length
   const proUsersCount = usersList.filter((u) => ((u.plan || '').toLowerCase() === 'pro' || u.isUnlimited) && !u.isAdmin).length
   const seniorUsersCount = usersList.filter((u) => (u.plan || '').toLowerCase() === 'senior' && !u.isAdmin).length
+  const demoUsersCount = usersList.filter((u) => {
+    const p = (u.plan || '').toLowerCase()
+    return (p === 'demo' || (u.email && u.email.toLowerCase().startsWith('evaluador.'))) && !u.isAdmin
+  }).length
   const juniorUsersCount = usersList.filter((u) => {
     const p = (u.plan || '').toLowerCase()
-    return (p === 'junior' || p === 'normal' || (p !== 'pro' && p !== 'senior')) && !u.isAdmin
+    const isDemo = p === 'demo' || (u.email && u.email.toLowerCase().startsWith('evaluador.'))
+    return (p === 'junior' || p === 'normal' || (p !== 'pro' && p !== 'senior' && !isDemo)) && !u.isAdmin && !isDemo
   }).length
   const expiredUsersCount = usersList.filter((u) => typeof u.daysRemaining === 'number' && u.daysRemaining <= 0).length
   const lowQuotaUsersCount = usersList.filter((u) => {
@@ -624,6 +633,7 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                         { key: 'pro', label: `PRO (${proUsersCount})` },
                         { key: 'senior', label: `Senior (${seniorUsersCount})` },
                         { key: 'junior', label: `Junior (${juniorUsersCount})` },
+                        { key: 'demo', label: `Demo (${demoUsersCount})` },
                         { key: 'lowQuota', label: `Por Agotarse (${lowQuotaUsersCount})` },
                         { key: 'expired', label: `Vencidas (${expiredUsersCount})` },
                         { key: 'admin', label: `Admins (${adminUsersCount})` },
@@ -735,7 +745,8 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                           const p = (u.plan || '').toLowerCase()
                           const isPro = (p === 'pro' || u.isUnlimited) && !u.isAdmin
                           const isSenior = p === 'senior' && !u.isAdmin
-                          const isJunior = (p === 'junior' || p === 'normal' || (!isPro && !isSenior)) && !u.isAdmin
+                          const isDemo = (p === 'demo' || (u.email && u.email.toLowerCase().startsWith('evaluador.'))) && !u.isAdmin
+                          const isJunior = (p === 'junior' || p === 'normal' || (!isPro && !isSenior && !isDemo)) && !u.isAdmin && !isDemo
                           const isUnlimited = u.isAdmin || isPro
                           const limitMax = u.questionLimit ?? (isSenior ? 250 : isJunior ? 50 : 250)
                           const remaining = u.questionsRemaining !== undefined && u.questionsRemaining !== null
@@ -757,6 +768,8 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                         ? 'rgba(201,168,76,0.15)'
                                         : isSenior
                                         ? 'rgba(168,85,247,0.15)'
+                                        : isDemo
+                                        ? 'rgba(245,158,11,0.15)'
                                         : 'rgba(56,189,248,0.15)',
                                       color: u.isAdmin
                                         ? '#f59e0b'
@@ -764,6 +777,8 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                         ? '#c9a84c'
                                         : isSenior
                                         ? '#c084fc'
+                                        : isDemo
+                                        ? '#f59e0b'
                                         : '#38bdf8',
                                       border: `1px solid ${
                                         u.isAdmin
@@ -772,6 +787,8 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                           ? 'rgba(201,168,76,0.3)'
                                           : isSenior
                                           ? 'rgba(168,85,247,0.3)'
+                                          : isDemo
+                                          ? 'rgba(245,158,11,0.3)'
                                           : 'rgba(56,189,248,0.3)'
                                       }`,
                                     }}
@@ -847,6 +864,26 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                         <option value="senior">Senior (250 consultas)</option>
                                         <option value="junior">Cambiar a Junior (50)</option>
                                         <option value="pro">Cambiar a PRO (Ilimitado)</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                ) : isDemo ? (
+                                  <div className="space-y-1">
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                                      <Sparkles size={11} />
+                                      MODO DEMO
+                                    </span>
+                                    <div>
+                                      <select
+                                        value="demo"
+                                        onChange={(e) => handleSetUserPlan(u.id, e.target.value)}
+                                        className="text-[9px] px-1.5 py-0.5 rounded bg-[#222222] text-white/70 border border-[#2a2a2a] hover:border-[#c9a84c] focus:outline-none cursor-pointer"
+                                        title="Cambiar plan del evaluador"
+                                      >
+                                        <option value="demo">Demo (7 días)</option>
+                                        <option value="junior">Pasar a Junior (50)</option>
+                                        <option value="senior">Pasar a Senior (250)</option>
+                                        <option value="pro">Pasar a PRO (Ilimitado)</option>
                                       </select>
                                     </div>
                                   </div>

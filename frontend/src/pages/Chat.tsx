@@ -5,14 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ChevronLeft,
   ArrowUp, Trash2, MessageSquare,
-  Copy, Check, ChevronDown, ChevronUp,
+  Copy, Check, CheckCircle2, ChevronDown, ChevronUp,
   ThumbsUp, ThumbsDown, CornerDownLeft, RefreshCw,
   Download, Paperclip, Image as ImageIcon,
   X, AlertTriangle, FileText, Loader2, FileDown, Printer,
   Menu, Mic, Square, Volume2, VolumeX, Play, Pause, ArrowRight, Share2, MessageCircle, Zap,
   Star, Calendar, BookOpen, Sparkles, Calculator, MapPin, Baby, Briefcase,
   Home, MailCheck, ShieldAlert, FileSignature, ShoppingBag,
-  Scale, Shield, Gavel, Building2, Search, Edit2, RotateCcw, Folder, FolderCheck, type LucideIcon
+  Scale, Shield, Gavel, Building2, Search, Edit2, RotateCcw, Folder, FolderCheck,
+  UploadCloud, Plus, type LucideIcon
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -96,7 +97,7 @@ const IMAGE_ACCEPT = '.png,.jpg,.jpeg,.gif,.webp'
 
 function requestPushPermission() {
   if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().catch(() => {})
+    Notification.requestPermission().catch(() => { })
   }
 }
 
@@ -158,7 +159,7 @@ function calculatePeruvianDeadline(
   const start = new Date(year, month - 1, day)
   let current = new Date(start)
   const holidaysSkipped: string[] = []
-  
+
   if (isBusinessDays) {
     let added = 0
     while (added < daysCount) {
@@ -167,7 +168,7 @@ function calculatePeruvianDeadline(
       const m = current.getMonth()
       const d = current.getDate()
       const holiday = PERU_HOLIDAYS_2026.find((h) => h.month === m && h.day === d)
-      
+
       if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holiday) {
         added++
       } else if (holiday) {
@@ -180,7 +181,7 @@ function calculatePeruvianDeadline(
 
   const daysOfWeek = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
   const months = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'setiembre', 'octubre', 'noviembre', 'diciembre']
-  
+
   const formattedDueDate = `${daysOfWeek[current.getDay()]}, ${current.getDate()} de ${months[current.getMonth()]} de ${current.getFullYear()}`
   return { dueDate: current, formattedDueDate, holidaysSkipped }
 }
@@ -203,7 +204,7 @@ function downloadCalculatedICS(title: string, details: string, dueDate: Date) {
   const dtStart = `${y}${m}${d}T090000Z`
   const dtEnd = `${y}${m}${d}T235900Z`
   const uid = `hardman-plazo-${Date.now()}@hardman.pe`
-  
+
   const ics = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
@@ -223,7 +224,7 @@ function downloadCalculatedICS(title: string, details: string, dueDate: Date) {
     'END:VEVENT',
     'END:VCALENDAR',
   ].join('\r\n')
-  
+
   const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -391,11 +392,10 @@ FECHA FATAL DE VENCIMIENTO: ${calculation.formattedDueDate} (Hasta las 23:59 hrs
               <button
                 type="button"
                 onClick={() => setIsBusinessDays(true)}
-                className={`py-2 px-3 rounded-lg text-[11px] font-medium border transition-all text-left ${
-                  isBusinessDays
+                className={`py-2 px-3 rounded-lg text-[11px] font-medium border transition-all text-left ${isBusinessDays
                     ? 'border-[#c9a84c] bg-[#c9a84c]/10 text-[#c9a84c]'
                     : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-                }`}
+                  }`}
               >
                 ⚖️ Días Hábiles Judiciales
                 <span className="block text-[9px] font-light opacity-70">Excluye sáb, dom y feriados</span>
@@ -403,11 +403,10 @@ FECHA FATAL DE VENCIMIENTO: ${calculation.formattedDueDate} (Hasta las 23:59 hrs
               <button
                 type="button"
                 onClick={() => setIsBusinessDays(false)}
-                className={`py-2 px-3 rounded-lg text-[11px] font-medium border transition-all text-left ${
-                  !isBusinessDays
+                className={`py-2 px-3 rounded-lg text-[11px] font-medium border transition-all text-left ${!isBusinessDays
                     ? 'border-[#c9a84c] bg-[#c9a84c]/10 text-[#c9a84c]'
                     : 'border-white/10 bg-[#111111] text-white/50 hover:text-white'
-                }`}
+                  }`}
               >
                 📅 Días Calendario
                 <span className="block text-[9px] font-light opacity-70">Días corridos continuos</span>
@@ -493,6 +492,15 @@ export default function Chat() {
   const [loadingConvs, setLoadingConvs] = useState(true)
   const [activeMode, setActiveMode] = useState<string | null>(null)
 
+  const [attachedDocs, setAttachedDocs] = useState<Array<{
+    id: string
+    file: File
+    extractedText?: string
+    pageCount?: number | null
+    status: 'extracting' | 'ready' | 'error'
+    error?: string | null
+    retryInfo?: string | null
+  }>>([])
   const [attachedFile, setAttachedFile] = useState<File | null>(null)
   const [extractedText, setExtractedText] = useState<string | null>(null)
   const [extracting, setExtracting] = useState(false)
@@ -502,6 +510,7 @@ export default function Chat() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pendingAutoSendRef = useRef(false)
   const [pendingAutoSend, setPendingAutoSend] = useState(false)
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
   const sendRef = useRef<() => void>()
 
   const [speechSupported, setSpeechSupported] = useState(true)
@@ -633,7 +642,7 @@ export default function Chat() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const imageInputRef = useRef<HTMLInputElement>(null)
-  
+
   const recognitionRef = useRef<any>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -660,10 +669,18 @@ export default function Chat() {
     loadConversations()
     setSidebarOpen(false)
 
-    const state = location.state as { transferMessage?: string } | null
+    const state = location.state as { transferMessage?: string; initialAttachedDocs?: any[] } | null
     if (state?.transferMessage) {
       setInput(state.transferMessage)
       setTimeout(autoResize, 80)
+    }
+    if (state?.initialAttachedDocs && state.initialAttachedDocs.length > 0) {
+      setAttachedDocs(state.initialAttachedDocs)
+      if (state.initialAttachedDocs[0]?.file) {
+        setAttachedFile(state.initialAttachedDocs[0].file)
+      }
+    }
+    if (state?.transferMessage || state?.initialAttachedDocs) {
       window.history.replaceState({}, document.title)
     } else {
       try {
@@ -699,7 +716,16 @@ export default function Chat() {
   }, [messages, loading])
 
   useEffect(() => {
-    api.account.usage().then(setUsage).catch(() => {})
+    const syncUsage = () => {
+      api.account.usage().then(setUsage).catch(() => { })
+    }
+    syncUsage()
+    window.addEventListener('hardman:usage-updated', syncUsage)
+    window.addEventListener('focus', syncUsage)
+    return () => {
+      window.removeEventListener('hardman:usage-updated', syncUsage)
+      window.removeEventListener('focus', syncUsage)
+    }
   }, [])
 
   useEffect(() => {
@@ -953,7 +979,7 @@ export default function Chat() {
 
     const abortCtrl = new AbortController()
     const timer = setTimeout(() => {
-      try { abortCtrl.abort() } catch {}
+      try { abortCtrl.abort() } catch { }
     }, 12000)
 
     try {
@@ -1002,11 +1028,11 @@ export default function Chat() {
         recognitionRef.current.onerror = null
         recognitionRef.current.onresult = null
         recognitionRef.current.stop()
-      } catch {}
+      } catch { }
       recognitionRef.current = null
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      try { mediaRecorderRef.current.stop() } catch {}
+      try { mediaRecorderRef.current.stop() } catch { }
     }
     mediaRecorderRef.current = null
     audioChunksRef.current = []
@@ -1062,10 +1088,10 @@ export default function Chat() {
         const mime = typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
           ? 'audio/webm;codecs=opus'
           : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/webm')
-          ? 'audio/webm'
-          : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
-          ? 'audio/mp4'
-          : ''
+            ? 'audio/webm'
+            : typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported('audio/mp4')
+              ? 'audio/mp4'
+              : ''
         const recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream)
         mediaRecorderRef.current = recorder
         audioChunksRef.current = []
@@ -1117,7 +1143,7 @@ export default function Chat() {
           if (isRecordingRef.current && recognitionRef.current) {
             try {
               recognitionRef.current.start()
-            } catch {}
+            } catch { }
           }
         }
 
@@ -1145,7 +1171,7 @@ export default function Chat() {
         recognitionRef.current.onend = null
         recognitionRef.current.onerror = null
         recognitionRef.current.stop()
-      } catch {}
+      } catch { }
       recognitionRef.current = null
     }
 
@@ -1327,67 +1353,127 @@ export default function Chat() {
     el.style.height = Math.min(el.scrollHeight, 140) + 'px'
   }
 
-  const handleFileSelect = async (file: File) => {
+  const handleFilesSelect = async (filesList: File[] | FileList) => {
     if (limitReached) {
       setUpgradeModalOpen(true)
       return
     }
-    const MAX_MB = 100
-    if (file.size > MAX_MB * 1024 * 1024) {
-      setAttachedFile(file)
-      setExtractError(`El archivo supera el límite de ${MAX_MB}MB. Por favor sube un archivo menor a 100MB o divídelo en partes.`)
-      setExtractedText(null)
-      setExtracting(false)
-      pendingAutoSendRef.current = false
-      setPendingAutoSend(false)
+    const incoming = Array.from(filesList)
+    if (incoming.length === 0) return
+
+    const MAX_FILES = 5
+    if (attachedDocs.length + incoming.length > MAX_FILES) {
+      alert(`Puedes adjuntar hasta ${MAX_FILES} archivos por consulta. Por favor selecciona hasta ${MAX_FILES - attachedDocs.length} archivo(s) más.`)
       return
     }
-    setAttachedFile(file)
-    setExtractError(null)
-    setExtractRetryInfo(null)
-    setPageCount(null)
+
+    const MAX_MB = 100
+    const newItems: Array<{
+      id: string
+      file: File
+      extractedText?: string
+      pageCount?: number | null
+      status: 'extracting' | 'ready' | 'error'
+      error?: string | null
+      retryInfo?: string | null
+    }> = []
+
+    for (const file of incoming) {
+      const id = Math.random().toString(36).slice(2, 9) + '_' + Date.now()
+      if (file.size > MAX_MB * 1024 * 1024) {
+        newItems.push({
+          id,
+          file,
+          status: 'error',
+          error: `Supera límite de ${MAX_MB}MB`,
+        })
+      } else {
+        newItems.push({
+          id,
+          file,
+          status: 'extracting',
+        })
+      }
+    }
+
+    setAttachedDocs((prev) => [...prev, ...newItems])
     setExtracting(true)
-    saveAttachmentLocally(file).catch(() => {})
-    try {
-      const result = await api.files.extract(file, (attempt, total) => {
-        setExtractRetryInfo(`Reintentando… intento ${attempt}/${total}`)
+    setExtractError(null)
+
+    if (incoming[0]) {
+      setAttachedFile(incoming[0])
+    }
+
+    // Procesar todos los archivos en paralelo sin bloquearse mutuamente
+    await Promise.all(
+      newItems.map(async (item) => {
+        if (item.status === 'error') return
+        saveAttachmentLocally(item.file).catch(() => { })
+        try {
+          const result = await api.files.extract(item.file, (attempt, total) => {
+            setAttachedDocs((prev) =>
+              prev.map((d) => (d.id === item.id ? { ...d, retryInfo: `Reintentando… ${attempt}/${total}` } : d))
+            )
+          })
+          if (!result.text || !result.text.trim()) {
+            setAttachedDocs((prev) =>
+              prev.map((d) => (d.id === item.id ? { ...d, status: 'error', error: 'Sin texto legible o escaneo borroso' } : d))
+            )
+          } else {
+            const cleanedText = result.text.trim()
+            setAttachedDocs((prev) =>
+              prev.map((d) =>
+                d.id === item.id
+                  ? {
+                    ...d,
+                    status: 'ready',
+                    extractedText: cleanedText,
+                    pageCount: result.pageCount ?? null,
+                    retryInfo: null,
+                  }
+                  : d
+              )
+            )
+            if (result.detectedExpediente) {
+              setDetectedExpediente(result.detectedExpediente)
+            }
+          }
+        } catch (err: any) {
+          setAttachedDocs((prev) =>
+            prev.map((d) => (d.id === item.id ? { ...d, status: 'error', error: err.message || 'Error al procesar archivo' } : d))
+          )
+        }
       })
-      if (!result.text || !result.text.trim()) {
-        setExtractError('El archivo no contiene texto legible o es un escaneo sin resolución')
+    )
+  }
+
+  const handleFileSelect = async (file: File) => {
+    handleFilesSelect([file])
+  }
+
+  const removeAttachedDoc = (id: string) => {
+    setAttachedDocs((prev) => {
+      const filtered = prev.filter((d) => d.id !== id)
+      if (filtered.length === 0) {
+        setAttachedFile(null)
         setExtractedText(null)
         setDetectedExpediente(null)
-        pendingAutoSendRef.current = false
-        setPendingAutoSend(false)
-      } else {
-        const cleanedText = result.text.trim()
-        setExtractedText(cleanedText)
-        setPageCount(result.pageCount ?? null)
-        setDetectedExpediente(result.detectedExpediente || null)
         setExtractError(null)
-        if (pendingAutoSendRef.current) {
-          pendingAutoSendRef.current = false
-          setPendingAutoSend(false)
-          setTimeout(() => {
-            sendRef.current?.()
-          }, 100)
-        }
+        setExtracting(false)
+        setExtractRetryInfo(null)
+        setPageCount(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      } else {
+        setAttachedFile(filtered[0].file)
       }
-      setExtractRetryInfo(null)
-    } catch (err: any) {
-      setExtractError(err.message || 'Error al procesar el archivo')
-      setExtractedText(null)
-      setDetectedExpediente(null)
-      setExtractRetryInfo(null)
-      pendingAutoSendRef.current = false
-      setPendingAutoSend(false)
-    } finally {
-      setExtracting(false)
-    }
+      return filtered
+    })
   }
 
   const clearAttachment = () => {
     pendingAutoSendRef.current = false
     setPendingAutoSend(false)
+    setAttachedDocs([])
     setAttachedFile(null)
     setExtractedText(null)
     setDetectedExpediente(null)
@@ -1399,23 +1485,63 @@ export default function Chat() {
     if (imageInputRef.current) imageInputRef.current.value = ''
   }
 
+  useEffect(() => {
+    const isAnyExtracting = attachedDocs.some((d) => d.status === 'extracting')
+    setExtracting(isAnyExtracting)
+    if (!isAnyExtracting && pendingAutoSendRef.current && attachedDocs.length > 0) {
+      pendingAutoSendRef.current = false
+      setPendingAutoSend(false)
+      setTimeout(() => {
+        sendRef.current?.()
+      }, 100)
+    }
+  }, [attachedDocs])
+
   const sendMessage = useCallback(async () => {
     if (limitReached) {
       setUpgradeModalOpen(true)
       return
     }
-    // Si aún se está extrayendo texto del archivo, encolar el envío automático para cuando finalice
-    if (extracting) {
+    // Si aún se está extrayendo texto de algún archivo, encolar el envío automático para cuando finalice
+    const isExtractingAny = attachedDocs.some((d) => d.status === 'extracting') || extracting
+    if (isExtractingAny) {
       pendingAutoSendRef.current = true
       setPendingAutoSend(true)
       return
     }
+
+    const readyAttachedDocs = attachedDocs.filter((d) => d.status === 'ready' && d.extractedText?.trim())
+    const hasAnyDocs = readyAttachedDocs.length > 0 || !!extractedText || !!linkedFolder
+
     const trimmed = input.trim()
-    if ((!trimmed && !extractedText && !linkedFolder) || loading || !agent) return
+    if ((!trimmed && !hasAnyDocs) || loading || !agent) return
 
     let fullContent = trimmed
     const wasVoice = isVoiceMessage
-    if (extractedText) {
+
+    if (readyAttachedDocs.length === 1) {
+      const doc = readyAttachedDocs[0]
+      const fileLabel = `[Archivo adjunto: ${doc.file.name}]\n`
+      const contextBlock = `${fileLabel}--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---\n${doc.extractedText}\n--- FIN DEL DOCUMENTO ---\n\n`
+      fullContent = contextBlock + (trimmed || 'Analiza este documento y proporciona tu opinión legal.')
+    } else if (readyAttachedDocs.length > 1) {
+      const fileLabels = readyAttachedDocs.map((d) => `[Archivo adjunto: ${d.file.name}]`).join('\n')
+      const docsSummary = readyAttachedDocs
+        .map(
+          (d, idx) =>
+            `--- DOCUMENTO ${idx + 1}: "${d.file.name}"${d.pageCount ? ` (${d.pageCount} pág.)` : ''} ---\n` +
+            `${d.extractedText}\n` +
+            `--- FIN "${d.file.name}" ---`
+        )
+        .join('\n\n')
+      const expedBlock =
+        `${fileLabels}\n` +
+        `[EXPEDIENTE ADJUNTO: ${readyAttachedDocs.length} DOCUMENTOS CARGADOS PARA ANÁLISIS INTEGRAL]\n` +
+        `Documentos en el expediente (${readyAttachedDocs.length}): ${readyAttachedDocs.map((d) => d.file.name).join(', ')}\n\n` +
+        `${docsSummary}\n\n` +
+        `Instrucción especial para el especialista: Analiza todos los documentos de este expediente en conjunto (demanda, resoluciones, sentencia, apelación) en una sola respuesta integral, contrastando agravios y considerandos judiciales sin requerir consultas fraccionadas.\n\n`
+      fullContent = expedBlock + (trimmed || 'Analiza este expediente completo y proporciona tu estrategia procesal integral.')
+    } else if (extractedText) {
       const fileLabel = attachedFile ? `[Archivo adjunto: ${attachedFile.name}]\n` : ''
       const contextBlock = `${fileLabel}--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---\n${extractedText}\n--- FIN DEL DOCUMENTO ---\n\n`
       fullContent = contextBlock + (trimmed || 'Analiza este documento y proporciona tu opinión legal.')
@@ -1445,7 +1571,7 @@ export default function Chat() {
     setInput('')
     try {
       localStorage.removeItem(`hardman_draft_${agent?.id || 'general'}_${conversationId || 'new'}`)
-    } catch {}
+    } catch { }
     setIsVoiceMessage(false)
     clearAttachment()
     setLoading(true)
@@ -1618,7 +1744,7 @@ export default function Chat() {
       ])
       setLoading(false)
     }
-  }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, usage, audioRepliesEnabled, isVoiceMessage, scrollToBottom, extracting])
+  }, [input, loading, agent, messages, conversationId, agentId, extractedText, attachedFile, attachedDocs, linkedFolder, usage, audioRepliesEnabled, isVoiceMessage, scrollToBottom, extracting])
 
   useEffect(() => {
     sendRef.current = sendMessage
@@ -1729,7 +1855,44 @@ export default function Chat() {
   const limitReached = (isLimited && usage!.questionsUsed >= usage!.limit!) || (isDemo && (usage?.questionsUsed ?? 0) >= 1)
 
   return (
-    <div className="fixed inset-0 h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden w-full max-w-full" style={{ background: '#111111' }}>
+    <div
+      className="fixed inset-0 h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden w-full max-w-full relative"
+      style={{ background: '#111111' }}
+      onDragOver={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!isDraggingOver) setIsDraggingOver(true)
+      }}
+      onDragLeave={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsDraggingOver(false)
+        }
+      }}
+      onDrop={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setIsDraggingOver(false)
+        const files = e.dataTransfer.files
+        if (files && files.length > 0) {
+          handleFilesSelect(files)
+        }
+      }}
+    >
+      {/* Drag & Drop Overlay */}
+      {isDraggingOver && (
+        <div className="absolute inset-0 z-50 bg-[#0a0a0c]/90 border-2 border-dashed border-[#c9a84c] flex flex-col items-center justify-center gap-3 backdrop-blur-md pointer-events-none">
+          <UploadCloud size={52} className="text-[#c9a84c] animate-bounce" />
+          <p className="text-base sm:text-lg font-bold text-white tracking-wide">
+            Suelta tus archivos aquí (PDF, Word, Imágenes)
+          </p>
+          <p className="text-xs sm:text-sm text-white/70">
+            Puedes soltar 1, 2, 3 o más archivos a la vez para analizarlos juntos
+          </p>
+        </div>
+      )}
+
       {/* NAVBAR */}
       <header
         className="h-14 flex-shrink-0 flex items-center justify-between gap-1 sm:gap-2 px-2.5 sm:px-4 border-b z-30 max-w-full overflow-hidden"
@@ -1822,7 +1985,7 @@ export default function Chat() {
               try {
                 localStorage.setItem('hardman_auto_speak', String(next))
                 localStorage.setItem('bufete_auto_speak', String(next))
-              } catch {}
+              } catch { }
             }}
             className="w-8 h-8 rounded-md flex items-center justify-center transition-colors"
             style={{
@@ -1912,22 +2075,20 @@ export default function Chat() {
               <button
                 type="button"
                 onClick={() => setConvTagFilter('all')}
-                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
-                  convTagFilter === 'all'
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${convTagFilter === 'all'
                     ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
                     : 'text-white/40 hover:text-white/70 border border-transparent'
-                }`}
+                  }`}
               >
                 Todos
               </button>
               <button
                 type="button"
                 onClick={() => setConvTagFilter('cliente')}
-                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
-                  convTagFilter === 'cliente'
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${convTagFilter === 'cliente'
                     ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
                     : 'text-white/40 hover:text-white/70 border border-transparent'
-                }`}
+                  }`}
                 title="Filtrar por Cliente"
               >
                 👤 Clientes
@@ -1935,11 +2096,10 @@ export default function Chat() {
               <button
                 type="button"
                 onClick={() => setConvTagFilter('expediente')}
-                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${
-                  convTagFilter === 'expediente'
+                className={`px-2 py-0.5 rounded text-[9px] font-medium transition-all ${convTagFilter === 'expediente'
                     ? 'bg-[#c9a84c]/20 text-[#c9a84c] border border-[#c9a84c]/40'
                     : 'text-white/40 hover:text-white/70 border border-transparent'
-                }`}
+                  }`}
                 title="Filtrar por Expediente"
               >
                 📂 Expedientes
@@ -1981,101 +2141,101 @@ export default function Chat() {
                   return true
                 })
                 .map((conv) => {
-                const isCurrent = conversationId === conv.id
-                return (
-                  <div
-                    key={conv.id}
-                    onClick={() => loadConversation(conv.id)}
-                    className="group flex items-start justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all gap-2"
-                    style={{
-                      background: isCurrent ? 'rgba(201,168,76,0.12)' : 'transparent',
-                      border: isCurrent ? '1px solid rgba(201,168,76,0.25)' : '1px solid transparent',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent'
-                    }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span
-                          className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                          style={{ background: isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.30)' }}
-                        />
-                        <span className="text-[8px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.50)' }}>
-                          {agent.badge}
-                        </span>
-                      </div>
-
-                      {editingConvId === conv.id ? (
-                        <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="text"
-                            value={editingTitle}
-                            onChange={(e) => setEditingTitle(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleSaveRename(conv.id, e)
-                              if (e.key === 'Escape') setEditingConvId(null)
-                            }}
-                            autoFocus
-                            className="px-1.5 py-0.5 rounded bg-[#111] border border-[#c9a84c] text-white text-[11px] w-full focus:outline-none"
-                          />
-                          <button
-                            type="button"
-                            onClick={(e) => handleSaveRename(conv.id, e)}
-                            className="p-1 rounded bg-[#c9a84c] text-black hover:bg-[#dfbc5e]"
-                            title="Guardar"
-                          >
-                            <Check size={11} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setEditingConvId(null) }}
-                            className="p-1 rounded text-white/50 hover:text-white"
-                            title="Cancelar"
-                          >
-                            <X size={11} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1">
-                          <p
-                            className="text-[11px] leading-tight line-clamp-2 flex-1"
-                            style={{
-                              fontWeight: isCurrent ? 500 : 300,
-                              color: isCurrent ? '#ffffff' : 'rgba(255,255,255,0.70)',
-                            }}
-                            title={conv.title}
-                          >
-                            {conv.title}
-                          </p>
-                          <button
-                            onClick={(e) => handleStartRename(conv, e)}
-                            className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-[#c9a84c] text-white/30 transition-opacity"
-                            title="Renombrar (ej: Cliente Pérez / Exp. 042-2026)"
-                          >
-                            <Edit2 size={10} />
-                          </button>
-                        </div>
-                      )}
-
-                      <p className="text-[9px] mt-1" style={{ color: 'rgba(255,255,255,0.30)' }}>
-                        {formatDate(conv.updatedAt)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => deleteConversation(conv.id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded transition-all flex-shrink-0 mt-1"
-                      style={{ color: 'rgba(255,255,255,0.30)' }}
-                      title="Eliminar consulta"
+                  const isCurrent = conversationId === conv.id
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => loadConversation(conv.id)}
+                      className="group flex items-start justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all gap-2"
+                      style={{
+                        background: isCurrent ? 'rgba(201,168,76,0.12)' : 'transparent',
+                        border: isCurrent ? '1px solid rgba(201,168,76,0.25)' : '1px solid transparent',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent'
+                      }}
                     >
-                      <Trash2 size={11} />
-                    </button>
-                  </div>
-                )
-              })
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span
+                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                            style={{ background: isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.30)' }}
+                          />
+                          <span className="text-[8px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded" style={{ background: 'rgba(255,255,255,0.06)', color: isCurrent ? '#c9a84c' : 'rgba(255,255,255,0.50)' }}>
+                            {agent.badge}
+                          </span>
+                        </div>
+
+                        {editingConvId === conv.id ? (
+                          <div className="flex items-center gap-1 mt-1" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="text"
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSaveRename(conv.id, e)
+                                if (e.key === 'Escape') setEditingConvId(null)
+                              }}
+                              autoFocus
+                              className="px-1.5 py-0.5 rounded bg-[#111] border border-[#c9a84c] text-white text-[11px] w-full focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => handleSaveRename(conv.id, e)}
+                              className="p-1 rounded bg-[#c9a84c] text-black hover:bg-[#dfbc5e]"
+                              title="Guardar"
+                            >
+                              <Check size={11} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); setEditingConvId(null) }}
+                              className="p-1 rounded text-white/50 hover:text-white"
+                              title="Cancelar"
+                            >
+                              <X size={11} />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            <p
+                              className="text-[11px] leading-tight line-clamp-2 flex-1"
+                              style={{
+                                fontWeight: isCurrent ? 500 : 300,
+                                color: isCurrent ? '#ffffff' : 'rgba(255,255,255,0.70)',
+                              }}
+                              title={conv.title}
+                            >
+                              {conv.title}
+                            </p>
+                            <button
+                              onClick={(e) => handleStartRename(conv, e)}
+                              className="opacity-0 group-hover:opacity-100 p-0.5 hover:text-[#c9a84c] text-white/30 transition-opacity"
+                              title="Renombrar (ej: Cliente Pérez / Exp. 042-2026)"
+                            >
+                              <Edit2 size={10} />
+                            </button>
+                          </div>
+                        )}
+
+                        <p className="text-[9px] mt-1" style={{ color: 'rgba(255,255,255,0.30)' }}>
+                          {formatDate(conv.updatedAt)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => deleteConversation(conv.id, e)}
+                        className="opacity-0 group-hover:opacity-100 p-1 rounded transition-all flex-shrink-0 mt-1"
+                        style={{ color: 'rgba(255,255,255,0.30)' }}
+                        title="Eliminar consulta"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  )
+                })
             )}
           </div>
         </aside>
@@ -2239,52 +2399,122 @@ export default function Chat() {
                 )}
               </AnimatePresence>
 
-              {/* Attached file preview */}
-              {attachedFile && (
+              {/* Attached file(s) preview - ChatGPT Style Cards */}
+              {attachedDocs.length > 0 && (
                 <div
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                  style={{ background: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  className="mb-2 p-2.5 rounded-xl border flex flex-col gap-2"
+                  style={{ background: '#141518', borderColor: 'rgba(201,168,76,0.30)' }}
                 >
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{
-                      background: extractError ? 'rgba(255,100,100,0.10)' : 'rgba(201,168,76,0.10)',
-                      border: `1px solid ${extractError ? 'rgba(255,100,100,0.20)' : 'rgba(201,168,76,0.20)'}`,
-                    }}
-                  >
-                    {extracting ? (
-                      <Loader2 size={14} className="animate-spin" style={{ color: '#c9a84c' }} />
-                    ) : extractError ? (
-                      <AlertTriangle size={14} style={{ color: '#ff6464' }} />
-                    ) : (
-                      <FileText size={14} style={{ color: '#c9a84c' }} />
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FolderCheck size={14} className="text-[#c9a84c] flex-shrink-0" />
+                      <span className="text-[11px] font-medium text-white truncate">
+                        {attachedDocs.length === 1
+                          ? `1 documento adjunto (1/5): ${attachedDocs[0].file.name}`
+                          : `Expediente Multi-Documento: ${attachedDocs.length}/5 archivos cargados (análisis conjunto en 1 sola consulta)`}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {attachedDocs.length < 5 && (
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-[10px] text-[#dfbe63] hover:text-white font-medium cursor-pointer flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#c9a84c]/10 border border-[#c9a84c]/30 hover:bg-[#c9a84c]/20 transition-all"
+                          title="Adjuntar más archivos (hasta 5 PDFs/Word)"
+                        >
+                          <Plus size={11} />
+                          <span>+ Agregar más</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={clearAttachment}
+                        className="text-white/40 hover:text-red-400 p-0.5 cursor-pointer transition-colors"
+                        title="Quitar todos los documentos"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ChatGPT-style Cards Horizontal Row */}
+                  <div className="flex items-stretch gap-2 overflow-x-auto pb-1 max-w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {attachedDocs.map((doc) => {
+                      const isPdf = doc.file.name.toLowerCase().endsWith('.pdf')
+                      const sizeMB = doc.file.size / (1024 * 1024)
+                      const sizeStr = sizeMB >= 1 ? `${sizeMB.toFixed(1)}MB` : `${(doc.file.size / 1024).toFixed(0)}KB`
+                      const isReady = doc.status === 'ready'
+                      const isErr = doc.status === 'error'
+                      return (
+                        <div
+                          key={doc.id}
+                          className="group relative flex flex-col justify-between p-2.5 rounded-xl border flex-shrink-0 w-36 sm:w-44 h-24 transition-all"
+                          style={{
+                            background: '#1a1b20',
+                            borderColor: isErr ? 'rgba(239,68,68,0.40)' : isReady ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.12)',
+                          }}
+                        >
+                          <div className="flex items-start justify-between gap-1">
+                            <div
+                              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{
+                                background: isPdf ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+                                color: isPdf ? '#f87171' : '#60a5fa',
+                              }}
+                            >
+                              <FileText size={14} />
+                            </div>
+
+                            <div className="flex items-center gap-1">
+                              {doc.status === 'extracting' ? (
+                                <Loader2 size={12} className="animate-spin text-[#c9a84c]" />
+                              ) : isErr ? (
+                                <AlertTriangle size={12} className="text-red-400" />
+                              ) : (
+                                <CheckCircle2 size={12} className="text-emerald-400" />
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => removeAttachedDoc(doc.id)}
+                                className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                title="Quitar archivo"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-medium text-white/90 truncate leading-snug" title={doc.file.name}>
+                              {doc.file.name}
+                            </p>
+                            <p className="text-[9px] text-white/40 truncate">
+                              {doc.retryInfo ? doc.retryInfo : isReady && doc.pageCount ? `${doc.pageCount} pág · ` : ''}{sizeStr}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })}
+
+                    {attachedDocs.length < 5 && (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl border border-dashed border-white/20 hover:border-[#c9a84c]/50 bg-white/[0.02] hover:bg-white/[0.05] transition-all flex-shrink-0 w-28 sm:w-32 h-24 text-white/50 hover:text-[#dfbe63] cursor-pointer"
+                        title="Adjuntar otro documento"
+                      >
+                        <Plus size={16} />
+                        <span className="text-[10px] font-medium">+ Adjuntar ({attachedDocs.length}/5)</span>
+                      </button>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-normal text-white truncate">{attachedFile.name}</p>
-                    <p className="text-[9px] font-light" style={{ color: extractError ? '#ff6464' : 'rgba(255,255,255,0.40)' }}>
-                      {extracting
-                        ? (pendingAutoSend
-                            ? '⏳ Procesando expediente... se enviará automáticamente con tu consulta al terminar'
-                            : (extractRetryInfo || `Extrayendo texto y procesando con IA${attachedFile.size > 5 * 1024 * 1024 ? ' (archivo extenso)…' : '…'}`))
-                        : extractError
-                        ? extractError
-                        : (() => {
-                            const sizeMB = attachedFile.size / (1024 * 1024)
-                            const sizeStr = sizeMB >= 1 ? `${sizeMB.toFixed(1)} MB` : `${(attachedFile.size / 1024).toFixed(0)} KB`
-                            const pageStr = pageCount ? ` · ${pageCount} pág.` : ''
-                            const recNotice = sizeMB > 15 ? ' · (Se recomienda <15MB para máxima agilidad)' : ''
-                            return `${sizeStr}${pageStr} · Texto extraído y listo para análisis${recNotice}`
-                          })()}
-                    </p>
-                  </div>
-                  <button
-                    onClick={clearAttachment}
-                    className="p-1 rounded transition-colors flex-shrink-0"
-                    style={{ color: 'rgba(255,255,255,0.30)' }}
-                  >
-                    <X size={14} />
-                  </button>
+
+                  {pendingAutoSend && (
+                    <div className="px-1 text-[10px] text-[#c9a84c] flex items-center gap-1.5">
+                      <Loader2 size={10} className="animate-spin" />
+                      <span>Extrayendo textos... Se enviará automáticamente cuando finalice.</span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2293,20 +2523,24 @@ export default function Chat() {
                 ref={fileInputRef}
                 type="file"
                 accept={FILE_ACCEPT}
+                multiple
                 className="hidden"
                 onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleFileSelect(file)
+                  const files = e.target.files
+                  if (files && files.length > 0) handleFilesSelect(files)
+                  if (fileInputRef.current) fileInputRef.current.value = ''
                 }}
               />
               <input
                 ref={imageInputRef}
                 type="file"
                 accept={IMAGE_ACCEPT}
+                multiple
                 className="hidden"
                 onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) handleFileSelect(file)
+                  const files = e.target.files
+                  if (files && files.length > 0) handleFilesSelect(files)
+                  if (imageInputRef.current) imageInputRef.current.value = ''
                 }}
               />
 
@@ -2500,6 +2734,7 @@ export default function Chat() {
                     {/* Left actions: smooth horizontal scroll only if needed, min-w-0 */}
                     <div className="flex items-center gap-1 sm:gap-1.5 min-w-0 flex-1 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-0.5">
                       <button
+                        type="button"
                         onClick={() => {
                           if (limitReached) {
                             setUpgradeModalOpen(true)
@@ -2507,11 +2742,11 @@ export default function Chat() {
                           }
                           fileInputRef.current?.click()
                         }}
-                        className="flex items-center gap-1 text-[9px] sm:text-[10px] font-light transition-colors px-1 sm:px-1.5 py-1 rounded hover:text-[#c9a84c] text-white/50 flex-shrink-0"
-                        title="Adjuntar PDF o Word (Máx. 25MB)"
+                        className="flex items-center gap-1.5 text-[9px] sm:text-[10px] font-medium transition-colors px-2 py-1 rounded-md text-[#dfbe63] bg-[#c9a84c]/10 hover:bg-[#c9a84c]/20 border border-[#c9a84c]/30 flex-shrink-0 cursor-pointer"
+                        title="Subir archivos (PDF, Word, DOCX). Puedes subir 2, 3 o más archivos a la vez para analizarlos juntos en una sola consulta."
                       >
-                        <Paperclip size={13} />
-                        <span className="hidden sm:inline">PDF / WORD</span>
+                        <Paperclip size={13} className="text-[#c9a84c]" />
+                        <span>SUBIR ARCHIVOS (PDF / WORD)</span>
                       </button>
                       <button
                         onClick={() => {
@@ -2558,11 +2793,10 @@ export default function Chat() {
                           }
                           setFolderModalOpen(true)
                         }}
-                        className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer ${
-                          linkedFolder
+                        className={`flex items-center gap-1 text-[9px] sm:text-[10px] font-medium transition-colors px-1.5 sm:px-2 py-1 rounded-md flex-shrink-0 cursor-pointer ${linkedFolder
                             ? 'text-emerald-400 bg-emerald-500/10 border border-emerald-500/25'
                             : 'text-white/50 hover:text-[#c9a84c]'
-                        }`}
+                          }`}
                         title={
                           linkedFolder
                             ? `Carpeta vinculada: ${linkedFolder.folderName} (${linkedFolder.docs.length} docs)`
@@ -2647,8 +2881,8 @@ export default function Chat() {
                           isRecording
                             ? { background: 'rgba(239,68,68,0.20)', border: '1.5px solid rgba(239,68,68,0.70)', color: '#ef4444', boxShadow: '0 0 10px rgba(239,68,68,0.3)' }
                             : isTranscribing
-                            ? { background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.40)', color: '#c9a84c' }
-                            : { background: 'rgba(255,255,255,0.07)', border: '1px solid #333333', color: 'rgba(255,255,255,0.60)' }
+                              ? { background: 'rgba(201,168,76,0.15)', border: '1px solid rgba(201,168,76,0.40)', color: '#c9a84c' }
+                              : { background: 'rgba(255,255,255,0.07)', border: '1px solid #333333', color: 'rgba(255,255,255,0.60)' }
                         }
                         title={isRecording ? 'Detener grabación' : isTranscribing ? 'Transcribiendo audio...' : 'Hablar por micrófono (dictado por voz)'}
                       >
@@ -2686,25 +2920,78 @@ export default function Chat() {
                               setUpgradeModalOpen(true)
                               return
                             }
-                            if (extracting) {
+                            if (extracting || attachedDocs.some((d) => d.status === 'extracting')) {
                               pendingAutoSendRef.current = true
                               setPendingAutoSend(true)
                               return
                             }
                             sendMessage()
                           }}
-                          disabled={(!input.trim() && !extractedText && !extracting) || isRecording || isTranscribing}
-                          whileHover={{ scale: (input.trim() || extractedText || extracting) ? 1.05 : 1 }}
-                          whileTap={{ scale: (input.trim() || extractedText || extracting) ? 0.95 : 1 }}
+                          disabled={
+                            (!input.trim() &&
+                              !extractedText &&
+                              !attachedDocs.some((d) => d.status === 'ready' && d.extractedText?.trim()) &&
+                              !linkedFolder &&
+                              !extracting &&
+                              !attachedDocs.some((d) => d.status === 'extracting')) ||
+                            isRecording ||
+                            isTranscribing
+                          }
+                          whileHover={{
+                            scale:
+                              input.trim() ||
+                                extractedText ||
+                                attachedDocs.some((d) => d.status === 'ready' || d.status === 'extracting') ||
+                                linkedFolder
+                                ? 1.05
+                                : 1,
+                          }}
+                          whileTap={{
+                            scale:
+                              input.trim() ||
+                                extractedText ||
+                                attachedDocs.some((d) => d.status === 'ready' || d.status === 'extracting') ||
+                                linkedFolder
+                                ? 0.95
+                                : 1,
+                          }}
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200"
                           style={{
-                            background: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#c9a84c' : 'rgba(255,255,255,0.07)',
-                            color: (input.trim() || extractedText || (extracting && pendingAutoSend)) ? '#111111' : 'rgba(255,255,255,0.25)',
-                            cursor: (!input.trim() && !extractedText && !extracting) ? 'not-allowed' : 'pointer',
+                            background:
+                              input.trim() ||
+                                extractedText ||
+                                attachedDocs.some((d) => d.status === 'ready' && d.extractedText?.trim()) ||
+                                linkedFolder ||
+                                ((extracting || attachedDocs.some((d) => d.status === 'extracting')) && pendingAutoSend)
+                                ? '#c9a84c'
+                                : 'rgba(255,255,255,0.07)',
+                            color:
+                              input.trim() ||
+                                extractedText ||
+                                attachedDocs.some((d) => d.status === 'ready' && d.extractedText?.trim()) ||
+                                linkedFolder ||
+                                ((extracting || attachedDocs.some((d) => d.status === 'extracting')) && pendingAutoSend)
+                                ? '#111111'
+                                : 'rgba(255,255,255,0.25)',
+                            cursor:
+                              !input.trim() &&
+                                !extractedText &&
+                                !attachedDocs.some((d) => d.status === 'ready' && d.extractedText?.trim()) &&
+                                !linkedFolder &&
+                                !extracting &&
+                                !attachedDocs.some((d) => d.status === 'extracting')
+                                ? 'not-allowed'
+                                : 'pointer',
                           }}
-                          title={extracting ? (pendingAutoSend ? 'Enviando automáticamente al completar lectura...' : 'Encolar envío automático al completar lectura') : 'Enviar consulta al abogado'}
+                          title={
+                            extracting || attachedDocs.some((d) => d.status === 'extracting')
+                              ? pendingAutoSend
+                                ? 'Enviando automáticamente al completar lectura del expediente...'
+                                : 'Encolar envío automático al completar lectura'
+                              : 'Enviar consulta al abogado'
+                          }
                         >
-                          {extracting && pendingAutoSend ? (
+                          {(extracting || attachedDocs.some((d) => d.status === 'extracting')) && pendingAutoSend ? (
                             <Loader2 size={14} className="animate-spin text-[#111111]" />
                           ) : (
                             <ArrowUp size={15} />
@@ -3020,10 +3307,11 @@ function MessageBubble({
 
   const cleanConversationalText = !isUser && conversationalText
     ? conversationalText
-        .replace(/^[ \t]*[⏹⬜◻◽▢][ \t]*/gm, '- ')
-        .replace(/[⏹⬜◻◽▢]/g, '•')
-        .replace(/\[\s*\]/g, '•')
-        .replace(/\*{3,}/g, '')
+      .replace(/^[ \t]*[⏹⬜◻◽▢][ \t]*/gm, '- ')
+      .replace(/[⏹⬜◻◽▢]/g, '•')
+      .replace(/\[\s*\]/g, '•')
+      .replace(/\*{3,}/g, '')
+      .replace(/^[ \t]{2,4}(?=[I|V|X|L|A-Z0-9\-\*•#])/gm, '')
     : conversationalText
 
   const formattedConversationalText = !isUser && cleanConversationalText
@@ -3059,24 +3347,49 @@ function MessageBubble({
 
 
 
-  const hasAttachment = isUser && message.content.includes('[Archivo adjunto:')
-  const attachmentName = hasAttachment
-    ? message.content.match(/\[Archivo adjunto:\s*([^\]\n]+)\]/)?.[1]?.trim() || null
-    : null
+  // Extraer todos los archivos adjuntos (soporta 1 documento o múltiples documentos del expediente)
+  const attachedFilesList: Array<{ name: string; content?: string | null }> = []
+  if (isUser) {
+    const singleRegex = /\[Archivo adjunto:\s*([^\]\n]+)\]/g
+    let match: RegExpExecArray | null
+    while ((match = singleRegex.exec(message.content)) !== null) {
+      const name = match[1].trim()
+      if (name && !attachedFilesList.some((f) => f.name === name)) {
+        attachedFilesList.push({ name, content: null })
+      }
+    }
+    const expedMatch = message.content.match(/Documentos en el expediente\s*\(\d+\):\s*([^\n]+)/i)
+    if (expedMatch && expedMatch[1]) {
+      const names = expedMatch[1].split(',').map((s) => s.trim()).filter(Boolean)
+      for (const name of names) {
+        if (!attachedFilesList.some((f) => f.name === name)) {
+          attachedFilesList.push({ name, content: null })
+        }
+      }
+    }
+  }
 
-  const extractedDocContent = hasAttachment
+  const hasAttachment = isUser && attachedFilesList.length > 0
+  const attachmentName = attachedFilesList.length === 1 ? attachedFilesList[0].name : null
+
+  const extractedDocContent = hasAttachment && attachedFilesList.length === 1
     ? message.content.match(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---\n([\s\S]*?)\n--- FIN DEL DOCUMENTO ---/)?.[1] || null
     : null
 
   const rawUserContent = isUser
     ? message.content
-        .replace(/\[Archivo adjunto:\s*[^\]\n]+\]\n?/gi, '')
-        .replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n?/gi, '')
-        .trim()
+      .replace(/\[Archivo adjunto:\s*[^\]\n]+\]\n?/gi, '')
+      .replace(/\[EXPEDIENTE ADJUNTO:[\s\S]*?\]\n?/gi, '')
+      .replace(/Documentos en el expediente\s*\(\d+\):[^\n]+\n?/gi, '')
+      .replace(/---\s*DOCUMENTO\s*(?:\d+)?:[\s\S]*?---\s*FIN\s*"[^"]+"\s*---\n\n?/gi, '')
+      .replace(/--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---[\s\S]*?--- FIN DEL DOCUMENTO ---\n\n?/gi, '')
+      .replace(/Instrucción especial para el especialista:[\s\S]*?\n\n?/gi, '')
+      .replace(/\[CARPETA FISCAL \/ EXPEDIENTE VINCULADO[\s\S]*?\n\n?/gi, '')
+      .trim()
     : message.content
 
   const displayContent = isUser && hasAttachment && !rawUserContent
-    ? 'Revisar y auditar este documento adjunto.'
+    ? (attachedFilesList.length === 1 ? 'Revisar y auditar este documento adjunto.' : 'Revisar y auditar este expediente multi-documento.')
     : rawUserContent
 
   const isVoice = (message as any).isVoice === true
@@ -3113,7 +3426,7 @@ function MessageBubble({
       transition={{ duration: 0.35, ease: 'easeOut' }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className={`group relative flex ${isUser ? 'justify-end' : 'justify-start'} gap-2 sm:gap-3 w-full max-w-4xl mx-auto`}
+      className={`group relative flex ${isUser ? 'justify-end' : 'justify-start'} gap-2 sm:gap-3 w-full max-w-4xl mx-auto min-w-0`}
     >
       {!isUser && (
         <div
@@ -3124,7 +3437,7 @@ function MessageBubble({
         </div>
       )}
 
-      <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[88%] sm:max-w-[85%]`}>
+      <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} w-full max-w-[88%] sm:max-w-[85%] min-w-0`}>
         {!isUser && (
           <div className="flex items-center gap-2 mb-1.5 px-1">
             <span className="text-[11px] sm:text-[12px] font-normal text-white">{agent.name}</span>
@@ -3139,42 +3452,56 @@ function MessageBubble({
 
         {/* Badges for user messages */}
         <div className="flex items-center gap-1.5 mb-0">
-          {attachmentName && (
+          {attachedFilesList.length === 1 ? (
             <button
               type="button"
-              onClick={() => downloadChatAttachment(attachmentName, extractedDocContent)}
+              onClick={() => downloadChatAttachment(attachedFilesList[0].name, extractedDocContent)}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-t-lg text-[9px] font-medium transition-all hover:brightness-125 cursor-pointer active:scale-95"
               style={{ background: 'rgba(201,168,76,0.18)', color: '#e6ca65' }}
               title="Descargar archivo original"
             >
               <FileText size={10} />
-              <span className="max-w-[170px] truncate">{attachmentName}</span>
+              <span className="max-w-[170px] truncate">{attachedFilesList[0].name}</span>
               <Download size={9} className="opacity-75" />
             </button>
-          )}
+          ) : attachedFilesList.length > 1 ? (
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-t-lg text-[9px] font-medium"
+              style={{ background: 'rgba(201,168,76,0.18)', color: '#e6ca65' }}
+            >
+              <FolderCheck size={11} className="text-[#c9a84c]" />
+              <span>Expediente ({attachedFilesList.length} documentos adjuntos)</span>
+            </div>
+          ) : null}
         </div>
 
         <div
-          className="px-5 py-4 text-[13px] font-light leading-relaxed"
+          className="px-5 py-4 text-[13px] font-light leading-relaxed w-full min-w-0 break-words overflow-hidden"
           style={
             isUser
               ? {
-                  background: 'rgba(201,168,76,0.10)',
-                  border: '1px solid rgba(201,168,76,0.25)',
-                  borderRadius: attachmentName ? '0 14px 14px 14px' : '14px 4px 14px 14px',
-                  color: '#ffffff',
-                }
+                background: 'rgba(201,168,76,0.10)',
+                border: '1px solid rgba(201,168,76,0.25)',
+                borderRadius: attachedFilesList.length > 0 ? '0 14px 14px 14px' : '14px 4px 14px 14px',
+                color: '#ffffff',
+                maxWidth: '100%',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+              }
               : {
-                  background: '#1a1a1a',
-                  border: '1px solid #2a2a2a',
-                  borderRadius: '4px 14px 14px 14px',
-                  color: 'rgba(255,255,255,0.60)',
-                }
+                background: '#1a1a1a',
+                border: '1px solid #2a2a2a',
+                borderRadius: '4px 14px 14px 14px',
+                color: 'rgba(255,255,255,0.60)',
+                maxWidth: '100%',
+                overflowWrap: 'break-word',
+                wordBreak: 'break-word',
+              }
           }
         >
           {isUser ? (
             <div className="space-y-3">
-              {hasAttachment && attachmentName && (
+              {attachedFilesList.length === 1 && (
                 <div
                   className="flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-lg transition-all"
                   style={{
@@ -3186,17 +3513,17 @@ function MessageBubble({
                     <div
                       className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                       style={{
-                        background: attachmentName.toLowerCase().endsWith('.pdf')
+                        background: attachedFilesList[0].name.toLowerCase().endsWith('.pdf')
                           ? 'rgba(239,68,68,0.15)'
                           : 'rgba(59,130,246,0.15)',
-                        color: attachmentName.toLowerCase().endsWith('.pdf') ? '#f87171' : '#60a5fa',
+                        color: attachedFilesList[0].name.toLowerCase().endsWith('.pdf') ? '#f87171' : '#60a5fa',
                       }}
                     >
                       <FileText size={16} />
                     </div>
                     <div className="min-w-0 text-left">
-                      <p className="text-[12px] font-medium text-white truncate max-w-[160px] xs:max-w-[220px] sm:max-w-[300px]" title={attachmentName}>
-                        {attachmentName}
+                      <p className="text-[12px] font-medium text-white truncate max-w-[160px] xs:max-w-[220px] sm:max-w-[300px]" title={attachedFilesList[0].name}>
+                        {attachedFilesList[0].name}
                       </p>
                       <span className="text-[10px] text-[#c9a84c]/75">
                         Documento original adjunto
@@ -3205,7 +3532,7 @@ function MessageBubble({
                   </div>
                   <button
                     type="button"
-                    onClick={() => downloadChatAttachment(attachmentName, extractedDocContent)}
+                    onClick={() => downloadChatAttachment(attachedFilesList[0].name, extractedDocContent)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-medium transition-all cursor-pointer flex-shrink-0 hover:bg-[#c9a84c]/30 text-[#e6ca65] hover:text-white active:scale-95 shadow-sm"
                     style={{
                       background: 'rgba(201,168,76,0.20)',
@@ -3218,14 +3545,70 @@ function MessageBubble({
                   </button>
                 </div>
               )}
+              {attachedFilesList.length > 1 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5 px-0.5 text-[11px] font-medium text-[#e6ca65]">
+                    <FolderCheck size={13} className="text-[#c9a84c]" />
+                    <span>Documentos adjuntos al expediente ({attachedFilesList.length}):</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {attachedFilesList.map((file, idx) => {
+                      const isPdf = file.name.toLowerCase().endsWith('.pdf')
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between gap-2.5 px-3 py-2 rounded-lg transition-all"
+                          style={{
+                            background: 'rgba(0,0,0,0.35)',
+                            border: '1px solid rgba(201,168,76,0.25)',
+                          }}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div
+                              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                              style={{
+                                background: isPdf ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+                                color: isPdf ? '#f87171' : '#60a5fa',
+                              }}
+                            >
+                              <FileText size={14} />
+                            </div>
+                            <div className="min-w-0 text-left">
+                              <p className="text-[11px] font-medium text-white truncate max-w-[130px] sm:max-w-[170px]" title={file.name}>
+                                {file.name}
+                              </p>
+                              <span className="text-[9px] text-[#c9a84c]/70 block truncate">
+                                Documento {idx + 1}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => downloadChatAttachment(file.name, null)}
+                            className="flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all cursor-pointer flex-shrink-0 hover:bg-[#c9a84c]/30 text-[#e6ca65] hover:text-white active:scale-95 shadow-sm"
+                            style={{
+                              background: 'rgba(201,168,76,0.20)',
+                              border: '1px solid rgba(201,168,76,0.35)',
+                            }}
+                            title={`Descargar ${file.name}`}
+                          >
+                            <Download size={11} />
+                            <span>Descargar</span>
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
               {displayContent ? (
                 <p className="whitespace-pre-wrap">{displayContent}</p>
               ) : null}
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-3 w-full min-w-0">
               {formattedConversationalText && (
-                <div className="prose-chat">
+                <div className="prose-chat w-full min-w-0 break-words">
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
@@ -3574,9 +3957,8 @@ function MessageBubble({
 
         {isUser && (
           <div
-            className={`flex items-center justify-end gap-1.5 mt-1.5 px-1 transition-all duration-200 ${
-              isHovered ? 'opacity-100' : 'opacity-75'
-            }`}
+            className={`flex items-center justify-end gap-1.5 mt-1.5 px-1 transition-all duration-200 ${isHovered ? 'opacity-100' : 'opacity-75'
+              }`}
           >
             <span className="text-[10px] mr-1 text-white/30 select-none">
               {formatTime(message.timestamp)}

@@ -36,8 +36,28 @@ export default function LinkedFolderModal({
 }: LinkedFolderModalProps) {
   const [dragActive, setDragActive] = useState(false)
   const folderInputRef = React.useRef<HTMLInputElement>(null)
+  const multiFileInputRef = React.useRef<HTMLInputElement>(null)
 
   if (!isOpen) return null
+
+  const handlePickMultiFiles = () => {
+    multiFileInputRef.current?.click()
+  }
+
+  const handleMultiFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    if (files.length === 0) return
+    const validFiles = files.filter((f) => {
+      const ext = f.name.split('.').pop()?.toLowerCase() || ''
+      return ['pdf', 'docx', 'doc', 'txt', 'png', 'jpg', 'jpeg'].includes(ext)
+    })
+    if (validFiles.length > 0) {
+      onLinkFolder(`Expediente (${validFiles.length} documentos)`, validFiles)
+    } else {
+      alert('No se encontraron documentos válidos (.pdf, .docx, .txt, .jpg).')
+    }
+    if (multiFileInputRef.current) multiFileInputRef.current.value = ''
+  }
 
   const handlePickDirectoryNative = async () => {
     try {
@@ -229,11 +249,10 @@ export default function LinkedFolderModal({
                     setDragActive(false)
                     handlePickDirectoryNative()
                   }}
-                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${
-                    dragActive
+                  className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-3 ${dragActive
                       ? 'border-[#c9a84c] bg-[#c9a84c]/10'
                       : 'border-white/15 bg-white/[0.02] hover:border-[#c9a84c]/50 hover:bg-white/[0.04]'
-                  }`}
+                    }`}
                 >
                   <div className="w-14 h-14 rounded-2xl bg-[#c9a84c]/10 border border-[#c9a84c]/25 flex items-center justify-center text-[#c9a84c] shadow-lg">
                     <Folder size={28} />
@@ -246,13 +265,30 @@ export default function LinkedFolderModal({
                       Vincula una carpeta completa de tu computadora. Sebastián analizará todos los archivos (.pdf, .docx, .txt) como en Claude Cowork.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    className="mt-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#c9a84c] to-[#997828] text-black font-semibold text-xs transition-transform hover:scale-[1.02] shadow-md flex items-center gap-1.5"
-                  >
-                    <Folder size={14} />
-                    <span>Seleccionar Carpeta Local</span>
-                  </button>
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handlePickDirectoryNative()
+                      }}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#c9a84c] to-[#997828] text-black font-semibold text-xs transition-transform hover:scale-[1.02] shadow-md flex items-center gap-1.5"
+                    >
+                      <Folder size={14} />
+                      <span>Seleccionar Carpeta Completa</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handlePickMultiFiles()
+                      }}
+                      className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-medium text-xs border border-white/15 transition-transform hover:scale-[1.02] flex items-center gap-1.5"
+                    >
+                      <Layers size={14} className="text-[#c9a84c]" />
+                      <span>O Seleccionar Varios Archivos Juntos</span>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Benefits / Info */}
@@ -292,6 +328,15 @@ export default function LinkedFolderModal({
               multiple
               className="hidden"
               onChange={handleInputChange}
+            />
+            {/* Hidden multi-files input */}
+            <input
+              ref={multiFileInputRef}
+              type="file"
+              multiple
+              accept=".pdf,.docx,.doc,.txt,.png,.jpg,.jpeg"
+              className="hidden"
+              onChange={handleMultiFilesChange}
             />
           </div>
 

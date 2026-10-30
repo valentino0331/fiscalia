@@ -148,9 +148,15 @@
     font-family: 'Montserrat', sans-serif;
     letter-spacing: -0.01em;
   }
-  .prose-chat h1 { font-size: 1.15rem; color: #ffffff; }
-  .prose-chat h2 { font-size: 1.05rem; color: #ffffff; }
-  .prose-chat h3 { font-size: 0.95rem; color: #c9a84c; }
+  .prose-chat {
+    max-width: 100%;
+    min-width: 0;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+  .prose-chat h1 { font-size: 1.15rem; color: #ffffff; word-break: break-word; }
+  .prose-chat h2 { font-size: 1.05rem; color: #ffffff; word-break: break-word; }
+  .prose-chat h3 { font-size: 0.95rem; color: #c9a84c; word-break: break-word; }
 
   .prose-chat p {
     margin-bottom: 0.85rem;
@@ -158,6 +164,10 @@
     color: rgba(255,255,255,0.72);
     font-weight: 300;
     font-size: 13.5px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    max-width: 100%;
+    min-width: 0;
   }
   .prose-chat p:last-child {
     margin-bottom: 0;
@@ -212,6 +222,11 @@
     border-radius: 8px;
     padding: 0.9rem 1rem;
     overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    min-width: 0;
     margin: 0.85rem 0;
   }
   .prose-chat pre code {
@@ -220,6 +235,9 @@
     padding: 0;
     font-size: 0.8rem;
     color: rgba(255,255,255,0.80);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .prose-chat blockquote {
@@ -358,16 +376,16 @@
 
   /* Sumilla / Expediente / Carátula Judicial */
   .doc-preview-sheet .doc-sumilla-box {
-    margin: 0 0 1.2rem auto;
-    max-width: 75%;
-    text-align: right;
+    margin: 0 0 1.2rem 0;
+    max-width: 100%;
+    text-align: left;
   }
 
   .doc-preview-sheet .doc-sumilla {
     font-weight: 700;
     margin: 0 0 0.3rem;
     line-height: 1.35;
-    text-align: right;
+    text-align: left;
     color: #000;
   }
 

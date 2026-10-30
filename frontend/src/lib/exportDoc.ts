@@ -206,13 +206,13 @@ export function classifyLine(line: string): LineKind {
   if (isClauseHeading(t)) return 'CLAUSE'
 
   // Sumilla, expediente, cuaderno, escrito, carpeta fiscal, carátula judicial / fiscal (MÁXIMA PRIORIDAD PARA ENCABEZADOS)
-  if (/^(SUMILLA\s*:|EXPEDIENTE(\s+JUDICIAL)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:|EXP\.?\s*(NOTARIAL|JUDICIAL)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:|CARPETA\s+FISCAL\s*(?:N?°|Nº|NRO\.?|#)?\s*:|FISCAL(\s+RESPONSABLE|\s+RESP\.?)?\s*:|CUADERNO(\s+INCIDENTAL|\s+CAUTELAR|\s+PRINCIPAL)?\s*:|ESCRITO\s*(?:N?°|Nº|NRO\.?|#)?\s*[:\d]|SECRETARIO(\s+JUDICIAL)?\s*:|ESPECIALISTA(\s+LEGAL)?\s*:|CASILLA\s*(SINOE|ELECTR[OÓ]NICA|F[IÍ]SICA)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:|KARDEX(\s+NOTARIAL)?\s*(?:N?°|Nº|NRO\.?|#)?\s*:)/i.test(plain)) return 'SUMILLA'
+  if (/^(SUMILLA\s*:|EXPEDIENTE\b[^\n:]*:|EXP\.?\b[^\n:]*:|CARPETA\s+FISCAL\b[^\n:]*:|FISCAL(\s+RESPONSABLE|\s+RESP\.?)?\s*:|CUADERNO\b[^\n:]*:|ESCRITO\b[^\n:]*[:\d]|SECRETARIO\b[^\n:]*:|ESPECIALISTA\b[^\n:]*:|CASILLA\s*(SINOE|ELECTR[OÓ]NICA|F[IÍ]SICA)?\b[^\n:]*:|KARDEX\b[^\n:]*:|PROCEDIMIENTO\b[^\n:]*:)/i.test(plain)) return 'SUMILLA'
 
   // Título principal del documento (excluye expresamente campos de carátula como ESCRITO :, EXPEDIENTE :, etc.)
   if (/^(CONTRATO DE ARRENDAMIENTO|CONTRATO DE|CONTRATO|CARTA NOTARIAL|DENUNCIA PENAL|DENUNCIA|DEMANDA DE|DEMANDA|RECURSO DE APELACI[OÓ]N|RECURSO DE RECLAMACI[OÓ]N|RECURSO DE QUEJA|MEDIDA CAUTELAR|SOLICITUD DE|SOLICITUD|ESCRITO DE DESCARGO|ESCRITO DE APERSONAMIENTO|ESCRITO JUDICIAL|INFORME|DICTAMEN|PODER SIMPLE|PODER ESPECIAL)/i.test(plain) && !/^(ESCRITO|EXPEDIENTE|CUADERNO|SUMILLA)\s*[:\d]/i.test(plain)) return 'MAIN_TITLE'
 
   // Autoridad destinataria
-  if (/^(SE[ÑN]OR\s+(JUEZ|FISCAL|PRESIDENTE|DIRECTOR|NOTARIO|SECRETARIO)|AL\s+(JUZGADO|SEÑOR|SE[ÑN]OR|DESPACHO)|A\s+LA\s+(FISCALÍA|JUNTA|AUTORIDAD|CORTE|SALA))/i.test(plain)) return 'AUTHORITY'
+  if (/^(SE[ÑN]OR(A)?\s+(JUEZ|JUEZA|FISCAL|PRESIDENTE|PRESIDENTA|DIRECTOR|DIRECTORA|NOTARIO|NOTARIA|SECRETARIO|SECRETARIA|ALCALDE|ALCALDESA|MINISTRO|MINISTRA|INTENDENTE|GERENTE|SUBGERENTE|REGISTRADOR|REGISTRADORA|EJECUTOR|SUPERINTENDENTE|DECANO|DECANA|INSPECTOR|INSPECTORA|JEFE|TRIBUNAL|VOCAL|COLEGIADO|CONCILIADOR|CONCILIADORA|AUDITOR|ARBITRO)\b|AL\s+(JUZGADO|SE[ÑN]OR|DESPACHO|TRIBUNAL|MINISTERIO|CONSEJO)\b|A\s+LA\s+(FISCALÍA|JUNTA|AUTORIDAD|CORTE|SALA|GERENCIA|SUBGERENCIA|DIRECCIÓN|INTENDENCIA|SUPERINTENDENCIA|MUNICIPALIDAD|COMISIÓN|POLICÍA)\b)/i.test(plain)) return 'AUTHORITY'
 
   // Encabezados markdown ## ### ####
   if (/^#{2,4}\s/.test(t)) return 'HEADING_MD'
@@ -1061,15 +1061,15 @@ function buildDocCSS(fmt: Required<DocFormatOptions>): string {
     }
     /* ── Sumilla / Expediente / Carátula Judicial y Fiscal ── */
     .doc-sumilla-box {
-      margin: 0 0 16pt auto;
-      max-width: 65%;
-      text-align: right;
+      margin: 0 0 16pt 0;
+      max-width: 100%;
+      text-align: left;
     }
     .doc-sumilla {
       font-weight: bold;
       margin: 0 0 3.5pt;
       line-height: 1.35;
-      text-align: right;
+      text-align: left;
       font-size: 10.5pt;
     }
     /* ── Cláusulas de contratos (PRIMERA.-, SEGUNDA.-, etc.) ── */
@@ -1994,8 +1994,8 @@ export async function downloadPdfDoc(
         pdf.setFont('times', 'bold')
         pdf.setFontSize(10)
         pdf.setTextColor(20, 20, 20)
-        const sumillaWidth = 95
-        const sumillaX = pageWidth - marginRight - sumillaWidth
+        const sumillaWidth = contentWidth
+        const sumillaX = marginLeft
         for (const l of block.lines) {
           const wrapped = pdf.splitTextToSize(cleanHeading(l), sumillaWidth)
           wrapped.forEach((wl: string) => {

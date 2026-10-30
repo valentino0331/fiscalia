@@ -63,18 +63,28 @@ export default function PnpLogin() {
 
   return (
     <div
-      className="w-screen h-screen flex items-center justify-center relative overflow-hidden select-none"
-      style={{ background: '#071715' }}
+      className="w-screen h-screen flex items-center justify-center relative overflow-hidden select-none p-4"
+      style={{
+        background: 'radial-gradient(ellipse at 50% 20%, #0d3830 0%, #082620 50%, #041713 100%)',
+      }}
     >
-      {/* Ambient rotated texts */}
+      {/* Ambient subtle police glow */}
+      <div
+        className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full blur-3xl opacity-20"
+        style={{
+          background: 'radial-gradient(circle, #2daf96 0%, #c9a84c 50%, transparent 100%)',
+        }}
+      />
+
+      {/* Ambient subtle institutional watermark texts */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <span
           className="absolute -left-16 top-1/3 text-[11px] tracking-[6px] uppercase"
           style={{
-            color: 'rgba(255,255,255,0.06)',
+            color: 'rgba(45, 175, 150, 0.12)',
             transform: 'rotate(-90deg)',
             transformOrigin: 'left center',
-            fontWeight: 300,
+            fontWeight: 400,
             letterSpacing: '8px',
           }}
         >
@@ -83,84 +93,116 @@ export default function PnpLogin() {
         <span
           className="absolute -right-12 top-1/2 text-[11px] tracking-[6px] uppercase"
           style={{
-            color: 'rgba(255,255,255,0.06)',
+            color: 'rgba(45, 175, 150, 0.12)',
             transform: 'rotate(90deg)',
             transformOrigin: 'right center',
-            fontWeight: 300,
+            fontWeight: 400,
             letterSpacing: '8px',
           }}
         >
-          DERECHO POLICIAL PERUANO
+          POLICÍA NACIONAL DEL PERÚ
         </span>
       </div>
 
-      <div className="w-full max-w-[380px] px-6 flex flex-col items-center">
-        {/* Logo - Montserrat thin 200 + Line under D + Bordered PNP badge */}
-        <HardmanPnpLogo size="lg" className="mb-8" color="#f4f1ea" />
+      {/* Glassmorphic Login Card with Chat Emerald Palette */}
+      <div
+        className="w-full max-w-[420px] p-8 sm:p-10 rounded-2xl flex flex-col items-center relative z-10"
+        style={{
+          background: 'rgba(8, 38, 32, 0.85)',
+          border: '1px solid rgba(45, 175, 150, 0.35)',
+          boxShadow: '0 16px 48px rgba(0, 0, 0, 0.6), 0 0 35px rgba(45, 175, 150, 0.12)',
+          backdropFilter: 'blur(16px)',
+        }}
+      >
+        {/* Logo */}
+        <HardmanPnpLogo size="lg" className="mb-6" color="#f4f1ea" />
 
-        {/* Separator */}
+        {/* Separator with gold-emerald accent */}
         <div
-          className="w-[280px] h-px mb-8"
+          className="w-[240px] h-px mb-6"
           style={{
-            background: 'linear-gradient(90deg, transparent, rgba(27, 85, 78, 0.4), transparent)',
+            background: 'linear-gradient(90deg, transparent, rgba(201, 168, 76, 0.5), transparent)',
           }}
         />
 
-        {/* Title: Exactly "INICIAR SESIÓN" */}
-        <div className="mb-8">
+        {/* Title */}
+        <div className="mb-6 text-center">
           <span
-            className="relative pb-2 text-[11px] uppercase tracking-[3px] font-medium"
+            className="text-xs uppercase tracking-[3px] font-semibold block"
             style={{ color: '#ffffff' }}
           >
-            Iniciar Sesión
-            <div
-              className="absolute bottom-0 left-0 right-0"
-              style={{ height: '0.5px', background: '#c9a84c' }}
-            />
+            Acceso al Despacho PNP
+          </span>
+          <span className="text-[11px] font-light mt-1 block" style={{ color: 'rgba(244, 241, 234, 0.6)' }}>
+            Documentación Operativa y Defensa Policial
           </span>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="w-full space-y-6">
-          <input
-            placeholder="CORREO ELECTRÓNICO"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoFocus
-            className="w-full bg-transparent outline-none pb-3 text-[13px] font-light transition-colors duration-300"
-            style={{
-              borderBottom: '0.5px solid rgba(27, 85, 78, 0.6)',
-              color: '#ffffff',
-              caretColor: '#c9a84c',
-            }}
-            onFocus={(e) => (e.currentTarget.style.borderBottomColor = '#c9a84c')}
-            onBlur={(e) => (e.currentTarget.style.borderBottomColor = 'rgba(27, 85, 78, 0.6)')}
-          />
-
-          <div className="relative">
+        <form onSubmit={handleSubmit} className="w-full space-y-4">
+          <div>
+            <label className="block text-[10px] uppercase tracking-wider mb-1 font-medium" style={{ color: '#dfbe63' }}>
+              Correo Electrónico
+            </label>
             <input
-              placeholder="CONTRASEÑA"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-transparent outline-none pb-3 text-[13px] font-light transition-colors duration-300"
+              placeholder="nombre@hardman.pe"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoFocus
+              className="w-full rounded-xl px-3.5 py-2.5 text-xs font-light transition-all outline-none"
               style={{
-                borderBottom: '0.5px solid rgba(27, 85, 78, 0.6)',
+                background: 'rgba(6, 30, 25, 0.9)',
+                border: '1px solid rgba(45, 175, 150, 0.35)',
                 color: '#ffffff',
-                caretColor: '#c9a84c',
+                caretColor: '#dfbe63',
               }}
-              onFocus={(e) => (e.currentTarget.style.borderBottomColor = '#c9a84c')}
-              onBlur={(e) => (e.currentTarget.style.borderBottomColor = 'rgba(27, 85, 78, 0.6)')}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#c9a84c'
+                e.currentTarget.style.boxShadow = '0 0 12px rgba(201, 168, 76, 0.2)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.35)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-0 top-1/2 -translate-y-1/2 p-2 transition-colors cursor-pointer"
-              style={{ color: 'rgba(255,255,255,0.25)' }}
-            >
-              {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
-            </button>
+          </div>
+
+          <div>
+            <label className="block text-[10px] uppercase tracking-wider mb-1 font-medium" style={{ color: '#dfbe63' }}>
+              Contraseña
+            </label>
+            <div className="relative">
+              <input
+                placeholder="••••••••"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-xl px-3.5 py-2.5 text-xs font-light transition-all outline-none pr-10"
+                style={{
+                  background: 'rgba(6, 30, 25, 0.9)',
+                  border: '1px solid rgba(45, 175, 150, 0.35)',
+                  color: '#ffffff',
+                  caretColor: '#dfbe63',
+                }}
+                onFocus={(e) => {
+                  e.currentTarget.style.borderColor = '#c9a84c'
+                  e.currentTarget.style.boxShadow = '0 0 12px rgba(201, 168, 76, 0.2)'
+                }}
+                onBlur={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.35)'
+                  e.currentTarget.style.boxShadow = 'none'
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 transition-colors cursor-pointer"
+                style={{ color: 'rgba(244, 241, 234, 0.45)' }}
+              >
+                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -170,54 +212,43 @@ export default function PnpLogin() {
               className="text-[11px] px-3 py-2 rounded-lg"
               style={{
                 color: '#ff6b6b',
-                background: 'rgba(255,107,107,0.08)',
-                border: '1px solid rgba(255,107,107,0.15)',
+                background: 'rgba(255,107,107,0.12)',
+                border: '1px solid rgba(255,107,107,0.25)',
               }}
             >
               {error}
             </motion.div>
           )}
 
-          {/* Submit button: EXACTLY "ACCEDER ->" */}
+          {/* Submit button: Gold gradient */}
           <button
             type="submit"
             disabled={loading}
-            className="group w-full py-3 rounded-lg text-[9px] uppercase tracking-[3px] transition-all duration-300 relative overflow-hidden disabled:opacity-40 cursor-pointer"
+            className="w-full py-3 rounded-xl text-xs uppercase tracking-[2px] font-bold transition-all shadow-md hover:scale-[1.01] active:scale-95 disabled:opacity-40 cursor-pointer flex items-center justify-center gap-2 mt-2"
             style={{
-              border: '0.5px solid rgba(27, 85, 78, 0.6)',
-              background: 'transparent',
-              color: 'rgba(255,255,255,0.70)',
-              fontWeight: 500,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#c9a84c'
-              e.currentTarget.style.color = '#c9a84c'
-              e.currentTarget.style.boxShadow = '0 0 20px rgba(201,168,76,0.12)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'rgba(27, 85, 78, 0.6)'
-              e.currentTarget.style.color = 'rgba(255,255,255,0.70)'
-              e.currentTarget.style.boxShadow = 'none'
+              background: 'linear-gradient(135deg, #dfbe63, #c9a84c)',
+              color: '#061e19',
+              boxShadow: '0 4px 18px rgba(201, 168, 76, 0.25)',
             }}
           >
             {loading ? (
-              <span className="text-[10px] tracking-widest text-[#c9a84c]">ACCEDIENDO...</span>
+              <span className="text-[11px] tracking-widest text-[#061e19]">ACCEDIENDO...</span>
             ) : (
               <span className="flex items-center justify-center gap-2">
-                Acceder
-                <ArrowRight size={13} />
+                Ingresar al Despacho
+                <ArrowRight size={14} />
               </span>
             )}
           </button>
         </form>
 
         {/* Demo Fast Access Link */}
-        <div className="mt-7 text-center">
+        <div className="mt-5 text-center">
           <button
             type="button"
             onClick={handleDemoAccess}
             disabled={loading}
-            className="inline-flex items-center gap-1.5 text-[11px] text-[#c9a84c]/90 hover:text-[#dfbe63] transition-colors tracking-wide font-light cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs text-[#dfbe63] hover:text-[#f3deb1] transition-colors tracking-wide font-medium cursor-pointer"
           >
             <span>Acceso directo de prueba (Demo Cármenes)</span>
             <span aria-hidden="true">&rarr;</span>
@@ -225,18 +256,18 @@ export default function PnpLogin() {
         </div>
 
         {/* Back Link */}
-        <div className="mt-5 text-center">
+        <div className="mt-4 text-center">
           <a
             href="/pnp"
-            className="text-[10px] text-white/35 hover:text-white/70 transition-colors uppercase tracking-widest"
+            className="text-[10px] text-white/45 hover:text-white/80 transition-colors uppercase tracking-widest"
           >
             &larr; Volver a Hardman PNP
           </a>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.20)' }}>
-          © 2026 Hardman · Perú
+        <div className="mt-6 text-center" style={{ fontSize: '10px', color: 'rgba(244, 241, 234, 0.35)' }}>
+          © 2026 Hardman · Policía Nacional del Perú
         </div>
       </div>
     </div>

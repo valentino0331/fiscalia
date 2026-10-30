@@ -575,7 +575,7 @@
     /* Hero Section: Centered Grand Copy + Full Original Size Video (max-width: 880px) */
     .hero {
       position: relative;
-      padding: 72px 0 94px;
+      padding: 72px 0 76px;
       border: 0;
       background-color: #080808;
       background-image: 
@@ -585,6 +585,14 @@
       background-position: center 20%;
       background-size: cover;
       background-repeat: no-repeat;
+    }
+
+    .sec-demostracion {
+      position: relative;
+      padding: 80px 0 92px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: #090a0d;
+      background-image: radial-gradient(ellipse at 50% 10%, rgba(201, 168, 76, 0.06) 0%, rgba(10, 10, 12, 0.96) 60%, #080808 100%);
     }
 
     .hero-header-wrap {
@@ -3024,12 +3032,292 @@
 
     .magnar-response-text {
       color: #f4f1ea;
-      font-size: 0.95rem;
-      line-height: 1.65;
-      white-space: pre-wrap;
-      max-height: 420px;
+      font-size: 0.94rem;
+      line-height: 1.7;
+      max-height: 440px;
       overflow-y: auto;
-      padding-right: 6px;
+      padding-right: 8px;
+    }
+    .magnar-response-text strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .magnar-response-text em {
+      color: #dfbe63;
+      font-style: italic;
+    }
+    .magnar-response-text .claude-p {
+      margin: 0 0 10px 0;
+      color: rgba(244, 241, 234, 0.92);
+    }
+    .magnar-response-text .claude-h1,
+    .magnar-response-text .claude-h2,
+    .magnar-response-text .claude-h3 {
+      color: #dfbe63;
+      margin: 14px 0 8px 0;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .magnar-response-text .claude-h1 { font-size: 1.08rem; }
+    .magnar-response-text .claude-h2 { font-size: 1.02rem; }
+    .magnar-response-text .claude-h3 { font-size: 0.96rem; }
+    .magnar-response-text .claude-divider {
+      height: 1px;
+      background: linear-gradient(90deg, rgba(201,168,76,0.35) 0%, rgba(255,255,255,0.06) 80%);
+      margin: 16px 0;
+    }
+    .magnar-response-text .claude-spacer {
+      height: 8px;
+    }
+    .magnar-response-text ul.claude-list {
+      margin: 6px 0 12px 0;
+      padding: 0;
+      list-style: none;
+    }
+    .magnar-response-text ul.claude-list li {
+      position: relative;
+      padding-left: 18px;
+      margin-bottom: 7px;
+      line-height: 1.55;
+      color: rgba(244, 241, 234, 0.9);
+    }
+    .magnar-response-text ul.claude-list li::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: #dfbe63;
+      font-size: 1.1rem;
+      line-height: 1.3;
+    }
+    .magnar-response-text ol.claude-num-list {
+      margin: 6px 0 12px 0;
+      padding-left: 0;
+      list-style: none;
+    }
+    .magnar-response-text ol.claude-num-list li {
+      margin-bottom: 8px;
+      line-height: 1.55;
+      color: rgba(244, 241, 234, 0.9);
+    }
+    .magnar-response-text .num-prefix {
+      color: #dfbe63;
+      font-weight: 700;
+    }
+
+    /* EXIT INTENT MODAL LEAD MAGNET */
+    .exit-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 99999;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      animation: fadeInModal 0.25s ease-out forwards;
+    }
+    @keyframes fadeInModal {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .exit-modal-card {
+      background: #111215;
+      border: 1px solid rgba(201, 168, 76, 0.45);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 40px rgba(201, 168, 76, 0.18);
+      border-radius: 18px;
+      max-width: 520px;
+      width: 100%;
+      padding: 28px 24px;
+      position: relative;
+      animation: scaleInModal 0.25s ease-out forwards;
+    }
+    @keyframes scaleInModal {
+      from { transform: scale(0.95); }
+      to { transform: scale(1); }
+    }
+    .exit-modal-close {
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 28px;
+      line-height: 1;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .exit-modal-close:hover {
+      color: #fff;
+    }
+    .exit-modal-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #dfbe63;
+      background: rgba(201, 168, 76, 0.12);
+      border: 1px solid rgba(201, 168, 76, 0.3);
+      padding: 4px 12px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+    .exit-modal-title {
+      font-size: 1.25rem;
+      line-height: 1.35;
+      color: #ffffff;
+      font-weight: 700;
+      margin: 0 0 14px 0;
+    }
+    .highlight-gold {
+      color: #dfbe63;
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+    .exit-modal-pack-list {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .pack-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 0.85rem;
+    }
+    .pack-ico {
+      font-size: 1.1rem;
+      line-height: 1;
+    }
+    .pack-item strong {
+      display: block;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    .pack-item small {
+      display: block;
+      color: rgba(244, 241, 234, 0.65);
+      font-size: 0.76rem;
+      margin-top: 1px;
+    }
+    .exit-modal-call {
+      font-size: 0.88rem;
+      color: #f4f1ea;
+      margin: 0 0 10px 0;
+    }
+    .exit-modal-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .exit-input-group {
+      display: flex;
+      align-items: center;
+      background: #08080a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .exit-input-group:focus-within {
+      border-color: #dfbe63;
+      box-shadow: 0 0 0 1px #dfbe63;
+    }
+    .exit-country-flag {
+      padding: 0 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #dfbe63;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      white-space: nowrap;
+    }
+    .exit-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 11px 12px;
+      color: #ffffff;
+      font-size: 0.95rem;
+      letter-spacing: 0.05em;
+    }
+    .exit-input-name {
+      background: #08080a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      outline: none;
+      padding: 10px 12px;
+      color: #ffffff;
+      font-size: 0.88rem;
+      transition: border-color 0.2s;
+    }
+    .exit-input-name:focus {
+      border-color: #dfbe63;
+    }
+    .exit-modal-submit {
+      padding: 13px 18px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #dfbe63, #c9a84c);
+      color: #0b0b0d;
+      font-weight: 800;
+      font-size: 0.88rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 18px rgba(201, 168, 76, 0.35);
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .exit-modal-submit:hover {
+      background: linear-gradient(135deg, #f0d482, #d9b959);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 22px rgba(201, 168, 76, 0.5);
+    }
+    .exit-modal-privacy {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      font-size: 0.72rem;
+      color: rgba(244, 241, 234, 0.45);
+      line-height: 1.3;
+    }
+    .exit-modal-success {
+      text-align: center;
+      padding: 16px 0;
+    }
+    .exit-modal-success .success-ico {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(37, 211, 102, 0.15);
+      border: 1px solid #25D366;
+      color: #25D366;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .exit-modal-success h4 {
+      color: #fff;
+      font-size: 1.1rem;
+      margin: 0 0 6px 0;
+    }
+    .exit-modal-success p {
+      color: rgba(244, 241, 234, 0.7);
+      font-size: 0.84rem;
+      margin: 0;
     }
 
     /* Barra de conversión directa personalizada: "¿Quieres continuar consultando con Diego?" */
@@ -3231,9 +3519,130 @@
       border: none;
     }
 
+  
+    /* =========================================================
+       ESTILOS EDITORIALES INSPIRADOS EN MAGNAR (HARDMAN 2026)
+       ========================================================= */
+    .magnar-annotation {
+      font-family: 'Caveat', cursive;
+      font-size: 1.35rem;
+      color: #dfbe63;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      transform: rotate(-1.5deg);
+      letter-spacing: 0.02em;
+      font-weight: 600;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+    }
+    .magnar-annotation svg {
+      stroke: #dfbe63;
+      flex-shrink: 0;
+    }
+    .hero-annotation-wrap {
+      display: flex;
+      justify-content: center;
+      margin: -6px auto 22px;
+    }
+    .pricing-annotation-box {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+    /* Tarjeta Marfil de Lujo estilo Magnar (Hoja de Expediente Judicial) */
+    .magnar-card-magnar {
+      background: rgba(255, 253, 246, 0.98) !important;
+      backdrop-filter: blur(28px) !important;
+      -webkit-backdrop-filter: blur(28px) !important;
+      border: 1px solid rgba(201, 168, 76, 0.5) !important;
+      border-radius: 22px !important;
+      padding: 22px 24px 18px !important;
+      box-shadow: 
+        0 26px 70px rgba(0, 0, 0, 0.7),
+        0 0 45px rgba(201, 168, 76, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+      color: #151816 !important;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    }
+    .magnar-card-magnar:focus-within {
+      background: #fffdf6 !important;
+      border-color: #dfbe63 !important;
+      box-shadow: 
+        0 32px 85px rgba(0, 0, 0, 0.8),
+        0 0 60px rgba(201, 168, 76, 0.3),
+        inset 0 1px 0 #fff !important;
+      transform: translateY(-2px);
+    }
+    .magnar-card-textarea {
+      color: #151816 !important;
+      font-size: 1.06rem !important;
+      font-weight: 500 !important;
+    }
+    .magnar-card-textarea::placeholder {
+      color: rgba(21, 24, 22, 0.45) !important;
+      font-weight: 400 !important;
+    }
+    .magnar-btn-prueba {
+      background: rgba(21, 24, 22, 0.05) !important;
+      border: 1px solid rgba(21, 24, 22, 0.16) !important;
+      color: #151816 !important;
+      font-weight: 600 !important;
+    }
+    .magnar-btn-prueba:hover {
+      background: rgba(201, 168, 76, 0.22) !important;
+      border-color: #c9a84c !important;
+      color: #151816 !important;
+    }
+    .magnar-active-agent-cue {
+      color: rgba(21, 24, 22, 0.65) !important;
+    }
+    .magnar-active-agent-cue strong {
+      color: #8c6815 !important;
+      font-weight: 700 !important;
+    }
+    .magnar-dock-divider {
+      border-top: 1px solid rgba(21, 24, 22, 0.12) !important;
+    }
+    .magnar-dock-line {
+      background: rgba(21, 24, 22, 0.14) !important;
+    }
+    .magnar-dock-label {
+      color: rgba(21, 24, 22, 0.65) !important;
+      font-weight: 700 !important;
+    }
+    .magnar-spec-chip {
+      background: rgba(21, 24, 22, 0.05) !important;
+      border: 1px solid rgba(21, 24, 22, 0.14) !important;
+      color: #151816 !important;
+      font-weight: 500 !important;
+    }
+    .magnar-spec-chip img {
+      border: 1.5px solid rgba(21, 24, 22, 0.25) !important;
+    }
+    .magnar-spec-chip:hover {
+      background: rgba(201, 168, 76, 0.18) !important;
+      border-color: #c9a84c !important;
+      color: #151816 !important;
+    }
+    .magnar-spec-chip.active {
+      background: #151816 !important;
+      border-color: #151816 !important;
+      color: #dfbe63 !important;
+      box-shadow: 0 4px 18px rgba(21, 24, 22, 0.35) !important;
+      font-weight: 700 !important;
+    }
+    .magnar-spec-chip.active img {
+      border-color: #dfbe63 !important;
+      box-shadow: 0 0 8px rgba(201, 168, 76, 0.6) !important;
+    }
+  
   </style>
   <!-- Lucide Icons Legal Tech Library -->
   <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
@@ -3247,7 +3656,7 @@
       <div class="nav-links">
         <a href="#especialistas">ESPECIALISTAS</a>
         <a href="#como">CÓMO FUNCIONA</a>
-        <a href="#top">DEMOSTRACIÓN</a>
+        <a href="#demostracion">DEMOSTRACIÓN</a>
         <a href="#planes">PLANES &amp; PRECIOS</a>
         <a href="#faq">PREGUNTAS</a>
       </div>
@@ -3269,17 +3678,23 @@
         <div class="hero-header-wrap">
           <div class="badge-gold">
             <span class="badge-dot"></span>
-            Inteligencia Artificial Jurídica Peruana • SPIJ 2026
+            Inteligencia Artificial Jurídica Peruana
           </div>
           <h1>Tu escrito de 4 horas, listo en 4 minutos.</h1>
-          <p class="sub">Recupera tus fines de semana y atiende el doble de clientes. 8 especialistas con IA en derecho peruano, con citas verificadas en SPIJ 2026.</p>
+          <p class="sub">Recupera tus fines de semana y atiende el doble de clientes. 8 especialistas con IA en derecho peruano, con citas verificadas en SPIJ 2026. El criterio legal y la firma siguen siendo 100% tuyos.</p>
+          <div class="hero-annotation-wrap">
+            <span class="magnar-annotation">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>
+              Tu estrategia y dirección jurídica siempre bajo tu control
+            </span>
+          </div>
           <div class="hero-ctas">
             <a class="btn p" href="#planes">Activar mi acceso fundador</a>
           </div>
           <div class="hero-trust">
             <span class="hero-trust-badge">
               <span class="badge-pulse-dot"></span>
-              +<span class="counter" data-count="500">500</span> abogados peruanos activos
+              <span class="counter" data-count="500">500</span> abogados peruanos activos
             </span>
           </div>
         </div>
@@ -3377,10 +3792,17 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div style="text-align: center; margin: 44px auto 20px;" class="reveal">
-          <span class="badge-gold">Demostración en Video</span>
-          <h3 style="font-size: 1.35rem; color: #fff; margin-top: 6px;">Recorrido guiado de 2 minutos por la plataforma</h3>
+    <!-- =========================================================
+         DEMOSTRACIÓN EN VIVO (VIDEO + MÉTRICAS)
+         ========================================================= -->
+    <section id="demostracion" class="sec-demostracion">
+      <div class="w">
+        <div style="text-align: center; margin-bottom: 28px;" class="reveal">
+          <span class="badge-gold">Demostración en vivo</span>
+          <h2 style="font-size: clamp(1.8rem, 3.2vw, 2.4rem); color: #fff; margin-top: 10px;">Recorrido guiado de 2 minutos por la plataforma</h2>
         </div>
 
         <!-- EL VIDEO CON SU TAMAÑO ORIGINAL AMPLIO (max-width: 880px) -->
@@ -3405,7 +3827,7 @@
         </div>
 
         <!-- CINTA DE MÉTRICAS QUE APROVECHA TODO EL ANCHO -->
-        <div class="hero-stats-ribbon reveal reveal-delay-2">
+        <div class="hero-stats-ribbon reveal reveal-delay-2" style="margin-top: 48px;">
           <div class="stat-pill">
             <strong class="counter" data-count="8">8</strong>
             <span>Especialidades Cubiertas</span>
@@ -3650,8 +4072,8 @@
       <div class="w">
         <div class="sec-hdr">
           <div class="badge-gold">Análisis Comparativo</div>
-          <h2>Por qué no basta con ChatGPT ni con un practicante.</h2>
-          <p class="lead">Hardman fue entrenado específicamente para la práctica litigante y notarial peruana.</p>
+          <h2>La IA generalista responde con errores. Hardman hace el trabajo legal peruano.</h2>
+          <p class="lead">Los abogados que van un paso adelante no pierden tiempo enseñándole derecho peruano a ChatGPT ni corrigiendo artículos inventados. Hardman ya conoce la normativa oficial, Plenos Casatorios y formato judicial A4.</p>
         </div>
         <div class="tw cmp-desktop-table">
           <table>
@@ -3993,6 +4415,12 @@
       <div class="w">
         <div class="sec-hdr">
           <div class="badge-gold">Tarifa Fundador Limitada</div>
+          <div class="pricing-annotation-box">
+            <span class="magnar-annotation" style="font-size: 1.25rem;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+              Sin reuniones corporativas de 1 hora. Activación instantánea en 2 minutos.
+            </span>
+          </div>
           <h2 id="elige-tu-plan">Elige tu plan y asegura tu precio de por vida.</h2>
           <p class="lead">Sin contratos de permanencia. Cancela cuando quieras con un solo clic.</p>
         </div>
@@ -4647,6 +5075,88 @@
           submitBtn.addEventListener('click', handleSendQuery);
         }
 
+        // Formateador de Markdown Pulcro estilo Claude (cero asteriscos visibles)
+        function formatClaudeMarkdown(raw) {
+          if (!raw) return '';
+          var text = String(raw);
+
+          // 1. Escapar HTML para seguridad
+          text = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+          // 2. Separadores horizontales (---, ___, ***)
+          text = text.replace(/^(?:---|___|\*\*\*)\s*$/gm, '<div class="claude-divider"></div>');
+
+          // 3. Encabezados markdown (#, ##, ###)
+          text = text.replace(/^### (.*$)/gm, '<h5 class="claude-h3">$1</h5>');
+          text = text.replace(/^## (.*$)/gm, '<h4 class="claude-h2">$1</h4>');
+          text = text.replace(/^# (.*$)/gm, '<h3 class="claude-h1">$1</h3>');
+
+          // 4. Negritas y cursivas combinadas: ***texto***
+          text = text.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+
+          // 5. Negritas: **texto**
+          text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+          // 6. Cursivas: *texto* (evitando asteriscos sueltos)
+          text = text.replace(/(^|[^\*])\*([^\*\n]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
+
+          // 7. Limpiar cualquier asterisco repetido residual
+          text = text.replace(/\*{2,}/g, '');
+
+          // 8. Procesar viñetas, listas numeradas y párrafos
+          var lines = text.split('\n');
+          var html = [];
+          var inList = false;
+          var inNumList = false;
+
+          for (var i = 0; i < lines.length; i++) {
+            var line = lines[i].trim();
+
+            if (!line) {
+              if (inList) { html.push('</ul>'); inList = false; }
+              if (inNumList) { html.push('</ol>'); inNumList = false; }
+              html.push('<div class="claude-spacer"></div>');
+              continue;
+            }
+
+            var bulletMatch = line.match(/^[-*•]\s+(.*)$/);
+            var numMatch = line.match(/^(\d+)[\.\)]\s+(.*)$/);
+
+            if (bulletMatch) {
+              if (!inList) {
+                if (inNumList) { html.push('</ol>'); inNumList = false; }
+                html.push('<ul class="claude-list">');
+                inList = true;
+              }
+              html.push('<li>' + bulletMatch[1] + '</li>');
+            } else if (numMatch) {
+              if (!inNumList) {
+                if (inList) { html.push('</ul>'); inList = false; }
+                html.push('<ol class="claude-num-list">');
+                inNumList = true;
+              }
+              html.push('<li><span class="num-prefix">' + numMatch[1] + '.</span> ' + numMatch[2] + '</li>');
+            } else {
+              if (inList) { html.push('</ul>'); inList = false; }
+              if (inNumList) { html.push('</ol>'); inNumList = false; }
+
+              if (line.indexOf('<h3') === 0 || line.indexOf('<h4') === 0 || line.indexOf('<h5') === 0 || line.indexOf('<div class="claude-divider"') === 0) {
+                html.push(line);
+              } else {
+                html.push('<p class="claude-p">' + line + '</p>');
+              }
+            }
+          }
+
+          if (inList) html.push('</ul>');
+          if (inNumList) html.push('</ol>');
+
+          return html.join('');
+        }
+
         function showAnswer(spec, question, answerText, animate) {
           if (ansAvatar) {
             ansAvatar.src = spec.avatar;
@@ -4663,26 +5173,29 @@
           if (answerWrap) answerWrap.style.display = 'block';
 
           if (!animate) {
-            if (ansContent) ansContent.textContent = answerText;
+            if (ansContent) ansContent.innerHTML = formatClaudeMarkdown(answerText);
             return;
           }
 
           if (ansContent) {
-            ansContent.textContent = '';
+            ansContent.innerHTML = '';
             var words = answerText.split(' ');
             var i = 0;
+            var accumulated = '';
             var timer = setInterval(function () {
               if (i < words.length) {
-                ansContent.textContent += (i === 0 ? '' : ' ') + words[i];
+                accumulated += (i === 0 ? '' : ' ') + words[i];
+                ansContent.innerHTML = formatClaudeMarkdown(accumulated);
                 i++;
-                if (i % 6 === 0) {
+                if (i % 5 === 0) {
                   ansContent.scrollTop = ansContent.scrollHeight;
                 }
               } else {
                 clearInterval(timer);
+                ansContent.innerHTML = formatClaudeMarkdown(answerText);
                 ansContent.scrollTop = ansContent.scrollHeight;
               }
-            }, 20);
+            }, 16);
           }
 
           setTimeout(function () {
@@ -4808,6 +5321,110 @@
           applyLockUI(prevRecord);
         }
       })();
+
+      // =========================================================
+      // EXIT INTENT / CAPTURA DE LEADS (PACK 3 DEMANDAS 2026)
+      // =========================================================
+      (function initExitIntent() {
+        var modal = document.getElementById('exit-lead-modal');
+        var closeBtn = document.getElementById('exit-modal-close-btn');
+        var form = document.getElementById('exit-lead-form');
+        var phoneInput = document.getElementById('exit-lead-phone');
+        var nameInput = document.getElementById('exit-lead-name');
+        var successBox = document.getElementById('exit-lead-success');
+        var waDirectBtn = document.getElementById('exit-lead-wa-direct');
+
+        if (!modal) return;
+
+        var SESSION_KEY = 'hardman_exit_lead_shown';
+        var shown = false;
+
+        function showModal() {
+          if (shown) return;
+          try {
+            if (sessionStorage.getItem(SESSION_KEY)) return;
+          } catch (e) {}
+          shown = true;
+          try { sessionStorage.setItem(SESSION_KEY, '1'); } catch (e) {}
+          modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+          modal.style.display = 'none';
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) closeModal();
+        });
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'Escape' && modal.style.display === 'flex') closeModal();
+        });
+
+        // 1. Desktop: Cursor hacia arriba para salir
+        document.addEventListener('mouseleave', function(e) {
+          if (e.clientY <= 12) {
+            showModal();
+          }
+        });
+
+        // 2. Mobile: Inactividad de 20 segundos
+        var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+        if (isMobile) {
+          var mobileTimer;
+          function resetMobileInactivity() {
+            clearTimeout(mobileTimer);
+            mobileTimer = setTimeout(function() {
+              showModal();
+            }, 20000);
+          }
+          ['touchstart', 'scroll', 'click'].forEach(function(ev) {
+            window.addEventListener(ev, resetMobileInactivity, { passive: true });
+          });
+          resetMobileInactivity();
+        }
+
+        // 3. Envío del formulario
+        if (form) {
+          form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var phone = (phoneInput.value || '').trim().replace(/\D/g, '');
+            var name = (nameInput.value || '').trim() || 'Colega';
+
+            if (phone.length !== 9) {
+              alert('Por favor, ingresa un número de WhatsApp peruano válido de 9 dígitos.');
+              phoneInput.focus();
+              return;
+            }
+
+            // Guardar localmente
+            try {
+              var existing = JSON.parse(localStorage.getItem('hardman_leads_captured') || '[]');
+              existing.push({ phone: phone, name: name, date: new Date().toISOString() });
+              localStorage.setItem('hardman_leads_captured', JSON.stringify(existing));
+            } catch (e) {}
+
+            // Intentar notificar backend
+            try {
+              fetch('/api/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: phone, name: name, source: 'exit_intent_demandas_pack' })
+              }).catch(function() {});
+            } catch (e) {}
+
+            var msg = 'Hola Hardman, soy ' + name + '. Acabo de solicitar en la web el Pack GRATIS de 3 Modelos Oficiales de Demandas 2026 (.docx). Mi WhatsApp es ' + phone + '. Por favor envíenmelo.';
+            var waUrl = 'https://wa.me/51929725274?text=' + encodeURIComponent(msg);
+
+            if (waDirectBtn) waDirectBtn.href = waUrl;
+            form.style.display = 'none';
+            if (successBox) successBox.style.display = 'block';
+
+            window.open(waUrl, '_blank');
+          });
+        }
+      })();
+
       
       // Lite YouTube Click-to-Play Activation
       (function initLiteYouTube() {
@@ -4832,6 +5449,92 @@
 
       if (window.lucide && typeof lucide.createIcons === "function") { lucide.createIcons(); }
   </script>
+
+  <!-- =========================================================
+       MODAL DE EXIT-INTENT / CAPTURA DE LEADS (PACK 3 DEMANDAS)
+       ========================================================= -->
+  <div id="exit-lead-modal" class="exit-modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="exit-modal-title">
+    <div class="exit-modal-card">
+      <button type="button" class="exit-modal-close" id="exit-modal-close-btn" aria-label="Cerrar modal">&times;</button>
+      
+      <div class="exit-modal-badge">
+        <span class="badge-pulse-dot"></span>
+        Regalo Exclusivo para Litigantes
+      </div>
+
+      <h3 id="exit-modal-title" class="exit-modal-title">
+        Antes de irte: Descarga <span class="highlight-gold">GRATIS</span> el Pack de 3 Modelos Oficiales de Demandas 2026 en Word (.docx)
+      </h3>
+
+      <div class="exit-modal-pack-list">
+        <div class="pack-item">
+          <span class="pack-ico">📄</span>
+          <div>
+            <strong>Demanda Laboral por Despido Arbitrario / Nulo</strong>
+            <small>Liquidación de beneficios sociales y primacía de la realidad (NLPT 29497)</small>
+          </div>
+        </div>
+        <div class="pack-item">
+          <span class="pack-ico">📄</span>
+          <div>
+            <strong>Demanda de Alimentos con Asignación Anticipada</strong>
+            <small>Cálculo de porcentaje, medidas cautelares y apercibimiento penal</small>
+          </div>
+        </div>
+        <div class="pack-item">
+          <span class="pack-ico">📄</span>
+          <div>
+            <strong>Demanda de Obligación de Dar Suma de Dinero</strong>
+            <small>Formatos ejecutivos PJ con liquidación de intereses legales</small>
+          </div>
+        </div>
+      </div>
+
+      <p class="exit-modal-call">
+        👉 <strong>Déjanos tu WhatsApp</strong> para enviártelo de inmediato:
+      </p>
+
+      <form id="exit-lead-form" class="exit-modal-form">
+        <div class="exit-input-group">
+          <span class="exit-country-flag">🇵🇪 +51</span>
+          <input
+            type="tel"
+            id="exit-lead-phone"
+            name="phone"
+            placeholder="9XX XXX XXX"
+            pattern="[0-9]{9}"
+            maxlength="9"
+            required
+            class="exit-input"
+            aria-label="Número de WhatsApp"
+          />
+        </div>
+        <input
+          type="text"
+          id="exit-lead-name"
+          name="name"
+          placeholder="Tu nombre o Estudio (opcional)"
+          class="exit-input-name"
+          aria-label="Nombre del abogado"
+        />
+        <button type="submit" class="exit-modal-submit" id="exit-lead-submit-btn">
+          <span>ENVIARME EL PACK POR WHATSAPP ➔</span>
+        </button>
+      </form>
+
+      <div class="exit-modal-success" id="exit-lead-success" style="display: none;">
+        <div class="success-ico">✓</div>
+        <h4>¡Listo, Dr(a)!</h4>
+        <p>Tu solicitud ha sido registrada. Abriendo tu WhatsApp para entregarte los archivos Word editables...</p>
+        <a id="exit-lead-wa-direct" class="btn p" href="#" target="_blank" style="margin-top: 10px; width: 100%; text-align: center;">Abrir WhatsApp Ahora ➔</a>
+      </div>
+
+      <div class="exit-modal-privacy">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        100% libre de spam. Datos protegidos bajo la Ley 29733 de Protección de Datos Personales.
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>

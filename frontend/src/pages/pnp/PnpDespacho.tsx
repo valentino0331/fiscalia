@@ -62,77 +62,12 @@ interface PnpCaseItem {
 
 const INITIAL_DEMO_CASES: PnpCaseItem[] = [
   {
-    id: 'demo-case-1',
-    title: 'Auto de Inicio PAD Falta G-24',
+    id: 'caso-pnp-1',
+    title: 'Nueva Consulta PNP',
     date: 'Hoy',
     mode: 'INSPECTORIA',
-    isPinned: true,
-    messages: [
-      {
-        id: 'msg-1',
-        role: 'user',
-        content: 'Genera Auto de Inicio de PAD por presunta infracción Grave G-24 por ausencia injustificada al servicio de guardia.',
-        timestamp: '10:14',
-        mode: 'INSPECTORIA',
-      },
-      {
-        id: 'msg-2',
-        role: 'assistant',
-        content: 'He redactado el Auto de Inicio de Procedimiento Administrativo Disciplinario conforme a la Ley N° 30714 y debida motivación de tipicidad. Puedes descargarlo en Word con membrete oficial:',
-        timestamp: '10:14',
-        docTitle: 'AUTO DE INICIO DE PROCEDIMIENTO ADMINISTRATIVO DISCIPLINARIO (G-24)',
-        docContent: `POLICÍA NACIONAL DEL PERÚ\nINSPECTORÍA GENERAL • OFICINA DE DISCIPLINA\n\nAUTO DE INICIO DE PROCEDIMIENTO ADMINISTRATIVO DISCIPLINARIO\nEXP. N° 024-2026-IGPNP/DIRINV-OD\n\nI. VISTOS: El Informe Policial N° 045-2026 dando cuenta de la presunta falta al servicio nocturno.\nII. HECHOS IMPUTADOS: Ausencia injustificada del efectivo en servicio de guardia.\nIII. SUBSUNCIÓN: Infracción Grave G-24 (Ley 30714). Sanción: 1 a 6 meses de pase a disponibilidad.\nIV. DISPOSICIÓN: Conceder diez (10) días hábiles para informe de descargo.`,
-        mode: 'INSPECTORIA',
-      },
-    ],
-  },
-  {
-    id: 'demo-case-2',
-    title: 'Descargo Falta Leve L-14',
-    date: 'Ayer',
-    mode: 'DEFENSA',
     isPinned: false,
-    messages: [
-      {
-        id: 'msg-3',
-        role: 'user',
-        content: 'Redacta mi descargo por imputación de falta leve L-14 por presunto descuido en uniforme, demostrando subsanación inmediata.',
-        timestamp: '14:22',
-        mode: 'DEFENSA',
-      },
-      {
-        id: 'msg-4',
-        role: 'assistant',
-        content: 'He redactado tu escrito de descargo fundamentado en el principio de razonabilidad y proporcionalidad de la Ley N° 30714 solicitando amonestación sin afectación de legajo.',
-        timestamp: '14:22',
-        docTitle: 'ESCRITO DE DESCARGO POR INFRACCIÓN LEVE L-14',
-        docContent: `SEÑOR JEFE DE UNIDAD PNP:\n\nSUMILLA: PRESENTA ESCRITO DE DESCARGO FRENTE A PAPELETA POR INFRACCIÓN L-14 Y SOLICITA AMONESTACIÓN.\n\nS2 PNP Juan Pérez Rojas expongo: Que habiendo procedido a la subsanación inmediata del uniforme reglamentario y no existiendo reincidencia, solicito tener por justificada la conducta.`,
-        mode: 'DEFENSA',
-      },
-    ],
-  },
-  {
-    id: 'demo-case-3',
-    title: 'Auditoría de Prescripción Art. 68',
-    date: '18 oct',
-    mode: 'INSPECTORIA',
-    isPinned: false,
-    messages: [
-      {
-        id: 'msg-5',
-        role: 'user',
-        content: '¿Cuáles son los plazos exactos de prescripción y caducidad según la Ley 30714?',
-        timestamp: '09:05',
-        mode: 'INSPECTORIA',
-      },
-      {
-        id: 'msg-6',
-        role: 'assistant',
-        content: 'Conforme al Art. 68 de la Ley N° 30714: Infracciones Leves prescriben a los 3 meses; Graves a los 2 años; Muy Graves a los 3 años. La caducidad del PAD opera a los 9 meses calendario de iniciado.',
-        timestamp: '09:05',
-        mode: 'INSPECTORIA',
-      },
-    ],
+    messages: [],
   },
 ]
 
@@ -152,18 +87,33 @@ export default function PnpDespacho() {
   const [searchQuery, setSearchQuery] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Historial de casos (ChatGPT style)
+  // Historial de casos (ChatGPT style) - Limpia forzosamente casos mock antiguos
   const [cases, setCases] = useState<PnpCaseItem[]>(() => {
     try {
-      const saved = localStorage.getItem('hardman_pnp_cases')
-      if (saved) return JSON.parse(saved)
+      localStorage.removeItem('hardman_pnp_cases')
+      localStorage.removeItem('hardman_pnp_cases_v2')
+      const saved = localStorage.getItem('hardman_pnp_cases_v3')
+      if (saved) {
+        const parsed: PnpCaseItem[] = JSON.parse(saved)
+        const cleaned = parsed.filter(
+          (c) =>
+            !c.id.startsWith('demo-case') &&
+            !c.messages.some(
+              (m) =>
+                m.id === 'msg-1' ||
+                m.id === 'msg-2' ||
+                m.content.includes('G-24 por ausencia injustificada')
+            )
+        )
+        if (cleaned.length > 0) return cleaned
+      }
     } catch {}
     return INITIAL_DEMO_CASES
   })
 
   // Caso actualmente seleccionado
   const [activeCaseId, setActiveCaseId] = useState<string>(() => {
-    return INITIAL_DEMO_CASES[0]?.id || 'demo-case-1'
+    return INITIAL_DEMO_CASES[0]?.id || 'caso-pnp-1'
   })
 
   // Modo operativo: Inspectoría vs Defensa
@@ -192,6 +142,24 @@ export default function PnpDespacho() {
 
   // Modal moderno de confirmación de eliminación (estilo ChatGPT)
   const [caseToDelete, setCaseToDelete] = useState<PnpCaseItem | null>(null)
+
+  // Modal interactivo: Calculadora de Caducidad y Prescripción PNP (Art. 68)
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false)
+  const [calcInfractionType, setCalcInfractionType] = useState<'LEVE' | 'GRAVE' | 'MUY_GRAVE'>('GRAVE')
+  const [calcPadDate, setCalcPadDate] = useState<string>(() => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - 10)
+    return d.toISOString().split('T')[0]
+  })
+  const [calcIncidentDate, setCalcIncidentDate] = useState<string>(() => {
+    const d = new Date()
+    d.setFullYear(d.getFullYear() - 1)
+    return d.toISOString().split('T')[0]
+  })
+
+  // Modal interactivo: Asistente Rápido de Documentos Policiales (Ambos roles)
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false)
+  const [assistantTab, setAssistantTab] = useState<'SERVICIO' | 'DEFENSA'>('SERVICIO')
 
   // Renombrado inline de casos
   const [renamingCaseId, setRenamingCaseId] = useState<string | null>(null)
@@ -258,10 +226,10 @@ export default function PnpDespacho() {
     }
   }, [openMenuCaseId])
 
-  // Guardar casos en localStorage
+  // Guardar casos en localStorage v3
   useEffect(() => {
     try {
-      localStorage.setItem('hardman_pnp_cases', JSON.stringify(cases))
+      localStorage.setItem('hardman_pnp_cases_v3', JSON.stringify(cases))
     } catch {}
   }, [cases])
 
@@ -462,15 +430,15 @@ export default function PnpDespacho() {
 
       try {
         const res = await api.chat.send({
-          agentId: 'marco',
+          agentId: 'pnp',
           messages: [
             {
               role: 'system',
-              content: `Eres Hardman PNP, la IA experta en Régimen Disciplinario de la Policía Nacional del Perú (Ley N° 30714, D.S. 003-2020-IN y precedentes del Tribunal de Disciplina Policial TDP). Estás interactuando con Valentino Marca. Estás actuando en modo: ${
+              content: `Eres Hardman PNP, la IA experta en Procedimiento Policial y Régimen Disciplinario de la Policía Nacional del Perú (Ley N° 30714, D.S. 003-2020-IN, D.L. 1186, Ley 31012, Ley 32130 y precedentes del TDP). Estás interactuando con ${firstName}. Estás actuando en modo: ${
                 mode === 'INSPECTORIA'
-                  ? 'DESPACHO DE INSPECTORÍA / OD (redactar autos de inicio, informes disciplinarios y resoluciones)'
-                  : 'DEFENSA TÉCNICA DEL EFECTIVO (redactar descargos, apelaciones y excepciones de prescripción)'
-              }. Mantén un estilo sobrio, formal, institucional y riguroso.`,
+                  ? 'DOCUMENTACIÓN Y DESPACHO POLICIAL (redactar actas de intervención NCPP, registro personal, lectura de derechos, oficios fiscales, informes preliminares y autos de inicio PAD)'
+                  : 'DEFENSA TÉCNICA DEL EFECTIVO (redactar descargos, apelaciones ante TDP, excepciones de prescripción/caducidad y justificación de uso de la fuerza)'
+              }. Mantén un estilo institucional, de camaradería policial, empático y jurídicamente inexpugnable.`,
               timestamp: new Date().toISOString(),
             },
             ...newMessages.map((m) => ({
@@ -990,6 +958,533 @@ export default function PnpDespacho() {
         )}
       </AnimatePresence>
 
+      {/* ─── MODAL 1: CALCULADORA DE CADUCIDAD Y PRESCRIPCIÓN PNP (ART. 68 LEY 30714) ─── */}
+      <AnimatePresence>
+        {isCalculatorOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-xl p-6 sm:p-7 rounded-2xl border shadow-2xl overflow-hidden text-left"
+              style={{
+                background: '#082821',
+                borderColor: 'rgba(45, 175, 150, 0.45)',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.7), 0 0 30px rgba(45, 175, 150, 0.15)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsCalculatorOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-[#a3cfc6]/60 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-2 rounded-lg bg-emerald-950/80 border border-emerald-800/40 text-[#dfbe63]">
+                  <Clock size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    Calculadora de Caducidad y Prescripción PNP
+                  </h3>
+                  <span className="text-[10px] text-[#dfbe63] font-medium uppercase tracking-wider">
+                    Artículo 68° de la Ley N° 30714 • Régimen Disciplinario
+                  </span>
+                </div>
+              </div>
+
+              <p className="text-xs text-[#a3cfc6]/80 font-light mt-2 leading-relaxed">
+                Verifica de inmediato si el Procedimiento Disciplinario (PAD) superó el plazo perentorio de <strong>9 meses calendario</strong> o si la infracción prescribió para exigir el <strong>archivo definitivo de plano</strong>.
+              </p>
+
+              {/* Form Inputs */}
+              <div className="mt-5 space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#dfbe63] mb-1">
+                      Gravedad de la Falta Imputada
+                    </label>
+                    <select
+                      value={calcInfractionType}
+                      onChange={(e) => setCalcInfractionType(e.target.value as any)}
+                      className="w-full text-xs rounded-xl px-3 py-2 bg-[#061e19] text-white border border-[#2daf96]/35 outline-none focus:border-[#c9a84c] cursor-pointer"
+                    >
+                      <option value="LEVE">Falta Leve (L) — Prescribe a los 3 meses</option>
+                      <option value="GRAVE">Falta Grave (G) — Prescribe a los 2 años</option>
+                      <option value="MUY_GRAVE">Falta Muy Grave (MG) — Prescribe a los 3 años</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-medium text-[#dfbe63] mb-1">
+                      Fecha Notificación Auto de Inicio (PAD)
+                    </label>
+                    <input
+                      type="date"
+                      value={calcPadDate}
+                      onChange={(e) => setCalcPadDate(e.target.value)}
+                      className="w-full text-xs rounded-xl px-3 py-2 bg-[#061e19] text-white border border-[#2daf96]/35 outline-none focus:border-[#c9a84c]"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-[#dfbe63] mb-1">
+                    Fecha de los Hechos (Comisión de la presunta falta)
+                  </label>
+                  <input
+                    type="date"
+                    value={calcIncidentDate}
+                    onChange={(e) => setCalcIncidentDate(e.target.value)}
+                    className="w-full text-xs rounded-xl px-3 py-2 bg-[#061e19] text-white border border-[#2daf96]/35 outline-none focus:border-[#c9a84c]"
+                  />
+                </div>
+              </div>
+
+              {/* Dynamic Calculation Diagnosis */}
+              {(() => {
+                const padDiffDays = Math.max(0, Math.floor((Date.now() - new Date(calcPadDate).getTime()) / (1000 * 60 * 60 * 24)))
+                const padElapsedMonths = +(padDiffDays / 30.41).toFixed(1)
+                const isPadCaducado = padElapsedMonths >= 9.0
+                const padRemainingDays = Math.max(0, Math.round(9 * 30.41 - padDiffDays))
+
+                const incidentDiffDays = Math.max(0, Math.floor((Date.now() - new Date(calcIncidentDate).getTime()) / (1000 * 60 * 60 * 24)))
+                const incidentElapsedMonths = +(incidentDiffDays / 30.41).toFixed(1)
+                const limitMonths = calcInfractionType === 'LEVE' ? 3 : calcInfractionType === 'GRAVE' ? 24 : 36
+                const isPrescrito = incidentElapsedMonths >= limitMonths
+
+                return (
+                  <div className="mt-5 space-y-3">
+                    {/* Caducidad Result Box */}
+                    <div
+                      className="p-3.5 rounded-xl border"
+                      style={{
+                        background: isPadCaducado ? 'rgba(239, 68, 68, 0.12)' : 'rgba(52, 209, 122, 0.12)',
+                        borderColor: isPadCaducado ? 'rgba(239, 68, 68, 0.4)' : 'rgba(52, 209, 122, 0.4)',
+                      }}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        {isPadCaducado ? (
+                          <AlertTriangle size={18} className="text-red-400 shrink-0 mt-0.5" />
+                        ) : (
+                          <Check size={18} className="text-[#34d17a] shrink-0 mt-0.5" />
+                        )}
+                        <div>
+                          <div className="text-xs font-bold" style={{ color: isPadCaducado ? '#f87171' : '#34d17a' }}>
+                            {isPadCaducado
+                              ? '🚨 CADUCIDAD CONSUMADA: EXCESO DEL PLAZO DE 9 MESES'
+                              : '⏳ PROCEDIMIENTO DENTRO DEL PLAZO DE 9 MESES'}
+                          </div>
+                          <p className="text-[11px] font-light mt-1 text-stone-200 leading-relaxed">
+                            {isPadCaducado
+                              ? `Han transcurrido ${padElapsedMonths} meses (${padDiffDays} días) desde la notificación. El plazo máximo legal de 9 meses calendario ha sido ampliamente superado. La potestad disciplinaria de Inspectoría está extinta de pleno derecho. Procede interponer Deducción de Caducidad y exigir el archivo.`
+                              : `Han transcurrido ${padElapsedMonths} meses. Quedan aproximadamente ${padRemainingDays} días para que opere la caducidad perentoria.`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Prescripción Result Box */}
+                    <div
+                      className="p-3 rounded-xl border text-[11px] font-light text-stone-300"
+                      style={{
+                        background: 'rgba(6, 30, 25, 0.8)',
+                        borderColor: isPrescrito ? 'rgba(239, 68, 68, 0.35)' : 'rgba(45, 175, 150, 0.3)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span>Prescripción de la acción ({limitMonths} meses):</span>
+                        <strong className={isPrescrito ? 'text-red-400' : 'text-[#34d17a]'}>
+                          {isPrescrito ? '¡ACCIÓN PRESCRITA!' : 'Acción aún vigente'}
+                        </strong>
+                      </div>
+                      <span className="text-[10px] text-stone-400 block mt-0.5">
+                        Transcurridos {incidentElapsedMonths} meses desde los hechos.
+                      </span>
+                    </div>
+
+                    {/* Action Button: Redactar Escrito de Inmediato */}
+                    <div className="pt-2 flex items-center justify-end gap-2.5">
+                      <button
+                        onClick={() => setIsCalculatorOpen(false)}
+                        className="px-4 py-2 rounded-xl text-xs font-medium border border-white/20 text-white hover:bg-white/10 transition cursor-pointer"
+                      >
+                        Cerrar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsCalculatorOpen(false)
+                          if (isPadCaducado) {
+                            handleSend(
+                              `Deduce la CADUCIDAD DEL PROCEDIMIENTO ADMINISTRATIVO DISCIPLINARIO (PAD) conforme al Art. 68° numeral 2 de la Ley N° 30714 por haber transcurrido ${padElapsedMonths} meses (más de 9 meses calendario) desde la notificación formal del Auto de Inicio de fecha ${calcPadDate} sin emisión de resolución final de primera instancia, y solicita el ARCHIVO DEFINITIVO de plano con devolución de legajo limpio.`
+                            )
+                          } else if (isPrescrito) {
+                            handleSend(
+                              `Deduce la EXCEPCIÓN DE PRESCRIPCIÓN DE LA ACCIÓN DISCIPLINARIA conforme al Art. 68° de la Ley N° 30714 para la presunta infracción ${calcInfractionType} ocurrida el ${calcIncidentDate} por haber superado el límite de ${limitMonths} meses sin resolución de inicio, solicitando el archivo de plano.`
+                            )
+                          } else {
+                            handleSend(
+                              `Audita la validez procesal de mi expediente notificado el ${calcPadDate} por hechos del ${calcIncidentDate} bajo la Ley N° 30714 y proyecta mi informe de descargo con causales eximentes.`
+                            )
+                          }
+                        }}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer shadow-lg active:scale-95 flex items-center gap-1.5"
+                        style={{
+                          background: 'linear-gradient(135deg, #dfbe63, #c9a84c)',
+                          color: '#061e19',
+                        }}
+                      >
+                        <FileText size={14} />
+                        <span>Redactar Escrito Oficial en Word Ahora</span>
+                      </button>
+                    </div>
+                  </div>
+                )
+              })()}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ─── MODAL 2: ASISTENTE RÁPIDO DE DOCUMENTOS POLICIALES (AMBOS ROLES) ─── */}
+      <AnimatePresence>
+        {isAssistantOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-2xl max-h-[88vh] p-6 sm:p-7 rounded-2xl border shadow-2xl flex flex-col text-left overflow-hidden"
+              style={{
+                background: '#082821',
+                borderColor: 'rgba(45, 175, 150, 0.45)',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.7), 0 0 35px rgba(201, 168, 76, 0.15)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setIsAssistantOpen(false)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-[#a3cfc6]/60 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2 pr-8">
+                <div className="p-2 rounded-lg bg-amber-950/80 border border-amber-800/40 text-[#dfbe63]">
+                  <Sparkles size={18} />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-bold text-white">
+                    Asistente de Documentación y Defensa Policial
+                  </h3>
+                  <span className="text-[10px] text-[#dfbe63] font-medium uppercase tracking-wider">
+                    Generación Inmediata con Membrete PNP Oficial en Word (.docx)
+                  </span>
+                </div>
+              </div>
+
+              {/* Tabs Switcher Inside Modal */}
+              <div className="flex border-b pb-2 mb-4 gap-2" style={{ borderColor: 'rgba(45, 175, 150, 0.3)' }}>
+                <button
+                  onClick={() => setAssistantTab('SERVICIO')}
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer flex items-center gap-1.5"
+                  style={{
+                    background:
+                      assistantTab === 'SERVICIO'
+                        ? 'linear-gradient(135deg, #dfbe63, #c9a84c)'
+                        : 'rgba(6, 30, 25, 0.8)',
+                    color: assistantTab === 'SERVICIO' ? '#061e19' : 'rgba(244, 241, 234, 0.8)',
+                    border: '1px solid ' + (assistantTab === 'SERVICIO' ? '#c9a84c' : 'rgba(45, 175, 150, 0.3)'),
+                  }}
+                >
+                  <FileText size={13} />
+                  <span>👮 Guardia & Turno (Carga Procesal)</span>
+                </button>
+
+                <button
+                  onClick={() => setAssistantTab('DEFENSA')}
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all cursor-pointer flex items-center gap-1.5"
+                  style={{
+                    background:
+                      assistantTab === 'DEFENSA'
+                        ? 'linear-gradient(135deg, #dfbe63, #c9a84c)'
+                        : 'rgba(6, 30, 25, 0.8)',
+                    color: assistantTab === 'DEFENSA' ? '#061e19' : 'rgba(244, 241, 234, 0.8)',
+                    border: '1px solid ' + (assistantTab === 'DEFENSA' ? '#c9a84c' : 'rgba(45, 175, 150, 0.3)'),
+                  }}
+                >
+                  <Shield size={13} />
+                  <span>⚖️ Defensa & Inspectoría (Notificado)</span>
+                </button>
+              </div>
+
+              {/* Documents Grid with 1-Click Action */}
+              <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
+                {assistantTab === 'SERVICIO' ? (
+                  <>
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un Acta de Intervención Policial en flagrancia delictiva conforme al Art. 259 del NCPP con descripción circunstanciada de hora, lugar, modo y sindicación directa para poner a disposición de la Fiscalía.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          ⚡ Acta de Intervención en Flagrancia (Art. 259 NCPP)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Estructura completa para detenciones en flagrancia. Evita observaciones o liberación por parte del Fiscal.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un Acta de Registro Personal, Incautación y Lacrado con cadena de custodia según los Arts. 210 y 220 del Código Procesal Penal para armas, drogas o especies incautadas.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          📦 Acta de Registro Personal, Incautación y Lacrado (Art. 210 NCPP)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Para hallazgo de armas, PBC/marihuana o celulares. Rótulo formal de cadena de custodia inimpugnable.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un Acta de Notificación y Lectura de Derechos del Imputado conforme al Art. 71 del Código Procesal Penal.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          ⚖️ Acta de Lectura de Derechos del Detenido (Art. 71 NCPP)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Notificación formal obligatoria que bloquea tutelas de derechos o acusaciones de detención arbitraria.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un Oficio Policial poniendo a disposición de la Fiscalía Provincial Penal de Turno al detenido en flagrancia con actas y especies incautadas.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          📨 Oficio de Puesta a Disposición a Fiscalía de Turno
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Remisión oficial con detalle de anexos, situación jurídica y recaudos de custodia dentro del plazo legal.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un Informe Policial de diligencias preliminares de investigación material bajo la Ley 32130 con conclusiones técnico-policiales.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          📑 Informe Policial Preliminar (Ley N° 32130)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Marco legal vigente 2026 que restituye la investigación preliminar material del delito a la PNP.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Genera Auto de Inicio de Procedimiento Administrativo Disciplinario (PAD) con motivación estricta de tipicidad según la Ley 30714 por presunta falta Grave.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          🏛️ Auto de Inicio de PAD (Para Instructor de Inspectoría / OD)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Vistos, hechos, subsunción típica (L, G o MG) y concesión de los 10 días hábiles para descargo.
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta escrito de descargo fundamentado en causal eximente de responsabilidad Art. 21 de la Ley 30714 por fuerza mayor o cumplimiento del deber solicitando el archivo definitivo.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          🛡️ Descargo Urgente por Cédula con Causales Eximentes (Art. 21)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Invocación de fuerza mayor, emergencia médica o cumplimiento del deber con jurisprudencia vinculante del TDP.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Deduce la CADUCIDAD DEL PROCEDIMIENTO DISCIPLINARIO por haber superado el plazo improrrogable de 9 meses del Art. 68 de la Ley 30714 y solicita el archivo definitivo de plano.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          ⏱️ Deducción de Caducidad del PAD (Superó los 9 Meses)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Si pasaron 9 meses desde que te notificaron el inicio sin resolución final, exige el archivo y legajo limpio.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un informe de descargo y justificación técnica por uso reglamentario de la fuerza y arma de fuego bajo el D.L. 1186 y la Ley 31012 de Protección Policial.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          🔫 Justificación por Uso Reglamentario de la Fuerza (D.L. 1186 / Ley 31012)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Blindaje jurídico de presunción de inocencia tras intervenciones armadas contra delincuentes o agresores.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Redacta un Recurso de Apelación ante el Tribunal de Disciplina Policial (TDP) por vulneración al debido proceso y motivación contra resolución sancionatoria.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          🏛️ Recurso de Apelación ante el Tribunal de Disciplina Policial (TDP)
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Impugnación formal de segunda instancia contra pases a disponibilidad o al retiro dictados en primera instancia.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Solicita la nulidad de la notificación de apertura de PAD por defecto en el emplazamiento y vulneración del derecho constitucional de defensa.'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          🚫 Solicitud de Nulidad por Vicio en la Notificación
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Cuestionamiento al emplazamiento defectuoso, falta de entrega de recaudos o notificación a destiempo.
+                      </p>
+                    </div>
+
+                    <div
+                      onClick={() => {
+                        setIsAssistantOpen(false)
+                        handleSend(
+                          'Tengo citación para rendir manifestación ante Inspectoría por queja de un ciudadano. ¿Qué derechos tengo, cómo prepararme y qué debo responder para no autoincriminarme?'
+                        )
+                      }}
+                      className="p-3 rounded-xl border transition-all cursor-pointer group hover:bg-[#0d453b]"
+                      style={{ background: 'rgba(6, 30, 25, 0.8)', borderColor: 'rgba(45, 175, 150, 0.35)' }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-white group-hover:text-[#dfbe63]">
+                          💬 Guía Táctica para Declaración en Inspectoría
+                        </span>
+                        <ArrowRight size={14} className="text-[#dfbe63] group-hover:translate-x-1 transition-transform" />
+                      </div>
+                      <p className="text-[11px] text-stone-300 font-light mt-1">
+                        Pautas clave para manifestar sin pisar trampas del instructor, derecho a guardar silencio y defensa legal.
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* ─── MINI-RAIL CHATGPT STYLE (VISIBLE CUANDO LA BARRA ESTÁ COLAPSADA EN DESKTOP) ─── */}
       {!sidebarOpen && (
         <aside
@@ -1212,7 +1707,7 @@ export default function PnpDespacho() {
                 </span>
                 <span className="text-[10px] font-light flex items-center gap-1.5" style={{ color: '#dfbe63' }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
-                  <span>Oficial PNP • Ley N° 30714</span>
+                  <span>Policía Nacional del Perú</span>
                 </span>
               </div>
             </div>
@@ -1335,8 +1830,38 @@ export default function PnpDespacho() {
             </div>
           </div>
 
-          {/* RIGHT COLUMN: Quick Action + Ley 30714 Badge + User Session */}
-          <div className="flex items-center gap-3">
+          {/* RIGHT COLUMN: Quick Actions (Calculadora + Asistente + Nuevo Caso + Logout) */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Quick Action: Calculadora de Caducidad / Prescripción */}
+            <button
+              onClick={() => setIsCalculatorOpen(true)}
+              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+              style={{
+                background: 'rgba(45, 175, 150, 0.18)',
+                border: '1px solid rgba(45, 175, 150, 0.45)',
+                color: '#34d17a',
+              }}
+              title="Calcular si tu expediente ya caducó (9 meses) o prescribió"
+            >
+              <Clock size={13} />
+              <span>Calculadora Art. 68</span>
+            </button>
+
+            {/* Quick Action: Asistente Policial */}
+            <button
+              onClick={() => setIsAssistantOpen(true)}
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+              style={{
+                background: 'rgba(201, 168, 76, 0.16)',
+                border: '1px solid rgba(201, 168, 76, 0.45)',
+                color: '#dfbe63',
+              }}
+              title="Asistente rápido de actas de turno y descargos de defensa"
+            >
+              <Sparkles size={13} />
+              <span>Asistente Policial</span>
+            </button>
+
             <button
               onClick={handleNewCase}
               className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-sm"
@@ -1355,17 +1880,6 @@ export default function PnpDespacho() {
               <Plus size={13} />
               <span>Nuevo Caso</span>
             </button>
-
-            <div
-              className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded text-[10px] font-semibold tracking-wider uppercase"
-              style={{
-                background: 'rgba(45, 175, 150, 0.25)',
-                border: '1px solid rgba(45, 175, 150, 0.45)',
-                color: '#dfbe63',
-              }}
-            >
-              <span>Ley N° 30714</span>
-            </div>
 
             <div
               className="flex items-center pl-2 border-l"
@@ -1387,33 +1901,171 @@ export default function PnpDespacho() {
 
         {/* ─── CHAT CONTENT AREA ─── */}
         {messages.length === 0 ? (
-          /* EMPTY CHAT: EXACT CHATGPT CENTERED HERO LAYOUT (¿En qué puedo ayudarte, Valentino?) */
+          /* EMPTY CHAT: EMPATHETIC POLICE OPERATIONAL HERO */
           <div className="flex-1 flex flex-col items-center justify-center px-4 max-w-3xl mx-auto w-full text-center py-6 overflow-y-auto">
-            {/* Centered Greeting - Valentino */}
-            <motion.h1
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-2xl sm:text-[32px] font-normal text-white/95 mb-8 tracking-tight drop-shadow-sm"
+            {/* Interactive Dual-Role Police Switcher */}
+            <div
+              className="inline-flex items-center p-1 rounded-xl mb-5 border transition-all"
+              style={{
+                background: 'rgba(6, 30, 25, 0.85)',
+                borderColor: 'rgba(45, 175, 150, 0.3)',
+              }}
             >
-              ¿En qué puedo ayudarte, {firstName}?
+              <button
+                onClick={() => handleModeChange('INSPECTORIA')}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-2 cursor-pointer"
+                style={{
+                  background:
+                    mode === 'INSPECTORIA'
+                      ? 'linear-gradient(135deg, #dfbe63, #c9a84c)'
+                      : 'transparent',
+                  color: mode === 'INSPECTORIA' ? '#061e19' : 'rgba(244, 241, 234, 0.75)',
+                  boxShadow: mode === 'INSPECTORIA' ? '0 2px 10px rgba(201, 168, 76, 0.3)' : 'none',
+                }}
+              >
+                <FileText size={13} />
+                <span>👮 Instructor / Servicio (Hacer Documentación)</span>
+              </button>
+
+              <button
+                onClick={() => handleModeChange('DEFENSA')}
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all flex items-center gap-2 cursor-pointer"
+                style={{
+                  background:
+                    mode === 'DEFENSA'
+                      ? 'linear-gradient(135deg, #dfbe63, #c9a84c)'
+                      : 'transparent',
+                  color: mode === 'DEFENSA' ? '#061e19' : 'rgba(244, 241, 234, 0.75)',
+                  boxShadow: mode === 'DEFENSA' ? '0 2px 10px rgba(201, 168, 76, 0.3)' : 'none',
+                }}
+              >
+                <Shield size={13} />
+                <span>⚖️ Efectivo Investigado (Defenderme de Inspectoría)</span>
+              </button>
+            </div>
+
+            {/* Dynamic Empathetic Greeting */}
+            <motion.h1
+              key={mode}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-2xl sm:text-[30px] font-normal text-white/95 mb-2 tracking-tight drop-shadow-sm"
+            >
+              {mode === 'INSPECTORIA'
+                ? `¿Qué acta o documentación necesitas para tu servicio, ${firstName}?`
+                : `¿De qué cédula o investigación necesitas defenderte, ${firstName}?`}
             </motion.h1>
+
+            <motion.p
+              key={`sub-${mode}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-xs sm:text-sm font-light mb-7 max-w-xl"
+              style={{ color: 'rgba(244, 241, 234, 0.65)' }}
+            >
+              {mode === 'INSPECTORIA'
+                ? 'Evita que la Fiscalía te observe el acta o libere al detenido. Genera actas de intervención (Art. 259 NCPP), registros y oficios con valor probatorio en 20 segundos.'
+                : 'Protege tu legajo, tu ascenso y tu estabilidad económica. Redacta descargos inexpugnables con eximentes del Art. 21, auditoría de caducidad (Art. 68) y apelaciones ante el TDP.'}
+            </motion.p>
 
             {/* Floating Input Pill in the Center */}
             <div className="w-full">
               {renderFloatingInputPill(true)}
             </div>
 
-            {/* ChatGPT-style Quick Suggestion Chips */}
+            {/* Dual Interactive Quick Action Cards for Enhanced Police Support */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl mt-5 mb-2 px-2 text-left">
+              {/* Card 1: Asistente Rápido de Turno */}
+              <button
+                type="button"
+                onClick={() => {
+                  setAssistantTab('SERVICIO')
+                  setIsAssistantOpen(true)
+                }}
+                className="p-3.5 rounded-xl border transition-all cursor-pointer group flex flex-col justify-between shadow-sm hover:scale-[1.01]"
+                style={{
+                  background: 'rgba(8, 38, 32, 0.75)',
+                  borderColor: 'rgba(45, 175, 150, 0.35)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#c9a84c'
+                  e.currentTarget.style.background = '#0d453b'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.35)'
+                  e.currentTarget.style.background = 'rgba(8, 38, 32, 0.75)'
+                }}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: '#dfbe63' }}>
+                      👮 Turno & Carga Procesal
+                    </span>
+                    <Sparkles size={13} style={{ color: '#dfbe63' }} />
+                  </div>
+                  <h4 className="text-xs font-semibold text-white">
+                    Asistente de Actas Policiales en 20s
+                  </h4>
+                  <p className="text-[11px] font-light mt-1 text-[#a3cfc6]/75 leading-snug">
+                    Flagrancia (Art. 259), registros (Art. 210), oficios al fiscal e informes Ley 32130 sin vicios.
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center text-[11px] font-medium text-[#dfbe63] group-hover:translate-x-1 transition-transform">
+                  <span>Abrir Plantillas Rápidas</span>
+                  <ChevronRight size={13} />
+                </div>
+              </button>
+
+              {/* Card 2: Calculadora & Blindaje de Defensa */}
+              <button
+                type="button"
+                onClick={() => setIsCalculatorOpen(true)}
+                className="p-3.5 rounded-xl border transition-all cursor-pointer group flex flex-col justify-between shadow-sm hover:scale-[1.01]"
+                style={{
+                  background: 'rgba(8, 38, 32, 0.75)',
+                  borderColor: 'rgba(45, 175, 150, 0.35)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#c9a84c'
+                  e.currentTarget.style.background = '#0d453b'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.35)'
+                  e.currentTarget.style.background = 'rgba(8, 38, 32, 0.75)'
+                }}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] uppercase font-bold tracking-wider" style={{ color: '#34d17a' }}>
+                      ⚖️ Defensa & Inspectoría
+                    </span>
+                    <Clock size={13} style={{ color: '#34d17a' }} />
+                  </div>
+                  <h4 className="text-xs font-semibold text-white">
+                    Calculadora de Caducidad (9 Meses)
+                  </h4>
+                  <p className="text-[11px] font-light mt-1 text-[#a3cfc6]/75 leading-snug">
+                    Calcula si tu PAD ya venció y redacta el escrito de archivo definitivo por exceso de plazo.
+                  </p>
+                </div>
+                <div className="mt-3 flex items-center text-[11px] font-medium text-[#34d17a] group-hover:translate-x-1 transition-transform">
+                  <span>Auditar mi Caso en 1 Clic</span>
+                  <ChevronRight size={13} />
+                </div>
+              </button>
+            </div>
+
+            {/* Empathetic Quick Suggestion Chips */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-2xl px-2">
               {mode === 'INSPECTORIA' ? (
                 <>
                   <button
                     onClick={() =>
                       handleSend(
-                        'Genera Auto de Inicio de PAD por presunta infracción Grave G-24 por ausencia injustificada al servicio.'
+                        'Redacta un Acta de Intervención Policial en flagrancia delictiva conforme al Art. 259 del NCPP con descripción circunstanciada y lectura de derechos.'
                       )
                     }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                     style={{
                       background: 'rgba(10, 42, 36, 0.75)',
                       borderColor: 'rgba(45, 175, 150, 0.4)',
@@ -1430,17 +2082,17 @@ export default function PnpDespacho() {
                       e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
                     }}
                   >
-                    <Scale size={14} style={{ color: '#dfbe63' }} />
-                    <span>Auto de Inicio PAD (Falta G-24)</span>
+                    <Scale size={13} style={{ color: '#dfbe63' }} />
+                    <span>Acta de Intervención (Art. 259 NCPP)</span>
                   </button>
 
                   <button
                     onClick={() =>
                       handleSend(
-                        'Redacta un Informe Disciplinario de Instrucción concluyendo con debida motivación de tipicidad.'
+                        'Redacta un Acta de Registro Personal, Incautación y Lacrado con cadena de custodia según el Art. 210 del NCPP.'
                       )
                     }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                     style={{
                       background: 'rgba(10, 42, 36, 0.75)',
                       borderColor: 'rgba(45, 175, 150, 0.4)',
@@ -1457,42 +2109,17 @@ export default function PnpDespacho() {
                       e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
                     }}
                   >
-                    <FileText size={14} style={{ color: '#dfbe63' }} />
-                    <span>Informe Disciplinario de Instrucción</span>
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleSend('Calcula los plazos de prescripción y caducidad según el Art. 68 de la Ley N° 30714.')
-                    }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
-                    style={{
-                      background: 'rgba(10, 42, 36, 0.75)',
-                      borderColor: 'rgba(45, 175, 150, 0.4)',
-                      color: 'rgba(244, 241, 234, 0.9)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#c9a84c'
-                      e.currentTarget.style.color = '#dfbe63'
-                      e.currentTarget.style.background = '#124c40'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
-                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
-                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
-                    }}
-                  >
-                    <Clock size={14} style={{ color: '#dfbe63' }} />
-                    <span>Auditoría de Prescripción (Art. 68)</span>
+                    <FileText size={13} style={{ color: '#dfbe63' }} />
+                    <span>Registro Personal e Incautación (Art. 210)</span>
                   </button>
 
                   <button
                     onClick={() =>
                       handleSend(
-                        'Verifica si la notificación de apertura de PAD cumple con las formalidades y no tiene vicios de nulidad.'
+                        'Redacta un Acta de Información y Lectura de Derechos del Imputado conforme al Art. 71 del Código Procesal Penal.'
                       )
                     }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                     style={{
                       background: 'rgba(10, 42, 36, 0.75)',
                       borderColor: 'rgba(45, 175, 150, 0.4)',
@@ -1509,8 +2136,89 @@ export default function PnpDespacho() {
                       e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
                     }}
                   >
-                    <Shield size={14} style={{ color: '#dfbe63' }} />
-                    <span>Control de Nulidad Procesal</span>
+                    <Shield size={13} style={{ color: '#dfbe63' }} />
+                    <span>Lectura de Derechos (Art. 71 NCPP)</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleSend(
+                        'Redacta un Oficio Policial poniendo a disposición de la Fiscalía Provincial Penal de Turno al detenido en flagrancia con actas y especies incautadas.'
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    style={{
+                      background: 'rgba(10, 42, 36, 0.75)',
+                      borderColor: 'rgba(45, 175, 150, 0.4)',
+                      color: 'rgba(244, 241, 234, 0.9)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#c9a84c'
+                      e.currentTarget.style.color = '#dfbe63'
+                      e.currentTarget.style.background = '#124c40'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
+                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
+                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
+                    }}
+                  >
+                    <Building2 size={13} style={{ color: '#dfbe63' }} />
+                    <span>Oficio Poniendo Detenido a Fiscalía</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleSend(
+                        'Redacta un Informe Policial de diligencias preliminares de investigación material bajo la Ley 32130 con conclusiones técnico-policiales.'
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    style={{
+                      background: 'rgba(10, 42, 36, 0.75)',
+                      borderColor: 'rgba(45, 175, 150, 0.4)',
+                      color: 'rgba(244, 241, 234, 0.9)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#c9a84c'
+                      e.currentTarget.style.color = '#dfbe63'
+                      e.currentTarget.style.background = '#124c40'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
+                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
+                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
+                    }}
+                  >
+                    <FileText size={13} style={{ color: '#dfbe63' }} />
+                    <span>Informe Policial (Ley 32130)</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleSend(
+                        'Genera Auto de Inicio de PAD por presunta infracción Grave G-24 por ausencia injustificada al servicio de guardia.'
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    style={{
+                      background: 'rgba(10, 42, 36, 0.75)',
+                      borderColor: 'rgba(45, 175, 150, 0.4)',
+                      color: 'rgba(244, 241, 234, 0.9)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#c9a84c'
+                      e.currentTarget.style.color = '#dfbe63'
+                      e.currentTarget.style.background = '#124c40'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
+                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
+                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
+                    }}
+                  >
+                    <Clock size={13} style={{ color: '#dfbe63' }} />
+                    <span>Auto de Inicio PAD (Inspectoría)</span>
                   </button>
                 </>
               ) : (
@@ -1518,10 +2226,10 @@ export default function PnpDespacho() {
                   <button
                     onClick={() =>
                       handleSend(
-                        'Redacta escrito de descargo fundamentado en causal eximente de responsabilidad Art. 21 de la Ley 30714.'
+                        'Redacta escrito de descargo fundamentado en causal eximente de responsabilidad Art. 21 de la Ley 30714 por fuerza mayor o cumplimiento del deber.'
                       )
                     }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                     style={{
                       background: 'rgba(10, 42, 36, 0.75)',
                       borderColor: 'rgba(45, 175, 150, 0.4)',
@@ -1538,17 +2246,17 @@ export default function PnpDespacho() {
                       e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
                     }}
                   >
-                    <Shield size={14} style={{ color: '#dfbe63' }} />
-                    <span>Escrito de Descargo (Causal Eximente)</span>
+                    <Shield size={13} style={{ color: '#dfbe63' }} />
+                    <span>Descargo Urgente (Eximente Art. 21)</span>
                   </button>
 
                   <button
                     onClick={() =>
                       handleSend(
-                        'Redacta un Recurso de Apelación ante el Tribunal de Disciplina Policial (TDP) por vulneración al debido proceso.'
+                        'Calcula y deduce la Caducidad del PAD por haber superado el plazo de 9 meses del Art. 68 de la Ley 30714 solicitando archivo definitivo.'
                       )
                     }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                     style={{
                       background: 'rgba(10, 42, 36, 0.75)',
                       borderColor: 'rgba(45, 175, 150, 0.4)',
@@ -1565,8 +2273,89 @@ export default function PnpDespacho() {
                       e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
                     }}
                   >
-                    <Scale size={14} style={{ color: '#dfbe63' }} />
-                    <span>Apelación ante el Tribunal (TDP)</span>
+                    <Clock size={13} style={{ color: '#dfbe63' }} />
+                    <span>Deducir Caducidad o Prescripción (Art. 68)</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleSend(
+                        'Redacta un Recurso de Apelación ante el Tribunal de Disciplina Policial (TDP) por vulneración al debido proceso y motivación.'
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    style={{
+                      background: 'rgba(10, 42, 36, 0.75)',
+                      borderColor: 'rgba(45, 175, 150, 0.4)',
+                      color: 'rgba(244, 241, 234, 0.9)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#c9a84c'
+                      e.currentTarget.style.color = '#dfbe63'
+                      e.currentTarget.style.background = '#124c40'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
+                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
+                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
+                    }}
+                  >
+                    <Scale size={13} style={{ color: '#dfbe63' }} />
+                    <span>Apelación ante el Tribunal TDP</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleSend(
+                        'Redacta un informe de descargo y justificación técnica por uso reglamentario de la fuerza y arma de fuego bajo el D.L. 1186 y la Ley 31012.'
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    style={{
+                      background: 'rgba(10, 42, 36, 0.75)',
+                      borderColor: 'rgba(45, 175, 150, 0.4)',
+                      color: 'rgba(244, 241, 234, 0.9)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#c9a84c'
+                      e.currentTarget.style.color = '#dfbe63'
+                      e.currentTarget.style.background = '#124c40'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
+                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
+                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
+                    }}
+                  >
+                    <Shield size={13} style={{ color: '#dfbe63' }} />
+                    <span>Uso de la Fuerza (D.L. 1186 / Ley 31012)</span>
+                  </button>
+
+                  <button
+                    onClick={() =>
+                      handleSend(
+                        'Solicita la nulidad de la notificación de apertura de PAD por defecto en el emplazamiento y vulneración del derecho de defensa.'
+                      )
+                    }
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    style={{
+                      background: 'rgba(10, 42, 36, 0.75)',
+                      borderColor: 'rgba(45, 175, 150, 0.4)',
+                      color: 'rgba(244, 241, 234, 0.9)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#c9a84c'
+                      e.currentTarget.style.color = '#dfbe63'
+                      e.currentTarget.style.background = '#124c40'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
+                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
+                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
+                    }}
+                  >
+                    <FileText size={13} style={{ color: '#dfbe63' }} />
+                    <span>Nulidad por Vicio de Notificación</span>
                   </button>
 
                   <button
@@ -1575,7 +2364,7 @@ export default function PnpDespacho() {
                         'Tengo citación para rendir manifestación ante Inspectoría por queja de un ciudadano. ¿Qué derechos tengo y qué debo responder?'
                       )
                     }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
+                    className="px-3.5 py-2 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
                     style={{
                       background: 'rgba(10, 42, 36, 0.75)',
                       borderColor: 'rgba(45, 175, 150, 0.4)',
@@ -1592,33 +2381,8 @@ export default function PnpDespacho() {
                       e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
                     }}
                   >
-                    <FileText size={14} style={{ color: '#dfbe63' }} />
+                    <Scale size={13} style={{ color: '#dfbe63' }} />
                     <span>Guía para Rendir Manifestación</span>
-                  </button>
-
-                  <button
-                    onClick={() =>
-                      handleSend('¿Cómo verificar si mi sanción disciplinaria ya prescribió bajo la Ley N° 30714?')
-                    }
-                    className="px-4 py-2.5 rounded-full border text-xs font-normal transition-all flex items-center gap-2 cursor-pointer shadow-sm hover:scale-[1.02] active:scale-95"
-                    style={{
-                      background: 'rgba(10, 42, 36, 0.75)',
-                      borderColor: 'rgba(45, 175, 150, 0.4)',
-                      color: 'rgba(244, 241, 234, 0.9)',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = '#c9a84c'
-                      e.currentTarget.style.color = '#dfbe63'
-                      e.currentTarget.style.background = '#124c40'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor = 'rgba(45, 175, 150, 0.4)'
-                      e.currentTarget.style.color = 'rgba(244, 241, 234, 0.9)'
-                      e.currentTarget.style.background = 'rgba(10, 42, 36, 0.75)'
-                    }}
-                  >
-                    <Clock size={14} style={{ color: '#dfbe63' }} />
-                    <span>Prescripción de la Sanción</span>
                   </button>
                 </>
               )}
@@ -1662,16 +2426,6 @@ export default function PnpDespacho() {
                         <div className="flex items-center justify-between gap-3 mb-2">
                           <span className="text-xs font-medium text-white">
                             {msg.docTitle || 'DOCUMENTO OFICIAL GENERADO'}
-                          </span>
-                          <span
-                            className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded font-semibold"
-                            style={{
-                              background: 'rgba(201, 168, 76, 0.15)',
-                              color: '#dfbe63',
-                              border: '1px solid rgba(201, 168, 76, 0.4)',
-                            }}
-                          >
-                            Ley N° 30714
                           </span>
                         </div>
 
@@ -1726,7 +2480,7 @@ export default function PnpDespacho() {
               {isTyping && (
                 <div className="flex gap-2 items-center text-xs font-light" style={{ color: '#dfbe63' }}>
                   <span className="w-1.5 h-1.5 rounded-full bg-[#dfbe63] animate-pulse" />
-                  <span>Estructurando escrito bajo la Ley N° 30714...</span>
+                  <span>Estructurando documento oficial PNP...</span>
                 </div>
               )}
 
@@ -1744,7 +2498,7 @@ export default function PnpDespacho() {
                 className="text-[10px] text-center mt-2 font-light"
                 style={{ color: 'rgba(163, 207, 198, 0.65)' }}
               >
-                Hardman PNP opera conforme a la Ley N° 30714 y precedentes TDP. Verifica siempre la motivación.
+                Hardman PNP — Inteligencia Jurídica y Operativa Policial. Verifica siempre los datos de la intervención.
               </p>
             </div>
           </div>

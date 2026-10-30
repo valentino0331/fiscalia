@@ -719,16 +719,19 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         m.content.includes('[Archivo adjunto:')
       ));
 
-    // Check if message should be transferred to another agent (solamente en consultas iniciales sin documentos o borradores)
-    if (!isDocRequest && !hasLargeDoc && recentMessages.length <= 2) {
+    // ─── VERIFICACIÓN DE SOBERANÍA DE ESPECIALIDAD Y SMART HANDOFF (ESTÁNDAR HARVEY AI) ───
+    // Si la consulta o solicitud de escrito pertenece manifiestamente a otra rama especializada,
+    // transferir de inmediato al especialista titular de Hardman con su contexto cargado.
+    const shouldCheckTransfer = recentMessages.length <= 4 || (!hasLargeDoc && !pinnedExpedienteBlock);
+    if (shouldCheckTransfer) {
       const transferSuggestion = suggestAgentTransfer(agentId, latestUserMessage);
       if (transferSuggestion) {
         transferTo = transferSuggestion.agentId;
         const destName = transferSuggestion.agentName;
         assistantMessage = [
-          `Estimado usuario: Analizada su consulta fáctica, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
-          `Por estricto rigor procesal y competencia jurídica, le transfiero de inmediato con ${destName}, especialista en ${transferSuggestion.agentLabel} de Hardman.`,
-          `Haga clic en el botón inferior para continuar; su consulta se cargará de manera automática en el despacho de ${destName}.`,
+          `Estimado colega: Analizada su consulta procesal, la materia planteada corresponde formalmente a la especialidad de **Derecho ${transferSuggestion.agentLabel}**.`,
+          `Para garantizar la máxima precisión técnica, dogmática y jurisprudencial (estándar de socio especialista de Hardman), le transfiero de inmediato con **${destName}**, especialista titular en ${transferSuggestion.agentLabel}.`,
+          `Haga clic en el botón inferior para continuar; su consulta y requerimiento se cargarán de manera automática en el despacho de ${destName}.`,
         ].join(' ');
 
         sendStreamChunk(assistantMessage);
@@ -801,6 +804,12 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
         title: 'Especialista en Derecho Administrativo y Contrataciones del Estado',
         specialty: 'licitaciones y contratos con el Estado (OECE bajo la Ley 32069), recursos de apelación ante el Tribunal de Contrataciones Públicas (TCP), procedimientos administrativos sancionadores y reclamos ante entidades públicas',
         intro: '¡Hola! Le doy una cordial bienvenida a mi despacho. Soy el **Dr. Marco**, especialista en **Derecho Administrativo y Contrataciones del Estado** en Hardman.',
+      },
+      pnp: {
+        name: 'Mayor Hardman PNP',
+        title: 'Especialista en Procedimiento Policial y Régimen Disciplinario PNP',
+        specialty: 'actas de intervención NCPP (Art. 259), registros y lectura de derechos, descargos y apelaciones Ley 30714 ante Inspectoría/TDP, auditoría de prescripción y uso reglamentario de la fuerza D.L. 1186 / Ley 31012',
+        intro: '¡Saludos, colega! Te doy la bienvenida a tu Despacho PNP en Hardman.',
       },
     };
 
@@ -929,6 +938,19 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
      * Cita con fidelidad los nombres de las partes, número de expediente/carpeta, juzgado, fiscalía, delito imputado y medios probatorios tal como obran en el expediente aportado.
      * ⛔ PROHIBICIÓN TOTAL DE INVENTAR HECHOS O PRUEBAS: Jamás inventes declaraciones testimoniales, peritajes ficticios, folios inexistentes ni hechos que no aparezcan en el expediente aportado.
      * Si para formular una solicitud o escrito (ej. cesación de prisión preventiva bajo el Art. 283° NCPP) se requiere un arraigo sobrevenido o medio probatorio complementario que el abogado aún no ha adjuntado en el texto, consigna la fundamentación jurídica y señala con total claridad: "[Adjuntar aquí: Constancia de arraigo laboral / peritaje técnico correspondiente que acredite este extremo]".
+   - ⚖️ FIDELIDAD LITERAL EN RESOLUCIONES JUDICIALES Y CONTROL DE INADMISIBILIDAD / SUBSANACIÓN:
+     * ⛔ PROHIBICIÓN RADICAL DE ASUMIR O INVENTAR DEFECTOS PROCESALES: Cuando el usuario suba o mencione una resolución judicial (ej.: Resolución N° 1 de inadmisibilidad, queja, apelación o requerimiento), está TERMINANTEMENTE PROHIBIDO asumir por defecto o plantilla que "falta la firma del abogado".
+     * EL ESPECIALISTA DEBE TRANSCRIBIR TEXTUALMENTE entre comillas el considerando donde el Juez formula la observación (ejemplo verbatim: «...se advierte que la firma de dicha recurrente no figura, estando en lo previsto en el artículo 131...»).
+     * DISTINCIÓN DOGMÁTICA INVIOLABLE (Art. 131° CPC vs Art. 132° CPC / Art. 290° LOPJ):
+       1. ARTÍCULO 131° DEL CÓDIGO PROCESAL CIVIL (Firma de la Parte o Recurrente):
+          - Exige la firma de la persona interesada, demandante, quejosa o recurrente (ejemplo: Hermelinda Albino Beteta).
+          - Si el juzgado cita el Art. 131° CPC o señala que «falta la firma de la recurrente», la omisión es EXCLUSIVAMENTE de la PARTE/RECURRENTE, NUNCA DEL ABOGADO.
+          - La subsanación consiste en que LA RECURRENTE ratifique el escrito estampando su firma gráfica o digital. NUNCA atribuyas al abogado una falta de firma ni redactes diciendo que el abogado omitió firmar.
+       2. ARTÍCULO 132° DEL CÓDIGO PROCESAL CIVIL Y ARTÍCULO 290° DE LA LOPJ (Firma y Colegiatura de Abogado):
+          - Exige la autorización del letrado colegiado. Solo si la resolución cita el Art. 132° CPC, Art. 290° LOPJ o indica textualmente que el escrito carece de firma o sello de abogado, se subsanará la firma letrada.
+       3. TASAS Y ARANCELES (Art. 130° CPC y LOPJ):
+          - Solo si la resolución observa pago de aranceles judiciales o cédulas de notificación se redactará subsanación adjuntando tasa judicial.
+     * IDENTIFICACIÓN NOMINAL DEL SUJETO OBSERVADO: Identifica con exactitud el nombre de la recurrente/parte observada, el número o código digital del escrito/queja y el plazo legal para subsanar (ej. 3 días hábiles bajo apercibimiento de rechazo), y redacta de inmediato el escrito formal de subsanación dentro del bloque \`\`\`document ratificando la firma de la recurrente bajo el Art. 131° CPC.
 
 3. ORIENTACIÓN PROFESIONAL ANTE CONSULTAS PREVIAS DE ABOGADOS:
    - Si un abogado consulta si la IA puede leer su expediente y preparar un escrito (ej. "¿si subo mi expediente y necesito que prepare un escrito x cesación de prisión preventiva también lo hace? ¿o debo explicarle que necesito o quiero realizar?"):
@@ -985,13 +1007,14 @@ El usuario ha solicitado expresamente continuar, completar o finalizar una respu
       effectiveSystemPrompt = continuationDirective + effectiveSystemPrompt;
     } else if (isDocRequest || hasLargeDoc) {
       const supremeDocDirective = `════════════════════════════════════════
-ORDEN SUPREMA Y PREVALENTE — AUDITORÍA, REVISIÓN DOCUMENTAL Y EXPEDIENTES:
+ORDEN SUPREMA Y PREVALENTE — AUDITORÍA, REVISIÓN DOCUMENTAL Y EXPEDIENTES (ESTÁNDAR HARVEY AI):
 El usuario ha enviado un documento o expediente para revisión/auditoría o solicita análisis/redacción legal (o hace referencia a un documento o caso enviado previamente en la conversación).
 ⛔ PROHIBICIÓN ABSOLUTA DE RECHAZAR O DECIR "Mi función en el sistema Hardman es exclusivamente...":
-ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, declararse incompetente o excusarse en la especialidad. La revisión y auditoría de documentos legales es 100% una labor jurídica válida y de máxima prioridad.
-✅ PROCEDE DE INMEDIATO a examinar minuciosamente el contenido del documento adjunto (o del mensaje previo en el historial):
-1. Audita los hechos fácticos, la calificación legal, los posibles vicios procesales, el cómputo de plazos fatales y la validez formal del acto notificado.
-2. Si el documento es una Disposición Fiscal (ej. "No procede formalizar investigación"), Resolución Judicial, Auto, Cédula o Contrato, emite tu diagnóstico procesal riguroso indicando si procede o no, qué recurso o medio de defensa interponer (queja de derecho, apelación, nulidad, tutela de derechos, contestación) y redacta la propuesta o escrito formal completo dentro del bloque \`\`\`document.
+ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, dar respuestas de descarte o lavarse las manos cuando el asunto pertenezca a tu especialidad o sea conexo. La revisión y redacción de documentos procesales es 100% una labor jurídica de máxima prioridad.
+✅ PROCEDE DE INMEDIATO A EXAMINAR MINUCIOSAMENTE EL CASO O DOCUMENTO:
+1. Aplica el protocolo de Socio Senior: Audita los hechos fácticos, la calificación legal exacta, los posibles vicios procesales, el cómputo de plazos fatales (caducidad/prescripción) y la validez formal del acto notificado.
+2. Si el caso presenta ambigüedad fáctica o requiere datos determinantes para el litigio (Surgical Intake), formula las preguntas clave de quiebre y entrega de inmediato la estructura procesal formal en bloque \`\`\`document con marcadores editables [DATOS CLAVE].
+3. Emplea la metodología de argumentación CREAC (Conclusión, Regla vigente al 2026, Precedente vinculante de Corte Suprema/TC/Tribunal Fiscal/OECE, Subsunción fáctica y Blindaje procesal anticipado contra excepciones previas).
 ════════════════════════════════════════\n\n`;
       effectiveSystemPrompt = supremeDocDirective + fullSystemPrompt;
     }

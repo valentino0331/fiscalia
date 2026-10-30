@@ -4,12 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   ArrowRight, Search, X, Shield, MessageSquare, Clock, FileText, Trash2, Star,
   Sparkles, Calculator, MapPin, ChevronRight,
-  Edit2, Check, Scale, Plus, ArrowUp, Zap, Users, Menu
+  Edit2, Check, Scale, Plus, ArrowUp, Zap, Users, Menu,
+  Paperclip, FolderCheck, Loader2, CheckCircle2, AlertTriangle
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { AGENTS, getAgent } from '@/lib/agents'
 import { api } from '@/lib/api'
 import { formatDate } from '@/lib/utils'
+import { saveAttachmentLocally } from '@/lib/attachmentStorage'
 import type { Agent, Conversation } from '@/types'
 import HardmanLogo from '@/components/brand/HardmanLogo'
 import DocumentScannerModal from '@/components/citizen/DocumentScannerModal'
@@ -141,21 +143,33 @@ export default function Dashboard() {
   const [savedLoading, setSavedLoading] = useState(false)
   const [userPlan, setUserPlan] = useState<'junior' | 'senior' | 'demo'>('junior')
   const [demoUsage, setDemoUsage] = useState<{ questionsUsed: number; limit: number } | null>(null)
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false)
 
   useEffect(() => {
-    api.account.usage()
-      .then((data) => {
-        if (data.plan === 'demo' || (data as any).isDemo || user?.isDemo) {
-          setUserPlan('demo')
-          setDemoUsage({ questionsUsed: data.questionsUsed, limit: data.limit || 1 })
-        } else if (data.plan === 'senior' || data.plan === 'pro' || data.limit === null) {
-          setUserPlan('senior')
-        } else {
-          setUserPlan('junior')
-        }
-      })
-      .catch(() => {})
+    const syncPlan = () => {
+      api.account.usage()
+        .then((data) => {
+          if (data.plan === 'demo' || (data as any).isDemo || user?.isDemo) {
+            setUserPlan('demo')
+            setDemoUsage({ questionsUsed: data.questionsUsed, limit: data.limit || 1 })
+          } else if (data.plan === 'senior' || data.plan === 'pro' || data.limit === null) {
+            setUserPlan('senior')
+            setDemoUsage({ questionsUsed: data.questionsUsed, limit: data.limit || 250 })
+          } else {
+            setUserPlan('junior')
+            setDemoUsage({ questionsUsed: data.questionsUsed, limit: data.limit || 50 })
+          }
+        })
+        .catch(() => {})
+    }
+
+    syncPlan()
+    window.addEventListener('hardman:usage-updated', syncPlan)
+    window.addEventListener('focus', syncPlan)
+
+    return () => {
+      window.removeEventListener('hardman:usage-updated', syncPlan)
+      window.removeEventListener('focus', syncPlan)
+    }
   }, [user])
 
   const handleStartRename = (conv: Conversation, e: React.MouseEvent) => {
@@ -275,6 +289,107 @@ export default function Dashboard() {
   const plusMenuRef = useRef<HTMLDivElement>(null)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
 
+  // Multi-file state estilo ChatGPT (límite de hasta 5 archivos / mínimo 3)
+  const [attachedDocs, setAttachedDocs] = useState<Array<{
+    id: string
+    file: File
+    extractedText?: string
+    pageCount?: number | null
+    status: 'extracting' | 'ready' | 'error'
+    error?: string | null
+    retryInfo?: string | null
+  }>>([])
+  const [extracting, setExtracting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const MAX_FILES = 5
+
+  const handleFilesSelect = async (filesList: File[] | FileList) => {
+    const incoming = Array.from(filesList)
+    if (incoming.length === 0) return
+
+    if (attachedDocs.length + incoming.length > MAX_FILES) {
+      alert(`Puedes adjuntar hasta ${MAX_FILES} archivos por consulta. Por favor selecciona hasta ${MAX_FILES - attachedDocs.length} archivo(s) más.`)
+      return
+    }
+
+    const MAX_MB = 100
+    const newItems: Array<{
+      id: string
+      file: File
+      extractedText?: string
+      pageCount?: number | null
+      status: 'extracting' | 'ready' | 'error'
+      error?: string | null
+      retryInfo?: string | null
+    }> = []
+
+    for (const file of incoming) {
+      const id = Math.random().toString(36).slice(2, 9) + '_' + Date.now()
+      if (file.size > MAX_MB * 1024 * 1024) {
+        newItems.push({
+          id,
+          file,
+          status: 'error',
+          error: `Supera límite de ${MAX_MB}MB`,
+        })
+      } else {
+        newItems.push({
+          id,
+          file,
+          status: 'extracting',
+        })
+      }
+    }
+
+    setAttachedDocs((prev) => [...prev, ...newItems])
+    setExtracting(true)
+
+    await Promise.all(
+      newItems.map(async (item) => {
+        if (item.status === 'error') return
+        saveAttachmentLocally(item.file).catch(() => { })
+        try {
+          const result = await api.files.extract(item.file, (attempt, total) => {
+            setAttachedDocs((prev) =>
+              prev.map((d) => (d.id === item.id ? { ...d, retryInfo: `Reintentando… ${attempt}/${total}` } : d))
+            )
+          })
+          if (!result.text || !result.text.trim()) {
+            setAttachedDocs((prev) =>
+              prev.map((d) => (d.id === item.id ? { ...d, status: 'error', error: 'Sin texto legible o escaneo borroso' } : d))
+            )
+          } else {
+            const cleanedText = result.text.trim()
+            setAttachedDocs((prev) =>
+              prev.map((d) =>
+                d.id === item.id
+                  ? {
+                    ...d,
+                    status: 'ready',
+                    extractedText: cleanedText,
+                    pageCount: result.pageCount ?? null,
+                    retryInfo: null,
+                  }
+                  : d
+              )
+            )
+          }
+        } catch (err: any) {
+          setAttachedDocs((prev) =>
+            prev.map((d) => (d.id === item.id ? { ...d, status: 'error', error: err.message || 'Error al procesar archivo' } : d))
+          )
+        }
+      })
+    )
+    setExtracting(false)
+  }
+
+  const removeAttachedDoc = (id: string) => {
+    setAttachedDocs((prev) => prev.filter((d) => d.id !== id))
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
   useEffect(() => {
     function handleClickOutside(event: globalThis.MouseEvent) {
       if (plusMenuRef.current && !plusMenuRef.current.contains(event.target as Node)) {
@@ -287,25 +402,30 @@ export default function Dashboard() {
 
   const handleStartPrompt = (targetAgentId?: string) => {
     const text = promptCase.trim()
-    if (!text) return
+    if (!text && attachedDocs.length === 0) return
     let agentId = targetAgentId || 'diego'
-    const lower = text.toLowerCase()
-    if (lower.includes('despido') || lower.includes('trabajador') || lower.includes('cts') || lower.includes('laboral') || lower.includes('sunafil')) {
+    const combinedSearchText = (text + ' ' + attachedDocs.map(d => d.file.name + ' ' + (d.extractedText || '')).join(' ')).toLowerCase()
+    if (combinedSearchText.includes('despido') || combinedSearchText.includes('trabajador') || combinedSearchText.includes('cts') || combinedSearchText.includes('laboral') || combinedSearchText.includes('sunafil')) {
       agentId = 'valentina'
-    } else if (lower.includes('penal') || lower.includes('prisión') || lower.includes('fiscalía') || lower.includes('delito') || lower.includes('ncpp')) {
+    } else if (combinedSearchText.includes('penal') || combinedSearchText.includes('prisión') || combinedSearchText.includes('fiscalía') || combinedSearchText.includes('delito') || combinedSearchText.includes('ncpp') || combinedSearchText.includes('colusión') || combinedSearchText.includes('condena')) {
       agentId = 'sebastian'
-    } else if (lower.includes('empresa') || lower.includes('sac') || lower.includes('societario') || lower.includes('compliance') || lower.includes('fusión')) {
+    } else if (combinedSearchText.includes('empresa') || combinedSearchText.includes('sac') || combinedSearchText.includes('societario') || combinedSearchText.includes('compliance') || combinedSearchText.includes('fusión')) {
       agentId = 'adriana'
-    } else if (lower.includes('mina') || lower.includes('minero') || lower.includes('ingemmet') || lower.includes('oefa') || lower.includes('reinfo')) {
+    } else if (combinedSearchText.includes('mina') || combinedSearchText.includes('minero') || combinedSearchText.includes('ingemmet') || combinedSearchText.includes('oefa') || combinedSearchText.includes('reinfo')) {
       agentId = 'rodrigo'
-    } else if (lower.includes('alimento') || lower.includes('tenencia') || lower.includes('divorcio') || lower.includes('familia')) {
+    } else if (combinedSearchText.includes('alimento') || combinedSearchText.includes('tenencia') || combinedSearchText.includes('divorcio') || combinedSearchText.includes('familia') || combinedSearchText.includes('adopción')) {
       agentId = 'camila'
-    } else if (lower.includes('sunat') || lower.includes('tributo') || lower.includes('renta') || lower.includes('igv') || lower.includes('fiscalización')) {
+    } else if (combinedSearchText.includes('sunat') || combinedSearchText.includes('tributo') || combinedSearchText.includes('renta') || combinedSearchText.includes('igv') || combinedSearchText.includes('fiscalización')) {
       agentId = 'fernanda'
-    } else if (lower.includes('administrativo') || lower.includes('oece') || lower.includes('osce') || lower.includes('apelación')) {
+    } else if (combinedSearchText.includes('administrativo') || combinedSearchText.includes('oece') || combinedSearchText.includes('osce') || combinedSearchText.includes('sancion') || combinedSearchText.includes('pad')) {
       agentId = 'marco'
     }
-    navigate(`/chat/${agentId}`, { state: { transferMessage: text } })
+    navigate(`/chat/${agentId}`, {
+      state: {
+        transferMessage: text || 'Analiza este expediente con los documentos adjuntos y entrega tu estrategia procesal integral.',
+        initialAttachedDocs: attachedDocs,
+      }
+    })
   }
 
   const handleNewConsulta = () => {
@@ -383,7 +503,7 @@ export default function Dashboard() {
               const isActive = activeSideItem === item.id
               const Icon = item.icon
               const count = item.id === 'specialists' ? 8
-                : item.id === 'consultations' ? (convCount || 26)
+                : item.id === 'consultations' ? (convCount > 0 ? convCount : undefined)
                 : item.id === 'habilidades' ? savedMessages.length || undefined
                 : undefined
               return (
@@ -483,21 +603,8 @@ export default function Dashboard() {
           <div className="hidden md:block"></div>
 
           <div className="flex items-center gap-3 ml-auto">
-            {/* Pill Consultas Restantes */}
-            <div
-              onClick={() => setUpgradeModalOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-[11px] font-medium transition-all cursor-pointer hover:border-[#c9a84c]/40 hover:bg-[#c9a84c]/5"
-              style={{
-                background: '#131418',
-                borderColor: 'rgba(255,255,255,0.08)'
-              }}
-              title="Consultas disponibles"
-            >
-              <Zap size={12} className="text-[#c9a84c] fill-[#c9a84c]" />
-              <span className="text-white/70">
-                Consultas <strong className="text-[#dfbe63] font-semibold">{demoUsage ? Math.max(0, (demoUsage.limit || 1) - demoUsage.questionsUsed) : (userPlan === 'senior' ? 250 : 50)}</strong> restantes
-              </span>
-            </div>
+            {/* Pill Consultas Restantes sincronizado en tiempo real */}
+            <UsageCounterBadge />
 
             {/* User Badge */}
             <button
@@ -558,6 +665,115 @@ export default function Dashboard() {
                       boxShadow: '0 12px 35px rgba(0,0,0,0.6)'
                     }}
                   >
+                    {/* Hidden Multi-file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.doc,.docx,.txt"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => {
+                        const files = e.target.files
+                        if (files && files.length > 0) handleFilesSelect(files)
+                        if (fileInputRef.current) fileInputRef.current.value = ''
+                      }}
+                    />
+
+                    {/* ChatGPT-style Attached Files Cards */}
+                    {attachedDocs.length > 0 && (
+                      <div className="mb-3 pt-1">
+                        <div className="flex items-center justify-between mb-2 px-1">
+                          <span className="text-[11px] font-medium text-[#c9a84c] flex items-center gap-1.5">
+                            <FolderCheck size={13} />
+                            {attachedDocs.length === 1
+                              ? `1 documento adjunto (${attachedDocs.length}/5)`
+                              : `Expediente Multi-Documento (${attachedDocs.length}/5 archivos cargados)`}
+                          </span>
+                          {attachedDocs.length < 5 && (
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="text-[10px] text-[#dfbe63] hover:text-white font-medium flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#c9a84c]/10 border border-[#c9a84c]/30 hover:bg-[#c9a84c]/20 transition-all cursor-pointer"
+                            >
+                              <Plus size={11} />
+                              <span>+ Agregar otro</span>
+                            </button>
+                          )}
+                        </div>
+
+                        {/* ChatGPT-style Cards Row */}
+                        <div className="flex items-stretch gap-2 overflow-x-auto pb-1 max-w-full [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                          {attachedDocs.map((doc) => {
+                            const isPdf = doc.file.name.toLowerCase().endsWith('.pdf')
+                            const sizeMB = doc.file.size / (1024 * 1024)
+                            const sizeStr = sizeMB >= 1 ? `${sizeMB.toFixed(1)}MB` : `${(doc.file.size / 1024).toFixed(0)}KB`
+                            const isReady = doc.status === 'ready'
+                            const isErr = doc.status === 'error'
+                            return (
+                              <div
+                                key={doc.id}
+                                className="group relative flex flex-col justify-between p-2.5 rounded-xl border flex-shrink-0 w-36 sm:w-44 h-24 transition-all"
+                                style={{
+                                  background: '#18191d',
+                                  borderColor: isErr ? 'rgba(239,68,68,0.4)' : isReady ? 'rgba(201,168,76,0.35)' : 'rgba(255,255,255,0.12)',
+                                }}
+                              >
+                                <div className="flex items-start justify-between gap-1">
+                                  <div
+                                    className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                      background: isPdf ? 'rgba(239,68,68,0.15)' : 'rgba(59,130,246,0.15)',
+                                      color: isPdf ? '#f87171' : '#60a5fa',
+                                    }}
+                                  >
+                                    <FileText size={14} />
+                                  </div>
+
+                                  <div className="flex items-center gap-1">
+                                    {doc.status === 'extracting' ? (
+                                      <Loader2 size={12} className="animate-spin text-[#c9a84c]" />
+                                    ) : isErr ? (
+                                      <AlertTriangle size={12} className="text-red-400" />
+                                    ) : (
+                                      <CheckCircle2 size={12} className="text-emerald-400" />
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => removeAttachedDoc(doc.id)}
+                                      className="w-5 h-5 rounded-full flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                                      title="Eliminar archivo"
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="min-w-0">
+                                  <p className="text-[11px] font-medium text-white/90 truncate leading-snug" title={doc.file.name}>
+                                    {doc.file.name}
+                                  </p>
+                                  <p className="text-[9px] text-white/40 truncate">
+                                    {doc.retryInfo ? doc.retryInfo : isReady && doc.pageCount ? `${doc.pageCount} pág · ` : ''}{sizeStr}
+                                  </p>
+                                </div>
+                              </div>
+                            )
+                          })}
+
+                          {attachedDocs.length < 5 && (
+                            <button
+                              type="button"
+                              onClick={() => fileInputRef.current?.click()}
+                              className="flex flex-col items-center justify-center gap-1 p-2.5 rounded-xl border border-dashed border-white/20 hover:border-[#c9a84c]/50 bg-white/[0.02] hover:bg-white/[0.05] transition-all flex-shrink-0 w-28 sm:w-32 h-24 text-white/50 hover:text-[#dfbe63] cursor-pointer"
+                            >
+                              <Plus size={16} />
+                              <span className="text-[10px] font-medium">+ Adjuntar ({attachedDocs.length}/5)</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <textarea
                       id="dashboard-case-textarea"
                       value={promptCase}
@@ -568,95 +784,122 @@ export default function Dashboard() {
                           handleStartPrompt()
                         }
                       }}
-                      placeholder="Describe tu caso: hechos, fechas y qué necesitas lograr..."
+                      placeholder={attachedDocs.length > 0 ? "Describe qué necesitas resolver con este expediente o presiona Enter para consultar..." : "Describe tu caso: hechos, fechas y qué necesitas lograr..."}
                       rows={2}
                       className="w-full bg-transparent text-[13.5px] text-white placeholder-white/40 resize-none outline-none leading-relaxed"
                     />
 
                     <div className="flex items-center justify-between pt-2.5 mt-2 border-t border-white/[0.05]">
-                      {/* + Button with Tools Dropdown */}
-                      <div className="relative" ref={plusMenuRef}>
+                      <div className="flex items-center gap-2">
+                        {/* + Button with Tools Dropdown */}
+                        <div className="relative" ref={plusMenuRef}>
+                          <button
+                            type="button"
+                            onClick={() => setPlusMenuOpen(!plusMenuOpen)}
+                            className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
+                              plusMenuOpen
+                                ? 'bg-[#c9a84c]/20 border-[#c9a84c] text-[#dfbe63]'
+                                : 'border-white/10 hover:border-[#c9a84c]/40 hover:bg-white/5 text-white/60 hover:text-white'
+                            }`}
+                            title="Herramientas y opciones"
+                          >
+                            <Plus size={15} />
+                          </button>
+
+                          {/* Popover Menu with Options */}
+                          <AnimatePresence>
+                            {plusMenuOpen && (
+                              <motion.div
+                                initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                                transition={{ duration: 0.15 }}
+                                className="absolute left-0 bottom-9 mb-1.5 w-56 rounded-xl p-1.5 z-50 shadow-2xl backdrop-blur-xl"
+                                style={{
+                                  background: 'rgba(18, 19, 23, 0.98)',
+                                  border: '1px solid rgba(201, 168, 76, 0.35)',
+                                  boxShadow: '0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(201,168,76,0.12)'
+                                }}
+                              >
+                                <div className="text-[9px] uppercase font-bold text-[#c9a84c] px-3 py-1 tracking-wider border-b border-white/5">
+                                  Acciones Rápidas
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => { setPlusMenuOpen(false); fileInputRef.current?.click() }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                  <Paperclip size={13} className="text-[#c9a84c]" />
+                                  <span>Subir archivos (PDF / Word)</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setPlusMenuOpen(false); setDocGenModal({ isOpen: true, docType: 'carta_notarial' }) }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                  <FileText size={13} className="text-[#c9a84c]" />
+                                  <span>Generar documentos</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setPlusMenuOpen(false); setScannerOpen(true) }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                  <Sparkles size={13} className="text-[#a5b4fc]" />
+                                  <span>Escanear cédula / PDF</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setPlusMenuOpen(false); setCalcModal({ isOpen: true, tab: 'liquidacion' }) }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                  <Calculator size={13} className="text-[#34d17a]" />
+                                  <span>Calculadoras S/</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setPlusMenuOpen(false); setWhereToGoOpen(true) }}
+                                  className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                                >
+                                  <MapPin size={13} className="text-[#f59e0b]" />
+                                  <span>A dónde acudir</span>
+                                </button>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Direct Paperclip Button */}
                         <button
                           type="button"
-                          onClick={() => setPlusMenuOpen(!plusMenuOpen)}
-                          className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer border ${
-                            plusMenuOpen
-                              ? 'bg-[#c9a84c]/20 border-[#c9a84c] text-[#dfbe63]'
-                              : 'border-white/10 hover:border-[#c9a84c]/40 hover:bg-white/5 text-white/60 hover:text-white'
-                          }`}
-                          title="Herramientas y opciones"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-medium text-[#dfbe63] bg-[#c9a84c]/10 hover:bg-[#c9a84c]/20 border border-[#c9a84c]/30 transition-all cursor-pointer"
+                          title="Subir hasta 5 archivos (PDF, Word) para análisis integral conjunto"
                         >
-                          <Plus size={15} />
+                          <Paperclip size={13} className="text-[#c9a84c]" />
+                          <span className="hidden xs:inline">
+                            {attachedDocs.length > 0 ? `Archivos (${attachedDocs.length}/5)` : 'Subir archivos'}
+                          </span>
                         </button>
-
-                        {/* Popover Menu with the 4 options user asked to put here */}
-                        <AnimatePresence>
-                          {plusMenuOpen && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                              transition={{ duration: 0.15 }}
-                              className="absolute left-0 bottom-9 mb-1.5 w-56 rounded-xl p-1.5 z-50 shadow-2xl backdrop-blur-xl"
-                              style={{
-                                background: 'rgba(18, 19, 23, 0.98)',
-                                border: '1px solid rgba(201, 168, 76, 0.35)',
-                                boxShadow: '0 20px 50px rgba(0,0,0,0.9), 0 0 25px rgba(201,168,76,0.12)'
-                              }}
-                            >
-                              <div className="text-[9px] uppercase font-bold text-[#c9a84c] px-3 py-1 tracking-wider border-b border-white/5">
-                                Acciones Rápidas
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => { setPlusMenuOpen(false); setDocGenModal({ isOpen: true, docType: 'carta_notarial' }) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                              >
-                                <FileText size={13} className="text-[#c9a84c]" />
-                                <span>Generar documentos</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { setPlusMenuOpen(false); setScannerOpen(true) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                              >
-                                <Sparkles size={13} className="text-[#a5b4fc]" />
-                                <span>Escanear cédula / PDF</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { setPlusMenuOpen(false); setCalcModal({ isOpen: true, tab: 'liquidacion' }) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                              >
-                                <Calculator size={13} className="text-[#34d17a]" />
-                                <span>Calculadoras S/</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => { setPlusMenuOpen(false); setWhereToGoOpen(true) }}
-                                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-[12px] text-white/80 hover:text-white hover:bg-white/10 transition-colors"
-                              >
-                                <MapPin size={13} className="text-[#f59e0b]" />
-                                <span>A dónde acudir</span>
-                              </button>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
                       </div>
 
                       {/* Up Arrow Send Button */}
                       <button
                         type="button"
                         onClick={() => handleStartPrompt()}
-                        disabled={!promptCase.trim()}
+                        disabled={!promptCase.trim() && attachedDocs.length === 0}
                         className="w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed hover:scale-105 active:scale-95"
                         style={{
-                          background: 'linear-gradient(135deg, #dfbe63, #c9a84c)',
-                          color: '#111111'
+                          background: promptCase.trim() || attachedDocs.length > 0 ? 'linear-gradient(135deg, #dfbe63, #c9a84c)' : 'rgba(255,255,255,0.08)',
+                          color: promptCase.trim() || attachedDocs.length > 0 ? '#111111' : 'rgba(255,255,255,0.25)',
                         }}
                         title="Enviar consulta"
                       >
-                        <ArrowUp size={14} strokeWidth={2.8} />
+                        {extracting ? (
+                          <Loader2 size={13} className="animate-spin text-[#111111]" />
+                        ) : (
+                          <ArrowUp size={14} strokeWidth={2.4} />
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1355,17 +1598,6 @@ export default function Dashboard() {
           />
         )}
       </Suspense>
-
-      <UpgradeModal
-        isOpen={upgradeModalOpen}
-        onClose={() => setUpgradeModalOpen(false)}
-        usage={{
-          plan: 'demo',
-          questionsUsed: demoUsage?.questionsUsed || 0,
-          limit: 1,
-          isDemo: true,
-        }}
-      />
     </div>
   )
 }

@@ -1348,7 +1348,8 @@ export function isOralHearingRequest(query: string): boolean {
   const norm = normalizeText(query);
   const hearingTriggers = [
     'audiencia', 'audiencia oral', 'estrado', 'litigacion', 'teoria del caso', 'alegato de apertura',
-    'alegato de clausura', 'objecion', 'objeciones', 'informe oral'
+    'alegato de clausura', 'objecion', 'objeciones', 'informe oral', 'apelacion', 'apelacion de sentencia',
+    'sentencia', 'condena', 'colusion', 'sustentacion', 'segunda instancia'
   ];
   return hearingTriggers.some((t) => norm.includes(t));
 }
@@ -1365,6 +1366,21 @@ export function isAdopcionMayorEdadRequest(query: string): boolean {
     'adopción', 'adoptar'
   ];
   return adopcionTriggers.some((t) => norm.includes(t));
+}
+
+/**
+ * Detecta si el usuario adjunta o consulta sobre una resolución judicial de inadmisibilidad, subsanación o queja (Arts. 131-132 CPC)
+ */
+export function isResolucionSubsanacionRequest(query: string): boolean {
+  const norm = normalizeText(query);
+  const subsanacionTriggers = [
+    'inadmisible', 'inadmisibilidad', 'subsanacion', 'subsanar', 'subsanar queja',
+    'resolucion 1', 'resolucion n 1', 'resolucion n° 1', 'resolucion uno', 'resolucion numero uno',
+    'art 131', 'articulo 131', 'art 132', 'articulo 132', 'firma de dicha recurrente',
+    'firma de la recurrente', 'falta firmar', 'falta firma', 'regularizar firma',
+    'ratificar firma', 'queja ingresada', 'auto de inadmisibilidad', 'subsanar escrito'
+  ];
+  return subsanacionTriggers.some((t) => norm.includes(t));
 }
 
 /**
@@ -1460,6 +1476,34 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
   const isHearing = isOralHearingRequest(userQuery);
   const isCesacion = isCesacionPrisionPreventivaRequest(userQuery);
   const isAdopcion = (agentId === 'camila' || agentId === 'diego') && isAdopcionMayorEdadRequest(userQuery);
+  const isSubsanacion = isResolucionSubsanacionRequest(userQuery);
+
+  if (isSubsanacion) {
+    sections.push('► DIRECTIVA CANÓNICA DE LITERALIDAD Y SUBSANACIÓN DE RESOLUCIONES JUDICIALES (CERO CONFUSIÓN):');
+    sections.push('- LITERALIDAD TEXTUAL OBLIGATORIA DEL AUTO JUDICIAL:');
+    sections.push('  * Cita textualmente entre comillas el considerando donde el Juez formula la observación procesal.');
+    sections.push('  * ⛔ PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO": Nunca inventes ni asumas que la omisión es del abogado cuando la resolución judicial observa a la parte.');
+    sections.push('- DISTINCIÓN DOGMÁTICA INVIOLABLE (Art. 131° CPC vs Art. 132° CPC / Art. 290° LOPJ):');
+    sections.push('  1. ARTÍCULO 131° DEL CÓDIGO PROCESAL CIVIL (Firma de la Parte o Recurrente):');
+    sections.push('     - Rige la firma de la persona interesada, demandante, quejosa o recurrente (ejemplo: Hermelinda Albino Beteta).');
+    sections.push('     - Si la resolución cita el Art. 131° CPC o señala que "la firma de dicha recurrente no figura", la omisión es EXCLUSIVAMENTE de la PARTE/RECURRENTE, NUNCA DEL ABOGADO.');
+    sections.push('     - La subsanación consiste en que LA RECURRENTE estampe su firma gráfica o digital ratificando la queja o escrito. El escrito de subsanación debe expresar con claridad que la recurrente cumple con estampar su firma y ratificarse en el contenido del escrito primigenio.');
+    sections.push('  2. ARTÍCULO 132° DEL CÓDIGO PROCESAL CIVIL Y ARTÍCULO 290° DE LA LOPJ (Firma y Colegiatura de Abogado):');
+    sections.push('     - Rige la defensa técnica cautiva. Solo si la resolución cita expresamente el Art. 132° CPC, Art. 290° LOPJ o indica textualmente que el escrito carece de firma o sello de abogado, se subsanará la firma letrada.');
+    sections.push('  3. TASAS Y ARANCELES (Art. 130° CPC y LOPJ):');
+    sections.push('     - Solo si la resolución observa pago de aranceles judiciales o cédulas de notificación se redactará subsanación adjuntando tasa judicial.');
+    sections.push('- IDENTIFICACIÓN NOMINAL DEL SUJETO OBSERVADO: Identifica con exactitud el nombre de la recurrente/parte observada, el número o código digital del escrito/queja y el plazo legal para subsanar (ej. 3 días hábiles bajo apercibimiento de rechazo).');
+    sections.push('- REDACCIÓN INMEDIATA DEL ESCRITO DE SUBSANACIÓN (BLOQUE DOCUMENT):');
+    sections.push('  * TÍTULO: SUBSANACION_INADMISIBILIDAD_FIRMA_RECURRENTE');
+    sections.push('  * TIPO: ESCRITO JUDICIAL / CUADERNO PRINCIPAL O QUEJA');
+    sections.push('  * SUMILLA: SUBSANA OBSERVACIÓN DE INADMISIBILIDAD CONFORME A LA RESOLUCIÓN N° 1 — RATIFICA FIRMA DE LA RECURRENTE (ARTÍCULO 131° CPC)');
+    sections.push('  * SEÑOR JUEZ DEL [ÓRGANO JURISDICCIONAL]:');
+    sections.push('  * Comparecencia de la recurrente [NOMBRE] con asesoría letrada');
+    sections.push('  * I. PETITORIO: Subsanar la omisión formal de firma de la recurrente y conceder la admisión a trámite');
+    sections.push('  * II. CUMPLIMIENTO DE SUBSANACIÓN: Declaración expresa de la recurrente suscribiendo y ratificando el escrito');
+    sections.push('  * III. FUNDAMENTACIÓN JURÍDICA: Art. 131° del Código Procesal Civil y principio pro actione (acceso a la justicia)');
+    sections.push('  * POR TANTO y OTROSÍES DIGO (Casilla SINOE, correo, teléfono y autorización de abogado bajo Art. 132° CPC).');
+  }
 
   if (isAdopcion) {
     sections.push('► DIRECTIVA SUPREMA Y VINCULANTE — ADOPCIÓN DE PERSONAS MAYORES DE EDAD (PERSONAS CAPACES):');
@@ -1538,10 +1582,18 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
   }
 
   if (isHearing) {
-    sections.push('► DIRECTIVA PARA PREPARACIÓN DE AUDIENCIA Y LITIGACIÓN ORAL:');
-    sections.push('- Desarrolla la Teoría del Caso en sus 3 niveles (fáctico, jurídico y probatorio sintetizado).');
-    sections.push('- Anticipa las 3 preguntas u objeciones más hostiles que formulará el magistrado y brinda la respuesta jurídica contundente con número de Acuerdo Plenario o Casación.');
-    sections.push('- Estructura el alegato oral con claridad, ritmo persuasivo y sin fórmulas vacías.');
+    sections.push('► DIRECTIVA CANÓNICA PARA PREPARACIÓN DE AUDIENCIAS Y EXAMEN DE SENTENCIAS (ESTÁNDAR SUPREMO):');
+    sections.push('- PROHIBIDO CONFUNDIR HIPÓTESIS DEFENSIVA CON CONCLUSIÓN PROBADA: No afirmes que la sentencia tiene "motivación aparente" o "indicios débiles" sin demostrarlo mediante el quiebre puntual del enlace inferencial del Juez.');
+    sections.push('- MATRIZ OBLIGATORIA DE CONTRASTE PÁRRAFO POR PÁRRAFO:');
+    sections.push('  1. Qué afirma el Juez: Cita expresa del fundamento y página de la sentencia apelada.');
+    sections.push('  2. Qué prueba de cargo utiliza: Correos, cotizaciones, testimonios, audios, peritajes.');
+    sections.push('  3. Qué inferencia extrae: El razonamiento judicial que conecta el hecho con la condena.');
+    sections.push('  4. Qué objeta la apelación: El agravio concreto y formalmente planteado.');
+    sections.push('  5. Quid iuris / Contradicción no resuelta: Explicaciones alternativas que el Colegiado no descartó.');
+    sections.push('- DELITOS DE CORRUPCIÓN (COLUSIÓN ART. 384° CP): En colusión simple (primer párrafo) rige el peligro abstracto (concertación ilegal idónea); NUNCA alegues que "no hay delito por falta de perjuicio económico o lucro", pues la ley no lo exige. En colusión agravada (segundo párrafo), exige perjuicio patrimonial real peritado (Casación 661-2016/Piura).');
+    sections.push('- CERO ALUCINACIÓN EN CITAS NORMATIVAS: La apelación de sentencia es Art. 416° inc. 1.a) y Arts. 421°-426° NCPP (Pretensión de nulidad: Arts. 150° y 425°.3.b NCPP; NUNCA cites Art. 427° que es CASACIÓN ante la Corte Suprema). El Amparo es Art. 200° inc. 2 de la Constitución (NUNCA cites Art. 200° inc. 4 que es Acción Popular). La Queja solo procede ante denegatoria formal del recurso.');
+    sections.push('- CONTROL ESTRICTO DE RESTRICCIONES NEGATIVAS: Si el usuario pidió excluir a un testigo o argumento (ej. la secretaria), queda TERMINANTEMENTE PROHIBIDO mencionarlo o reincorporarlo.');
+    sections.push('- EVALUACIÓN CRÍTICA DE LA APELACIÓN (RED TEAM): Señala qué agravios de la defensa son genéricos y anticipa la objeción más hostil del Fiscal o de la Sala con su respuesta técnica.');
   }
 
   if (isCesacion) {

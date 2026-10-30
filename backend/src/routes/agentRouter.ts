@@ -278,55 +278,31 @@ export function suggestAgentTransfer(
   const normalizedInput = normalize(userText);
   if (!normalizedInput || normalizedInput.length < 5) return null;
 
-  // 0. GUARDA ANTI-DEFLEXIÓN Y PROTECCIÓN DE ESCRITOS / DOCUMENTOS
-  // Si el usuario está enviando o solicitando un escrito, o revisando un borrador propio
-  // ("el que yo realicé", "mi escrito", "revisa este escrito", "adjunto", etc.), NUNCA transferir.
-  // El especialista que recibió la solicitud/documento debe asumir la responsabilidad de atenderlo.
-  const isDocumentOrDraftReview =
-    normalizedInput.includes('el que yo realice') ||
-    normalizedInput.includes('el que yo realize') ||
-    normalizedInput.includes('el que realice') ||
-    normalizedInput.includes('el que realize') ||
-    normalizedInput.includes('el que hice') ||
-    normalizedInput.includes('el que redacte') ||
-    normalizedInput.includes('mi escrito') ||
-    normalizedInput.includes('este escrito') ||
-    normalizedInput.includes('mi borrador') ||
-    normalizedInput.includes('este borrador') ||
-    normalizedInput.includes('revisa este') ||
-    normalizedInput.includes('revisa mi') ||
-    normalizedInput.includes('revisar mi') ||
-    normalizedInput.includes('corrige mi') ||
-    normalizedInput.includes('corregir mi') ||
-    normalizedInput.includes('pasa a limpio') ||
-    normalizedInput.includes('formato de escrito') ||
-    normalizedInput.includes('solicito un escrito') ||
-    normalizedInput.includes('solicitando un escrito') ||
-    normalizedInput.includes('hacer escritos') ||
-    normalizedInput.includes('hacer un escrito') ||
-    normalizedInput.includes('hazme el escrito') ||
-    normalizedInput.includes('dame el escrito') ||
-    normalizedInput.includes('sumilla') ||
-    normalizedInput.includes('petitorio') ||
-    normalizedInput.includes('otrosi digo') ||
-    normalizedInput.includes('por tanto') ||
-    userText.includes('--- CONTENIDO EXTRAÍDO DEL DOCUMENTO ---');
-
-  if (isDocumentOrDraftReview) {
-    return null;
-  }
-
   // 1. CHEQUEO PRIORITARIO DEL AGENTE ACTUAL
   // Si la consulta ya contiene conceptos clave del especialista en el que se encuentra el usuario,
-  // NO lo transferimos a otro especialista, garantizando continuidad de atención.
+  // NO lo transferimos a otro especialista, garantizando soberanía y continuidad de atención.
   const currentRule = AGENT_ROUTING_RULES[currentAgentId];
   const currentCheck = currentRule ? scoreTopic(normalizedInput, currentRule.keywords) : { score: 0, hits: [] };
   if (currentCheck.score >= 1) {
     return null;
   }
 
-  // 2. REGLA DE TRANSFERENCIA EXPLÍCITA DIRECTA
-  // Si el usuario dice inequívocamente "tengo un problema civil", "tema laboral", "consulta familiar", etc.
+  // 2. EXCEPCIÓN DE SEBASTIÁN (PENAL)
+  // Si Sebastián está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, no transferir
+  if (currentAgentId === 'sebastian') {
+    const penalTriggers = [
+      'plazo', 'proceso', 'penal', 'fiscal', 'investigacion', 'prision', 'juicio', 'delito',
+      'formalizacion', 'audiencia', 'etapa', 'cpp', 'ncpp', 'sobreseimiento', 'acusacion',
+      'imputado', 'carpeta', 'diligencias', 'defensa', 'coercion', 'descargo', 'semilibertad',
+      'beneficio', 'habeas', 'penitenciario', 'inpe'
+    ];
+    if (penalTriggers.some((t) => normalizedInput.includes(t))) {
+      return null;
+    }
+  }
+
+  // 3. REGLA DE TRANSFERENCIA EXPLÍCITA DIRECTA
+  // Si el usuario invoca inequívocamente una materia o trámite exclusivo de otra rama
   for (const item of EXPLICIT_BRANCH_TRIGGERS) {
     if (item.agentId !== currentAgentId) {
       for (const phrase of item.triggers) {
@@ -343,19 +319,7 @@ export function suggestAgentTransfer(
     }
   }
 
-  // 3. Si Sebastián (Penal) está atendiendo y la consulta trata de plazos, investigación, fiscalía o delitos, no transferir
-  if (currentAgentId === 'sebastian') {
-    const penalTriggers = [
-      'plazo', 'proceso', 'penal', 'fiscal', 'investigacion', 'prision', 'juicio', 'delito',
-      'formalizacion', 'audiencia', 'etapa', 'cpp', 'ncpp', 'sobreseimiento', 'acusacion',
-      'imputado', 'carpeta', 'diligencias', 'defensa', 'coercion', 'descargo', 'semilibertad',
-      'beneficio', 'habeas', 'penitenciario', 'inpe'
-    ];
-    if (penalTriggers.some((t) => normalizedInput.includes(t))) {
-      return null;
-    }
-  }
-
+  // 4. EVALUACIÓN Y RANKING DE LAS DEMÁS RAMAS (HARVEY / SOBERANÍA DE ESPECIALIDAD)
   const ranking = Object.entries(AGENT_ROUTING_RULES)
     .map(([agentId, rule]) => {
       const { score, hits } = scoreTopic(normalizedInput, rule.keywords);
@@ -369,13 +333,17 @@ export function suggestAgentTransfer(
     .sort((a, b) => b.score - a.score);
 
   const best = ranking[0];
-  // Requiere coincidencia sólida (mínimo 2 puntos) y que sea diferente al agente actual
-  if (!best || best.score < 2 || best.agentId === currentAgentId) return null;
 
-  return {
-    agentId: best.agentId,
-    agentLabel: best.label,
-    agentName: AGENT_NAMES[best.agentId] || best.label,
-    matchedKeywords: best.hits.slice(0, 3),
-  };
+  // Si otra rama tiene coincidencia técnica sólida (score >= 2), se transfiere al especialista idóneo,
+  // garantizando que cada escrito o consulta sea atendido por el verdadero especialista de Hardman.
+  if (best && best.score >= 2 && best.agentId !== currentAgentId) {
+    return {
+      agentId: best.agentId,
+      agentLabel: best.label,
+      agentName: AGENT_NAMES[best.agentId] || best.label,
+      matchedKeywords: best.hits.slice(0, 3),
+    };
+  }
+
+  return null;
 }

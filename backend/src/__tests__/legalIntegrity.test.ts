@@ -5,8 +5,10 @@ import {
   NORMATIVE_REFORMS_COMPENDIUM,
   isCesacionPrisionPreventivaRequest,
   isAdopcionMayorEdadRequest,
+  isResolucionSubsanacionRequest,
   getSpijLegalGrounding,
 } from '../lib/spijLegalEngine.js';
+import { suggestAgentTransfer } from '../routes/agentRouter.js';
 
 describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados', () => {
   const agentKeys = ['sebastian', 'valentina', 'diego', 'camila', 'marco', 'fernanda', 'adriana', 'rodrigo'];
@@ -351,6 +353,67 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
       expect(grounding).toContain('Código de los Niños y Adolescentes');
       expect(grounding).toContain('D. Leg. 1297');
       expect(grounding).toContain('POR LO EXPUESTO');
+    });
+  });
+
+  describe('Harvey AI Standard: Soberanía de Especialidad y Smart Handoff de Escritos', () => {
+    it('transfiere a Sebastián (Penal) si en Diego (Civil) solicitan un escrito penal', () => {
+      const transfer = suggestAgentTransfer('diego', 'revisa este escrito de apelacion de prision preventiva');
+      expect(transfer).not.toBeNull();
+      expect(transfer?.agentId).toBe('sebastian');
+      expect(transfer?.agentLabel).toBe('Penal');
+    });
+
+    it('transfiere a Valentina (Laboral) si en Diego (Civil) solicitan una demanda laboral', () => {
+      const transfer = suggestAgentTransfer('diego', 'hazme una demanda por despido arbitrario y pago de beneficios sociales');
+      expect(transfer).not.toBeNull();
+      expect(transfer?.agentId).toBe('valentina');
+      expect(transfer?.agentLabel).toBe('Laboral');
+    });
+
+    it('mantiene la soberanía en Diego (Civil) si solicitan un escrito de su materia', () => {
+      const transfer = suggestAgentTransfer('diego', 'redacta una demanda de desalojo por ocupacion precaria');
+      expect(transfer).toBeNull();
+    });
+
+    it('mantiene la soberanía si el usuario envía un borrador neutro sin palabras clave ajenas', () => {
+      const transfer = suggestAgentTransfer('diego', 'revisa este borrador que redacté para mi cliente');
+      expect(transfer).toBeNull();
+    });
+
+    it('los prompts de todos los 8 especialistas consagran el estándar de Soberanía y Surgical Intake', () => {
+      agentKeys.forEach((key) => {
+        const prompt = SYSTEM_PROMPTS[key];
+        expect(prompt).toContain('SOBERANÍA DE LA ESPECIALIDAD');
+        expect(prompt).toContain('SURGICAL INTAKE');
+        expect(prompt).toContain('NUNCA indentes párrafos');
+      });
+    });
+  });
+
+  describe('Control de Resoluciones Judiciales y Subsanación (Art. 131 vs Art. 132 CPC)', () => {
+    it('detecta solicitudes de revisión de autos de inadmisibilidad y subsanación', () => {
+      expect(isResolucionSubsanacionRequest('revisa esta resolucion numero uno donde declaran inadmisible mi queja')).toBe(true);
+      expect(isResolucionSubsanacionRequest('se advierte que la firma de dicha recurrente no figura estando en el articulo 131')).toBe(true);
+      expect(isResolucionSubsanacionRequest('redacta subsanacion para la resolucion 1')).toBe(true);
+      expect(isResolucionSubsanacionRequest('consulta de alimentos')).toBe(false);
+    });
+
+    it('los prompts de todos los especialistas contienen la prohibición de alucinar firma de abogado ante Art. 131 CPC', () => {
+      agentKeys.forEach((key) => {
+        const prompt = SYSTEM_PROMPTS[key];
+        expect(prompt).toContain('Art. 131° CPC');
+        expect(prompt).toContain('Firma de la Parte o Recurrente');
+        expect(prompt).toContain('Art. 132° CPC');
+      });
+    });
+
+    it('inyecta grounding de Art. 131 CPC vs Art. 132 CPC ante resolución de inadmisibilidad', () => {
+      const grounding = getSpijLegalGrounding('diego', 'tengo la resolucion n 1 de queja donde declaran inadmisible por articulo 131 cpc');
+      expect(grounding).toContain('DIRECTIVA CANÓNICA DE LITERALIDAD Y SUBSANACIÓN DE RESOLUCIONES JUDICIALES');
+      expect(grounding).toContain('ARTÍCULO 131° DEL CÓDIGO PROCESAL CIVIL (Firma de la Parte o Recurrente)');
+      expect(grounding).toContain('ARTÍCULO 132° DEL CÓDIGO PROCESAL CIVIL');
+      expect(grounding).toContain('PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO"');
     });
   });
 });
