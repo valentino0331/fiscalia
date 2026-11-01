@@ -71,6 +71,20 @@ export class AiOrchestrator {
     }
 
     // 4. Construcción del Prompt Central
+    // Detección de fecha de los hechos para principio Tempus Regit Actum (Irretroactividad)
+    const historicalFactMatch = latestUserMessage.match(/\b(?:en\s+el\s+a[ñn]o|en|a[ñn]o|fecha|desde|ocurr(?:i[óo]|ieron)\s+en)\s*(19[89][0-9]|20[012][0-4])\b/i);
+    let temporalIrretroactivityDirective = '';
+    if (historicalFactMatch) {
+      const factYear = historicalFactMatch[1];
+      temporalIrretroactivityDirective = `════════════════════════════════════════════════════════════════
+DIRECTIVA DE APLICACIÓN TEMPORAL DE LA LEY (TEMPUS REGIT ACTUM - LEGAL TRUTH ENGINE):
+Se advierte que la consulta hace referencia a hechos o actos ocurridos en el año ${factYear}.
+1. DERECHO SUSTANTIVO APLICABLE: Conforme al Artículo 103° de la Constitución Política del Perú, los derechos y obligaciones sustantivas se rigen por la norma vigente al momento de acaecer los hechos (${factYear}).
+2. PROHIBICIÓN DE RETROACTIVIDAD PERJUDICIAL: Está terminantemente prohibido aplicar retroactivamente normas posteriores que restrinjan derechos o impongan cargas inexistentes en ${factYear}, salvo el principio de retroactividad benigna en materia penal.
+3. DERECHO PROCESAL VIGENTE (2026): Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a OCTUBRE DE 2026.
+════════════════════════════════════════════════════════════════\n\n`;
+    }
+
     const TEMPORAL_OCTOBER_2026_ANCHOR = `════════════════════════════════════════════════════════════════
 ANCLAJE TEMPORAL Y DOGMÁTICO OFICIAL — OCTUBRE DE 2026 (PERÚ)
 ════════════════════════════════════════════════════════════════
@@ -113,6 +127,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
     const agentPrompt = SYSTEM_PROMPTS[agentId] || '';
     const fullSystemPrompt = 
       PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE +
+      temporalIrretroactivityDirective +
       TEMPORAL_OCTOBER_2026_ANCHOR +
       agentPrompt +
       caseMemory.formattedBlock +

@@ -11,6 +11,7 @@
 
 import { DetectedCitation, VerificationSummary } from './types';
 import { JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
+import { LegalSourceRegistry } from './legalSourceRegistry';
 
 // Catálogo de precedentes y casaciones canónicas verificadas de la Corte Suprema del Perú
 export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
@@ -483,9 +484,44 @@ export function validateLegalCitations(text: string): ValidationReport {
     const lookupKey = `${docketNum}-${year}`;
     const rawMatch = match[0];
 
+    const knownDoc = LegalSourceRegistry.getByShortKey(lookupKey);
     const knownVerified = VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey];
 
-    if (knownVerified) {
+    if (knownDoc) {
+      // Control de Correspondencia Temática (Ratio Decidendi)
+      const surroundingStart = Math.max(0, match.index - 250);
+      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
+      const surroundingContext = text.slice(surroundingStart, surroundingEnd);
+      
+      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext);
+
+      if (attribution.isAttributionValid) {
+        citations.push({
+          raw: rawMatch,
+          type: 'casacion',
+          normalized: knownDoc.officialNumber,
+          status: 'VERIFIED',
+          officialSource: knownDoc.issuingEntity,
+          detail: `${knownDoc.officialNumber}: ${knownDoc.subject} (${knownDoc.relevantFJ.map(f => f.fjNumber).join(', ')})`,
+        });
+      } else {
+        // Atribución falsa de fundamento a sentencia real
+        citations.push({
+          raw: rawMatch,
+          type: 'casacion',
+          normalized: knownDoc.officialNumber,
+          status: 'CONTRADICTED',
+          officialSource: knownDoc.issuingEntity,
+          detail: attribution.actualReason,
+        });
+        warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+        processedText = processedText.replace(
+          rawMatch,
+          `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
+        );
+        processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+      }
+    } else if (knownVerified) {
       citations.push({
         raw: rawMatch,
         type: 'casacion',
@@ -523,8 +559,41 @@ export function validateLegalCitations(text: string): ValidationReport {
     const lookupKey = `${apNum}-${apYear}`;
     const rawMatch = match[0];
 
+    const knownDoc = LegalSourceRegistry.getByShortKey(lookupKey);
     const knownVerified = VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey];
-    if (knownVerified) {
+
+    if (knownDoc) {
+      const surroundingStart = Math.max(0, match.index - 250);
+      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
+      const surroundingContext = text.slice(surroundingStart, surroundingEnd);
+
+      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext);
+      if (attribution.isAttributionValid) {
+        citations.push({
+          raw: rawMatch,
+          type: 'acuerdo_plenario',
+          normalized: knownDoc.officialNumber,
+          status: 'VERIFIED',
+          officialSource: knownDoc.issuingEntity,
+          detail: `${knownDoc.subject} (${knownDoc.relevantFJ.map(f => f.fjNumber).join(', ')})`,
+        });
+      } else {
+        citations.push({
+          raw: rawMatch,
+          type: 'acuerdo_plenario',
+          normalized: knownDoc.officialNumber,
+          status: 'CONTRADICTED',
+          officialSource: knownDoc.issuingEntity,
+          detail: attribution.actualReason,
+        });
+        warnings.push(`❌ ATRIBUCIÓN DE ACUERDO PLENARIO CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+        processedText = processedText.replace(
+          rawMatch,
+          `[acuerdo plenario con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
+        );
+        processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+      }
+    } else if (knownVerified) {
       citations.push({
         raw: rawMatch,
         type: 'acuerdo_plenario',
@@ -541,6 +610,11 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Acuerdo Plenario no contrastado en el registro supremo.',
       });
+      warnings.push(`⚠️ Acuerdo Plenario ${rawMatch} no figura en el registro oficial. Desclasificado.`);
+      processedText = processedText.replace(
+        rawMatch,
+        '[acuerdo plenario pendiente de verificación documental]'
+      );
     }
   }
 
