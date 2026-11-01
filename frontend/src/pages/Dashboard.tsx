@@ -214,14 +214,24 @@ export default function Dashboard() {
     })
   }
 
-  useEffect(() => {
+  const refreshConversations = () => {
     api.conversations.list()
       .then((convs) => {
         setConversations(convs)
         setConvCount(convs.length)
       })
       .catch(() => {})
+  }
+
+  useEffect(() => {
+    refreshConversations()
   }, [])
+
+  useEffect(() => {
+    if (activeSideItem === 'consultations') {
+      refreshConversations()
+    }
+  }, [activeSideItem])
 
   useEffect(() => {
     if (activeSideItem !== 'habilidades') return
@@ -503,7 +513,7 @@ export default function Dashboard() {
               const isActive = activeSideItem === item.id
               const Icon = item.icon
               const count = item.id === 'specialists' ? 8
-                : item.id === 'consultations' ? (convCount > 0 ? convCount : undefined)
+                : item.id === 'consultations' ? (conversations.length > 0 ? conversations.length : undefined)
                 : item.id === 'habilidades' ? savedMessages.length || undefined
                 : undefined
               return (
@@ -1498,12 +1508,12 @@ export default function Dashboard() {
         >
           <MessageSquare size={18} strokeWidth={activeSideItem === 'consultations' ? 2.2 : 1.5} />
           <span className="text-[9px] font-medium">Consultas</span>
-          {convCount > 0 && (
+          {conversations.length > 0 && (
             <span
               className="absolute top-0 right-3 w-4 h-4 rounded-full text-[8px] font-bold flex items-center justify-center shadow"
               style={{ background: '#c9a84c', color: '#111' }}
             >
-              {convCount}
+              {conversations.length}
             </span>
           )}
         </button>

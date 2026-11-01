@@ -524,6 +524,10 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       'crear escrito', 'modelo de escrito', 'plantilla de', 'redactalo', 'redáctalo',
       'genera', 'generar', 'hazme un', 'haz una', 'haz un', 'escribe un', 'escribe una',
       'modelo de', 'formato de', 'borrador de', 'proyecto de escrito',
+      // Subsanación de observaciones, inadmisibilidad e incidentes
+      'subsanar', 'subsanacion', 'subsanación', 'subsanar inadmisibilidad', 'auto de inadmisibilidad',
+      'inadmisibilidad', 'escrito de subsanacion', 'escrito de subsanación', 'observaciones de la resolución',
+      'resolución n°', 'resolucion n°', 'subsanando', 'subsanamos',
       // Informes legales, dictámenes y marcas
       'informe', 'informes', 'informe legal', 'informe juridico', 'informe jurídico', 'dictamen', 'dictamen legal', 'opinion legal', 'opinión legal',
       'registro de marca', 'indecopi', 'signos distintivos', 'clasificacion de niza', 'clasificación de niza', 'niza',
@@ -1013,8 +1017,12 @@ El usuario ha enviado un documento o expediente para revisión/auditoría o soli
 ESTÁ TERMINANTEMENTE PROHIBIDO rechazar esta consulta, dar respuestas de descarte o lavarse las manos cuando el asunto pertenezca a tu especialidad o sea conexo. La revisión y redacción de documentos procesales es 100% una labor jurídica de máxima prioridad.
 ✅ PROCEDE DE INMEDIATO A EXAMINAR MINUCIOSAMENTE EL CASO O DOCUMENTO:
 1. Aplica el protocolo de Socio Senior: Audita los hechos fácticos, la calificación legal exacta, los posibles vicios procesales, el cómputo de plazos fatales (caducidad/prescripción) y la validez formal del acto notificado.
-2. Si el caso presenta ambigüedad fáctica o requiere datos determinantes para el litigio (Surgical Intake), formula las preguntas clave de quiebre y entrega de inmediato la estructura procesal formal en bloque \`\`\`document con marcadores editables [DATOS CLAVE].
-3. Emplea la metodología de argumentación CREAC (Conclusión, Regla vigente al 2026, Precedente vinculante de Corte Suprema/TC/Tribunal Fiscal/OECE, Subsunción fáctica y Blindaje procesal anticipado contra excepciones previas).
+2. FASE DE DISCUSIÓN / SPARRING ESTRATÉGICO PREVIO:
+   Si el usuario indica expresamente evaluar, analizar o debatir la estrategia primero (ej. "conversemos", "no escribas nada todavía", "qué opinas", "analízalo primero", "léelo primero", "¿qué te parece?"):
+   RESPONDE EXCLUSIVAMENTE EN TEXTO CONVERSACIONAL con el diagnóstico crítico, las observaciones procesales y la estrategia sugerida; NO generes el bloque \`\`\`document prematuramente hasta que el usuario dé la orden de redacción.
+3. REDACCIÓN Y SUBSANACIÓN DE INADMISIBILIDAD:
+   Cuando el usuario ordene redactar o subsanar el documento (o si solicita directamente el escrito listo): Genera de inmediato el escrito procesal formal COMPLETO dentro del bloque \`\`\`document sin truncamientos, sin omitir fundamentos de derecho, desglosando cada observación judicial en párrafos densos (2 a 4 párrafos por punto) con su base legal (CPC, CC, Ley 30364) y casaciones vinculantes completas (III Pleno Casatorio Civil, Cas. 4618-2007/Lima, Cas. 2402-2012/Lima).
+4. Emplea la metodología de argumentación CREAC (Conclusión, Regla vigente al 2026, Precedente vinculante de Corte Suprema/TC/Tribunal Fiscal/OECE, Subsunción fáctica y Blindaje procesal anticipado contra excepciones previas).
 ════════════════════════════════════════\n\n`;
       effectiveSystemPrompt = supremeDocDirective + fullSystemPrompt;
     }
