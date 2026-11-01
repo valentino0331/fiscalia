@@ -52,3 +52,4 @@ Requisitos de Vigencia del REINFO:
 3. Declaración Jurada semestral de producción minera.
 4. Acreditación de titularidad de la concesión, contrato de explotación suscrito con el titular minero inscrito en SUNARP o acuerdo de uso de terreno superficial.
 5. Inexistencia de labores en zonas arqueológicas, áreas naturales protegidas de uso indirecto o cauces de ríos no autorizados.
+

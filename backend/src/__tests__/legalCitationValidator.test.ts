@@ -66,3 +66,4 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
     expect(verifiedAp?.status).toBe('VERIFIED');
   });
 });
+

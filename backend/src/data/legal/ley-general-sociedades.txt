@@ -49,3 +49,4 @@ Elementos Mínimos del Modelo de Prevención:
 3. Procedimientos de denuncia anónima (canal ético) y protección del denunciante.
 4. Difusión y capacitación periódica del modelo y código de conducta.
 5. Evaluación y monitoreo continuo del modelo de compliance.
+

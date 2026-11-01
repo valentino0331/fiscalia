@@ -216,3 +216,4 @@ graph TD
 - **Fase 13:** Telemetría, métricas y observabilidad.
 - **Fase 14:** Batería de pruebas integrales y adversariales.
 - **Fase 15:** Guía de despliegue y documentación de producción.
+

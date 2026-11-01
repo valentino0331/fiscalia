@@ -44,3 +44,4 @@ El catálogo `VERIFIED_JURISPRUDENCE_REGISTRY` contiene las casaciones y acuerdo
 - **Acuerdo Plenario N° 05-2023/CIJ-112:** Inaplicabilidad de Ley Soto sobre prescripción.
 - **IV Pleno Casatorio Civil (Casación 2195-2011/Ucayali):** Desalojo por ocupación precaria.
 - **STC Exp. N° 03525-2021-PA/TC:** Inconstitucionalidad de intereses moratorios SUNAT.
+

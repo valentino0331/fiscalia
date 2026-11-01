@@ -50,3 +50,4 @@ LIMIT 5;
 ```
 
 Esto garantiza que al consultar por el *"Artículo 333 del Código Civil"*, el artículo 333 obtenga 60 puntos de relevancia, desplazando a cualquier otro fragmento accesorio.
+
