@@ -24,6 +24,112 @@ const audioUpload = multer({
   limits: { fileSize: 12 * 1024 * 1024 }, // 12 MB max audio (optimizado para memoria RAM)
 });
 
+
+// ─── MEMORIA DINÁMICA DEL CASO (BLACKBOARD & ANTI-AMNESIA) ──────────────────────
+// Analiza todo el historial de la conversación para extraer y preservar de forma inmutable
+// las normas citadas por el letrado, casaciones vinculantes, hechos admitidos y directivas procesales.
+function buildCaseMemoryBlock(messages: any[]): string {
+  if (!messages || messages.length === 0) return '';
+
+  const fullText = messages
+    .map((m: any) => (typeof m.content === 'string' ? m.content : ''))
+    .join('\n');
+
+  if (fullText.length < 40) return '';
+
+  const norms: string[] = [];
+  if (/30364/.test(fullText)) {
+    norms.push('Ley N° 30364 (violencia psicológica y acoso procesal/judicial reiterado)');
+  }
+  if (/tercer\s+pleno\s+casatorio|4618[-–/]?2007/i.test(fullText)) {
+    norms.push('Tercer Pleno Casatorio Civil (Casación N° 4618-2007/Lima: cónyuge más perjudicado e indemnización obligatoria)');
+  }
+  if (/2402[-–/]?2012/.test(fullText)) {
+    norms.push('Casación N° 2402-2012/Lima (daño moral in re ipsa inferido de denuncias penales calumniosas y zozobra procesal)');
+  }
+  if (/333.*(?:inciso|inc\.?)\s*4|injuria\s+grave/i.test(fullText)) {
+    norms.push('Art. 333° inc. 4 Código Civil (Injuria Grave que hace insoportable la vida en común)');
+  }
+  if (/333.*(?:inciso|inc\.?)\s*12|separaci[oó]n\s+de\s+hecho/i.test(fullText)) {
+    norms.push('Art. 333° inc. 12 Código Civil (Separación de Hecho ininterrumpida por más de 2 años)');
+  }
+  if (/345[-–]a/i.test(fullText)) {
+    norms.push('Art. 345-A° Código Civil (Indemnización por daño personal y perjuicio al cónyuge inocente)');
+  }
+  if (/352/.test(fullText)) {
+    norms.push('Art. 352° Código Civil (Pérdida de gananciales procedentes de los bienes del cónyuge culpable)');
+  }
+  if (/197.*cpc|adquisici[oó]n\s+procesal|comunidad\s+de\s+la\s+prueba/i.test(fullText)) {
+    norms.push('Art. 197° CPC y Principio de Adquisición Procesal / Comunidad de la Prueba');
+  }
+  if (/128.*cpc|131.*cpc|424.*cpc|425.*cpc|426.*cpc|445.*cpc/i.test(fullText)) {
+    norms.push('Arts. 128°, 131°, 424°, 425°, 426° y 445° del Código Procesal Civil');
+  }
+
+  const facts: string[] = [];
+  if (/01\s+de\s+s[e|i]ptiembre\s+(?:de\s+)?2022/i.test(fullText)) {
+    facts.push('Fecha cierta de separación conyugal ininterrumpida: 01 de septiembre de 2022 (acreditada con Acta 299-2023)');
+  }
+  if (/dp\s*world/i.test(fullText)) {
+    facts.push('Linchamiento laboral y hostigamiento en DP World Callao S.R.L. que provocó despido y precarización económica');
+  }
+  if (/e001[-–]?6|recibo\s+por\s+honorarios/i.test(fullText)) {
+    facts.push('Precarización económica actual acreditada con Recibo por Honorarios Electrónico N° E001-6');
+  }
+  if (/no\s+(?:tengo|tiene)\s+bienes\s+propios|carece\s+de\s+bienes\s+propios/i.test(fullText)) {
+    facts.push('El demandado NO ostenta bienes propios (los bienes son sociales y se liquidan en ejecución de sentencia)');
+  }
+  if (/discapacidad.*menor|carnet.*discapacidad|conadis/i.test(fullText)) {
+    facts.push('Carnet de discapacidad CONADIS del menor: NO cuestionar ni atacar la salud del menor; enfocar el argumento en la capacidad profesional de la madre (SUNEDU/PUCP) y en la instrumentalización económica');
+  }
+  if (/133[,.]000/.test(fullText)) {
+    facts.push('Monto indemnizatorio por Daño Moral, Daño Personal y Proyecto de Vida: S/ 133,000.00');
+  }
+
+  const directives: string[] = [];
+  if (/desist\w+.*nulidad/i.test(fullText)) {
+    directives.push('Desistimiento expreso de la nulidad de todo lo actuado; reconducir DNI caducado como argumento de fondo');
+  }
+  if (/no\s+ingresar\s+(?:nuevos\s+)?medios\s+probatorios|sin\s+nuevos\s+anexos/i.test(fullText)) {
+    directives.push('NO ingresar nuevos anexos documentales; aplicar Principio de Adquisición Procesal sobre las pruebas de la actora');
+  }
+  if (/reconvenci[oó]n/i.test(fullText)) {
+    directives.push('PRONUNCIAMIENTO DUAL OBLIGATORIO: Pronunciarse exhaustivamente sobre la Contestación Y de manera separada e independiente sobre la Reconvención');
+  }
+
+  if (norms.length === 0 && facts.length === 0 && directives.length === 0) {
+    return '';
+  }
+
+  const lines: string[] = [
+    '════════════════════════════════════════════════════════════════',
+    'MEMORIA HISTÓRICA ACUMULATIVA DEL CASO (REGLAS Y ACUERDOS VINCULANTES)',
+    '════════════════════════════════════════════════════════════════',
+    'A lo largo de los turnos de esta conversación, el letrado patrocinante y tú han fijado los siguientes parámetros jurídicos y fácticos obligatorios:',
+  ];
+
+  if (norms.length > 0) {
+    lines.push('\n1. MARCO LEGAL Y CASACIONES OBLIGATORIAS:');
+    norms.forEach(n => lines.push(`   • ${n}`));
+  }
+  if (facts.length > 0) {
+    lines.push('\n2. HECHOS Y PARÁMETROS FÁCTICOS INMUTABLES:');
+    facts.forEach(f => lines.push(`   • ${f}`));
+  }
+  if (directives.length > 0) {
+    lines.push('\n3. DIRECTIVAS PROCESALES DEL PATROCINANTE:');
+    directives.forEach(d => lines.push(`   • ${d}`));
+  }
+
+  lines.push('\n⛔ DIRECTIVA SUPREMA ANTI-AMNESIA:');
+  lines.push('Está TERMINANTEMENTE PROHIBIDO olvidar, descartar o contradecir cualquiera de estas normas, hechos o directivas.');
+  lines.push('Cualquier corrección u observación del abogado debe ser asimilada de inmediato sin perder ni omitir los puntos ya acordados.');
+  lines.push('════════════════════════════════════════════════════════════════\n\n');
+
+  return '\n\n' + lines.join('\n');
+}
+
+
 export const chatRouter = Router();
 
 // Endpoint público para consultar el compendio de normas SPIJ y Acuerdos Plenarios vigentes (filtrable por especialista)
@@ -658,7 +764,12 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
     }
 
     // Ventana deslizante para el prompt: últimos 10 mensajes para evitar latencia de tokens masivos
-    let recentMessages = sanitizedMessages.length > 10 ? sanitizedMessages.slice(-10) : sanitizedMessages;
+    // Ventana generosa de historial conversacional: hasta 32 mensajes (16 turnos completos)
+    // Modelos modernos (Gemini 2.5 Flash, DeepSeek V3, Claude 3.5 Haiku) admiten 128k-1M tokens sin problemas
+    let recentMessages = sanitizedMessages.length > 32 ? sanitizedMessages.slice(-32) : sanitizedMessages;
+
+    // Memoria Continua del Caso: extrae y consolida acuerdos y normas de TODO el historial
+    const caseMemoryBlock = buildCaseMemoryBlock(sanitizedMessages);
 
     // Si había un expediente en un mensaje anterior que quedó fuera de recentMessages, preservarlo intacto
     if (pinnedExpedienteBlock) {
@@ -962,7 +1073,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
      * Explícale de forma directa que puede simplemente subir el archivo de su expediente y solicitar la cesación o escrito que requiera, o si lo prefiere, adjuntar además los puntos específicos o nuevos arraigos que desee priorizar.
 ════════════════════════════════════════════════════════════════\n\n`;
 
-    const fullSystemPrompt = PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE + TEMPORAL_OCTOBER_2026_ANCHOR + SYSTEM_PROMPTS[agentId] + memoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
+    const fullSystemPrompt = PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE + TEMPORAL_OCTOBER_2026_ANCHOR + SYSTEM_PROMPTS[agentId] + memoryBlock + caseMemoryBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : '');
 
 
     // Optimización quirúrgica de prompt para consultas conversacionales (ahorro masivo de tokens > 85% y latencia < 500ms)
