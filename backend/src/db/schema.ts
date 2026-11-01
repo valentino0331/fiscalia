@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid, jsonb, index, boolean, integer, real } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, uuid, jsonb, index, boolean, integer, real, date } from 'drizzle-orm/pg-core';
 import { customType } from 'drizzle-orm/pg-core';
 
 // pgvector custom type for Drizzle ORM
@@ -142,6 +142,14 @@ export const legalChunks = pgTable(
     content: text('content').notNull(),
     // 768-dimensional embedding vector (Gemini text-embedding-004)
     embedding: vector('embedding', 768).notNull(),
+    // Legal Source Registry & Document Integrity Metadata (Legal Truth Engine)
+    sourceUrl: text('source_url'),
+    sha256Hash: text('sha256_hash'),
+    validityStatus: text('validity_status').default('in_force'),
+    issuingEntity: text('issuing_entity'),
+    publicationDate: date('publication_date'),
+    bindingStatus: text('binding_status').default('binding'),
+    lastVerifiedAt: timestamp('last_verified_at', { withTimezone: true }).defaultNow(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   },
   (table) => ({

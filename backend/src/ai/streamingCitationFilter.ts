@@ -15,6 +15,7 @@
  */
 
 import { VERIFIED_JURISPRUDENCE_REGISTRY } from './legalCitationValidator';
+import { LegalSourceRegistry } from './legalSourceRegistry';
 
 export class StreamingCitationFilter {
   private buffer: string = '';
@@ -79,7 +80,7 @@ export class StreamingCitationFilter {
         const rawCitation = casMatch[0].slice(0, casMatch[0].length - trailingDelimiter.length).trim();
         const lookupKey = `${docketNum}-${year}`;
 
-        const isVerified = Boolean(VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey]);
+        const isVerified = Boolean(LegalSourceRegistry.getByShortKey(lookupKey) || VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey]);
 
         if (isVerified) {
           // Cita verificada en el compendio oficial de la Corte Suprema: emitir tal cual
@@ -107,7 +108,7 @@ export class StreamingCitationFilter {
         const rawCitation = apMatch[0].slice(0, apMatch[0].length - trailingDelimiter.length).trim();
         const lookupKey = `${apNum}-${apYear}`;
 
-        const isVerified = Boolean(VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey]);
+        const isVerified = Boolean(LegalSourceRegistry.getByShortKey(lookupKey) || VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey]);
 
         if (isVerified) {
           this.outCallback(rawCitation + trailingDelimiter);
@@ -161,3 +162,4 @@ export class StreamingCitationFilter {
     return [...this.unverifiedCitations];
   }
 }
+
