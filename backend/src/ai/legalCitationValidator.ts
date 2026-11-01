@@ -392,7 +392,7 @@ export const MISATTRIBUTIONS_CATALOG: {
   correctAttribution: string;
 }[] = [
   {
-    pattern: /(?:(?:art[íi]culo|art\.)\s*62[°º]?[\s\S]{0,100}(?:derecho\s+(?:a\s+(?:la\s+)?)?defensa|asistencia\s+letrada)|(?:derecho\s+(?:a\s+(?:la\s+)?)?defensa|asistencia\s+letrada)[\s\S]{0,100}(?:art[íi]culo|art\.)\s*62[°º]?)/i,
+    pattern: /(?:(?:art[íi]culo|art\.)\s*62[°º]?[\s\S]{0,100}(?:(?:derecho\s+(?:a\s+(?:la\s+)?)?)?defensa(?:\s+t[ée]cnica)?|asistencia\s+letrada)|(?:(?:derecho\s+(?:a\s+(?:la\s+)?)?)?defensa(?:\s+t[ée]cnica)?|asistencia\s+letrada)[\s\S]{0,100}(?:art[íi]culo|art\.)\s*62[°º]?)/i,
     errorDescription: 'El Artículo 62° del NCPP regula la Exclusión del Fiscal en el proceso penal, NO el derecho de defensa técnica.',
     correctAttribution: 'El Derecho a la Defensa Técnica cautiva se consagra en los Artículos IX del Título Preliminar, 71.2 literal c y 80° al 85° del NCPP.',
   },
@@ -506,11 +506,11 @@ export function validateLegalCitations(text: string): ValidationReport {
       warnings.push(`⚠️ Casación ${rawMatch} no figura en el registro oficial de precedentes vinculantes. Desclasificada a criterio de parte.`);
 
       // Sanitización preventiva en el cuerpo procesal:
-      // Reemplaza la referencia numérica no contrastada para evitar que números judiciales ficticios o inexactos
-      // se introduzcan en el texto del documento legal o respuesta.
+      // Retira el número judicial no contrastado para evitar temeridad procesal y alucinaciones en estrados.
+      // Queda prohibido convertirlo en "doctrina jurisprudencial uniforme" o frases análogas sin respaldo factual.
       processedText = processedText.replace(
         rawMatch,
-        'la doctrina jurisprudencial uniforme de la Corte Suprema de Justicia'
+        '[criterio jurisprudencial pendiente de verificación documental]'
       );
     }
   }
@@ -562,7 +562,7 @@ export function validateLegalCitations(text: string): ValidationReport {
   const unverifiedCitations = citations.filter((c) => c.status === 'UNVERIFIED_CLAIM');
   if (unverifiedCitations.length > 0 && !processedText.includes('NOTA DE RIGOR Y AUDITORÍA PROCESAL')) {
     const disclaimer = `\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
-      unverifiedCitations.map(u => `> • **${u.raw}:** Esta cita no se encuentra indexada en el registro de precedentes vinculantes de observancia obligatoria de la Corte Suprema. Debe postularse como criterio argumentativo e interpretativo de parte, verificando su ejecutoria en el sistema judicial antes de su presentación en estrados.\n`).join('');
+      unverifiedCitations.map(u => `> • **${u.raw}:** Esta referencia no cuenta con verificación documental en el registro oficial de precedentes vinculantes de la Corte Suprema. Al no existir fuente comprobable del expediente citado, se ha desclasificado y retirado el número judicial para evitar temeridad procesal, debiendo sustentarse la pretensión directamente en las normas legales aplicables.\n`).join('');
     processedText = processedText + disclaimer;
   }
 

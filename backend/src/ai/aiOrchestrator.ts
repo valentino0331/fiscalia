@@ -23,6 +23,7 @@ import { CaseMemoryManager } from './caseMemoryManager';
 import { detectTaskType, getCandidatesForTask } from './modelRouter';
 import { ProviderAdapter, ProviderExecutionError } from './providerAdapter';
 import { ResponseQualityController } from './responseQualityController';
+import { StreamingCitationFilter } from './streamingCitationFilter';
 import {
   AiOrchestratorResponse,
   AiOrchestratorMeta,
@@ -150,12 +151,22 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       const candidate = candidates[i];
       try {
         console.log(`[Orchestrator] Ejecutando candidato ${i + 1}/${candidates.length}: ${candidate.provider} (${candidate.model})...`);
+        
+        // Filtro de flujo continuo (SSE) en tiempo real para evitar fuga de alucinaciones
+        const streamFilter = (isStream && sendStreamChunk) 
+          ? new StreamingCitationFilter(sendStreamChunk) 
+          : null;
+
         const result = await ProviderAdapter.executeCandidate(
           candidate,
           formattedMessages,
           isStream || false,
-          sendStreamChunk
+          streamFilter ? (chunk) => streamFilter.processChunk(chunk) : sendStreamChunk
         );
+
+        if (streamFilter) {
+          streamFilter.flush();
+        }
 
         if (i > 0) {
           fallbackOccurred = true;

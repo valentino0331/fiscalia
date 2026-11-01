@@ -22,7 +22,8 @@ export type CitationValidationStatus =
   | 'EXISTENCE_VERIFIED_CONTENT_UNVERIFIED'
   | 'UNVERIFIED_CLAIM'
   | 'CONTRADICTED'
-  | 'REPEALED_NORM';
+  | 'REPEALED_NORM'
+  | 'VIGENCIA_NO_DETERMINADA';
 
 export interface DetectedCitation {
   raw: string;

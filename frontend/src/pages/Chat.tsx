@@ -3833,6 +3833,19 @@ function MessageBubble({
               <span>{message.meta.model?.split('/').pop() || message.meta.model || 'Hardman Core'}</span>
               {message.meta.durationMs && <span>· {(message.meta.durationMs / 1000).toFixed(1)}s</span>}
             </span>
+            {message.meta.fallbackOccurred && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
+                style={{
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  border: '1px solid rgba(245, 158, 11, 0.3)',
+                  color: '#f59e0b',
+                }}
+                title={message.meta.fallbackReason || 'Conmutación automática por alta demanda en el proveedor primario'}
+              >
+                <span>⚡ Fallback: {message.meta.provider}</span>
+              </span>
+            )}
             {message.meta.verificationSummary && message.meta.verificationSummary.verifiedCitations > 0 && (
               <span
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
@@ -3844,6 +3857,19 @@ function MessageBubble({
                 title="Citas jurídicas contrastadas y verificadas contra el registro oficial de la Corte Suprema y SPIJ 2026"
               >
                 <span>⚖️ {message.meta.verificationSummary.verifiedCitations} cita{message.meta.verificationSummary.verifiedCitations > 1 ? 's' : ''} verificada{message.meta.verificationSummary.verifiedCitations > 1 ? 's' : ''}</span>
+              </span>
+            )}
+            {message.meta.verificationSummary && message.meta.verificationSummary.unverifiedCitations > 0 && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.10)',
+                  border: '1px solid rgba(239, 68, 68, 0.25)',
+                  color: '#f87171',
+                }}
+                title="Referencias no contrastadas en el compendio oficial supremo; desclasificadas del cuerpo procesal"
+              >
+                <span>⚠️ {message.meta.verificationSummary.unverifiedCitations} no verificada{message.meta.verificationSummary.unverifiedCitations > 1 ? 's' : ''}</span>
               </span>
             )}
           </div>
