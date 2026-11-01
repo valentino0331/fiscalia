@@ -1,0 +1,69 @@
+CÓDIGO TRIBUTARIO (TUO — D.S. N° 133-2013-EF) Y FISCALIZACIÓN SUNAT
+TEXTO VIGENTE AL 2026 — FUENTE: SPIJ MINJUSDH / SUNAT
+ESPECIALISTA: FERNANDA (Derecho Tributario y Fiscalidad)
+
+═══════════════════════════════════════════════════════════════
+LIBRO PRIMERO — LA OBLIGACIÓN TRIBUTARIA
+═══════════════════════════════════════════════════════════════
+
+Artículo 1.- Concepto de Obligación Tributaria
+La obligación tributaria, que es de derecho público, es el vínculo entre el acreedor y el deudor tributario, establecido por ley, que tiene por objeto el cumplimiento de la prestación tributaria, siendo exigible coactivamente.
+
+Artículo 43.- Plazos de Prescripción de la Deuda Tributaria
+La acción de la Administración Tributaria para determinar la obligación tributaria, así como la acción para exigir su pago y aplicar sanciones prescribe a los cuatro (4) años, y a los seis (6) años para quienes no hayan presentado la declaración respectiva.
+Dichas acciones prescriben a los diez (10) años cuando el Agente de retención o percepción no ha pagado el tributo retenido o percibido.
+La acción para solicitar o efectuar la compensación, así como para solicitar la devolución prescribe a los cuatro (4) años.
+
+Artículo 44.- Cómputo de los Plazos de Prescripción
+El término prescriptorio se computará:
+1. Desde el uno (1) de enero del año siguiente a la fecha en que vence el plazo para la presentación de la declaración anual respectiva.
+2. Desde el uno (1) de enero siguiente a la fecha en que la obligación sea exigible, respecto de tributos que deban ser determinados por el deudor tributario no comprendidos en el inciso anterior.
+3. Desde el uno (1) de enero siguiente a la fecha de nacimiento de la obligación tributaria, en los casos de tributos no comprendidos en los incisos anteriores.
+
+Artículo 45.- Interrupción de la Prescripción
+El plazo de prescripción de la facultad de la Administración para determinar la obligación tributaria se interrumpe:
+a) Por la presentación de una solicitud de devolución.
+b) Por el reconocimiento expreso de la obligación tributaria por parte del deudor.
+c) Por la notificación de cualquier acto de la Administración Tributaria dirigido al reconocimiento o regularización de la obligación o al cobro de la deuda.
+d) Por el pago parcial de la deuda.
+
+═══════════════════════════════════════════════════════════════
+LIBRO SEGUNDO — LA ADMINISTRACIÓN TRIBUTARIA Y LOS PROCEDIMIENTOS
+═══════════════════════════════════════════════════════════════
+
+Artículo 61.- Fiscalización o Verificación de la Obligación Tributaria
+La determinación de la obligación tributaria efectuada por el deudor tributario está sujeta a fiscalización o verificación por la Administración Tributaria, la que podrá modificarla cuando constante la omisión o inexactitud en la información proporcionada.
+La fiscalización definitiva debe realizarse en el plazo de un (1) año computado a partir de la fecha en que el deudor entregue la totalidad de la información solicitada en el primer requerimiento.
+
+Artículo 62.- Facultad de Fiscalización de la SUNAT
+La facultad de fiscalización de la Administración Tributaria se ejerce en forma discrecional. Comprende la inspección, investigación y el control del cumplimiento de obligaciones tributarias, incluso de aquellos sujetos que gocen de inafectación, exoneración o beneficios tributarios. Para el ejercicio de la función fiscalizadora, la SUNAT puede exigir exhibición de libros, requerir información a terceros y practicar incautaciones.
+
+Artículo 62-A.- Plazo de la Fiscalización Definitiva
+El procedimiento de fiscalización definitiva que lleve a cabo la SUNAT debe efectuarse en el plazo de un (1) año, computado a partir de la fecha en que el deudor tributario entregue la totalidad de la información y/o documentación que fuera requerida por la SUNAT en el primer requerimiento.
+Transcurrido el plazo de un (1) año no se podrá solicitar al deudor tributario mayor información de la ya requerida.
+
+═══════════════════════════════════════════════════════════════
+LIBRO TERCERO — PROCEDIMIENTOS TRIBUTARIOS Y CONTENCIOSO
+═══════════════════════════════════════════════════════════════
+
+Artículo 132.- Facultad de Interponer Reclamación ante la SUNAT
+Los deudores tributarios directamente afectados por actos de la Administración Tributaria podrán interponer Reclamación contra las Resoluciones de Determinación, Resoluciones de Multa, Órdenes de Pago y resoluciones que resuelven solicitudes de devolución.
+
+Artículo 137.- Requisitos de Admisibilidad de la Reclamación
+La reclamación se iniciará mediante escrito fundamentado firmado por el deudor o su representante legal, debiendo interponerse en el plazo perentorio de veinte (20) días hábiles computados desde el día hábil siguiente a aquel en que se notificó el acto impugnado.
+Tratándose de resoluciones de comiso de bienes, internamiento temporal de vehículos o cierre temporal, el plazo será de cinco (5) días hábiles.
+No se requiere el pago previo de la deuda impugnada si la reclamación se presenta dentro del plazo de 20 días hábiles.
+
+Artículo 143.- Recurso de Apelación ante el Tribunal Fiscal
+El Tribunal Fiscal es el órgano encargado de resolver en última instancia administrativa los recursos de apelación contra las Resoluciones que resuelven las reclamaciones emitidas por la SUNAT y gobiernos locales.
+
+Artículo 146.- Plazo para Interponer Apelación ante el Tribunal Fiscal
+La apelación contra la resolución que resuelve la reclamación debe ser presentada ante el órgano que dictó la resolución apelada dentro de los quince (15) días hábiles siguientes a su notificación.
+La SUNAT elevará el expediente al Tribunal Fiscal en un plazo máximo de treinta (30) días hábiles.
+
+═══════════════════════════════════════════════════════════════
+JURISPRUDENCIA VINCULANTE TRIBUTARIA — TRIBUNAL CONSTITUCIONAL
+═══════════════════════════════════════════════════════════════
+
+Sentencia del Tribunal Constitucional — Exp. N° 03525-2021-PA/TC (Caso Maxco S.A.C.)
+Regla de Observancia Obligatoria: Es inconstitucional y lesivo al derecho de petición y plazo razonable el cobro de intereses moratorios generados durante el tiempo en que la Administración Tributaria (SUNAT) o el Tribunal Fiscal hayan excedido los plazos legales máximos previstos para resolver los recursos de reclamación y apelación. Queda terminantemente prohibido liquidar o exigir intereses moratorios por el período de dilación imputable a la administración.

@@ -1649,12 +1649,17 @@ export default function Chat() {
             if (result.conversationId && !conversationId) {
               setConversationId(result.conversationId)
             }
-            if (result.transferTo) {
+            if (result.finalContent || result.meta || result.transferTo) {
               setMessages((prev) => {
                 const updated = [...prev]
                 const lastIdx = updated.length - 1
                 if (lastIdx >= 0 && updated[lastIdx].role === 'assistant') {
-                  updated[lastIdx] = { ...updated[lastIdx], transferTo: result.transferTo }
+                  updated[lastIdx] = {
+                    ...updated[lastIdx],
+                    content: result.finalContent || updated[lastIdx].content,
+                    transferTo: result.transferTo || updated[lastIdx].transferTo,
+                    meta: result.meta || updated[lastIdx].meta,
+                  }
                 }
                 return updated
               })
@@ -3812,6 +3817,37 @@ function MessageBubble({
             </div>
           )}
         </div>
+
+        {!isUser && !isStreaming && message.meta && (
+          <div className="flex items-center gap-2 mt-1.5 px-1 flex-wrap text-[10px]">
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
+              style={{
+                background: 'rgba(255, 255, 255, 0.04)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                color: 'rgba(255, 255, 255, 0.55)',
+              }}
+              title={`Motor de inferencia: ${message.meta.provider || 'AI'} (${message.meta.model || 'estándar'})${message.meta.durationMs ? ` en ${message.meta.durationMs}ms` : ''}`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span>{message.meta.model?.split('/').pop() || message.meta.model || 'Hardman Core'}</span>
+              {message.meta.durationMs && <span>· {(message.meta.durationMs / 1000).toFixed(1)}s</span>}
+            </span>
+            {message.meta.verificationSummary && message.meta.verificationSummary.verifiedCitations > 0 && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
+                style={{
+                  background: 'rgba(201, 168, 76, 0.10)',
+                  border: '1px solid rgba(201, 168, 76, 0.25)',
+                  color: '#c9a84c',
+                }}
+                title="Citas jurídicas contrastadas y verificadas contra el registro oficial de la Corte Suprema y SPIJ 2026"
+              >
+                <span>⚖️ {message.meta.verificationSummary.verifiedCitations} cita{message.meta.verificationSummary.verifiedCitations > 1 ? 's' : ''} verificada{message.meta.verificationSummary.verifiedCitations > 1 ? 's' : ''}</span>
+              </span>
+            )}
+          </div>
+        )}
 
         {!isUser && !isStreaming && (
           <div className="flex items-center gap-1.5 mt-2 px-1 flex-wrap">

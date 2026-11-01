@@ -30,6 +30,19 @@ export interface Message {
   isVoice?: boolean
   isError?: boolean
   lastUserPrompt?: string
+  meta?: {
+    provider?: string
+    model?: string
+    durationMs?: number
+    fallbackOccurred?: boolean
+    fallbackReason?: string
+    verificationSummary?: {
+      totalCitations: number
+      verifiedCitations: number
+      unverifiedCitations: number
+      repealedWarnings: number
+    }
+  }
 }
 
 export interface Conversation {

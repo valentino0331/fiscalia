@@ -1,82 +1,100 @@
-CÓDIGO PROCESAL CIVIL (TUO — RM 010-93-JUS, reformado por Ley 31591)
+CÓDIGO PROCESAL CIVIL (TUO — RM 010-93-JUS, REFORMADO AL 2026)
 TEXTO VIGENTE AL 2026 — FUENTE: SPIJ MINJUSDH
-ESPECIALISTAS: DIEGO (Civil e Inmobiliario)
+ESPECIALISTAS: DIEGO (Civil), CAMILA (Familia)
 
 ═══════════════════════════════════════════════════════════════
-SECCIÓN V — PROCESOS DE EJECUCIÓN
-TÍTULO IV — PROCESO ÚNICO DE EJECUCIÓN
+SECCIÓN TERCERA — ACTIVIDAD PROCESAL
+TÍTULO I — FORMA DE LOS ACTOS PROCESALES
 ═══════════════════════════════════════════════════════════════
 
-Artículo 720.- Procedencia de la Ejecución de Garantías (Demanda)
-Procede la ejecución de garantías reales, siempre que su constitución cumpla con las formalidades que la ley prescribe y la obligación garantizada se encuentre contenida en el mismo documento o en cualquier otro título ejecutivo.
-El ejecutante anexará a su demanda el documento que contiene la garantía, y el estado de cuenta del saldo deudor.
-Si el bien fuere inmueble, debe presentarse documento que contenga tasación comercial actualizada realizada por dos ingenieros y/o arquitectos colegiados, según corresponda, con sus firmas legalizadas notarialmente.
-Si el bien fuere mueble, debe presentarse similar documentación con peritos especializados, de ser el caso.
+Artículo 130.- Forma del Escrito Judicial
+El escrito que se presente al proceso se sujeta a las siguientes reglas:
+1. Es redactado en idioma castellano y en caracteres legibles.
+2. Se indica en la parte superior derecha la sumilla que exprese con claridad el pedido procesal.
+3. Se señalan las casillas procesales electrónica (SINOE) y física, además de correo electrónico y teléfono celular.
+4. Es firmado por el recurrente y autorizado por letrado colegiado.
 
-Artículo 721.- Mandato de Ejecución en Proceso de Ejecución de Garantías
-Admitida la demanda, el juez dispondrá que el ejecutado pague la deuda dentro de tres días, bajo apercibimiento de procederse al remate del bien dado en garantía.
-Solo si la obligación ha sido contraída por personas naturales, el plazo a que hace referencia el párrafo anterior será de ocho días.
-El ejecutado puede contradecir dentro del mismo plazo que el concedido para pagar, en base a los siguientes fundamentos:
-1. Inexigibilidad o iliquidez de la obligación contenida en el título.
+Artículo 131.- Firma del Interesado o Recurrente
+Los escritos serán firmados por los interesados con firma gráfica o digital. Si el interesado no sabe o no puede firmar, estampará su huella dactilar, de lo que el auxiliar jurisdiccional o secretario de juzgado dejará constancia fehaciente.
+La omisión de la firma de la parte o recurrente genera la inadmisibilidad del acto procesal, debiendo subsanarse mediante la ratificación y suscripción personal por la interesada dentro del plazo legal bajo apercibimiento de rechazo.
+
+Artículo 132.- Defensa Cautiva y Firma del Abogado Patrocinante
+El escrito debe estar autorizado por abogado colegiado con indicación clara de su nombre y número de registro de colegiatura (Art. 290 de la Ley Orgánica del Poder Judicial). Si el escrito carece de la firma o autorización letrada, el juez concederá un plazo no mayor de tres días para subsanar la omisión bajo apercibimiento de tenerlo por no presentado.
+
+═══════════════════════════════════════════════════════════════
+SECCIÓN CUARTA — POSTULACIÓN DEL PROCESO
+TÍTULO I — DEMANDA Y EMPLAZAMIENTO
+═══════════════════════════════════════════════════════════════
+
+Artículo 424.- Requisitos de la Demanda
+La demanda se presenta por escrito y contendrá:
+1. La designación del Juez ante quien se interpone.
+2. El nombre, datos de identidad, dirección domiciliaria y domicilio procesal electrónico (casilla SINOE) del demandante.
+3. El nombre y dirección domiciliaria del demandado. Si se ignora, se expresará esta circunstancia bajo juramento.
+4. El petitorio, que comprende la determinación clara y concreta de lo que se pide.
+5. Los hechos en que se funde el petitorio, expuestos numeradamente en forma precisa, con orden y claridad.
+6. La fundamentación jurídica del petitorio.
+7. La indicación del monto del petitorio, salvo que no pudiera establecerse.
+8. El ofrecimiento de todos los medios probatorios.
+9. La firma del demandante o de su representante o de su apoderado, y la del abogado.
+
+Artículo 425.- Anexos de la Demanda
+A la demanda debe acompañarse:
+1. Copia legible del documento de identidad del demandante y, en su caso, del representante.
+2. El documento que contiene el poder para iniciar el proceso, cuando se actúe por apoderado.
+3. Los medios probatorios que acrediten la representación legal del demandante, si se trata de personas jurídicas o incapaces.
+4. Todos los medios probatorios documentales que el demandante tenga en su poder.
+5. Los documentos probatorios que certifiquen el agotamiento de la conciliación extrajudicial previa (Ley 26872) cuando la materia sea conciliable.
+
+Artículo 426.- Inadmisibilidad de la Demanda
+El Juez declarará inadmisible la demanda cuando:
+1. No tenga los requisitos legales del Artículo 424.
+2. No se acompañen los anexos exigidos por el Artículo 425.
+3. El petitorio sea incompleto o impreciso.
+4. Contenga una indebida acumulación de pretensiones.
+En estos casos, el Juez ordenará al demandante que subsane la omisión o defecto en un plazo no mayor de tres (3) días hábiles (o diez días en proceso de conocimiento). Si el demandante no cumpliera con lo ordenado, el Juez rechazará la demanda y ordenará el archivo del expediente.
+
+Artículo 427.- Improcedencia de la Demanda
+El Juez declarará improcedente la demanda cuando:
+1. El demandante carezca evidentemente de legitimidad para obrar.
+2. El demandante carezca manifiestamente de interés para obrar.
+3. Advierta la caducidad del derecho.
+4. No exista conexión lógica entre los hechos y el petitorio.
+5. El petitorio fuese jurídica o físicamente imposible.
+
+═══════════════════════════════════════════════════════════════
+TÍTULO II — CONTESTACIÓN DE DEMANDA Y RECONVENCIÓN
+═══════════════════════════════════════════════════════════════
+
+Artículo 442.- Requisitos de la Contestación de Demanda
+Al contestar la demanda, el demandado debe:
+1. Observar los requisitos previstos para la demanda en lo que corresponda.
+2. Pronunciarse respecto a cada uno de los hechos expuestos en la demanda. El silencio, la respuesta evasiva o la negativa meramente genérica pueden ser apreciados por el Juez como reconocimiento de verdad de los hechos alegados.
+3. Reconocer o negar categóricamente la autenticidad de los documentos que se le atribuyen.
+4. Exponer con claridad y precisión los hechos en que funda su defensa.
+5. Ofrecer los medios probatorios pertinentes.
+6. Incluir la firma del demandado o su representante y la del abogado patrocinante.
+
+Artículo 445.- Reconvención
+La reconvención se propone en el mismo escrito en que se contesta la demanda, en la forma y con los requisitos previstos para ésta, en lo que corresponda.
+La reconvención es admisible si no afecta la competencia ni la vía procedimental originales.
+Asimismo, es requisito sine qua non que la pretensión reconvencional tenga conexión jurídica o fáctica con la relación jurídica invocada en la demanda original (ej. divorcio reconvenido por causal propia de separación de hecho o injuria grave con indemnización bajo el Art. 345-A CC).
+Propuesta la reconvención, se correrá traslado al demandante por el mismo plazo previsto para contestar la demanda.
+
+═══════════════════════════════════════════════════════════════
+TÍTULO III — DESALOJO CON ALLANAMIENTO FUTURO Y PROCESO DE EJECUCIÓN
+═══════════════════════════════════════════════════════════════
+
+Artículo 594.- Sentencia con Allanamiento Futuro en Contrato de Arrendamiento
+En los contratos de arrendamiento de inmuebles con firmas legalizadas ante Notario Público o Juez de Paz en los que el arrendatario se hubiere allanado previamente a la restitución del bien por vencimiento del plazo del contrato o por resolución del arrendamiento por falta de pago de la renta conforme al Artículo 1697 del Código Civil, procede el desalojo sumario.
+Presentada la demanda, el juez notifica al demandado para que en el plazo de seis (6) días hábiles acredite la vigencia del contrato de arrendamiento o la cancelación de la renta adeudada. De no acreditarse, el juez ordenará de inmediato el lanzamiento dentro de los quince días hábiles siguientes.
+
+Artículo 720.- Procedencia de la Ejecución de Garantías Reales
+Procede la ejecución de garantías reales siempre que su constitución cumpla con las formalidades legales y la obligación esté contenida en el mismo documento o en título ejecutivo. El ejecutante anexará a su demanda el saldo deudor y la tasación comercial actualizada realizada por dos peritos colegiados con firmas legalizadas.
+
+Artículo 721.- Mandato de Ejecución
+Admitida la demanda de ejecución de garantías, el juez dispondrá que el ejecutado pague la deuda dentro de tres (3) días hábiles (u ocho días hábiles tratándose de personas naturales), bajo apercibimiento de procederse al remate del bien dado en garantía.
+El ejecutado puede contradecir en el mismo plazo fundándose únicamente en:
+1. Inexigibilidad o iliquidez de la obligación.
 2. Nulidad formal o falsedad del título ejecutivo.
 3. Extinción de la obligación exigida.
-Si no concurren los supuestos indicados en el segundo párrafo, el plazo para contradicción es de tres días.
-
-Artículo 722.- Contradicción
-La contradicción sólo podrá fundarse en:
-1. Inexigibilidad o iliquidez de la obligación contenida en el título.
-2. Nulidad formal o falsedad del título.
-3. Extinción de la obligación exigida.
-
-Artículo 726.- Remate
-El remate se realiza ante el juez de la ejecución.
-
-═══════════════════════════════════════════════════════════════
-EXCEPCIONES Y DEFENSAS PREVIAS (Arts. 446-457)
-═══════════════════════════════════════════════════════════════
-
-Artículo 446.- Excepciones Proponibles
-El demandado sólo puede proponer las siguientes excepciones:
-1. Incompetencia.
-2. Incapacidad del demandante o de su representante.
-3. Representación defectuosa o insuficiente del demandante o del demandado.
-4. Oscuridad o ambigüedad en el modo de proponer la demanda.
-5. Falta de agotamiento de la vía administrativa.
-6. Falta de legitimidad para obrar del demandante o del demandado.
-7. Litispendencia.
-8. Cosa Juzgada.
-9. Desistimiento de la pretensión.
-10. Conclusión del proceso por conciliación o transacción.
-11. Caducidad.
-12. Prescripción extintiva.
-13. Convenio arbitral.
-
-Artículo 453.- Fundamento de las Excepciones de Conclusión del Proceso por Conciliación o Transacción
-Las excepciones de conclusión del proceso por conciliación o transacción se amparan cuando la cuestión controvertida en el proceso ha sido ya resuelta mediante:
-1. Acuerdos conciliatorios que tengan la calidad de cosa juzgada (art. 328 CPC).
-2. Transacción judicial homologada o aprobada por el juez en proceso anterior entre las mismas partes (se requiere identidad de partes, objeto y causa).
-
-═══════════════════════════════════════════════════════════════
-PRUEBA DE OFICIO
-═══════════════════════════════════════════════════════════════
-
-Artículo 194.- Prueba de Oficio (X Pleno Casatorio Civil)
-Cuando los medios probatorios ofrecidos por las partes sean insuficientes para formar convicción, el juez, en decisión motivada e inimpugnable, puede ordenar la actuación de los medios probatorios adicionales que considere convenientes.
-Excepcionalmente, el juez puede ordenar la comparecencia de un menor de edad con las medidas de reserva del caso.
-La resolución que ordena las pruebas de oficio debe estar debidamente motivada, con indicación de los hechos que se pretende esclarecer, bajo sanción de nulidad. Las partes deben ser notificadas con la resolución y se les concede un plazo para que puedan formular oposición motivada.
-
-═══════════════════════════════════════════════════════════════
-PROCESO DE DESALOJO (Ley 30933 — Desalojo Notarial Express)
-═══════════════════════════════════════════════════════════════
-
-Ley N° 30933 — Proceso Especial de Desalojo con Intervención Notarial
-La Ley 30933 y su Reglamento (D.S. 013-2019-JUS) regulan el proceso especial de desalojo con intervención notarial. Requisitos:
-- El contrato de arrendamiento debe contener cláusula de allanamiento futuro.
-- Debe identificarse la cuenta bancaria de pago de renta.
-- El contrato debe constar en el Formulario Único de Arrendamiento (FUA) o en documento privado con firmas legalizadas notarialmente (o por escritura pública).
-Procedimiento:
-1. El arrendador formula solicitud ante Notario acreditando incumplimiento.
-2. El Notario notifica al arrendatario otorgando 5 días para acreditar pago o contradecir.
-3. De no acreditar pago, el Notario emite Acta de Desalojo.
-4. El acta se presenta ante Juez de Paz Letrado quien ordena el lanzamiento en plazo no mayor de 7 días hábiles.
-El proceso total puede completarse en menos de 30 días desde la solicitud notarial.

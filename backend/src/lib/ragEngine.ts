@@ -285,13 +285,29 @@ const STOPWORDS = new Set([
 ]);
 
 function extractSearchKeywords(query: string): string[] {
-  return query
+  // 1. Extraer menciones específicas de artículos y números de casación
+  const exactNumbers: string[] = [];
+  const articleMatches = query.match(/(?:art[íi]culo|art\.?)\s*([0-9A-Za-z\-]+)/gi);
+  if (articleMatches) {
+    articleMatches.forEach(m => {
+      const num = m.replace(/art[íi]culo|art\.?/gi, '').trim();
+      if (num) exactNumbers.push(num);
+    });
+  }
+  const docketMatches = query.match(/([0-9]{1,5}[-–/][0-9]{4})/gi);
+  if (docketMatches) {
+    docketMatches.forEach(d => exactNumbers.push(d.trim()));
+  }
+
+  const words = query
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter((w) => w.length >= 4 && !STOPWORDS.has(w));
+    .filter((w) => (w.length >= 4 || /^\d{2,4}$/.test(w)) && !STOPWORDS.has(w));
+
+  return [...new Set([...exactNumbers, ...words])];
 }
 
 /**
@@ -338,8 +354,9 @@ export async function searchChunksByText(
       )
       ORDER BY (
         (CASE WHEN specialist_id = ${specialistId || ''} THEN 20 ELSE 0 END) +
-        (CASE WHEN articles ILIKE ${'%' + mainTerm + '%'} THEN 15 ELSE 0 END) +
-        (CASE WHEN content ILIKE ${'%' + mainTerm + '%'} THEN 8 ELSE 0 END) +
+        (CASE WHEN articles ILIKE ${'%' + mainTerm + '%'} THEN 40 ELSE 0 END) +
+        (CASE WHEN articles ILIKE ${'%' + secondTerm + '%'} THEN 25 ELSE 0 END) +
+        (CASE WHEN content ILIKE ${'%' + mainTerm + '%'} THEN 10 ELSE 0 END) +
         (CASE WHEN content ILIKE ${'%' + secondTerm + '%'} THEN 5 ELSE 0 END) +
         (CASE WHEN content ILIKE ${'%' + thirdTerm + '%'} THEN 3 ELSE 0 END)
       ) DESC

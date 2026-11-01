@@ -155,7 +155,7 @@ export const api = {
       },
       callbacks: {
         onChunk: (chunk: string) => void
-        onDone: (result: { conversationId?: string; transferTo?: string }) => void
+        onDone: (result: { conversationId?: string; transferTo?: string; meta?: any; finalContent?: string }) => void
         onError: (err: any) => void
       },
       signal?: AbortSignal
@@ -201,6 +201,8 @@ export const api = {
           callbacks.onDone({
             conversationId: standardJson.conversationId,
             transferTo: standardJson.transferTo,
+            meta: standardJson.meta,
+            finalContent: standardJson.message,
           })
           return
         }
@@ -245,6 +247,8 @@ export const api = {
                 callbacks.onDone({
                   conversationId: payload.conversationId,
                   transferTo: payload.transferTo,
+                  meta: payload.meta,
+                  finalContent: payload.finalContent,
                 })
                 return
               }
