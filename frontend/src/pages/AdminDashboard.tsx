@@ -267,6 +267,7 @@ export default function AdminDashboard() {
         !q ||
         u.email.toLowerCase().includes(q) ||
         (u.name && u.name.toLowerCase().includes(q)) ||
+        (u.hotmartTransaction && u.hotmartTransaction.toLowerCase().includes(q)) ||
         u.id.toLowerCase().includes(q)
       if (!matchesSearch) return false
 
@@ -862,8 +863,13 @@ Fecha: ${new Date().toLocaleDateString('es-PE')}
                                         </span>
                                       )}
                                     </div>
-                                    <div className="flex items-center gap-2 text-[9px] text-white/30 font-mono">
+                                    <div className="flex items-center gap-2 text-[9px] text-white/30 font-mono flex-wrap">
                                       <span>ID: {u.id.slice(0, 8)}...</span>
+                                      {u.hotmartTransaction && (
+                                        <span className="text-[#c9a84c]/90 bg-[#c9a84c]/10 px-1.5 py-0.2 rounded border border-[#c9a84c]/20">
+                                          Tx: {u.hotmartTransaction}
+                                        </span>
+                                      )}
                                       {u.name && (
                                         <span className="text-white/50">
                                           {hideEmails ? `${u.name.slice(0, 1)}••••` : u.name}

@@ -429,8 +429,8 @@ export const api = {
   admin: {
     stats: () =>
       request<any>('/admin/stats'),
-    users: () =>
-      request<{ users: import('@/types').AdminUserItem[] }>('/admin/users'),
+    users: (limit = 500) =>
+      request<{ users: import('@/types').AdminUserItem[]; total: number }>(`/admin/users?limit=${limit}`),
     deleteUser: (id: string) =>
       request<{ success: boolean; message: string }>(`/admin/users/${id}`, { method: 'DELETE' }),
     updateUserPlan: (id: string, data: { plan?: string; addDays?: number; status?: string }) =>

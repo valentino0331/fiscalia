@@ -206,7 +206,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
   try {
     const rawLimit = parseInt(req.query?.limit as string, 10);
     const rawPage = parseInt(req.query?.page as string, 10);
-    const limit = !isNaN(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 200) : 100;
+    const limit = !isNaN(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 1000) : 500;
     const page = !isNaN(rawPage) && rawPage > 0 ? rawPage : 1;
     const offset = (page - 1) * limit;
 
@@ -313,6 +313,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
         status: effectiveStatus,
         expiresAt: expiresAtIso,
         daysRemaining: sub ? daysRemaining : (u.isAdmin ? 999 : null),
+        hotmartTransaction: sub?.hotmartTransaction || null,
         subscription: sub
           ? {
               id: sub.id,
@@ -321,6 +322,7 @@ adminRouter.get('/users', requireAuth, requireAdmin, async (req: any, res) => {
               currentPeriodEnd: sub.currentPeriodEnd,
               isExpired,
               daysRemaining,
+              hotmartTransaction: sub.hotmartTransaction || null,
             }
           : null,
       };

@@ -80,6 +80,7 @@ export interface AdminUserItem {
   status: string
   expiresAt: string | null
   daysRemaining: number | null
+  hotmartTransaction?: string | null
   subscription: {
     id: string
     status: string
@@ -87,6 +88,7 @@ export interface AdminUserItem {
     currentPeriodEnd: string | null
     isExpired: boolean
     daysRemaining: number
+    hotmartTransaction?: string | null
   } | null
 }
 
