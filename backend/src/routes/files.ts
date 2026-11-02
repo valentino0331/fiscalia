@@ -31,328 +31,51 @@ import { sanitizeDocumentPromptInjection } from '../lib/fileSanitizer';
 export { extractLegalMetadata, sanitizeDocumentPromptInjection };
 
 
-// Extractor multimodal con Gemini, OpenRouter y OpenAI
-async function extractMultimodalContent(
+import { DocumentPipeline } from '../lib/documentPipeline';
+
+// Extractor multimodal delegando al pipeline documental canónico
+export async function extractMultimodalContent(
   buffer: Buffer,
   mimeType: string,
   promptText: string
 ): Promise<string> {
-  const geminiKeys = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '')
-    .split(',')
-    .map((k) => k.trim())
-    .filter(Boolean);
-  const openrouterKey = (process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '').trim();
-  const openaiKey = (process.env.OPENAI_API_KEY || '').trim();
-
-  // 1. Google Gemini Nativo (Soporta PDFs directos con OCR y todas las imágenes)
-  for (const gKey of geminiKeys) {
-    try {
-      console.log(`[Files OCR] Intentando OCR nativo con Gemini (${mimeType})...`);
-      const genAI = new GoogleGenerativeAI(gKey);
-      const geminiModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
-
-      for (const mName of geminiModels) {
-        try {
-          const model = genAI.getGenerativeModel({ model: mName });
-          const base64Data = buffer.toString('base64');
-          const result = await model.generateContent([
-            promptText,
-            {
-              inlineData: {
-                data: base64Data,
-                mimeType,
-              },
-            },
-          ]);
-          const text = result?.response?.text()?.trim() || '';
-          if (text && text.length > 20) {
-            console.log(`[Files OCR] Éxito con Gemini (${mName}): ${text.length} caracteres extraídos`);
-            return text;
-          }
-        } catch (mErr: any) {
-          console.warn(`[Files OCR] Error en modelo Gemini ${mName}:`, mErr?.message || mErr);
-        }
-      }
-    } catch (gErr: any) {
-      console.warn('[Files OCR] Error con clave Gemini:', gErr?.message || gErr);
-    }
-  }
-
-  // 2. OpenRouter Multimodal (para imágenes o modelos compatibles)
-  if (openrouterKey && mimeType.startsWith('image/')) {
-    const orModels = [
-      process.env.OPENROUTER_VISION_MODEL,
-      'google/gemini-2.5-flash',
-      'openai/gpt-4o-mini',
-      'google/gemini-flash-1.5',
-    ].filter(Boolean) as string[];
-
-    const base64Data = buffer.toString('base64');
-
-    for (const vModel of orModels) {
-      try {
-        console.log(`[Files OCR] Intentando OpenRouter Vision (${vModel})...`);
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 45000);
-        const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${openrouterKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://hardman.lat',
-            'X-Title': 'Hardman Legal AI',
-          },
-          body: JSON.stringify({
-            model: vModel,
-            messages: [
-              {
-                role: 'user',
-                content: [
-                  { type: 'text', text: promptText },
-                  {
-                    type: 'image_url',
-                    image_url: {
-                      url: `data:${mimeType};base64,${base64Data}`,
-                    },
-                  },
-                ],
-              },
-            ],
-          }),
-          signal: controller.signal,
-        });
-        clearTimeout(timer);
-
-        if (res.ok) {
-          const data: any = await res.json();
-          const text = data?.choices?.[0]?.message?.content?.trim() || '';
-          if (text && text.length > 20) {
-            console.log(`[Files OCR] Éxito con OpenRouter (${vModel}): ${text.length} caracteres`);
-            return text;
-          }
-        } else {
-          console.warn(`[Files OCR] OpenRouter ${vModel} respondió status ${res.status}`);
-        }
-      } catch (orErr: any) {
-        console.warn(`[Files OCR] Error en OpenRouter ${vModel}:`, orErr?.message || orErr);
-      }
-    }
-  }
-
-  // 3. OpenAI Vision Directo
-  if (openaiKey && mimeType.startsWith('image/')) {
-    try {
-      console.log('[Files OCR] Intentando OpenAI Vision (gpt-4o-mini)...');
-      const base64Data = buffer.toString('base64');
-      const res = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${openaiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: promptText },
-                {
-                  type: 'image_url',
-                  image_url: {
-                    url: `data:${mimeType};base64,${base64Data}`,
-                  },
-                },
-              ],
-            },
-          ],
-        }),
-      });
-
-      if (res.ok) {
-        const data: any = await res.json();
-        const text = data?.choices?.[0]?.message?.content?.trim() || '';
-        if (text && text.length > 20) {
-          console.log(`[Files OCR] Éxito con OpenAI: ${text.length} caracteres`);
-          return text;
-        }
-      }
-    } catch (oaiErr: any) {
-      console.warn('[Files OCR] Error en OpenAI Vision:', oaiErr?.message || oaiErr);
-    }
-  }
-
-  return '';
+  const result = await DocumentPipeline.processFile(buffer, 'documento_ocr', mimeType);
+  return result.extractedText;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
 export async function extractFileRaw(file: Express.Multer.File): Promise<{
   extractedText: string;
   pageCount: number | null;
   mime: string;
   safeOriginalName: string;
+  documentType?: string;
+  qualityMetrics?: any;
+  processingMethod?: string;
+  status?: string;
+  sha256Hash?: string;
 }> {
   const safeOriginalName = (typeof file.originalname === 'string' && file.originalname.trim())
     ? file.originalname.replace(/[\\/]/g, '_').trim().slice(0, 255)
     : 'archivo_subido';
 
   const mime = resolveMime(file.mimetype, safeOriginalName);
-  let extractedText = '';
-  let pageCount: number | null = null;
 
-  if (mime === 'application/pdf' || safeOriginalName.toLowerCase().endsWith('.pdf')) {
-    try {
-      const pdfParseModule = await import('pdf-parse');
-      const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
+  const result = await DocumentPipeline.processFile(file.buffer, safeOriginalName, mime);
 
-      let totalChars = 0;
-      const MAX_EXPEDIENTE_PAGES = 500;
-      const MAX_CHARS_LIMIT = 500000;
-
-      const customPagerender = async (pageData: any): Promise<string> => {
-        if (totalChars >= MAX_CHARS_LIMIT) {
-          if (typeof pageData.cleanup === 'function') pageData.cleanup();
-          return '';
-        }
-        try {
-          const textContent = await pageData.getTextContent({
-            normalizeWhitespace: true,
-            disableCombineTextItems: false,
-          });
-          let lastY: any;
-          let pageText = '';
-          for (const item of textContent.items) {
-            if (item && typeof item.str === 'string') {
-              const str = item.str;
-              if (!str) continue;
-              if (lastY === item.transform[5] || !lastY) {
-                if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n') && !str.startsWith(' ')) {
-                  pageText += ' ';
-                }
-                pageText += str;
-              } else {
-                pageText += '\n' + str;
-              }
-              lastY = item.transform[5];
-            }
-          }
-          const pageNum = (pageData.pageIndex ?? 0) + 1;
-          const formattedPage = `\n--- [FOLIO / PÁGINA ${pageNum}] ---\n` + pageText.trim() + '\n';
-          totalChars += formattedPage.length;
-          if (typeof pageData.cleanup === 'function') {
-            pageData.cleanup();
-          }
-          return formattedPage;
-        } catch {
-          return '';
-        }
-      };
-
-      const data = await pdfParse(file.buffer, {
-        max: MAX_EXPEDIENTE_PAGES,
-        pagerender: customPagerender,
-      });
-
-      const text = (data.text || '').trim();
-      pageCount = data.numpages || null;
-      if (text.length > 30) {
-        extractedText = text;
-        if (pageCount && pageCount > MAX_EXPEDIENTE_PAGES) {
-          extractedText += `\n\n[Nota del Expediente: Se procesaron las primeras ${MAX_EXPEDIENTE_PAGES} páginas de un total de ${pageCount} para garantizar la máxima profundidad de análisis].`;
-        }
-      }
-    } catch (pdfErr) {
-      console.warn('[Files] Error en pdf-parse digital:', pdfErr);
-    }
-
-    if (!extractedText || extractedText.trim().length < 40) {
-      const ocrPrompt =
-        'Transcribe con total fidelidad todo el texto visible, números de expediente o carpeta fiscal, fechas, sellos, firmas, sumillas, juzgado, demandante, demandado, petitorio y considerandos de este documento legal o expediente escaneado. Responde con la transcripción íntegra en español.';
-      const ocrResult = await extractMultimodalContent(file.buffer, 'application/pdf', ocrPrompt);
-      if (ocrResult && ocrResult.trim().length > 20) {
-        extractedText = ocrResult.trim();
-      }
-    }
-
-    if (!extractedText || !extractedText.trim()) {
-      throw new Error(
-        'No se pudo extraer texto del PDF (el archivo podría ser una imagen escaneada ilegible o estar protegido por contraseña).'
-      );
-    }
-
-    if (extractedText.length > 500000) {
-      extractedText =
-        extractedText.slice(0, 500000) +
-        `\n\n[Documento extenso - se muestran los primeros 500,000 caracteres de ${extractedText.length.toLocaleString()} totales]`;
-    }
-  } else if (
-    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-    safeOriginalName.toLowerCase().endsWith('.docx')
-  ) {
-    try {
-      const mammoth = await import('mammoth');
-      const result = await mammoth.extractRawText({ buffer: file.buffer });
-      extractedText = (result.value || '').trim();
-    } catch (mammothErr: any) {
-      console.warn('[Files] Error en mammoth extractRawText:', mammothErr?.message || mammothErr);
-    }
-
-    if (!extractedText || extractedText.trim().length < 40) {
-      try {
-        const JSZip = (await import('jszip')).default || (await import('jszip'));
-        const zip = await JSZip.loadAsync(file.buffer);
-        const imagePaths = Object.keys(zip.files).filter((k) =>
-          /^word\/media\/.+\.(png|jpe?g|webp|gif)$/i.test(k)
-        );
-        if (imagePaths.length > 0) {
-          const ocrParts: string[] = [];
-          for (const imgPath of imagePaths.slice(0, 6)) {
-            const imgBuffer = await zip.files[imgPath].async('nodebuffer');
-            const ext = imgPath.split('.').pop()?.toLowerCase() || 'png';
-            const imgMime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
-            const ocrPart = await extractMultimodalContent(
-              imgBuffer,
-              imgMime,
-              'Transcribe íntegro todo el texto visible, resoluciones y considerandos de esta página o documento legal escaneado.'
-            );
-            if (ocrPart && ocrPart.trim().length > 15) {
-              ocrParts.push(ocrPart.trim());
-            }
-          }
-          if (ocrParts.length > 0) {
-            extractedText = (extractedText ? extractedText + '\n\n' : '') + ocrParts.join('\n\n--- SIGUIENTE PÁGINA ---\n\n');
-          }
-        }
-      } catch (docxImgErr: any) {
-        console.warn('[Files] Error inspeccionando imágenes en DOCX:', docxImgErr?.message || docxImgErr);
-      }
-    }
-
-    if (!extractedText || !extractedText.trim()) {
-      throw new Error('El archivo Word (.docx) no contiene texto ni imágenes legibles.');
-    }
-  } else if (
-    mime === 'application/msword' ||
-    safeOriginalName.toLowerCase().endsWith('.doc')
-  ) {
-    throw new Error('El formato de archivo Word antiguo (.doc) no es compatible. Por favor guárdalo como .docx o PDF.');
-  } else if (mime.startsWith('image/')) {
-    const imgPrompt =
-      'Analiza esta imagen con detalle. Si contiene texto, documentos, resoluciones, cédulas o expedientes legales, transcríbelos íntegros con total fidelidad en español.';
-    extractedText = await extractMultimodalContent(file.buffer, mime, imgPrompt);
-
-    if (!extractedText || !extractedText.trim()) {
-      throw new Error('No se pudo extraer texto de la imagen. Verifica que esté bien enfocada.');
-    }
-  } else {
-    throw new Error('Formato no soportado. Usa: PDF, DOCX, PNG, JPG, JPEG o WEBP.');
+  if (result.status === 'FAILED' && !result.extractedText) {
+    throw new Error(result.errorMessage || 'No se pudo extraer texto del documento.');
   }
 
   return {
-    extractedText,
-    pageCount,
-    mime,
-    safeOriginalName,
+    extractedText: result.extractedText,
+    pageCount: result.pageCount,
+    mime: result.mimeType,
+    safeOriginalName: result.originalFileName,
+    documentType: result.documentType,
+    qualityMetrics: result.qualityMetrics,
+    processingMethod: result.processingMethod,
+    status: result.status,
+    sha256Hash: result.sha256Hash,
   };
 }
 
@@ -379,7 +102,7 @@ filesRouter.post(
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'Archivo requerido' });
 
-      const { extractedText, pageCount, mime, safeOriginalName } = await extractFileRaw(file);
+      const { extractedText, pageCount, mime, safeOriginalName, documentType, status, qualityMetrics, processingMethod, sha256Hash } = await extractFileRaw(file);
       const sanitization = sanitizeDocumentPromptInjection(extractedText);
       const safeText = sanitization.sanitizedText;
       const meta = extractLegalMetadata(safeText);
@@ -390,6 +113,11 @@ filesRouter.post(
         fileType: mime,
         fileSize: file.size,
         pageCount,
+        documentType,
+        status,
+        qualityMetrics,
+        processingMethod,
+        sha256Hash,
         detectedExpediente: meta.detectedExpediente,
         detectedAuthority: meta.detectedAuthority,
         materia: meta.materia,
@@ -436,38 +164,10 @@ filesRouter.post(
       // Caso A: Viene como archivo
       if (req.file) {
         const file = req.file;
-        fileName = file.originalname || 'Expediente';
-        const mime = resolveMime(file.mimetype, fileName);
-
-        if (mime === 'application/pdf') {
-          try {
-            const pdfParseModule = await import('pdf-parse');
-            const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
-            const data = await pdfParse(file.buffer, { max: 100 });
-            rawText = (data.text || '').trim();
-            pageCount = data.numpages || null;
-          } catch (e) {
-            console.warn('[Scanner] pdf-parse fallback a OCR:', e);
-          }
-
-          if (!rawText || rawText.length < 40) {
-            rawText = await extractMultimodalContent(
-              file.buffer,
-              'application/pdf',
-              'Transcribe con total fidelidad todo el texto visible, números de expediente o carpeta fiscal, sellos, firmas, sumillas y considerandos de este documento legal escaneado en PDF.'
-            );
-          }
-        } else if (mime.startsWith('image/')) {
-          rawText = await extractMultimodalContent(
-            file.buffer,
-            mime,
-            'Transcribe con total fidelidad todo el texto visible, resoluciones y sellos de este documento o cédula legal escaneada.'
-          );
-        } else if (mime.endsWith('document') || fileName.endsWith('.docx')) {
-          const mammoth = await import('mammoth');
-          const result = await mammoth.extractRawText({ buffer: file.buffer });
-          rawText = (result.value || '').trim();
-        }
+        const extraction = await extractFileRaw(file);
+        rawText = extraction.extractedText;
+        fileName = extraction.safeOriginalName;
+        pageCount = extraction.pageCount;
       } else if (req.body?.text) {
         rawText = String(req.body.text).trim();
         fileName = req.body.fileName || 'Texto ingresado';
@@ -645,7 +345,7 @@ filesRouter.post(
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         try {
-          const { extractedText, pageCount, mime, safeOriginalName } = await extractFileRaw(file);
+          const { extractedText, pageCount, mime, safeOriginalName, documentType, status, qualityMetrics, processingMethod, sha256Hash } = await extractFileRaw(file);
           const sanitization = sanitizeDocumentPromptInjection(extractedText);
           const safeText = sanitization.sanitizedText;
           const meta = extractLegalMetadata(safeText);
@@ -657,6 +357,11 @@ filesRouter.post(
             fileType: mime,
             fileSize: file.size,
             pageCount,
+            documentType,
+            status,
+            qualityMetrics,
+            processingMethod,
+            sha256Hash,
             detectedExpediente: meta.detectedExpediente,
             detectedAuthority: meta.detectedAuthority,
             materia: meta.materia,

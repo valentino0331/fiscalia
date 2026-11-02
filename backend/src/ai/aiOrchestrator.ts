@@ -24,6 +24,7 @@ import { detectTaskType, getCandidatesForTask } from './modelRouter';
 import { ProviderAdapter, ProviderExecutionError } from './providerAdapter';
 import { ResponseQualityController } from './responseQualityController';
 import { StreamingCitationFilter } from './streamingCitationFilter';
+import { CircuitBreaker } from './circuitBreaker';
 import {
   AiOrchestratorResponse,
   AiOrchestratorMeta,
@@ -42,11 +43,13 @@ export interface OrchestrationRequest {
   ephemeral?: boolean;
   confidential?: boolean;
   abortSignal?: AbortSignal;
+  correlationId?: string;
 }
 
 export class AiOrchestrator {
   public static async processRequest(req: OrchestrationRequest): Promise<AiOrchestratorResponse> {
     const overallStart = Date.now();
+    const correlationId = req.correlationId || ('req-' + Date.now().toString(36) + '-' + uuidv4().slice(0, 8));
     const { userId, agentId, messages, conversationId, letterhead, isStream, sendStreamChunk } = req;
 
     const latestUserMessage = [...messages]
@@ -168,8 +171,13 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
 
     for (let i = 0; i < candidates.length; i++) {
       const candidate = candidates[i];
+      if (CircuitBreaker.isCircuitOpen(candidate.provider)) {
+        console.warn(`[Orchestrator:${correlationId}] Omitiendo candidato ${candidate.provider}:${candidate.model} por circuito ABIERTO.`);
+        continue;
+      }
+
       try {
-        console.log(`[Orchestrator] Ejecutando candidato ${i + 1}/${candidates.length}: ${candidate.provider} (${candidate.model})...`);
+        console.log(`[Orchestrator:${correlationId}] Ejecutando candidato ${i + 1}/${candidates.length}: ${candidate.provider} (${candidate.model})...`);
         
         // Filtro de flujo continuo (SSE) en tiempo real para evitar fuga de alucinaciones
         const streamFilter = (isStream && sendStreamChunk) 
@@ -183,6 +191,8 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
           streamFilter ? (chunk) => streamFilter.processChunk(chunk) : sendStreamChunk,
           req.abortSignal
         );
+
+        CircuitBreaker.recordSuccess(candidate.provider, result.durationMs);
 
         if (streamFilter) {
           streamHadDisclaimer = streamFilter.getUnverifiedCitations().length > 0;
@@ -201,9 +211,11 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
         };
         break;
       } catch (err: any) {
-        console.warn(`[Orchestrator] Error en candidato ${candidate.provider}:${candidate.model}:`, err.message);
+        const classified = CircuitBreaker.classifyError(err, candidate.model);
+        CircuitBreaker.recordFailure(candidate.provider, classified, candidate.model);
+        console.warn(`[Orchestrator:${correlationId}] Error en candidato ${candidate.provider}:${candidate.model} [${classified.category}]:`, err.message);
         if (req.abortSignal?.aborted) {
-          console.log('[Orchestrator] Petición cancelada por el cliente. Deteniendo intentos de conmutación.');
+          console.log(`[Orchestrator:${correlationId}] Petición cancelada por el cliente. Deteniendo intentos de conmutación.`);
           break;
         }
         if (i === 0) {
@@ -212,28 +224,42 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
-    // 6. Respaldo de Emergencia si todos fallan
+    // 6. Respaldo de Emergencia si todos fallan (Downtime honesto sin alucinaciones)
     if (!executionResult) {
-      console.error('[Orchestrator] Todos los proveedores fallaron. Conmutando a respuesta de contingencia.');
+      console.error(`[Orchestrator:${correlationId}] Todos los proveedores fallaron. Conmutando a respuesta de contingencia transparente.`);
       executionResult = {
-        text: 'Estimado doctor: El sistema se encuentra temporalmente experimentando alta demanda en los servidores de inferencia. Por favor reintente su consulta en unos instantes.',
-        provider: 'emergency_mock',
-        model: 'static-mock',
+        text: 'Estimado doctor: El servicio de procesamiento de inteligencia artificial se encuentra temporalmente no disponible debido a alta demanda simultánea en los servidores de inferencia o mantenimiento temporal de los proveedores. Sus documentos y datos se encuentran resguardados con total seguridad. Por favor, reintente su consulta en unos instantes.',
+        provider: 'system_unavailable',
+        model: 'service-degraded',
         durationMs: Date.now() - overallStart,
         fallbackOccurred: true,
-        fallbackReason: 'Agotamiento de todos los proveedores configurados',
+        fallbackReason: 'Agotamiento o indisponibilidad temporal de todos los proveedores configurados',
       };
       if (isStream && sendStreamChunk) {
         sendStreamChunk(executionResult.text);
       }
     }
 
-    // 7. Validación Jurídica y Control de Calidad Estructural
-    const qualityReport = ResponseQualityController.evaluateResponse(
-      executionResult.text,
-      latestUserMessage,
-      isDraftingRequest
-    );
+    // 7. Validación Jurídica y Control de Calidad Estructural (Bypassed if service unavailable)
+    const isServiceDown = executionResult.provider === 'system_unavailable' || executionResult.provider === 'emergency_mock';
+    const qualityReport = isServiceDown
+      ? {
+          isValid: false,
+          warnings: ['Servicio temporalmente no disponible'],
+          processedText: executionResult.text,
+          verificationSummary: {
+            totalCitations: 0,
+            verifiedCitations: 0,
+            unverifiedCitations: 0,
+            repealedWarnings: 0,
+            citations: [],
+          },
+        }
+      : ResponseQualityController.evaluateResponse(
+          executionResult.text,
+          latestUserMessage,
+          isDraftingRequest
+        );
 
     // Si se agregaron rectificaciones o notas de advertencia que no se emitieron en el stream, enviarlas ahora
     if (isStream && sendStreamChunk && qualityReport.processedText !== executionResult.text) {
@@ -307,12 +333,13 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
-    // 10. Registro Inmutable de Consumo de Cuota (solo si la consulta concluyó con éxito y no fue abortada)
-    if (!req.abortSignal?.aborted && executionResult.provider !== 'emergency_mock') {
+    // 10. Registro Inmutable de Consumo de Cuota (solo si la consulta concluyó con éxito y no fue abortada ni degradada)
+    if (!req.abortSignal?.aborted && !isServiceDown) {
       await recordQuestionUsage(userId);
     }
 
     const meta: AiOrchestratorMeta = {
+      correlationId,
       provider: executionResult.provider,
       model: executionResult.model,
       durationMs: Date.now() - overallStart,

@@ -8,6 +8,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { ModelCandidate, ModelExecutionResult, AiProviderName } from './types';
+import { ModelCatalog } from './modelCatalog';
 
 export class ProviderExecutionError extends Error {
   public provider: AiProviderName;
@@ -78,6 +79,9 @@ export class ProviderAdapter {
 
           if (!res.ok) {
             const errData = await res.text().catch(() => '');
+            if (res.status === 404) {
+              ModelCatalog.markModelStatus(model, 'DISABLED', `OpenRouter HTTP 404: ${errData.slice(0, 100)}`);
+            }
             throw new ProviderExecutionError(provider, model, `HTTP ${res.status}: ${errData.slice(0, 200)}`, res.status);
           }
 
@@ -112,6 +116,9 @@ export class ProviderAdapter {
 
           if (!res.ok) {
             const errData = await res.text().catch(() => '');
+            if (res.status === 404) {
+              ModelCatalog.markModelStatus(model, 'DISABLED', `OpenRouter HTTP 404: ${errData.slice(0, 100)}`);
+            }
             throw new ProviderExecutionError(provider, model, `HTTP ${res.status}: ${errData.slice(0, 200)}`, res.status);
           }
 
@@ -154,10 +161,11 @@ export class ProviderAdapter {
             signal: controller.signal,
           });
 
-          // Si el modelo específico retorna 404 (ej. gemini-2.0-flash deprecado por Google), conmutar dinámicamente
+          // Si el modelo específico retorna 404 (ej. modelo deprecado por Google), conmutar dinámicamente a modelos canónicos activos
           if (!res.ok && res.status === 404) {
-            console.warn(`[ProviderAdapter:gemini] Modelo ${activeModel} devolvió 404. Intentando conmutación dinámica...`);
-            const fallbackModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'].filter(
+            console.warn(`[ProviderAdapter:gemini] Modelo ${activeModel} devolvió 404. Desactivando en ModelCatalog e intentando conmutación dinámica...`);
+            ModelCatalog.markModelStatus(activeModel, 'DISABLED', 'Google REST API HTTP 404: Model no longer available');
+            const fallbackModels = ['gemini-3.8-flash', 'gemini-2.5-flash'].filter(
               (m) => m !== activeModel
             );
             for (const fbModel of fallbackModels) {
@@ -217,6 +225,9 @@ export class ProviderAdapter {
 
           if (!res.ok) {
             const errData = await res.text().catch(() => '');
+            if (res.status === 404) {
+              ModelCatalog.markModelStatus(model, 'DISABLED', `OpenRouter HTTP 404: ${errData.slice(0, 100)}`);
+            }
             throw new ProviderExecutionError(provider, model, `HTTP ${res.status}: ${errData.slice(0, 200)}`, res.status);
           }
 
@@ -251,6 +262,9 @@ export class ProviderAdapter {
 
           if (!res.ok) {
             const errData = await res.text().catch(() => '');
+            if (res.status === 404) {
+              ModelCatalog.markModelStatus(model, 'DISABLED', `OpenRouter HTTP 404: ${errData.slice(0, 100)}`);
+            }
             throw new ProviderExecutionError(provider, model, `HTTP ${res.status}: ${errData.slice(0, 200)}`, res.status);
           }
 

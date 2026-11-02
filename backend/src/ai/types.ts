@@ -15,6 +15,7 @@ export type AiProviderName =
   | 'openai'
   | 'deepseek'
   | 'anthropic'
+  | 'system_unavailable'
   | 'emergency_mock';
 
 export type CitationValidationStatus = 
@@ -73,6 +74,7 @@ export interface QualityCheckResult {
 }
 
 export interface AiOrchestratorMeta {
+  correlationId?: string;
   provider: AiProviderName;
   model: string;
   durationMs: number;

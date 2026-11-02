@@ -197,7 +197,7 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           const modelsToTry = [
             process.env.GEMINI_MODEL,
             'gemini-3.8-flash',
-            'gemini-1.5-flash',
+            'gemini-2.5-flash',
           ].filter(Boolean) as string[];
 
           let geminiMime = 'audio/webm';

@@ -15,6 +15,11 @@ import { memoryRouter } from './routes/memory';
 import { initNewTables } from './db/init';
 import { startKeepAlive, getKeepAliveStatus } from './lib/keepAlive';
 import { securityShieldMiddleware } from './middleware/securityShield';
+import { db } from './db';
+import { sql } from 'drizzle-orm';
+import { CircuitBreaker } from './ai/circuitBreaker';
+import { ModelCatalog } from './ai/modelCatalog';
+import { AiProviderName } from './ai/types';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -129,12 +134,77 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 
-app.get('/health', (_, res) => {
+app.get('/health', async (_, res) => {
   const mem = process.memoryUsage();
-  res.json({
-    status: 'ok',
+  const configuredProviders: Record<AiProviderName, boolean> = {
+    gemini: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    openrouter: Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY),
+    groq: Boolean(process.env.GROQ_API_KEY),
+    openai: Boolean(process.env.OPENAI_API_KEY),
+    deepseek: Boolean(process.env.DEEPSEEK_API_KEY),
+    anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
+    system_unavailable: false,
+    emergency_mock: false,
+  };
+
+  let dbStatus: 'connected' | 'error' = 'connected';
+  let dbLatencyMs = 0;
+  let dbError: string | undefined;
+
+  try {
+    const dbStart = Date.now();
+    await db.execute(sql`SELECT 1`);
+    dbLatencyMs = Date.now() - dbStart;
+  } catch (err: any) {
+    dbStatus = 'error';
+    dbError = err?.message || 'DB ping failed';
+  }
+
+  const providerHealth = CircuitBreaker.getProviderHealthSummary(configuredProviders);
+  const allModels = ModelCatalog.getAllModels();
+  const operationalModels = allModels.filter((m) => m.status === 'OPERATIONAL');
+  const degradedModels = allModels.filter((m) => m.status === 'DEGRADED');
+  const disabledModels = allModels.filter((m) => m.status === 'DISABLED' || m.status === 'DEPRECATED');
+
+  const hasOutage = Object.values(providerHealth).some((p) => p.status === 'OUTAGE');
+  const isDegraded = hasOutage || dbStatus === 'error' || Object.values(providerHealth).some((p) => p.status === 'DEGRADED');
+
+  let overallStatus: 'ok' | 'degraded' | 'unhealthy' = 'ok';
+  if (dbStatus === 'error') {
+    overallStatus = 'unhealthy';
+  } else if (isDegraded) {
+    overallStatus = 'degraded';
+  }
+
+  const httpCode = overallStatus === 'unhealthy' ? 503 : 200;
+
+  res.status(httpCode).json({
+    status: overallStatus,
     timestamp: new Date().toISOString(),
     uptimeSeconds: Math.floor(process.uptime()),
+    database: {
+      status: dbStatus,
+      latencyMs: dbLatencyMs,
+      ...(dbError ? { error: dbError } : {}),
+    },
+    aiProviders: providerHealth,
+    modelCatalog: {
+      totalRegistered: allModels.length,
+      operationalCount: operationalModels.length,
+      degradedCount: degradedModels.length,
+      disabledOrDeprecatedCount: disabledModels.length,
+      operationalModels: operationalModels.map((m) => `${m.provider}:${m.id}`),
+    },
+    ocrEngine: {
+      status: 'ready',
+      supportedMimes: [
+        'application/pdf',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/png',
+        'image/jpeg',
+        'image/webp',
+      ],
+    },
     keepAlive: getKeepAliveStatus(),
     memory: {
       rssMB: Math.round(mem.rss / 1024 / 1024),

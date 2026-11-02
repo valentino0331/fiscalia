@@ -24,25 +24,24 @@ describe('User Memory & AI Model Resilience', () => {
     expect(sanitized).toHaveLength(500);
   });
 
-  it('verifies that official Google Gemini model candidates are valid and exclude hallucinated versions', () => {
+  it('verifies that official Google Gemini model candidates are valid and obsolete versions are deprecated', () => {
     const validOfficialModels = new Set([
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
+      'gemini-3.8-flash',
+      'gemini-2.5-flash',
     ]);
 
     const activeGeminiCandidates = [
-      'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
+      'gemini-3.8-flash',
+      'gemini-2.5-flash',
     ];
 
     for (const model of activeGeminiCandidates) {
       expect(validOfficialModels.has(model)).toBe(true);
     }
 
-    // Ensure non-existent models are strictly absent
+    // Ensure deprecated or non-existent models are strictly absent from active primary candidates
+    expect(activeGeminiCandidates.includes('gemini-2.0-flash')).toBe(false);
+    expect(activeGeminiCandidates.includes('gemini-1.5-flash')).toBe(false);
     expect(activeGeminiCandidates.includes('gemini-3.6-flash')).toBe(false);
-    expect(activeGeminiCandidates.includes('gemini-2.5-flash')).toBe(false);
   });
 });
