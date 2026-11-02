@@ -51,7 +51,7 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
     }
   });
 
-  it('2. ModelCatalog routes all legal tasks to deepseek/deepseek-chat (Primary) and openai/gpt-4o-mini (Fallback) via OpenRouter', () => {
+  it('2. ModelCatalog routes all legal tasks to deepseek/deepseek-chat (Primary), openai/gpt-4o-mini (Fallback), and z-ai/glm-5.3-flash (Tertiary) via OpenRouter', () => {
     const configuredProviders: Record<AiProviderName, boolean> = {
       openrouter: true,
       gemini: false,
@@ -66,7 +66,7 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
     const tasks: any[] = ['LEGAL_CONSULTATION', 'EXPEDIENTE_ANALYSIS', 'DOCUMENT_DRAFTING', 'QUICK_ANSWER'];
     for (const task of tasks) {
       const candidates = ModelCatalog.getCandidatesForTask(task, configuredProviders);
-      expect(candidates).toHaveLength(2);
+      expect(candidates).toHaveLength(3);
       expect(candidates[0].provider).toBe('openrouter');
       expect(candidates[0].model).toBe('deepseek/deepseek-chat');
       expect(candidates[0].temperature).toBe(0.0);
@@ -74,6 +74,10 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
       expect(candidates[1].provider).toBe('openrouter');
       expect(candidates[1].model).toBe('openai/gpt-4o-mini');
       expect(candidates[1].temperature).toBe(0.0);
+
+      expect(candidates[2].provider).toBe('openrouter');
+      expect(candidates[2].model).toBe('z-ai/glm-5.3-flash');
+      expect(candidates[2].temperature).toBe(0.0);
     }
   });
 

@@ -44,7 +44,7 @@ describe('ModelCatalog — Cost-Effective High Quality Strategy (DeepSeek V3 + G
     }
   });
 
-  it('getCandidatesForTask returns primary deepseek/deepseek-chat and fallback openai/gpt-4o-mini via OpenRouter', () => {
+  it('getCandidatesForTask returns primary deepseek/deepseek-chat, fallback openai/gpt-4o-mini, and tertiary z-ai/glm-5.3-flash via OpenRouter', () => {
     const allProviders: Record<AiProviderName, boolean> = {
       gemini: true,
       openrouter: true,
@@ -60,7 +60,7 @@ describe('ModelCatalog — Cost-Effective High Quality Strategy (DeepSeek V3 + G
 
     for (const task of tasks) {
       const candidates = ModelCatalog.getCandidatesForTask(task, allProviders);
-      expect(candidates).toHaveLength(2);
+      expect(candidates).toHaveLength(3);
       expect(candidates[0].provider).toBe('openrouter');
       expect(candidates[0].model).toBe('deepseek/deepseek-chat');
       expect(candidates[0].temperature).toBe(0.0);
@@ -68,10 +68,14 @@ describe('ModelCatalog — Cost-Effective High Quality Strategy (DeepSeek V3 + G
       expect(candidates[1].provider).toBe('openrouter');
       expect(candidates[1].model).toBe('openai/gpt-4o-mini');
       expect(candidates[1].temperature).toBe(0.0);
+
+      expect(candidates[2].provider).toBe('openrouter');
+      expect(candidates[2].model).toBe('z-ai/glm-5.3-flash');
+      expect(candidates[2].temperature).toBe(0.0);
     }
   });
 
-  it('markModelStatus dynamically disables DeepSeek V3 and smoothly falls back to GPT-4o Mini', () => {
+  it('markModelStatus dynamically disables DeepSeek V3 and smoothly falls back to GPT-4o Mini and GLM-5.3 Flash', () => {
     const providers: Record<AiProviderName, boolean> = {
       gemini: false,
       openrouter: true,
@@ -84,15 +88,16 @@ describe('ModelCatalog — Cost-Effective High Quality Strategy (DeepSeek V3 + G
     };
 
     let candidates = ModelCatalog.getCandidatesForTask('DOCUMENT_DRAFTING', providers);
-    expect(candidates).toHaveLength(2);
+    expect(candidates).toHaveLength(3);
     expect(candidates[0].model).toBe('deepseek/deepseek-chat');
 
     // Simular error 429 o fallo en DeepSeek
     ModelCatalog.markModelStatus('deepseek/deepseek-chat', 'DISABLED', 'Rate Limit 429');
 
     candidates = ModelCatalog.getCandidatesForTask('DOCUMENT_DRAFTING', providers);
-    expect(candidates).toHaveLength(1);
+    expect(candidates).toHaveLength(2);
     expect(candidates[0].model).toBe('openai/gpt-4o-mini'); // Fallback automático e inmediato
+    expect(candidates[1].model).toBe('z-ai/glm-5.3-flash');
   });
 
   it('returns empty candidates array if OpenRouter is unconfigured', () => {

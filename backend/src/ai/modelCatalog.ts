@@ -256,6 +256,33 @@ export const MODEL_REGISTRY: Record<string, ModelDefinition> = {
     maxRetries: 2,
   },
 
+  'z-ai/glm-5.3-flash': {
+    id: 'z-ai/glm-5.3-flash',
+    provider: 'openrouter',
+    apiType: 'openai-compatible',
+    displayName: 'GLM 5.3 Flash (OpenRouter - Respaldo Alta Capacidad 1M)',
+    supportedTasks: [
+      'EXPEDIENTE_ANALYSIS',
+      'DOCUMENT_DRAFTING',
+      'LEGAL_CONSULTATION',
+      'QUICK_ANSWER',
+    ],
+    capabilities: {
+      text: true,
+      image: true,
+      pdfDocument: false,
+      audio: false,
+      streaming: true,
+    },
+    contextWindow: 1048576,
+    maxOutputTokens: 16384,
+    status: 'OPERATIONAL',
+    priority: 3,
+    defaultTemperature: 0.0,
+    timeoutMs: 45000,
+    maxRetries: 2,
+  },
+
   'meta-llama/llama-3.3-70b-instruct': {
     id: 'meta-llama/llama-3.3-70b-instruct',
     provider: 'openrouter',
@@ -397,6 +424,24 @@ export class ModelCatalog {
           timeoutMs: fallbackDef.timeoutMs,
         });
         addedModelIds.add(fallbackDef.id);
+      }
+    }
+
+    // 3. Añadir Candidato Terciario (GLM 5.3 Flash - 1 Millón de tokens de contexto y alta disponibilidad)
+    const tertiaryModelId = (process.env.OPENROUTER_TERTIARY_MODEL || 'z-ai/glm-5.3-flash').trim();
+    const tertiaryDef = this.getModel(tertiaryModelId) || MODEL_REGISTRY['z-ai/glm-5.3-flash'];
+    if (tertiaryDef && !addedModelIds.has(tertiaryDef.id)) {
+      const override = this.dynamicStatusOverrides.get(tertiaryDef.id);
+      const effectiveStatus = override || tertiaryDef.status;
+      if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
+        candidates.push({
+          provider: 'openrouter',
+          model: tertiaryDef.id,
+          maxTokens: tertiaryDef.maxOutputTokens,
+          temperature: 0.0,
+          timeoutMs: tertiaryDef.timeoutMs,
+        });
+        addedModelIds.add(tertiaryDef.id);
       }
     }
 
