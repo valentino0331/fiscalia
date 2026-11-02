@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { getRagContext } from '../lib/ragEngine';
+import { getRagContext, hybridSearchRRF, extractLegalSearchParameters } from '../lib/ragEngine';
 import { getSpijLegalGrounding } from '../lib/spijLegalEngine';
 
 describe('RAG Engine & SPIJ Grounding Module', () => {
@@ -14,6 +14,29 @@ describe('RAG Engine & SPIJ Grounding Module', () => {
     vi.restoreAllMocks();
   });
 
+  describe('extractLegalSearchParameters', () => {
+    it('extrae artículos exactos y códigos reconocidos', () => {
+      const params = extractLegalSearchParameters('¿Cuál es el plazo de prescripción bajo el artículo 2001 del Código Civil?');
+      expect(params.exactArticles).toContain('2001');
+      expect(params.detectedCode).toBe('CC');
+      expect(params.keywords).toContain('prescripcion');
+    });
+
+    it('extrae dockets de casación y códigos procesales', () => {
+      const params = extractLegalSearchParameters('Conforme a la Casación 4618-2007 bajo el CPC');
+      expect(params.exactDockets).toContain('4618-2007');
+      expect(params.detectedCode).toBe('CPC');
+    });
+  });
+
+  describe('hybridSearchRRF', () => {
+    it('retorna array vacío de forma segura si la base de datos no está disponible', async () => {
+      process.env.DATABASE_URL = 'postgresql://dummy';
+      const results = await hybridSearchRRF('Consulta de prueba sobre desalojo', 'diego', null, 5);
+      expect(results).toEqual([]);
+    });
+  });
+
   describe('getRagContext', () => {
     it('returns null if RAG_ENABLED is set to "false"', async () => {
       process.env.RAG_ENABLED = 'false';
@@ -24,7 +47,7 @@ describe('RAG Engine & SPIJ Grounding Module', () => {
       expect(result).toBeNull();
     });
 
-    it('returns null if GEMINI_API_KEY and GOOGLE_API_KEY are missing', async () => {
+    it('returns null if GEMINI_API_KEY and GOOGLE_API_KEY are missing and database is unreachable', async () => {
       process.env.RAG_ENABLED = 'true';
       delete process.env.GEMINI_API_KEY;
       delete process.env.GOOGLE_API_KEY;

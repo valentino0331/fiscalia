@@ -22,6 +22,7 @@ export interface LegalChunk {
   articles: string | null;
   content: string;
   similarity: number;
+  validityStatus?: string | null;
 }
 
 // ─── Constantes ───────────────────────────────────────────────────────────────
@@ -233,6 +234,7 @@ export async function searchSimilarChunks(
           section,
           articles,
           content,
+          coalesce(validity_status, 'in_force') as "validityStatus",
           1 - (embedding <=> ${vectorStr}::vector) as similarity
         FROM legal_chunks
         WHERE specialist_id = ${specialistId} OR specialist_id = 'all'
@@ -248,6 +250,7 @@ export async function searchSimilarChunks(
           section,
           articles,
           content,
+          coalesce(validity_status, 'in_force') as "validityStatus",
           1 - (embedding <=> ${vectorStr}::vector) as similarity
         FROM legal_chunks
         ORDER BY embedding <=> ${vectorStr}::vector
@@ -268,6 +271,7 @@ export async function searchSimilarChunks(
       section: r.section,
       articles: r.articles,
       content: r.content,
+      validityStatus: r.validityStatus || 'in_force',
       similarity: parseFloat(r.similarity),
     }));
 }
@@ -384,7 +388,8 @@ export async function searchChunksByText(
         source_code as "sourceCode",
         section,
         articles,
-        content
+        content,
+        coalesce(validity_status, 'in_force') as "validityStatus"
       FROM legal_chunks
       WHERE (
         ${filterSpecialist}::text IS NULL
@@ -419,11 +424,142 @@ export async function searchChunksByText(
       section: r.section,
       articles: r.articles,
       content: r.content,
+      validityStatus: r.validityStatus || 'in_force',
       similarity: primaryArticle && r.articles?.includes(primaryArticle) ? 1.0 : 0.9,
     }));
   } catch (err: any) {
     return [];
   }
+}
+
+/**
+ * Realiza Búsqueda Híbrida combinando Dense Vector Search y Sparse Text Search
+ * aplicando Fusión de Rango Recíproco (RRF - Reciprocal Rank Fusion).
+ *
+ * Fórmula estándar (Cormack et al.):
+ * RRF_Score(doc) = (1 / (k + r_dense(doc))) + (1 / (k + r_sparse(doc))) + exactArticleBonus + codeBonus
+ *
+ * @param queryText    - Texto de la consulta del usuario
+ * @param specialistId - Identificador del agente o null para todos
+ * @param queryVector  - Vector de 768 dims (o null si no hay Gemini)
+ * @param topK         - Cantidad final de fragmentos a inyectar (default 5)
+ * @param factsYear    - Año de los hechos para análisis temporal (tempus regit actum)
+ */
+export async function hybridSearchRRF(
+  queryText: string,
+  specialistId: string | null,
+  queryVector: number[] | null,
+  topK: number = TOP_K,
+  factsYear?: number | null
+): Promise<LegalChunk[]> {
+  const K_RRF = 60; // Constante de suavizado estándar en RRF
+
+  // Ejecutar búsquedas densa y dispersa en paralelo
+  const [denseResults, sparseResults] = await Promise.all([
+    queryVector ? searchSimilarChunks(queryVector, specialistId, topK * 2).catch(() => []) : Promise.resolve([]),
+    searchChunksByText(queryText, specialistId, topK * 2).catch(() => []),
+  ]);
+
+  if (denseResults.length === 0 && sparseResults.length === 0) {
+    return [];
+  }
+
+  const params = extractLegalSearchParameters(queryText);
+  const candidateMap = new Map<string, {
+    chunk: LegalChunk;
+    denseRank: number | null;
+    sparseRank: number | null;
+  }>();
+
+  // 1. Mapear resultados densos (Vector)
+  denseResults.forEach((chunk, index) => {
+    candidateMap.set(chunk.id, {
+      chunk,
+      denseRank: index + 1,
+      sparseRank: null,
+    });
+  });
+
+  // 2. Mapear resultados dispersos (Texto / Exact match)
+  sparseResults.forEach((chunk, index) => {
+    const existing = candidateMap.get(chunk.id);
+    if (existing) {
+      existing.sparseRank = index + 1;
+    } else {
+      candidateMap.set(chunk.id, {
+        chunk,
+        denseRank: null,
+        sparseRank: index + 1,
+      });
+    }
+  });
+
+  // 3. Calcular RRF Score ponderado y filtrar por vigencia temporal
+  const isHistorical = typeof factsYear === 'number' && factsYear < 2026;
+  const scoredCandidates: { chunk: LegalChunk; score: number }[] = [];
+
+  for (const entry of candidateMap.values()) {
+    const { chunk, denseRank, sparseRank } = entry;
+
+    // Filtro de vigencia temporal (Principio Tempus Regit Actum):
+    // Si la consulta es para el presente (2026) y el fragmento está explícitamente derogado,
+    // se descarta salvo que el usuario consulte expresamente sobre dicha norma derogada.
+    const isChunkRepealed = chunk.validityStatus === 'repealed' ||
+      /\b(?:derogad[ao]|reemplazad[ao])\b/i.test(chunk.sourceCode);
+
+    if (!isHistorical && isChunkRepealed) {
+      const userAskedAboutRepealed = params.exactArticles.some(a => chunk.articles?.includes(a)) ||
+        params.keywords.some(k => chunk.sourceCode.toLowerCase().includes(k));
+      if (!userAskedAboutRepealed) {
+        continue; // Omitir norma derogada no solicitada
+      }
+    }
+
+    let densePart = 0;
+    if (denseRank !== null) {
+      densePart = 1 / (K_RRF + denseRank);
+    }
+
+    let sparsePart = 0;
+    if (sparseRank !== null) {
+      sparsePart = 1 / (K_RRF + sparseRank);
+    }
+
+    let exactArticleBonus = 0;
+    // Si el fragmento coincide exactamente con el número de artículo solicitado por el letrado
+    if (params.exactArticles.length > 0) {
+      const matchesArticle = params.exactArticles.some((art) => {
+        return (
+          (chunk.articles && chunk.articles.toLowerCase().includes(art.toLowerCase())) ||
+          new RegExp(`\\bArt(?:[íi]culo|\\.)\\s*${art}\\b`, 'i').test(chunk.content)
+        );
+      });
+      if (matchesArticle) {
+        exactArticleBonus = 0.05; // Bono determinante para no sumergir el artículo exacto frente al vector
+      }
+    }
+
+    // Bono si coincide con el código legal específico solicitado (ej. CPC vs CC)
+    let codeBonus = 0;
+    if (params.detectedCode && chunk.sourceCode.toLowerCase().includes(params.detectedCode.toLowerCase())) {
+      codeBonus = 0.02;
+    }
+
+    const totalRrfScore = densePart + sparsePart + exactArticleBonus + codeBonus;
+
+    scoredCandidates.push({
+      chunk: {
+        ...chunk,
+        similarity: Math.min(1.0, totalRrfScore * 30), // Escala normalizada para legibilidad
+      },
+      score: totalRrfScore,
+    });
+  }
+
+  // 4. Ordenar descendentemente por score RRF
+  scoredCandidates.sort((a, b) => b.score - a.score);
+
+  return scoredCandidates.slice(0, topK).map(sc => sc.chunk);
 }
 
 /**
@@ -434,10 +570,12 @@ export async function searchChunksByText(
  *
  * @param agentId      - the specialist's ID (e.g. 'diego', 'camila')
  * @param userQuery    - the user's latest message
+ * @param factsYear    - optional historical year of facts for tempus regit actum
  */
 export async function getRagContext(
   agentId: string,
-  userQuery: string
+  userQuery: string,
+  factsYear?: number | null
 ): Promise<string | null> {
   // Skip RAG if disabled via env flag
   if (process.env.RAG_ENABLED === 'false') return null;
@@ -472,21 +610,19 @@ export async function getRagContext(
   try {
     let chunks: LegalChunk[] = [];
 
-    // 1. Si hay clave de Gemini/Google, intentar búsqueda vectorial semántica
+    // 1. Si hay clave de Gemini/Google, intentar generar vector semántico
+    let queryVector: number[] | null = null;
     const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
     if (hasGeminiKey) {
       try {
-        const queryVector = await generateEmbedding(queryToEmbed);
-        chunks = await searchSimilarChunks(queryVector, agentId, TOP_K);
+        queryVector = await generateEmbedding(queryToEmbed);
       } catch (embErr: any) {
         console.warn('[RAG] Búsqueda vectorial Gemini omitida, usando búsqueda nativa en DB:', embErr?.message);
       }
     }
 
-    // 2. Búsqueda directa por texto en Neon PostgreSQL (100% compatible con OpenRouter, Zero Gemini)
-    if (chunks.length === 0) {
-      chunks = await searchChunksByText(queryToEmbed, agentId, TOP_K);
-    }
+    // 2. Búsqueda Híbrida RRF (Fusión de Rango Recíproco: Dense Vector + Sparse Text)
+    chunks = await hybridSearchRRF(queryToEmbed, agentId, queryVector, TOP_K, factsYear);
 
     if (chunks.length === 0) return null;
 
@@ -499,7 +635,8 @@ export async function getRagContext(
     let totalChars = contextBlock.length;
 
     for (const chunk of chunks) {
-      const header = `📌 ${chunk.sourceCode}${chunk.articles ? ` — ${chunk.articles}` : ''}${chunk.section ? ` [${chunk.section}]` : ''}\n`;
+      const isHistoricalWarning = chunk.validityStatus === 'repealed' ? ' ⚠️ [NORMA DEROGADA / VIGENCIA HISTÓRICA]' : '';
+      const header = `📌 ${chunk.sourceCode}${chunk.articles ? ` — ${chunk.articles}` : ''}${chunk.section ? ` [${chunk.section}]` : ''}${isHistoricalWarning}\n`;
       const body = chunk.content + '\n\n';
       const entry = header + body;
 

@@ -60,20 +60,22 @@ export class AiOrchestrator {
     // 2. Extracción de Memoria Estructurada del Caso
     const caseMemory = CaseMemoryManager.extractStructuredMemory(messages);
 
-    // 3. Recuperación Documental (RAG + SPIJ Grounding)
+    // Detección de fecha de los hechos para principio Tempus Regit Actum (Irretroactividad)
+    const historicalFactMatch = latestUserMessage.match(/\b(?:en\s+el\s+a[ñn]o|en|a[ñn]o|fecha|desde|ocurr(?:i[óo]|ieron)\s+en)\s*(19[89][0-9]|20[012][0-4])\b/i);
+    const parsedFactYear = historicalFactMatch ? parseInt(historicalFactMatch[1], 10) : null;
+
+    // 3. Recuperación Documental Híbrida RRF (RAG pgvector/text + SPIJ Grounding)
     let legalGrounding: string | null = null;
     try {
-      legalGrounding = await getRagContext(agentId, latestUserMessage);
+      legalGrounding = await getRagContext(agentId, latestUserMessage, parsedFactYear);
     } catch (ragErr) {
-      console.warn('[Orchestrator] RAG pgvector no disponible, usando compendio SPIJ:', ragErr);
+      console.warn('[Orchestrator] RAG híbrido no disponible, usando compendio SPIJ:', ragErr);
     }
     if (!legalGrounding) {
       legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
     }
 
     // 4. Construcción del Prompt Central
-    // Detección de fecha de los hechos para principio Tempus Regit Actum (Irretroactividad)
-    const historicalFactMatch = latestUserMessage.match(/\b(?:en\s+el\s+a[ñn]o|en|a[ñn]o|fecha|desde|ocurr(?:i[óo]|ieron)\s+en)\s*(19[89][0-9]|20[012][0-4])\b/i);
     let temporalIrretroactivityDirective = '';
     if (historicalFactMatch) {
       const factYear = historicalFactMatch[1];
