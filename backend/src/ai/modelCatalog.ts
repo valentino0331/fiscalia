@@ -3,15 +3,10 @@
  * 
  * ÚNICA FUENTE DE VERDAD para todos los modelos y proveedores de IA en HARDMAN.
  * 
- * DIRECTIVA ARQUITECTÓNICA V3.1:
- * Toda la inteligencia artificial generativa de HARDMAN utiliza EXCLUSIVAMENTE:
- * - Proveedor: OpenRouter
- * - Modelo: anthropic/claude-sonnet-5.5
- * - Endpoint: https://openrouter.ai/api/v1/chat/completions
- * - Autenticación: OPENROUTER_API_KEY
- * 
- * Prohibido el uso de proveedores o modelos generativos alternativos como fallback
- * (no Gemini Direct, no DeepSeek, no Groq, no OpenAI, no Anthropic Direct).
+ * DIRECTIVA ARQUITECTÓNICA DE ALTA RENTABILIDAD Y CALIDAD JURÍDICA:
+ * Proveedor Central: OpenRouter (https://openrouter.ai/api/v1/chat/completions)
+ * 1. Candidato Primario: deepseek/deepseek-chat (DeepSeek V3: Razonamiento superior, ~$0.01/consulta)
+ * 2. Candidato de Respaldo: openai/gpt-4o-mini (Resiliencia y disponibilidad 99.99%, ~$0.007/consulta)
  */
 
 import { AiProviderName, ModelCandidate, TaskType } from './types';
@@ -66,13 +61,8 @@ export const MODEL_REGISTRY: Record<string, ModelDefinition> = {
     id: 'anthropic/claude-sonnet-5.5',
     provider: 'openrouter',
     apiType: 'openai-compatible',
-    displayName: 'Anthropic Claude Sonnet 5.5 (OpenRouter)',
-    supportedTasks: [
-      'EXPEDIENTE_ANALYSIS',
-      'DOCUMENT_DRAFTING',
-      'LEGAL_CONSULTATION',
-      'QUICK_ANSWER',
-    ],
+    displayName: 'Anthropic Claude Sonnet 5.5 (Desactivado por Coste)',
+    supportedTasks: [],
     capabilities: {
       text: true,
       image: true,
@@ -80,10 +70,10 @@ export const MODEL_REGISTRY: Record<string, ModelDefinition> = {
       audio: false,
       streaming: true,
     },
-    contextWindow: 1000000, // 1M tokens oficiales en OpenRouter
+    contextWindow: 1000000,
     maxOutputTokens: 16384,
-    status: 'OPERATIONAL',
-    priority: 1,
+    status: 'DISABLED',
+    priority: 99,
     defaultTemperature: 0.0,
     timeoutMs: 90000,
     maxRetries: 2,
@@ -162,17 +152,54 @@ export const MODEL_REGISTRY: Record<string, ModelDefinition> = {
     id: 'deepseek/deepseek-chat',
     provider: 'openrouter',
     apiType: 'openai-compatible',
-    displayName: 'DeepSeek Chat (OpenRouter - Desactivado)',
-    supportedTasks: [],
-    capabilities: { text: true, image: false, pdfDocument: false, audio: false, streaming: true },
-    contextWindow: 64000,
+    displayName: 'DeepSeek V3 (OpenRouter - Primario)',
+    supportedTasks: [
+      'EXPEDIENTE_ANALYSIS',
+      'DOCUMENT_DRAFTING',
+      'LEGAL_CONSULTATION',
+      'QUICK_ANSWER',
+    ],
+    capabilities: {
+      text: true,
+      image: false,
+      pdfDocument: false,
+      audio: false,
+      streaming: true,
+    },
+    contextWindow: 128000,
     maxOutputTokens: 8192,
-    status: 'DISABLED',
-    priority: 99,
+    status: 'OPERATIONAL',
+    priority: 1,
     defaultTemperature: 0.0,
     timeoutMs: 60000,
-    maxRetries: 0,
-    deprecatedReason: 'Desactivado por directiva: fallback a modelos alternativos prohibido.',
+    maxRetries: 1,
+  },
+
+  'openai/gpt-4o-mini': {
+    id: 'openai/gpt-4o-mini',
+    provider: 'openrouter',
+    apiType: 'openai-compatible',
+    displayName: 'GPT-4o Mini (OpenRouter - Respaldo Resiliente)',
+    supportedTasks: [
+      'EXPEDIENTE_ANALYSIS',
+      'DOCUMENT_DRAFTING',
+      'LEGAL_CONSULTATION',
+      'QUICK_ANSWER',
+    ],
+    capabilities: {
+      text: true,
+      image: true,
+      pdfDocument: false,
+      audio: false,
+      streaming: true,
+    },
+    contextWindow: 128000,
+    maxOutputTokens: 16384,
+    status: 'OPERATIONAL',
+    priority: 2,
+    defaultTemperature: 0.0,
+    timeoutMs: 45000,
+    maxRetries: 2,
   },
 
   'meta-llama/llama-3.3-70b-instruct': {
@@ -273,29 +300,45 @@ export class ModelCatalog {
     taskType: ExtendedTaskType,
     configuredProviders: Record<AiProviderName, boolean>
   ): ModelCandidate[] {
-    // 1. Debe estar configurado el proveedor OpenRouter
     if (!configuredProviders.openrouter) {
       return [];
     }
 
-    const sonnetDef = MODEL_REGISTRY['anthropic/claude-sonnet-5.5'];
-    if (!sonnetDef) return [];
+    const candidates: ModelCandidate[] = [];
 
-    const override = this.dynamicStatusOverrides.get(sonnetDef.id);
-    const effectiveStatus = override || sonnetDef.status;
-
-    // Si el modelo fue deshabilitado por el disyuntor o 404, no devolver candidato (prohibido fallback a otros modelos)
-    if (effectiveStatus === 'DISABLED' || effectiveStatus === 'DEPRECATED') {
-      return [];
+    // Candidato 1 (Opción 2 - Primario): DeepSeek V3 en OpenRouter (~$0.01/consulta)
+    const deepseekDef = MODEL_REGISTRY['deepseek/deepseek-chat'];
+    if (deepseekDef) {
+      const override = this.dynamicStatusOverrides.get(deepseekDef.id);
+      const effectiveStatus = override || deepseekDef.status;
+      if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
+        candidates.push({
+          provider: 'openrouter',
+          model: deepseekDef.id,
+          maxTokens: deepseekDef.maxOutputTokens,
+          temperature: 0.0,
+          timeoutMs: deepseekDef.timeoutMs,
+        });
+      }
     }
 
-    return [{
-      provider: 'openrouter',
-      model: sonnetDef.id,
-      maxTokens: sonnetDef.maxOutputTokens,
-      temperature: 0.0, // Determinismo estricto para toda tarea jurídica
-      timeoutMs: sonnetDef.timeoutMs,
-    }];
+    // Candidato 2 (Opción 1 - Respaldo Inmediato): GPT-4o Mini en OpenRouter (~$0.007/consulta)
+    const gptDef = MODEL_REGISTRY['openai/gpt-4o-mini'];
+    if (gptDef) {
+      const override = this.dynamicStatusOverrides.get(gptDef.id);
+      const effectiveStatus = override || gptDef.status;
+      if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
+        candidates.push({
+          provider: 'openrouter',
+          model: gptDef.id,
+          maxTokens: gptDef.maxOutputTokens,
+          temperature: 0.0,
+          timeoutMs: gptDef.timeoutMs,
+        });
+      }
+    }
+
+    return candidates;
   }
 
   /**

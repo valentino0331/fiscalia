@@ -31,10 +31,10 @@ export class ProviderExecutionError extends Error {
 
 export class ProviderAdapter {
   private static readonly AUTHORIZED_PROVIDER: AiProviderName = 'openrouter';
-  private static readonly CANONICAL_MODEL = 'anthropic/claude-sonnet-5.5';
+  private static readonly CANONICAL_MODEL = 'deepseek/deepseek-chat';
 
   /**
-   * Ejecuta la llamada generativa unificada a través de OpenRouter con Claude Sonnet 5.5
+   * Ejecuta la llamada generativa unificada a través de OpenRouter (DeepSeek V3 / GPT-4o Mini)
    */
   public static async executeCandidate(
     candidate: ModelCandidate,
@@ -52,7 +52,7 @@ export class ProviderAdapter {
       throw new ProviderExecutionError(
         provider,
         model,
-        `Llamada no autorizada: Toda la IA generativa de Hardman está restringida exclusivamente a OpenRouter (${this.CANONICAL_MODEL}). Proveedor '${provider}' bloqueado.`
+        `Llamada no autorizada: Toda la IA generativa de Hardman está restringida exclusivamente a OpenRouter. Proveedor '${provider}' bloqueado.`
       );
     }
 

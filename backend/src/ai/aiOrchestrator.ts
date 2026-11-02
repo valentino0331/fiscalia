@@ -219,11 +219,11 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
 
     // 6. Respaldo de Emergencia si falla OpenRouter (Downtime honesto sin alucinaciones ni modelos sustitutos)
     if (!executionResult) {
-      console.error(`[Orchestrator:${correlationId}] OpenRouter (Claude Sonnet 5.5) no disponible. Emitiendo aviso transparente de indisponibilidad.`);
+      console.error(`[Orchestrator:${correlationId}] OpenRouter no disponible tras agotar candidatos. Emitiendo aviso transparente de indisponibilidad.`);
       executionResult = {
-        text: 'Estimado doctor: El servicio de inteligencia artificial jurídica (Claude Sonnet 5.5) se encuentra temporalmente no disponible por alta demanda de procesamiento en el proveedor. Sus documentos y datos se encuentran resguardados con total seguridad. Por favor, reintente su consulta en unos instantes.',
+        text: 'Estimado doctor: El servicio de inteligencia artificial jurídica se encuentra temporalmente no disponible por alta demanda en la red de procesamiento. Sus documentos y datos se encuentran resguardados con total seguridad. Por favor, reintente su consulta en unos instantes.',
         provider: 'system_unavailable',
-        model: 'anthropic/claude-sonnet-5.5',
+        model: candidates[0]?.model || 'deepseek/deepseek-chat',
         durationMs: Date.now() - overallStart,
         fallbackOccurred: false,
         fallbackReason: fallbackReason || 'Indisponibilidad temporal de OpenRouter',

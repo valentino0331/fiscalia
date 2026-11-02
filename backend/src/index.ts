@@ -222,7 +222,7 @@ initNewTables()
 const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
   const orK = Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY);
-  console.log(`[AI Engine] Motor Generativo Exclusivo: OpenRouter (anthropic/claude-sonnet-5.5) | Configurado=${orK}`);
+  console.log(`[AI Engine] Motor Generativo Calidad/Precio: OpenRouter (Primario: deepseek/deepseek-chat, Fallback: openai/gpt-4o-mini) | Configurado=${orK}`);
   startKeepAlive();
 });
 

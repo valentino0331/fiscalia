@@ -1,6 +1,7 @@
 import { Router, Response, NextFunction } from 'express';
 import multer, { MulterError } from 'multer';
 import { ProviderAdapter } from '../ai/providerAdapter';
+import { ModelCatalog } from '../ai/modelCatalog';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
 

@@ -51,7 +51,7 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
     }
   });
 
-  it('2. ModelCatalog routes all legal tasks exclusively to anthropic/claude-sonnet-5.5 via OpenRouter', () => {
+  it('2. ModelCatalog routes all legal tasks to deepseek/deepseek-chat (Primary) and openai/gpt-4o-mini (Fallback) via OpenRouter', () => {
     const configuredProviders: Record<AiProviderName, boolean> = {
       openrouter: true,
       gemini: false,
@@ -66,10 +66,14 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
     const tasks: any[] = ['LEGAL_CONSULTATION', 'EXPEDIENTE_ANALYSIS', 'DOCUMENT_DRAFTING', 'QUICK_ANSWER'];
     for (const task of tasks) {
       const candidates = ModelCatalog.getCandidatesForTask(task, configuredProviders);
-      expect(candidates).toHaveLength(1);
+      expect(candidates).toHaveLength(2);
       expect(candidates[0].provider).toBe('openrouter');
-      expect(candidates[0].model).toBe('anthropic/claude-sonnet-5.5');
+      expect(candidates[0].model).toBe('deepseek/deepseek-chat');
       expect(candidates[0].temperature).toBe(0.0);
+
+      expect(candidates[1].provider).toBe('openrouter');
+      expect(candidates[1].model).toBe('openai/gpt-4o-mini');
+      expect(candidates[1].temperature).toBe(0.0);
     }
   });
 
@@ -107,7 +111,7 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
       ProviderAdapter.executeCandidate(
         {
           provider: 'openrouter',
-          model: 'anthropic/claude-sonnet-5.5',
+          model: 'deepseek/deepseek-chat',
           maxTokens: 1000,
           temperature: 0.0,
           timeoutMs: 10000,
@@ -166,7 +170,7 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
     });
 
     expect(res.meta.provider).toBe('system_unavailable');
-    expect(res.meta.model).toBe('anthropic/claude-sonnet-5.5');
+    expect(res.meta.model).toBe('deepseek/deepseek-chat');
     expect(res.meta.fallbackOccurred).toBe(false); // Prohibido fallback a otros modelos
     expect(res.message).toContain('temporalmente no disponible');
     expect(res.message).not.toContain('Artículo 911'); // No inventa fundamentos en downtime
