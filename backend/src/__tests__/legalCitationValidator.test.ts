@@ -67,5 +67,52 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
     expect(verifiedAp).toBeDefined();
     expect(verifiedAp?.status).toBe('VERIFIED');
   });
+
+  it('valida cita textual auténtica verificada contra el fundamento vinculante de la resolución (Round-Trip Grounding)', () => {
+    const text = 'Conforme a la Casación N° 4618-2007/Lima en su doctrina vinculante: "En los procesos de divorcio por la causal de separación de hecho, el Juez tiene el deber de fijar de oficio una indemnización o adjudicar preferentemente bienes al cónyuge más perjudicado."';
+    const report = validateLegalCitations(text);
+
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    expect(verifiedCas).toBeDefined();
+    expect(verifiedCas?.status).toBe('VERIFIED');
+    expect(verifiedCas?.citationType).toBe('VERBATIM_QUOTE');
+    expect(verifiedCas?.verbatimVerified).toBe(true);
+  });
+
+  it('detecta cita textual apócrifa atribuida a una resolución real y la desclasifica como CONTRADICTED', () => {
+    const text = 'Según la Casación N° 4618-2007/Lima: "El cónyuge que no trabaje perderá todo derecho a alimentos y será sancionado con prisión efectiva inmediata por abandono familiar."';
+    const report = validateLegalCitations(text);
+
+    expect(report.hasBlockingErrors).toBe(true);
+    const apocryphal = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    expect(apocryphal).toBeDefined();
+    expect(apocryphal?.status).toBe('CONTRADICTED');
+    expect(apocryphal?.citationType).toBe('VERBATIM_QUOTE');
+    expect(apocryphal?.verbatimVerified).toBe(false);
+    expect(report.processedText).toContain('cita textual apócrifa');
+    expect(report.processedText).toContain('RECTIFICACIÓN JURISPRUDENCIAL');
+  });
+
+  it('valida paráfrasis legítima de ratio decidendi sin exigir coincidencia literal', () => {
+    const text = 'La Casación N° 4618-2007/Lima tutela al cónyuge perjudicado exigiendo que el juzgador evalúe la indemnización económica o adjudicación preferente de bienes.';
+    const report = validateLegalCitations(text);
+
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    expect(verifiedCas).toBeDefined();
+    expect(verifiedCas?.status).toBe('VERIFIED');
+    expect(verifiedCas?.citationType).toBe('RATIO_PARAPHRASE');
+  });
+
+  it('detecta y rectifica artículos inexistentes que exceden los límites de los códigos peruanos', () => {
+    const text = 'Se solicita la prescripción conforme al Artículo 2500 del Código Civil y se deduce excepción bajo el Artículo 1500 del Código Procesal Civil.';
+    const report = validateLegalCitations(text);
+
+    expect(report.hasBlockingErrors).toBe(true);
+    const fakeArticles = report.summary.citations.filter((c) => c.status === 'CONTRADICTED' && c.type === 'articulo');
+    expect(fakeArticles.length).toBeGreaterThanOrEqual(2);
+    expect(report.processedText).toContain('el ordenamiento peruano solo cuenta con 2122 artículos en esta norma');
+    expect(report.processedText).toContain('el ordenamiento peruano solo cuenta con 840 artículos en esta norma');
+    expect(report.processedText).toContain('RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE)');
+  });
 });
 

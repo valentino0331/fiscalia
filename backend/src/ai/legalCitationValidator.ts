@@ -11,7 +11,7 @@
 
 import { DetectedCitation, VerificationSummary } from './types';
 import { JURISPRUDENCE_COMPENDIUM, NORMATIVE_REFORMS_COMPENDIUM } from '../lib/spijLegalEngine';
-import { LegalSourceRegistry } from './legalSourceRegistry';
+import { LegalSourceRegistry, validateStatutoryArticle } from './legalSourceRegistry';
 
 // Catálogo de precedentes y casaciones canónicas verificadas de la Corte Suprema del Perú
 export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
@@ -606,6 +606,32 @@ export function validateLegalCitations(text: string): ValidationReport {
     }
   }
 
+  // 2.2. Detectar Artículos Inexistentes por Límite de Código Nacional (Statutory Boundary Enforcement)
+  const articleBoundaryRegex = /\b(?:Art[íi]culo|Art\.?)\s*([0-9]{1,5})(?:[-–]([A-Za-z0-9]+))?\s*(?:[º°\.]\s*)?(?:del|de\s+la|de\s+los|del\s+TUO\s+de\s+la)?\s*(C[óo]digo\s+Civil|C[óo]digo\s+Penal|C[óo]digo\s+Procesal\s+Civil|C[óo]digo\s+Procesal\s+Penal|Nuevo\s+C[óo]digo\s+Procesal\s+Penal|NCPP|CPC|CPP|CC|C\.P\.|C\.C\.|C\.P\.C\.|C[óo]digo\s+Tributario|C[óo]digo\s+Procesal\s+Constitucional|Constituci[óo]n(?:\s+Pol[íi]tica)?|Ley\s+General\s+de\s+Sociedades|LGS|LPAG|Nueva\s+Ley\s+Procesal\s+del\s+Trabajo|NLPT|Ley\s+de\s+T[íi]tulos\s+Valores)\b/gi;
+  let artMatch: RegExpExecArray | null;
+  while ((artMatch = articleBoundaryRegex.exec(text)) !== null) {
+    const artNum = parseInt(artMatch[1], 10);
+    const codeMention = artMatch[3];
+    const validation = validateStatutoryArticle(artNum, codeMention);
+
+    if (!validation.isValid && validation.codeBoundary) {
+      citations.push({
+        raw: artMatch[0],
+        type: 'articulo',
+        normalized: `Artículo ${artNum} del ${validation.codeBoundary.name}`,
+        status: 'CONTRADICTED',
+        officialSource: validation.codeBoundary.officialEnactment,
+        detail: validation.reason,
+      });
+      warnings.push(`❌ ARTÍCULO INEXISTENTE: ${artMatch[0]}. ${validation.reason}`);
+      processedText = processedText.replace(
+        artMatch[0],
+        `[artículo inexistente: ${artMatch[0]} — el ordenamiento peruano solo cuenta con ${validation.codeBoundary.maxArticle} artículos en esta norma]`
+      );
+      processedText += `\n\n> 🔍 **RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE):** ${validation.reason}\n\n`;
+    }
+  }
+
   // 3. Detectar Casaciones Judiciales y cotejar contra registro verificado
   const casacionRegex = /\b(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?\b/gi;
   let match: RegExpExecArray | null;
@@ -622,7 +648,7 @@ export function validateLegalCitations(text: string): ValidationReport {
     const knownVerified = VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey];
 
     if (knownDoc) {
-      // Control de Correspondencia Temática (Ratio Decidendi)
+      // Control de Correspondencia Temática (Ratio Decidendi) y Cita Textual (Round-Trip Grounding)
       const surroundingStart = Math.max(0, match.index - 250);
       const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
       const surroundingContext = text.slice(surroundingStart, surroundingEnd);
@@ -637,23 +663,56 @@ export function validateLegalCitations(text: string): ValidationReport {
           status: 'VERIFIED',
           officialSource: knownDoc.issuingEntity,
           detail: `${knownDoc.officialNumber}: ${knownDoc.subject} (${knownDoc.relevantFJ.map(f => f.fjNumber).join(', ')})`,
+          citationType: attribution.citationType,
+          extractedQuote: attribution.extractedQuote,
+          verbatimVerified: attribution.verbatimVerified,
         });
       } else {
-        // Atribución falsa de fundamento a sentencia real
-        citations.push({
-          raw: rawMatch,
-          type: 'casacion',
-          normalized: knownDoc.officialNumber,
-          status: 'CONTRADICTED',
-          officialSource: knownDoc.issuingEntity,
-          detail: attribution.actualReason,
-        });
-        warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
-        processedText = processedText.replace(
-          rawMatch,
-          `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
-        );
-        processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        if (attribution.citationType === 'VERBATIM_QUOTE') {
+          // Cita textual apócrifa atribuida a una resolución real
+          citations.push({
+            raw: rawMatch,
+            type: 'casacion',
+            normalized: knownDoc.officialNumber,
+            status: 'CONTRADICTED',
+            officialSource: knownDoc.issuingEntity,
+            detail: attribution.actualReason,
+            citationType: 'VERBATIM_QUOTE',
+            extractedQuote: attribution.extractedQuote,
+            verbatimVerified: false,
+          });
+          warnings.push(`❌ CITA TEXTUAL APÓCRIFA: ${rawMatch}. ${attribution.actualReason}`);
+          if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
+            processedText = processedText.replace(
+              attribution.extractedQuote,
+              `[cita textual apócrifa del expediente ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
+            );
+          } else {
+            processedText = processedText.replace(
+              rawMatch,
+              `[cita textual apócrifa del expediente ${knownDoc.officialNumber}]`
+            );
+          }
+          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        } else {
+          // Atribución falsa de fundamento a sentencia real
+          citations.push({
+            raw: rawMatch,
+            type: 'casacion',
+            normalized: knownDoc.officialNumber,
+            status: 'CONTRADICTED',
+            officialSource: knownDoc.issuingEntity,
+            detail: attribution.actualReason,
+            citationType: attribution.citationType,
+            verbatimVerified: false,
+          });
+          warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+          processedText = processedText.replace(
+            rawMatch,
+            `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
+          );
+          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        }
       }
     } else if (knownVerified) {
       citations.push({
@@ -663,6 +722,8 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'VERIFIED',
         officialSource: knownVerified.court,
         detail: `${knownVerified.title}: ${knownVerified.subject} (${knownVerified.bindingFJ})`,
+        citationType: 'RATIO_PARAPHRASE',
+        verbatimVerified: true,
       });
     } else {
       // Casación no registrada en compendio oficial: Marcar como NO VERIFICADA
@@ -709,22 +770,54 @@ export function validateLegalCitations(text: string): ValidationReport {
           status: 'VERIFIED',
           officialSource: knownDoc.issuingEntity,
           detail: `${knownDoc.subject} (${knownDoc.relevantFJ.map(f => f.fjNumber).join(', ')})`,
+          citationType: attribution.citationType,
+          extractedQuote: attribution.extractedQuote,
+          verbatimVerified: attribution.verbatimVerified,
         });
       } else {
-        citations.push({
-          raw: rawMatch,
-          type: 'acuerdo_plenario',
-          normalized: knownDoc.officialNumber,
-          status: 'CONTRADICTED',
-          officialSource: knownDoc.issuingEntity,
-          detail: attribution.actualReason,
-        });
-        warnings.push(`❌ ATRIBUCIÓN DE ACUERDO PLENARIO CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
-        processedText = processedText.replace(
-          rawMatch,
-          `[acuerdo plenario con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
-        );
-        processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        if (attribution.citationType === 'VERBATIM_QUOTE') {
+          citations.push({
+            raw: rawMatch,
+            type: 'acuerdo_plenario',
+            normalized: knownDoc.officialNumber,
+            status: 'CONTRADICTED',
+            officialSource: knownDoc.issuingEntity,
+            detail: attribution.actualReason,
+            citationType: 'VERBATIM_QUOTE',
+            extractedQuote: attribution.extractedQuote,
+            verbatimVerified: false,
+          });
+          warnings.push(`❌ CITA TEXTUAL APÓCRIFA DE ACUERDO PLENARIO: ${rawMatch}. ${attribution.actualReason}`);
+          if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
+            processedText = processedText.replace(
+              attribution.extractedQuote,
+              `[cita textual apócrifa del ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
+            );
+          } else {
+            processedText = processedText.replace(
+              rawMatch,
+              `[cita textual apócrifa del ${knownDoc.officialNumber}]`
+            );
+          }
+          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        } else {
+          citations.push({
+            raw: rawMatch,
+            type: 'acuerdo_plenario',
+            normalized: knownDoc.officialNumber,
+            status: 'CONTRADICTED',
+            officialSource: knownDoc.issuingEntity,
+            detail: attribution.actualReason,
+            citationType: attribution.citationType,
+            verbatimVerified: false,
+          });
+          warnings.push(`❌ ATRIBUCIÓN DE ACUERDO PLENARIO CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+          processedText = processedText.replace(
+            rawMatch,
+            `[acuerdo plenario con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
+          );
+          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        }
       }
     } else if (knownVerified) {
       citations.push({
@@ -734,6 +827,8 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'VERIFIED',
         officialSource: knownVerified.court,
         detail: `${knownVerified.title} (${knownVerified.bindingFJ})`,
+        citationType: 'RATIO_PARAPHRASE',
+        verbatimVerified: true,
       });
     } else {
       citations.push({

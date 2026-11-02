@@ -33,6 +33,9 @@ export interface DetectedCitation {
   officialSource?: string;
   detail?: string;
   remediedText?: string;
+  citationType?: 'VERBATIM_QUOTE' | 'RATIO_PARAPHRASE' | 'LEGAL_SUBSUMPTION';
+  extractedQuote?: string;
+  verbatimVerified?: boolean;
 }
 
 export interface VerificationSummary {

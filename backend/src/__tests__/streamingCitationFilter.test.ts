@@ -106,4 +106,22 @@ describe('Streaming Citation Filter — Validación en Tiempo Real (SSE)', () =>
     expect(output).not.toContain('Ley de Enjuiciamiento Civil');
     expect(output).toContain('[norma/tribunal foráneo no aplicable en el Perú — rige legislación peruana]');
   });
+
+  it('intercepta artículos que exceden los límites del código (Art. 2500 del Código Civil) en streaming', () => {
+    let output = '';
+    const filter = new StreamingCitationFilter((chunk) => {
+      output += chunk;
+    });
+
+    filter.processChunk('Invocamos el ');
+    filter.processChunk('Artículo 2500 del Código Civil ');
+    filter.processChunk('para sustentar la prescripción.');
+    filter.flush();
+
+    const [bodyText, disclaimerText] = output.split('> ⚖️');
+    expect(bodyText).not.toContain('Artículo 2500 del Código Civil');
+    expect(bodyText).toContain('[artículo inexistente: Código Civil solo cuenta con 2122 artículos]');
+    expect(disclaimerText).toContain('Artículo 2500 del Código Civil');
+    expect(filter.getUnverifiedCitations()).toContain('Artículo 2500 del Código Civil');
+  });
 });
