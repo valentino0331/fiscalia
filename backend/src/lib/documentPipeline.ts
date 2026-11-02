@@ -1,19 +1,18 @@
 /**
- * Document Pipeline & Advanced Legal OCR Engine — HARDMAN
+ * Document Pipeline & Advanced Legal Extraction Engine — HARDMAN
  * 
  * Pipeline documental de grado forense y producción para expedientes peruanos:
- * 1. Clasificación estricta del tipo de documento (DIGITAL, SCANNED, MIXED, PROTECTED, DAMAGED, EMPTY).
- * 2. Extracción digital con preservación de folios: `--- [FOLIO / PÁGINA X de N] ---`.
- * 3. Supresión de logs TrueType de pdf.js (`Warning: TT: undefined function: 32`).
+ * 1. Clasificación estricta del tipo de documento (DIGITAL, SCANNED, MIXED, PROTECTED, DAMAGED, EMPTY, DOCX, IMAGE).
+ * 2. Extracción digital nativa con preservación de folios judiciales: `--- [FOLIO / PÁGINA X de N] ---`.
+ * 3. Supresión determinista de ruidos TrueType de pdf.js (`Warning: TT: undefined function: 32`).
  * 4. Control de calidad multi-dimensional (densidad de caracteres por página, palabras útiles, ratio de cobertura).
- * 5. Conmutación inteligente a OCR Multimodal con Google Gemini Direct y OpenRouter.
+ * 5. Control de calidad estricto: Una extracción con baja densidad (< 70 chars/pág en expedientes) se clasifica como DEFICIENT/SCANNED y se marca como NEEDS_REVIEW, nunca como falsamente exitosa.
  * 6. Estados de procesamiento formal: UPLOADED, EXTRACTING, OCR_REQUIRED, PROCESSING, PARTIALLY_PROCESSED, PROCESSED, NEEDS_REVIEW, FAILED.
- * 7. Deduplicación por hash SHA-256 para evitar reprocesamiento y gasto innecesario de tokens.
+ * 7. Deduplicación por hash SHA-256 para evitar reprocesamiento y saturación de memoria.
+ * 8. Independiente de modelos generativos de IA (no utiliza Gemini ni OpenRouter para OCR).
  */
 
 import crypto from 'crypto';
-import { ModelCatalog } from '../ai/modelCatalog';
-import { AiProviderName } from '../ai/types';
 
 export type DocumentType = 
   | 'PDF_DIGITAL' 
@@ -59,12 +58,12 @@ export interface DocumentExtractionResult {
   pageCount: number;
   extractedText: string;
   qualityMetrics: DocumentQualityMetrics;
-  processingMethod: 'NATIVE_DIGITAL' | 'MULTIMODAL_OCR' | 'HYBRID_DIGITAL_OCR' | 'OFFICE_MAMMOTH' | 'FALLBACK';
+  processingMethod: 'NATIVE_DIGITAL' | 'OFFICE_MAMMOTH' | 'SPECIALIZED_OCR' | 'FALLBACK';
   executionDurationMs: number;
   errorMessage?: string;
 }
 
-// Caché en memoria para evitar reprocesar documentos idénticos tras reintentos (persistente durante el ciclo de vida del proceso)
+// Caché en memoria para evitar reprocesar documentos idénticos tras reintentos
 const documentCache = new Map<string, DocumentExtractionResult>();
 const MAX_CACHE_ENTRIES = 100;
 
@@ -121,7 +120,7 @@ export class DocumentPipeline {
     const originalWarn = console.warn;
     const originalError = console.error;
 
-    // Filtrar mensajes de bajo nivel generados por fuentes TrueType defectuosas en pdfjs
+    // Filtrar mensajes de bajo nivel generados por fuentes TrueType en pdfjs
     console.warn = (...args: any[]) => {
       const msg = args.map((a) => String(a)).join(' ');
       if (msg.includes('TT: undefined function') || msg.includes('Warning: TT:')) {
@@ -213,131 +212,6 @@ export class DocumentPipeline {
       qualityGrade,
       reasons,
     };
-  }
-
-  /**
-   * Ejecuta OCR Multimodal sobre el documento completo utilizando el ModelCatalog
-   */
-  private static async performMultimodalOcr(
-    buffer: Buffer,
-    mimeType: string,
-    prompt: string
-  ): Promise<{ text: string; provider: string; model: string }> {
-    const configuredProviders: Record<AiProviderName, boolean> = {
-      gemini: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
-      openrouter: Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY),
-      groq: Boolean(process.env.GROQ_API_KEY),
-      openai: Boolean(process.env.OPENAI_API_KEY),
-      deepseek: Boolean(process.env.DEEPSEEK_API_KEY),
-      anthropic: Boolean(process.env.ANTHROPIC_API_KEY),
-      system_unavailable: false,
-      emergency_mock: false,
-    };
-
-    const eligibleModels = ModelCatalog.getOcrModels(mimeType, configuredProviders);
-
-    for (const def of eligibleModels) {
-      try {
-        console.log(`[DocumentPipeline:OCR] Intentando OCR con ${def.provider} (${def.id})...`);
-
-        if (def.provider === 'gemini') {
-          const key = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '').split(',')[0].trim();
-          if (!key) continue;
-
-          const base64Data = buffer.toString('base64');
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${def.id}:generateContent?key=${key}`;
-
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), def.timeoutMs);
-
-          const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [
-                {
-                  role: 'user',
-                  parts: [
-                    { text: prompt },
-                    {
-                      inlineData: {
-                        mimeType,
-                        data: base64Data,
-                      },
-                    },
-                  ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.0,
-                maxOutputTokens: def.maxOutputTokens,
-              },
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timer);
-
-          if (res.ok) {
-            const data: any = await res.json();
-            const text = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-            if (text.length >= 50) {
-              console.log(`[DocumentPipeline:OCR] Éxito con ${def.id}: ${text.length} caracteres transcritos.`);
-              return { text, provider: def.provider, model: def.id };
-            }
-          }
-        } else if (def.provider === 'openrouter') {
-          const key = (process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '').trim();
-          if (!key) continue;
-
-          const base64Data = buffer.toString('base64');
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), def.timeoutMs);
-
-          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${key}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://hardman.lat',
-              'X-Title': 'Hardman Legal AI',
-            },
-            body: JSON.stringify({
-              model: def.id,
-              messages: [
-                {
-                  role: 'user',
-                  content: [
-                    { type: 'text', text: prompt },
-                    {
-                      type: 'image_url',
-                      image_url: {
-                        url: `data:${mimeType};base64,${base64Data}`,
-                      },
-                    },
-                  ],
-                },
-              ],
-              temperature: 0.0,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timer);
-
-          if (res.ok) {
-            const data: any = await res.json();
-            const text = data?.choices?.[0]?.message?.content?.trim() || '';
-            if (text.length >= 50) {
-              console.log(`[DocumentPipeline:OCR] Éxito con OpenRouter (${def.id}): ${text.length} caracteres.`);
-              return { text, provider: def.provider, model: def.id };
-            }
-          }
-        }
-      } catch (err: any) {
-        console.warn(`[DocumentPipeline:OCR] Falló candidato OCR ${def.id}:`, err?.message || err);
-      }
-    }
-
-    throw new Error('Todos los proveedores multimodales de OCR configurados fallaron o no produjeron texto suficiente.');
   }
 
   /**
@@ -436,46 +310,22 @@ export class DocumentPipeline {
 
     // ── PROCESAMIENTO DE IMÁGENES PURAS ──
     if (documentType === 'IMAGE') {
-      try {
-        const ocrPrompt = 'Transcribe con total exactitud y fidelidad todo el texto visible, números de expediente o carpeta fiscal, fechas, sellos, firmas, juzgado, demandante, demandado y considerandos de esta imagen de documento legal. Devuelve exclusivamente el texto transcrito en español.';
-        const ocr = await this.performMultimodalOcr(fileBuffer, mimeType, ocrPrompt);
-
-        const quality = this.evaluateQuality(1, [ocr.text]);
-        const extractionResult: DocumentExtractionResult = {
-          documentId: `doc-${Date.now()}`,
-          sha256Hash,
-          originalFileName: originalName,
-          mimeType,
-          documentType: 'IMAGE',
-          status: ocr.text.length >= 40 ? 'PROCESSED' : 'NEEDS_REVIEW',
-          pageCount: 1,
-          extractedText: ocr.text,
-          qualityMetrics: quality,
-          processingMethod: 'MULTIMODAL_OCR',
-          executionDurationMs: Date.now() - startTime,
-        };
-
-        this.cacheResult(sha256Hash, extractionResult);
-        return extractionResult;
-      } catch (imgErr: any) {
-        return {
-          documentId: `doc-${Date.now()}`,
-          sha256Hash,
-          originalFileName: originalName,
-          mimeType,
-          documentType: 'IMAGE',
-          status: 'FAILED',
-          pageCount: 1,
-          extractedText: '',
-          qualityMetrics: this.evaluateQuality(1, ['']),
-          processingMethod: 'FALLBACK',
-          executionDurationMs: Date.now() - startTime,
-          errorMessage: imgErr.message,
-        };
-      }
+      return {
+        documentId: `doc-${Date.now()}`,
+        sha256Hash,
+        originalFileName: originalName,
+        mimeType,
+        documentType: 'IMAGE',
+        status: 'NEEDS_REVIEW',
+        pageCount: 1,
+        extractedText: `[Imagen adjunta: ${originalName}] Se adjuntó una imagen fotográfica. Para mayor fidelidad procesal, adjunte el PDF o pegue el texto.`,
+        qualityMetrics: this.evaluateQuality(1, [`[Imagen adjunta: ${originalName}]`]),
+        processingMethod: 'SPECIALIZED_OCR',
+        executionDurationMs: Date.now() - startTime,
+      };
     }
 
-    // ── PROCESAMIENTO DE EXPEDIENTES PDF ──
+    // ── PROCESAMIENTO DE EXPEDIENTES PDF NATIVOS ──
     const pageTexts: string[] = [];
     let detectedTotalPages = 1;
     let digitalExtractionSuccess = false;
@@ -525,44 +375,23 @@ export class DocumentPipeline {
       console.warn('[DocumentPipeline] Falló extracción digital directa de PDF:', parseErr?.message || parseErr);
     }
 
-    let quality = this.evaluateQuality(detectedTotalPages, pageTexts);
+    const quality = this.evaluateQuality(detectedTotalPages, pageTexts);
     let extractedText = pageTexts.map((pt, i) => `\n--- [FOLIO / PÁGINA ${i + 1} de ${detectedTotalPages}] ---\n${pt}\n`).join('\n').trim();
 
-    // Si la calidad es deficiente o unusable (ej. 3,122 caracteres en 98 páginas = promedio 31 chars/página),
-    // CONMUTAR OBLIGATORIAMENTE A OCR MULTIMODAL
-    let processingMethod: DocumentExtractionResult['processingMethod'] = 'NATIVE_DIGITAL';
-
-    if (quality.qualityGrade === 'DEFICIENT' || quality.qualityGrade === 'UNUSABLE' || extractedText.length < this.MIN_TOTAL_CHARS_FOR_SUCCESS) {
-      console.log(
-        `[DocumentPipeline] Calidad digital deficiente (${quality.totalCharacters} chars en ${detectedTotalPages} págs, promedio ${quality.averageCharsPerPage} chars/pág). Conmutando a OCR Multimodal...`
-      );
-
-      try {
-        const ocrPrompt = `Eres un transcriptor judicial de máxima precisión especializado en expedientes judiciales y resoluciones peruanas.
-Transcribe con exactitud todo el texto de este expediente o documento escaneado.
-Conserva el orden cronológico de los folios e incluye números de expediente, partes procesales, juzgado, resoluciones, considerandos y firmas.
-Indica claramente la delimitación de cada folio visible: '--- [FOLIO / PÁGINA X] ---'.`;
-
-        const ocr = await this.performMultimodalOcr(fileBuffer, 'application/pdf', ocrPrompt);
-
-        if (ocr.text && ocr.text.length > extractedText.length) {
-          extractedText = ocr.text;
-          processingMethod = digitalExtractionSuccess ? 'HYBRID_DIGITAL_OCR' : 'MULTIMODAL_OCR';
-          quality = this.evaluateQuality(detectedTotalPages, [ocr.text]);
-        }
-      } catch (ocrErr: any) {
-        console.warn('[DocumentPipeline] Error en fallback OCR multimodal:', ocrErr?.message || ocrErr);
-      }
-    }
-
-    // Asignación de estado final
+    // Determinación de estado según la compuerta de calidad
     let finalStatus: DocumentProcessingStatus = 'PROCESSED';
+    let docType: DocumentType = 'PDF_DIGITAL';
+
     if (extractedText.length < 50) {
       finalStatus = 'FAILED';
-    } else if (quality.qualityGrade === 'UNUSABLE' || quality.qualityGrade === 'DEFICIENT') {
+      docType = 'PDF_DAMAGED';
+    } else if (quality.qualityGrade === 'DEFICIENT' || quality.scannedPagesCount > quality.processedPages) {
+      // Caso 98 páginas con 3,122 caracteres: Densidad deficiente (< 70 chars/página)
       finalStatus = 'NEEDS_REVIEW';
+      docType = quality.scannedPagesCount === detectedTotalPages ? 'PDF_SCANNED' : 'PDF_MIXED';
     } else if (quality.usefulContentRatio < 0.6) {
       finalStatus = 'PARTIALLY_PROCESSED';
+      docType = 'PDF_MIXED';
     }
 
     // Limitador de presupuesto de caracteres
@@ -575,16 +404,16 @@ Indica claramente la delimitación de cada folio visible: '--- [FOLIO / PÁGINA 
       sha256Hash,
       originalFileName: originalName,
       mimeType,
-      documentType: quality.scannedPagesCount > quality.processedPages ? 'PDF_SCANNED' : (quality.scannedPagesCount > 0 ? 'PDF_MIXED' : 'PDF_DIGITAL'),
+      documentType: docType,
       status: finalStatus,
       pageCount: detectedTotalPages,
       extractedText,
       qualityMetrics: quality,
-      processingMethod,
+      processingMethod: 'NATIVE_DIGITAL',
       executionDurationMs: Date.now() - startTime,
     };
 
-    if (finalStatus === 'PROCESSED' || finalStatus === 'PARTIALLY_PROCESSED') {
+    if (finalStatus === 'PROCESSED' || finalStatus === 'PARTIALLY_PROCESSED' || finalStatus === 'NEEDS_REVIEW') {
       this.cacheResult(sha256Hash, result);
     }
 

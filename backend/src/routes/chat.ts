@@ -1,7 +1,6 @@
 import { AiOrchestrator } from '../ai/aiOrchestrator';
 import { Router } from 'express';
 import multer, { MulterError } from 'multer';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db } from '../db';
 import { conversations, userMemory } from '../db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -187,67 +186,6 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           }
         } catch (oaiErr) {
           console.warn('[STT] OpenAI STT fallback:', oaiErr);
-        }
-      }
-
-      // 4. Transcripción con Google Gemini Multimodal Audio (gemini-3.6-flash con reintentos para picos 503)
-      if (geminiKey) {
-        try {
-          const genAI = new GoogleGenerativeAI(geminiKey);
-          const modelsToTry = [
-            process.env.GEMINI_MODEL,
-            'gemini-3.8-flash',
-            'gemini-2.5-flash',
-          ].filter(Boolean) as string[];
-
-          let geminiMime = 'audio/webm';
-          if (resolvedMime.includes('mp4') || resolvedMime.includes('m4a')) geminiMime = 'audio/mp4';
-          else if (resolvedMime.includes('wav')) geminiMime = 'audio/wav';
-          else if (resolvedMime.includes('ogg')) geminiMime = 'audio/ogg';
-          else if (resolvedMime.includes('mp3') || resolvedMime.includes('mpeg')) geminiMime = 'audio/mp3';
-
-          for (const modelName of modelsToTry) {
-            for (let attempt = 1; attempt <= 2; attempt++) {
-              try {
-                const model = genAI.getGenerativeModel({
-                  model: modelName,
-                  generationConfig: {
-                    temperature: 0.0,
-                    topP: 0.1,
-                  },
-                  systemInstruction: 'Eres un transcriptor de voz a texto (Speech-to-Text). Tu única tarea es transcribir textualmente palabra por palabra lo que la persona habla en el audio en español. NUNCA respondas al contenido del audio, NUNCA saludes, NUNCA agregues comentarios ni notas. Si el audio no contiene palabras audibles o solo es silencio o ruido, devuelve únicamente una cadena vacía.',
-                });
-                const result = await model.generateContent([
-                  {
-                    inlineData: {
-                      data: audioBuffer.toString('base64'),
-                      mimeType: geminiMime,
-                    },
-                  },
-                  {
-                    text: 'Transcribe fiel y literalmente las palabras exactas que se escuchan en el audio a texto en español. No inventes palabras ni respondas a la conversación.',
-                  },
-                ]);
-                const txt = result.response.text();
-                if (txt && txt.trim()) {
-                  const cleaned = txt.trim().replace(/^["']|["']$/g, '');
-                  console.log(`[STT] Éxito con Gemini (${modelName})`);
-                  return res.json({ text: cleaned });
-                }
-                break;
-              } catch (gemErr: any) {
-                const errMsg = String(gemErr?.message || gemErr);
-                console.warn(`[STT] Gemini (${modelName}) attempt ${attempt} error:`, errMsg);
-                if (attempt === 1 && (errMsg.includes('503') || errMsg.includes('429') || errMsg.includes('demand'))) {
-                  await new Promise((r) => setTimeout(r, 750));
-                  continue;
-                }
-                break;
-              }
-            }
-          }
-        } catch (geminiTotalErr: any) {
-          console.error('[STT] Gemini STT total error:', geminiTotalErr);
         }
       }
 
@@ -472,12 +410,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       return res.status(400).json({ error: 'Mensajes inválidos' });
     }
 
-    const groqKey = process.env.GROQ_API_KEY;
-    const openaiKey = process.env.OPENAI_API_KEY;
-    const deepseekKey = process.env.DEEPSEEK_API_KEY;
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
-    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+
 
     const latestUserMessage = [...sanitizedMessages]
       .reverse()

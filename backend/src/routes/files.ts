@@ -1,6 +1,6 @@
 import { Router, Response, NextFunction } from 'express';
 import multer, { MulterError } from 'multer';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ProviderAdapter } from '../ai/providerAdapter';
 import { requireAuth } from '../middleware/auth';
 import { requireSubscription } from '../middleware/subscription';
 
@@ -182,12 +182,8 @@ filesRouter.post(
       // Analizar metadatos procesales con heurística base
       const meta = extractLegalMetadata(rawText);
 
-      // Intentar enriquecer con LLM para un análisis ultra detallado si hay claves
-      const geminiKeys = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '')
-        .split(',')
-        .map((k) => k.trim())
-        .filter(Boolean);
-      const openrouterKey = (process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY || '').trim();
+      // Enriquecer con Claude Sonnet 5.5 a través del adaptador central de OpenRouter
+      const hasOpenRouter = Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY);
 
       let aiSummary = '';
       let aiActionSteps: string[] = [];
@@ -211,73 +207,43 @@ Genera una respuesta en formato JSON estrictamente válido con los siguientes ca
   "actionSteps": ["Paso concreto 1 que debe hacer hoy mismo", "Paso concreto 2", "Paso concreto 3", "Paso concreto 4"]
 }`;
 
-      // 1. Probar con Gemini
-      if (geminiKeys.length > 0) {
+      if (hasOpenRouter) {
         try {
-          const genAI = new GoogleGenerativeAI(geminiKeys[0]);
-          const model = genAI.getGenerativeModel({
-            model: 'gemini-3.8-flash',
-            generationConfig: { responseMimeType: 'application/json' },
-          });
-          const result = await model.generateContent(aiPrompt);
-          const jsonText = result?.response?.text()?.trim() || '';
-          if (jsonText) {
-            const parsed = JSON.parse(jsonText);
-            if (parsed.alertTitle) aiAlertTitle = parsed.alertTitle;
-            if (parsed.deadlineText) aiDeadlineText = parsed.deadlineText;
-            if (parsed.summary) aiSummary = parsed.summary;
-            if (Array.isArray(parsed.actionSteps) && parsed.actionSteps.length > 0) {
-              aiActionSteps = parsed.actionSteps;
-            }
-            if (parsed.expedienteNumber && !meta.detectedExpediente) {
-              meta.detectedExpediente = parsed.expedienteNumber;
-            }
-            if (parsed.authority && !meta.detectedAuthority) {
-              meta.detectedAuthority = parsed.authority;
-            }
-            if (parsed.alertLevel) meta.alertLevel = parsed.alertLevel;
-          }
-        } catch (geminiErr: any) {
-          console.warn('[Scanner AI] Error analizando con Gemini:', geminiErr?.message || geminiErr);
-        }
-      } else if (openrouterKey) {
-        try {
-          const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${openrouterKey}`,
-              'Content-Type': 'application/json',
-              'HTTP-Referer': 'https://hardman.lat',
-              'X-Title': 'Hardman Legal AI',
+          const aiResult = await ProviderAdapter.executeCandidate(
+            {
+              provider: 'openrouter',
+              model: 'anthropic/claude-sonnet-5.5',
+              maxTokens: 4096,
+              temperature: 0.0,
+              timeoutMs: 60000,
             },
-            body: JSON.stringify({
-              model: 'google/gemini-2.5-flash',
-              messages: [{ role: 'user', content: aiPrompt }],
-              response_format: { type: 'json_object' },
-            }),
-          });
-          if (res.ok) {
-            const data: any = await res.json();
-            const content = data?.choices?.[0]?.message?.content?.trim();
-            if (content) {
-              const parsed = JSON.parse(content);
-              if (parsed.alertTitle) aiAlertTitle = parsed.alertTitle;
-              if (parsed.deadlineText) aiDeadlineText = parsed.deadlineText;
-              if (parsed.summary) aiSummary = parsed.summary;
-              if (Array.isArray(parsed.actionSteps) && parsed.actionSteps.length > 0) {
-                aiActionSteps = parsed.actionSteps;
-              }
-              if (parsed.expedienteNumber && !meta.detectedExpediente) {
-                meta.detectedExpediente = parsed.expedienteNumber;
-              }
-              if (parsed.authority && !meta.detectedAuthority) {
-                meta.detectedAuthority = parsed.authority;
-              }
-              if (parsed.alertLevel) meta.alertLevel = parsed.alertLevel;
-            }
+            [{ role: 'user', content: aiPrompt }],
+            false
+          );
+
+          let jsonContent = aiResult.text.trim();
+          if (jsonContent.includes('```json')) {
+            jsonContent = jsonContent.split('```json')[1].split('```')[0].trim();
+          } else if (jsonContent.includes('```')) {
+            jsonContent = jsonContent.split('```')[1].split('```')[0].trim();
           }
-        } catch (orErr: any) {
-          console.warn('[Scanner AI] Error analizando con OpenRouter:', orErr?.message || orErr);
+
+          const parsed = JSON.parse(jsonContent);
+          if (parsed.alertTitle) aiAlertTitle = parsed.alertTitle;
+          if (parsed.deadlineText) aiDeadlineText = parsed.deadlineText;
+          if (parsed.summary) aiSummary = parsed.summary;
+          if (Array.isArray(parsed.actionSteps) && parsed.actionSteps.length > 0) {
+            aiActionSteps = parsed.actionSteps;
+          }
+          if (parsed.expedienteNumber && !meta.detectedExpediente) {
+            meta.detectedExpediente = parsed.expedienteNumber;
+          }
+          if (parsed.authority && !meta.detectedAuthority) {
+            meta.detectedAuthority = parsed.authority;
+          }
+          if (parsed.alertLevel) meta.alertLevel = parsed.alertLevel;
+        } catch (claudeErr: any) {
+          console.warn('[Scanner AI] Error analizando con Claude Sonnet 5.5:', claudeErr?.message || claudeErr);
         }
       }
 

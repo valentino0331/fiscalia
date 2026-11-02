@@ -189,7 +189,8 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
           formattedMessages,
           isStream || false,
           streamFilter ? (chunk) => streamFilter.processChunk(chunk) : sendStreamChunk,
-          req.abortSignal
+          req.abortSignal,
+          correlationId
         );
 
         CircuitBreaker.recordSuccess(candidate.provider, result.durationMs);
@@ -199,41 +200,33 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
           streamFilter.flush();
         }
 
-        if (i > 0) {
-          fallbackOccurred = true;
-          fallbackReason = `El proveedor principal falló. Conmutado con éxito a ${candidate.provider} (${candidate.model}).`;
-        }
-
         executionResult = {
           ...result,
-          fallbackOccurred,
-          fallbackReason,
+          fallbackOccurred: false,
         };
         break;
       } catch (err: any) {
         const classified = CircuitBreaker.classifyError(err, candidate.model);
         CircuitBreaker.recordFailure(candidate.provider, classified, candidate.model);
-        console.warn(`[Orchestrator:${correlationId}] Error en candidato ${candidate.provider}:${candidate.model} [${classified.category}]:`, err.message);
+        console.warn(`[Orchestrator:${correlationId}] Error en OpenRouter:${candidate.model} [${classified.category}]:`, err.message);
         if (req.abortSignal?.aborted) {
-          console.log(`[Orchestrator:${correlationId}] Petición cancelada por el cliente. Deteniendo intentos de conmutación.`);
+          console.log(`[Orchestrator:${correlationId}] Petición cancelada por el cliente. Deteniendo ejecución.`);
           break;
         }
-        if (i === 0) {
-          fallbackReason = err.message;
-        }
+        fallbackReason = err.message;
       }
     }
 
-    // 6. Respaldo de Emergencia si todos fallan (Downtime honesto sin alucinaciones)
+    // 6. Respaldo de Emergencia si falla OpenRouter (Downtime honesto sin alucinaciones ni modelos sustitutos)
     if (!executionResult) {
-      console.error(`[Orchestrator:${correlationId}] Todos los proveedores fallaron. Conmutando a respuesta de contingencia transparente.`);
+      console.error(`[Orchestrator:${correlationId}] OpenRouter (Claude Sonnet 5.5) no disponible. Emitiendo aviso transparente de indisponibilidad.`);
       executionResult = {
-        text: 'Estimado doctor: El servicio de procesamiento de inteligencia artificial se encuentra temporalmente no disponible debido a alta demanda simultánea en los servidores de inferencia o mantenimiento temporal de los proveedores. Sus documentos y datos se encuentran resguardados con total seguridad. Por favor, reintente su consulta en unos instantes.',
+        text: 'Estimado doctor: El servicio de inteligencia artificial jurídica (Claude Sonnet 5.5) se encuentra temporalmente no disponible por alta demanda de procesamiento en el proveedor. Sus documentos y datos se encuentran resguardados con total seguridad. Por favor, reintente su consulta en unos instantes.',
         provider: 'system_unavailable',
-        model: 'service-degraded',
+        model: 'anthropic/claude-sonnet-5.5',
         durationMs: Date.now() - overallStart,
-        fallbackOccurred: true,
-        fallbackReason: 'Agotamiento o indisponibilidad temporal de todos los proveedores configurados',
+        fallbackOccurred: false,
+        fallbackReason: fallbackReason || 'Indisponibilidad temporal de OpenRouter',
       };
       if (isStream && sendStreamChunk) {
         sendStreamChunk(executionResult.text);

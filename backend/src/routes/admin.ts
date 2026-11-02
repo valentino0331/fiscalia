@@ -1,3 +1,4 @@
+import { ProviderAdapter } from '../ai/providerAdapter';
 import { Router } from 'express';
 import { sql, eq, and, desc } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
@@ -570,39 +571,23 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
       });
       result.openrouter.keyStatus = orAuthRes.status;
       result.openrouter.authData = await orAuthRes.json().catch(() => ({}));
+
+      const testSonnet = await ProviderAdapter.executeCandidate(
+        {
+          provider: 'openrouter',
+          model: 'anthropic/claude-sonnet-5.5',
+          maxTokens: 50,
+          temperature: 0.0,
+          timeoutMs: 30000,
+        },
+        [{ role: 'user', content: 'Di "OK" en una sola palabra.' }],
+        false
+      );
+      result.openrouter.testModel = 'anthropic/claude-sonnet-5.5';
+      result.openrouter.testResult = testSonnet.text;
+      result.openrouter.testDurationMs = testSonnet.durationMs;
     } catch (e: any) {
       result.openrouter.error = e.message;
-    }
-  }
-
-  if (geminiKey) {
-    const firstKey = geminiKey.split(',')[0].trim();
-    try {
-      const modelsRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${firstKey}`);
-      result.gemini.status = modelsRes.status;
-      const modelsData: any = await modelsRes.json().catch(() => ({}));
-      if (modelsData.models && Array.isArray(modelsData.models)) {
-        result.gemini.availableModels = modelsData.models
-          .map((m: any) => m.name?.replace('models/', ''))
-          .filter((name: string) => name && (name.includes('flash') || name.includes('pro') || name.includes('gemini')));
-      } else {
-        result.gemini.raw = modelsData;
-      }
-
-      // Test a quick 1-sentence prompt with the specified or recommended model
-      const candidateToTest = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-      const testGen = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidateToTest}:generateContent?key=${firstKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: 'Hola, di "OK" en una sola palabra.' }] }]
-        })
-      });
-      result.gemini.testModel = candidateToTest;
-      result.gemini.testStatus = testGen.status;
-      result.gemini.testResult = await testGen.json().catch(() => ({}));
-    } catch (e: any) {
-      result.gemini.error = e.message;
     }
   }
 
@@ -614,49 +599,30 @@ adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, r
   const log: string[] = [];
   const add = (msg: string) => log.push(`[+${Date.now() - t0}ms] ${msg}`);
 
-  add('Start simulation');
-  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
-  const firstKey = (geminiKey || '').split(',')[0].trim();
-  add(`geminiKey present: ${Boolean(firstKey)}`);
+  add('Start simulation with Claude Sonnet 5.5 via OpenRouter');
+  const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
+  add(`openrouterKey present: ${Boolean(openrouterKey)}`);
 
   try {
-    const model = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
-    const disableThinking = req.query.thinking === 'false' || req.query.thinking === '0';
-    add(`Calling Google Generative Language REST ${model} (disableThinking: ${disableThinking})...`);
-    
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${firstKey}`;
-    const requestBody: any = {
-      contents: [{ role: 'user', parts: [{ text: 'hola' }] }],
-      generationConfig: {
-        temperature: 0.2
-      }
-    };
-
-    if (disableThinking) {
-      requestBody.generationConfig.thinkingConfig = {
-        thinkingBudget: 0
-      };
-    }
-
-    const gemRes = await fetch(geminiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody)
-    });
-    add(`Google REST HTTP Status: ${gemRes.status}`);
-    const data: any = await gemRes.json();
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    add(`Google reply in ${Date.now() - t0}ms: ${reply.slice(0, 100)}`);
-    return res.json({ log, reply, data, durationMs: Date.now() - t0 });
+    const sonnetRes = await ProviderAdapter.executeCandidate(
+      {
+        provider: 'openrouter',
+        model: 'anthropic/claude-sonnet-5.5',
+        maxTokens: 2048,
+        temperature: 0.0,
+        timeoutMs: 45000,
+      },
+      [{ role: 'user', content: req.body?.prompt || 'hola' }],
+      false
+    );
+    add(`OpenRouter Claude Sonnet 5.5 reply in ${sonnetRes.durationMs}ms: ${sonnetRes.text.slice(0, 100)}`);
+    return res.json({ log, reply: sonnetRes.text, durationMs: sonnetRes.durationMs });
   } catch (err: any) {
     add(`Error: ${err.message}`);
     return res.status(500).json({ log, error: err.message, durationMs: Date.now() - t0 });
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// AUDITORÍA DE CUMPLIMIENTO: NORMATIVAS ISO & MARCO LEGAL
-// ─────────────────────────────────────────────────────────────
 adminRouter.get('/compliance', requireAuth, requireAdmin, async (_, res) => {
   try {
     const [countsResult, convsResult] = await Promise.all([
