@@ -27,7 +27,7 @@ export type CitationValidationStatus =
 
 export interface DetectedCitation {
   raw: string;
-  type: 'casacion' | 'pleno' | 'articulo' | 'ley' | 'acuerdo_plenario' | 'resolucion_administrativa';
+  type: 'casacion' | 'pleno' | 'articulo' | 'ley' | 'acuerdo_plenario' | 'resolucion_administrativa' | 'sentencia_tc';
   normalized: string;
   status: CitationValidationStatus;
   officialSource?: string;

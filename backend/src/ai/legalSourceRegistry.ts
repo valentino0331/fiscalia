@@ -206,13 +206,27 @@ export function validateStatutoryArticle(
   articleNum: number,
   codeMention: string
 ): { isValid: boolean; codeBoundary?: StatutoryCodeBoundary; reason?: string } {
-  const normMention = normalizeLegalText(codeMention);
-  const matchedBoundary = STATUTORY_CODE_BOUNDARIES.find(b =>
+  const normMention = normalizeLegalText(codeMention).replace(/\s+/g, ' ').trim();
+  const rawClean = normMention.replace(/[^a-z0-9]/g, '');
+
+  // 1. Coincidencia exacta por alias o acrónimo
+  let matchedBoundary = STATUTORY_CODE_BOUNDARIES.find(b =>
     b.aliases.some(alias => {
       const normAlias = normalizeLegalText(alias);
-      return normMention === normAlias || normMention.includes(normAlias);
+      const aliasClean = normAlias.replace(/[^a-z0-9]/g, '');
+      return normMention === normAlias || rawClean === aliasClean;
     })
   );
+
+  // 2. Coincidencia por inclusión para nombres largos (> 4 letras)
+  if (!matchedBoundary) {
+    matchedBoundary = STATUTORY_CODE_BOUNDARIES.find(b =>
+      b.aliases.some(alias => {
+        const normAlias = normalizeLegalText(alias);
+        return normAlias.length > 4 && (normMention.includes(normAlias) || normAlias.includes(normMention));
+      })
+    );
+  }
 
   if (!matchedBoundary) {
     return { isValid: true };
@@ -491,7 +505,7 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     officialUrl: 'https://www.tc.gob.pe/jurisprudencia/2015/05057-2013-AA.pdf',
     sha256Hash: computeLegalDigest('Precedente Huatuco STC 05057-2013-PA/TC Improcedencia reposicion sector publico sin concurso publico meritos plaza presupuestada vacante indeterminada'),
     specialistIds: ['valentina'],
-    subject: 'Precedente Huatuco: Improcedencia de reposición de trabajadores en el sector público si no ingresaron por concurso público de méritos a plaza presupuestada vacante e indeterminada',
+    subject: 'Precedente Vinculante Huatuco: Improcedencia de reposición de trabajadores en el sector público si no ingresaron por concurso público de méritos a plaza presupuestada vacante e indeterminada',
     keywords: ['huatuco', 'reposición', 'reposicion', 'sector público', 'sector publico', 'concurso público', 'concurso publico', 'plaza presupuestada', 'indemnización por despido'],
     relevantFJ: [
       {
@@ -582,7 +596,7 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     officialUrl: 'https://www.tc.gob.pe/jurisprudencia/2023/03525-2021-AA.pdf',
     sha256Hash: computeLegalDigest('Caso Maxco STC 03525-2021-PA/TC Inconstitucionalidad cobro intereses moratorios fuera de plazo legal SUNAT Tribunal Fiscal'),
     specialistIds: ['fernanda'],
-    subject: 'Caso Maxco S.A.C.: Inconstitucionalidad e inaplicabilidad del cobro de intereses moratorios generados por la demora de SUNAT o Tribunal Fiscal fuera de los plazos legales',
+    subject: 'Caso Maxco S.A.C.: Prohibición e inconstitucionalidad del cobro de intereses moratorios generados en exceso del plazo razonable por dilación de SUNAT o Tribunal Fiscal',
     keywords: ['intereses moratorios', 'sunat', 'tribunal fiscal', 'maxco', 'plazo legal de resolución', 'deuda tributaria', 'artículo 33 código tributario'],
     relevantFJ: [
       {
@@ -1086,7 +1100,7 @@ export class LegalSourceRegistry {
           verbatimVerified: false,
           extractedQuote: foundQuote,
           expectedSubject: doc.subject,
-          actualReason: `Cita textual apócrifa: El texto entrecomillado "${foundQuote.length > 70 ? foundQuote.slice(0, 70) + '...' : foundQuote}" no corresponde al tenor literal auténtico ni a los fundamentos vinculantes de ${doc.officialNumber}.`,
+          actualReason: `Cita textual apócrifa: El texto entrecomillado "${foundQuote.length > 70 ? foundQuote.slice(0, 70) + '...' : foundQuote}" no corresponde al tenor literal auténtico ni a los fundamentos vinculantes de ${doc.officialNumber}. Dicho precedente versa sobre: ${doc.subject}.`,
         };
       }
     }

@@ -373,16 +373,64 @@ export const REPEALED_NORMS_CATALOG: {
     warningNote: 'El D.S. 004-2019-JUS fue derogado y formalmente reemplazado por el D.S. N° 006-2026-JUS (MINJUSDH).',
   },
   {
-    pattern: /\b(?:Ley\s*N[°º.]?\s*28677|Ley\s+de\s+Garant[ií]as\s+Mobiliarias\s+28677)\b/i,
+    pattern: /\b(?:Ley\s*(?:N[°º.]?|Nro\.?|Número)?\s*28677|Ley\s+de\s+Garant[ií]as\s+Mobiliarias\s+28677)\b/i,
     repealedName: 'Ley N° 28677 (Ley de la Garantía Mobiliaria)',
-    activeSubstitute: 'Decreto Legislativo N° 1400 y Sistema Informativo de Garantías Mobiliarias (SIGM)',
-    warningNote: 'La Ley 28677 fue derogada en su totalidad por el Decreto Legislativo N° 1400 y el SIGM de SUNARP.',
+    activeSubstitute: 'Decreto Legislativo N° 1400 (D.L. 1400) y Sistema Informativo de Garantías Mobiliarias (SIGM)',
+    warningNote: 'La Ley 28677 fue derogada en su totalidad por el Decreto Legislativo N° 1400 (D.L. 1400) y el SIGM de SUNARP.',
   },
   {
     pattern: /\b(?:RMV\s*(?:de\s*)?S\/?\.?\s*1,?025|RMV\s*(?:de\s*)?S\/?\.?\s*1,?130)\b/i,
     repealedName: 'RMV desactualizada (S/ 1,025 o S/ 1,130)',
     activeSubstitute: 'Remuneración Mínima Vital de S/ 1,230.00 (D.S. N° 015-2026-TR)',
-    warningNote: 'Al 2026 la RMV oficial es de S/ 1,230.00 y la Asignación Familiar asciende a S/ 123.00.',
+    warningNote: 'Al 2026 la RMV oficial es de S/ 1,230.00 (D.S. N° 015-2026-TR) y la Asignación Familiar asciende a S/ 123.00.',
+  },
+  {
+    pattern: /\b(?:Tribunal\s+del\s+OSCE|del\s+OSCE|ante\s+el\s+OSCE|opini[óo]n\s+(?:vinculante\s+)?del\s+OSCE|solicita\s+al\s+OSCE)\b/i,
+    repealedName: 'OSCE (Organismo Supervisor de las Contrataciones del Estado)',
+    activeSubstitute: 'OECE (Organismo Especializado para las Contrataciones Públicas Eficientes) y Tribunal de Contrataciones Públicas (TCP)',
+    warningNote: 'El OSCE y su Tribunal se encuentran formalmente extintos bajo la Ley N° 32069 y D.S. N° 009-2025-EF, habiendo sido sustituidos por el OECE y el Tribunal de Contrataciones Públicas (TCP).',
+  },
+  {
+    pattern: /\b(?:Ley\s*(?:N[°º.]?|Nro\.?|Número)?\s*26636|Ley\s+Procesal\s+del\s+Trabajo\s+26636)\b/i,
+    repealedName: 'Ley N° 26636 (Antigua Ley Procesal del Trabajo)',
+    activeSubstitute: 'Ley N° 29497 (Nueva Ley Procesal del Trabajo - NLPT) y Ley N° 32155',
+    warningNote: 'La Ley 26636 fue formalmente derogada por la Ley N° 29497 (NLPT), reformada por la Ley N° 32155.',
+  },
+  {
+    pattern: /\b(?:Ley\s*(?:N[°º.]?|Nro\.?|Número)?\s*23506|Ley\s*(?:N[°º.]?|Nro\.?|Número)?\s*28237|C[óo]digo\s+Procesal\s+Constitucional\s+28237)\b/i,
+    repealedName: 'Ley N° 23506 / Ley N° 28237 (Código Procesal Constitucional derogado)',
+    activeSubstitute: 'Ley N° 31307 (Nuevo Código Procesal Constitucional)',
+    warningNote: 'Las leyes 23506 y 28237 fueron derogadas íntegramente por el Nuevo Código Procesal Constitucional (Ley N° 31307).',
+  },
+  {
+    pattern: /\b(?:C[óo]digo\s+de\s+Procedimientos\s+Penales(?:\s+de\s+1940)?|C\.?\s*de\s*P\.?\s*P\.?\s*de\s*1940)\b/i,
+    repealedName: 'Código de Procedimientos Penales de 1940 (Ley N° 9024)',
+    activeSubstitute: 'Nuevo Código Procesal Penal (Decreto Legislativo N° 957 - NCPP)',
+    warningNote: 'El Código de Procedimientos Penales de 1940 ha concluido su proceso de liquidación procesal en el Perú, rigiendo exclusivamente el Nuevo Código Procesal Penal (D. Leg. 957 - NCPP).',
+  },
+  {
+    pattern: /\b(?:D\.?\s*S\.?\s*(?:N[°º.]?\s*)?344[-–]2018[-–]EF|Decreto\s+Supremo\s+344[-–]2018[-–]EF)\b/i,
+    repealedName: 'D.S. N° 344-2018-EF (Antiguo Reglamento de Contrataciones)',
+    activeSubstitute: 'D.S. N° 009-2025-EF (Reglamento de la Ley N° 32069 - Ley General de Contrataciones Públicas)',
+    warningNote: 'El D.S. 344-2018-EF fue formalmente derogado y reemplazado por el D.S. N° 009-2025-EF bajo la Ley N° 32069.',
+  },
+  {
+    pattern: /\b(?:Ley\s*(?:N[°º.]?|Nro\.?|Número)?\s*26002|Ley\s+del\s+Notariado\s+26002)\b/i,
+    repealedName: 'Ley N° 26002 (Antigua Ley del Notariado)',
+    activeSubstitute: 'Decreto Legislativo N° 1049 (D.L. 1049 - Decreto Legislativo del Notariado)',
+    warningNote: 'La Ley 26002 fue derogada en su totalidad por el Decreto Legislativo N° 1049 (D.L. 1049).',
+  },
+  {
+    pattern: /\b(?:Ley\s*(?:N[°º.]?|Nro\.?|Número)?\s*16123|Ley\s+de\s+Sociedades\s+Mercantiles\s+16123)\b/i,
+    repealedName: 'Ley N° 16123 (Antigua Ley de Sociedades Mercantiles)',
+    activeSubstitute: 'Ley N° 26887 (Ley General de Sociedades - LGS)',
+    warningNote: 'La Ley 16123 fue derogada por la actual Ley General de Sociedades (Ley N° 26887).',
+  },
+  {
+    pattern: /\b(?:D\.?\s*L\.?\s*(?:N[°º.]?|Nro\.?)?\s*17752|Decreto\s+Ley\s*(?:N[°º.]?|Nro\.?)?\s*17752|Ley\s+General\s+de\s+Aguas\s+17752)\b/i,
+    repealedName: 'Decreto Ley N° 17752 (Antigua Ley General de Aguas)',
+    activeSubstitute: 'Ley N° 29338 (Ley de Recursos Hídricos)',
+    warningNote: 'El D.L. 17752 fue formalmente derogado por la Ley de Recursos Hídricos (Ley N° 29338).',
   },
 ];
 
@@ -407,6 +455,21 @@ export const MISATTRIBUTIONS_CATALOG: {
     errorDescription: 'El Artículo 720° del CPC regula la procedencia de la ejecución de garantías, NO el mandato de ejecución ni el plazo de contradicción.',
     correctAttribution: 'El mandato de ejecución y el plazo de 3 días hábiles para contradecir se tipifican en el Artículo 721° del Código Procesal Civil.',
   },
+  {
+    pattern: /(?:bancarizaci[óo]n[\s\S]{0,100}(?:a\s+partir\s+de\s+)?(?:US\$?\s*1,?000|S\/?\.?\s*3,?500)|(?:US\$?\s*1,?000|S\/?\.?\s*3,?500)[\s\S]{0,100}bancarizaci[óo]n)/i,
+    errorDescription: 'Los umbrales antiguos de bancarización de US$ 1,000 y S/ 3,500 fueron modificados.',
+    correctAttribution: 'Conforme al Decreto Legislativo N° 1529 (D.L. 1529), los nuevos montos mínimos obligatorios para usar Medios de Pago bancarizados son S/ 2,000.00 o US$ 500.00.',
+  },
+  {
+    pattern: /(?:tenencia\s+exclusiva\s+materna\s+es\s+la\s+[úu]nica|preferencia\s+maternal\s+absoluta)/i,
+    errorDescription: 'La preferencia maternal automática fue modificada por la reforma de Tenencia Compartida.',
+    correctAttribution: 'Conforme a la Ley N° 31590, la regla general y preferente en el Perú es la Tenencia Compartida entre ambos progenitores aptos.',
+  },
+  {
+    pattern: /(?:allanamiento[\s\S]{0,100}sin\s+presencia\s+(?:obligatoria\s+)?d(?:el\s+abogado|e\s+la\s+defensa)|allanar[\s\S]{0,100}sin\s+abogado)/i,
+    errorDescription: 'Los allanamientos fiscales sin abogado defensor fueron limitados legalmente.',
+    correctAttribution: 'Conforme a la Ley N° 32108, los allanamientos e incautaciones en procesos de crimen organizado exigen la presencia obligatoria de la defensa técnica.',
+  },
 ];
 
 // Catálogo de jurisprudencia y normas de jurisdicciones extranjeras prohibidas en el fuero peruano
@@ -426,7 +489,7 @@ export const FOREIGN_JURISDICTION_CATALOG: {
     pattern: /\b(?:C[óo]digo\s+Nacional\s+de\s+Procedimientos\s+Penales|CNPP(?:\s+de\s+M[ée]xico)?)\b/i,
     jurisdiction: 'México',
     foreignSource: 'Código Nacional de Procedimientos Penales de México',
-    peruvianEquivalent: 'En el Perú rige el Código Procesal Penal (Decreto Legislativo N° 957 - NCPP).',
+    peruvianEquivalent: 'En el Perú rige el Nuevo Código Procesal Penal (Decreto Legislativo N° 957 - NCPP).',
   },
   {
     pattern: /\b(?:Ley\s+de\s+Enjuiciamiento\s+Civil|LEC\s+1\/2000)\b/i,
@@ -450,7 +513,7 @@ export const FOREIGN_JURISDICTION_CATALOG: {
     pattern: /\b(?:Suprema\s+Corte\s+de\s+Justicia\s+de\s+la\s+Naci[óo]n|SCJN(?:\s+de\s+M[ée]xico)?)\b/i,
     jurisdiction: 'México',
     foreignSource: 'Suprema Corte de Justicia de la Nación (SCJN - México)',
-    peruvianEquivalent: 'El máximo tribunal ordinario en el Perú es la Corte Suprema de Justicia de la República y en materia constitucional el Tribunal Constitucional del Perú.',
+    peruvianEquivalent: 'El máximo tribunal ordinario en el Perú es la Corte Suprema de Justicia de la República (Corte Suprema de Justicia del Perú) y en materia constitucional el Tribunal Constitucional del Perú.',
   },
   {
     pattern: /\b(?:Tribunal\s+Supremo\s+espa[ñn]ol|STS\s+[0-9]+\/[0-9]+)\b/i,
@@ -462,19 +525,19 @@ export const FOREIGN_JURISDICTION_CATALOG: {
     pattern: /\b(?:Estatuto\s+de\s+los\s+Trabajadores|ET\s+espa[ñn]ol)\b/i,
     jurisdiction: 'España',
     foreignSource: 'Estatuto de los Trabajadores de España',
-    peruvianEquivalent: 'En el Perú las relaciones laborales se rigen por el D.S. 003-97-TR (LPCL), la Ley 29497 (NLPT) y la Ley 32155.',
+    peruvianEquivalent: 'En el Perú las relaciones laborales se rigen por el Texto Único Ordenado del Decreto Legislativo N° 728 (D.S. 003-97-TR), la Ley N° 29497 (NLPT) y la Ley 32155.',
   },
   {
     pattern: /\b(?:Ley\s+Federal\s+del\s+Trabajo|LFT(?:\s+de\s+M[ée]xico)?)\b/i,
     jurisdiction: 'México',
     foreignSource: 'Ley Federal del Trabajo de México',
-    peruvianEquivalent: 'En el Perú rige el Texto Único Ordenado del D.Leg. 728 (D.S. 003-97-TR) y la NLPT.',
+    peruvianEquivalent: 'En el Perú rige el Texto Único Ordenado del Decreto Legislativo N° 728 (D.S. 003-97-TR), el Decreto Legislativo N° 713 (descansos remunerados) y la NLPT.',
   },
   {
     pattern: /\b(?:C[óo]digo\s+Fiscal\s+de\s+la\s+Federaci[óo]n|CFF(?:\s+mexicano)?|PRODECON)\b/i,
     jurisdiction: 'México',
     foreignSource: 'Código Fiscal de la Federación de México / PRODECON',
-    peruvianEquivalent: 'En el Perú rige el Código Tributario (D.S. 133-2013-EF) bajo administración de la SUNAT y el Tribunal Fiscal.',
+    peruvianEquivalent: 'En el Perú rige el Código Tributario (D.S. 133-2013-EF) bajo administración de la SUNAT, el Tribunal Fiscal y la Defensoría del Contribuyente y Usuario Aduanero (DEFCON).',
   },
   {
     pattern: /\b(?:Ley\s+General\s+de\s+Sociedades\s+Mercantiles|LGSM(?:\s+de\s+M[ée]xico)?)\b/i,
@@ -545,9 +608,12 @@ export function validateLegalCitations(text: string): ValidationReport {
       });
       warnings.push(`⚠️ Norma Derogada detectada: ${item.repealedName}. Reemplazada por ${item.activeSubstitute}.`);
       
-      // Si la respuesta no advierte sobre la derogación, inyectar el cintillo oficial
-      if (!processedText.includes('⚠️ **ALERTA DE VIGENCIA NORMATIVA')) {
-        const warningBanner = `\n\n> ⚠️ **ALERTA DE VIGENCIA NORMATIVA (SPIJ 2026):** Se advierte que ${item.warningNote}\n\n`;
+      // Sanitizar la mención de la norma derogada en el texto procesal
+      processedText = processedText.replace(item.pattern, `[norma derogada — sustituida por ${item.activeSubstitute}]`);
+
+      // Inyectar el cintillo oficial
+      const warningBanner = `\n\n> ⚠️ **ALERTA DE VIGENCIA NORMATIVA (SPIJ 2026):** Se advierte que ${item.warningNote}\n\n`;
+      if (!processedText.includes(warningBanner.trim())) {
         processedText = warningBanner + processedText;
       }
     }
@@ -565,9 +631,14 @@ export function validateLegalCitations(text: string): ValidationReport {
       });
       warnings.push(`❌ Atribución jurídica incorrecta: ${mis.errorDescription}`);
       
+      // Sanitizar la frase errónea en el texto procesal
+      processedText = processedText.replace(mis.pattern, `[atribución jurídica errónea: ${mis.errorDescription} — por mandato legal rige: ${mis.correctAttribution}]`);
+
       // Inyectar rectificación dogmática
       const fixBanner = `\n\n> 🔍 **RECTIFICACIÓN DOGMÁTICA DE PRECISIÓN:** ${mis.errorDescription} Por mandato legal estricto: ${mis.correctAttribution}\n\n`;
-      processedText = processedText + fixBanner;
+      if (!processedText.includes(fixBanner.trim())) {
+        processedText = processedText + fixBanner;
+      }
     }
   }
 
@@ -601,13 +672,18 @@ export function validateLegalCitations(text: string): ValidationReport {
       });
       warnings.push(`❌ Norma extranjera detectada: ${f.foreignSource} (${f.jurisdiction}). ${f.peruvianEquivalent}`);
       
+      // Primero sanitizar en el texto procesal
+      processedText = processedText.replace(f.pattern, `[norma/tribunal foráneo no aplicable en el Perú — rige legislación nacional: ${f.peruvianEquivalent}]`);
+
       const foreignBanner = `\n\n> 🚫 **ALERTA DE JURISDICCIÓN EXTRANJERA (LEGAL TRUTH ENGINE):** Se advierte que la referencia a "${f.foreignSource}" pertenece al ordenamiento de ${f.jurisdiction}. Por mandato constitucional y soberanía judicial, en los estrados y procesos peruanos rige exclusivamente la legislación nacional: ${f.peruvianEquivalent}\n\n`;
-      processedText = foreignBanner + processedText;
+      if (!processedText.includes(foreignBanner.trim())) {
+        processedText = foreignBanner + processedText;
+      }
     }
   }
 
   // 2.2. Detectar Artículos Inexistentes por Límite de Código Nacional (Statutory Boundary Enforcement)
-  const articleBoundaryRegex = /\b(?:Art[íi]culo|Art\.?)\s*([0-9]{1,5})(?:[-–]([A-Za-z0-9]+))?\s*(?:[º°\.]\s*)?(?:del|de\s+la|de\s+los|del\s+TUO\s+de\s+la)?\s*(C[óo]digo\s+Civil|C[óo]digo\s+Penal|C[óo]digo\s+Procesal\s+Civil|C[óo]digo\s+Procesal\s+Penal|Nuevo\s+C[óo]digo\s+Procesal\s+Penal|NCPP|CPC|CPP|CC|C\.P\.|C\.C\.|C\.P\.C\.|C[óo]digo\s+Tributario|C[óo]digo\s+Procesal\s+Constitucional|Constituci[óo]n(?:\s+Pol[íi]tica)?|Ley\s+General\s+de\s+Sociedades|LGS|LPAG|Nueva\s+Ley\s+Procesal\s+del\s+Trabajo|NLPT|Ley\s+de\s+T[íi]tulos\s+Valores)\b/gi;
+  const articleBoundaryRegex = /\b(?:Art[íi]culo|Art\.?)\s*([0-9]{1,5})(?:[-–]([A-Za-z0-9]+))?\s*(?:[º°\.]\s*)?(?:del|de\s+la|de\s+los|del\s+TUO\s+de\s+la)?\s*(C[óo]digo\s+Civil|C[óo]digo\s+Penal|C[óo]digo\s+Procesal\s+Civil|C[óo]digo\s+Procesal\s+Penal|Nuevo\s+C[óo]digo\s+Procesal\s+Penal|NCPP|CPC|CPP|CC|C\.P\.|C\.C\.|C\.P\.C\.|C[óo]digo\s+Tributario|C[óo]digo\s+Procesal\s+Constitucional|Nuevo\s+C[óo]digo\s+Procesal\s+Constitucional|Constituci[óo]n(?:\s+Pol[íi]tica(?:\s+del\s+Per[úu])?)?|Ley\s+General\s+de\s+Sociedades|LGS|LPAG|Ley\s+(?:del\s+)?Procedimiento\s+Administrativo\s+General|Nueva\s+Ley\s+Procesal\s+del\s+Trabajo|NLPT|Ley\s+de\s+T[íi]tulos\s+Valores)\b/gi;
   let artMatch: RegExpExecArray | null;
   while ((artMatch = articleBoundaryRegex.exec(text)) !== null) {
     const artNum = parseInt(artMatch[1], 10);
@@ -742,6 +818,106 @@ export function validateLegalCitations(text: string): ValidationReport {
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
       );
+    }
+  }
+
+  // 3.1. Detectar Sentencias del Tribunal Constitucional (STC) y Precedentes Vinculantes
+  const stcRegex = /\b(?:STC\s*(?:Exp\.?\s*(?:N[°º.]?|Nro\.?)?)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:[-–/]([A-Za-z0-9\/]+))?|(?:Precedente\s+(?:Vinculante\s+)?)?Huatuco|(?:Caso\s+)?Maxco)\b/gi;
+  while ((match = stcRegex.exec(text)) !== null) {
+    const rawMatch = match[0];
+    let lookupKey = '';
+    if (/Huatuco/i.test(rawMatch)) {
+      lookupKey = '05057-2013';
+    } else if (/Maxco/i.test(rawMatch)) {
+      lookupKey = '03525-2021';
+    } else if (match[1] && match[2]) {
+      const docket = match[1].padStart(5, '0');
+      lookupKey = `${docket}-${match[2]}`;
+      if (!LegalSourceRegistry.getByShortKey(lookupKey)) {
+        lookupKey = `${match[1]}-${match[2]}`;
+      }
+    }
+
+    if (!lookupKey) continue;
+
+    const knownDoc = LegalSourceRegistry.getByShortKey(lookupKey);
+    const knownVerified = VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey];
+
+    if (knownDoc) {
+      const surroundingStart = Math.max(0, match.index - 250);
+      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
+      const surroundingContext = text.slice(surroundingStart, surroundingEnd);
+      
+      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext);
+
+      if (attribution.isAttributionValid) {
+        citations.push({
+          raw: rawMatch,
+          type: 'sentencia_tc',
+          normalized: knownDoc.officialNumber,
+          status: 'VERIFIED',
+          officialSource: knownDoc.issuingEntity,
+          detail: `${knownDoc.officialNumber}: ${knownDoc.subject} (${knownDoc.relevantFJ.map(f => f.fjNumber).join(', ')})`,
+          citationType: attribution.citationType,
+          extractedQuote: attribution.extractedQuote,
+          verbatimVerified: attribution.verbatimVerified,
+        });
+      } else {
+        if (attribution.citationType === 'VERBATIM_QUOTE') {
+          citations.push({
+            raw: rawMatch,
+            type: 'sentencia_tc',
+            normalized: knownDoc.officialNumber,
+            status: 'CONTRADICTED',
+            officialSource: knownDoc.issuingEntity,
+            detail: attribution.actualReason,
+            citationType: 'VERBATIM_QUOTE',
+            extractedQuote: attribution.extractedQuote,
+            verbatimVerified: false,
+          });
+          warnings.push(`❌ CITA TEXTUAL APÓCRIFA DEL TRIBUNAL CONSTITUCIONAL: ${rawMatch}. ${attribution.actualReason}`);
+          if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
+            processedText = processedText.replace(
+              attribution.extractedQuote,
+              `[cita textual apócrifa del expediente ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
+            );
+          } else {
+            processedText = processedText.replace(
+              rawMatch,
+              `[cita textual apócrifa del expediente ${knownDoc.officialNumber}]`
+            );
+          }
+          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        } else {
+          citations.push({
+            raw: rawMatch,
+            type: 'sentencia_tc',
+            normalized: knownDoc.officialNumber,
+            status: 'CONTRADICTED',
+            officialSource: knownDoc.issuingEntity,
+            detail: attribution.actualReason,
+            citationType: attribution.citationType,
+            verbatimVerified: false,
+          });
+          warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+          processedText = processedText.replace(
+            rawMatch,
+            `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
+          );
+          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+        }
+      }
+    } else if (knownVerified) {
+      citations.push({
+        raw: rawMatch,
+        type: 'sentencia_tc',
+        normalized: knownVerified.title,
+        status: 'VERIFIED',
+        officialSource: knownVerified.court,
+        detail: `${knownVerified.title}: ${knownVerified.subject} (${knownVerified.bindingFJ})`,
+        citationType: 'RATIO_PARAPHRASE',
+        verbatimVerified: true,
+      });
     }
   }
 
