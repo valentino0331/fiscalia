@@ -22,7 +22,7 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
     expect(unverified).toBeDefined();
     expect(unverified?.status).toBe('UNVERIFIED_CLAIM');
     expect(report.processedText).toContain('NOTA DE RIGOR Y AUDITORÍA PROCESAL');
-    expect(report.processedText).toContain('Esta referencia no cuenta con verificación documental en el registro oficial');
+    expect(report.processedText).toContain('No he podido verificar esta referencia en las fuentes jurídicas disponibles');
     expect(report.processedText).toContain('[criterio jurisprudencial pendiente de verificación documental]');
     expect(report.processedText).not.toContain('la doctrina jurisprudencial uniforme');
   });

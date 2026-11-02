@@ -26,7 +26,7 @@ function resolveMime(fileMime: string, fileName: string): string {
   return fileMime;
 }
 
-import { extractLegalMetadata } from '../lib/legalMetadata';
+import { extractLegalMetadata, extractDatesFromText, detectContradictionsAcrossFiles } from '../lib/legalMetadata';
 import { sanitizeDocumentPromptInjection } from '../lib/fileSanitizer';
 export { extractLegalMetadata, sanitizeDocumentPromptInjection };
 
@@ -186,6 +186,177 @@ async function extractMultimodalContent(
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+export async function extractFileRaw(file: Express.Multer.File): Promise<{
+  extractedText: string;
+  pageCount: number | null;
+  mime: string;
+  safeOriginalName: string;
+}> {
+  const safeOriginalName = (typeof file.originalname === 'string' && file.originalname.trim())
+    ? file.originalname.replace(/[\\/]/g, '_').trim().slice(0, 255)
+    : 'archivo_subido';
+
+  const mime = resolveMime(file.mimetype, safeOriginalName);
+  let extractedText = '';
+  let pageCount: number | null = null;
+
+  if (mime === 'application/pdf' || safeOriginalName.toLowerCase().endsWith('.pdf')) {
+    try {
+      const pdfParseModule = await import('pdf-parse');
+      const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
+
+      let totalChars = 0;
+      const MAX_EXPEDIENTE_PAGES = 500;
+      const MAX_CHARS_LIMIT = 500000;
+
+      const customPagerender = async (pageData: any): Promise<string> => {
+        if (totalChars >= MAX_CHARS_LIMIT) {
+          if (typeof pageData.cleanup === 'function') pageData.cleanup();
+          return '';
+        }
+        try {
+          const textContent = await pageData.getTextContent({
+            normalizeWhitespace: true,
+            disableCombineTextItems: false,
+          });
+          let lastY: any;
+          let pageText = '';
+          for (const item of textContent.items) {
+            if (item && typeof item.str === 'string') {
+              const str = item.str;
+              if (!str) continue;
+              if (lastY === item.transform[5] || !lastY) {
+                if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n') && !str.startsWith(' ')) {
+                  pageText += ' ';
+                }
+                pageText += str;
+              } else {
+                pageText += '\n' + str;
+              }
+              lastY = item.transform[5];
+            }
+          }
+          const pageNum = (pageData.pageIndex ?? 0) + 1;
+          const formattedPage = `\n--- [FOLIO / PÁGINA ${pageNum}] ---\n` + pageText.trim() + '\n';
+          totalChars += formattedPage.length;
+          if (typeof pageData.cleanup === 'function') {
+            pageData.cleanup();
+          }
+          return formattedPage;
+        } catch {
+          return '';
+        }
+      };
+
+      const data = await pdfParse(file.buffer, {
+        max: MAX_EXPEDIENTE_PAGES,
+        pagerender: customPagerender,
+      });
+
+      const text = (data.text || '').trim();
+      pageCount = data.numpages || null;
+      if (text.length > 30) {
+        extractedText = text;
+        if (pageCount && pageCount > MAX_EXPEDIENTE_PAGES) {
+          extractedText += `\n\n[Nota del Expediente: Se procesaron las primeras ${MAX_EXPEDIENTE_PAGES} páginas de un total de ${pageCount} para garantizar la máxima profundidad de análisis].`;
+        }
+      }
+    } catch (pdfErr) {
+      console.warn('[Files] Error en pdf-parse digital:', pdfErr);
+    }
+
+    if (!extractedText || extractedText.trim().length < 40) {
+      const ocrPrompt =
+        'Transcribe con total fidelidad todo el texto visible, números de expediente o carpeta fiscal, fechas, sellos, firmas, sumillas, juzgado, demandante, demandado, petitorio y considerandos de este documento legal o expediente escaneado. Responde con la transcripción íntegra en español.';
+      const ocrResult = await extractMultimodalContent(file.buffer, 'application/pdf', ocrPrompt);
+      if (ocrResult && ocrResult.trim().length > 20) {
+        extractedText = ocrResult.trim();
+      }
+    }
+
+    if (!extractedText || !extractedText.trim()) {
+      throw new Error(
+        'No se pudo extraer texto del PDF (el archivo podría ser una imagen escaneada ilegible o estar protegido por contraseña).'
+      );
+    }
+
+    if (extractedText.length > 500000) {
+      extractedText =
+        extractedText.slice(0, 500000) +
+        `\n\n[Documento extenso - se muestran los primeros 500,000 caracteres de ${extractedText.length.toLocaleString()} totales]`;
+    }
+  } else if (
+    mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+    safeOriginalName.toLowerCase().endsWith('.docx')
+  ) {
+    try {
+      const mammoth = await import('mammoth');
+      const result = await mammoth.extractRawText({ buffer: file.buffer });
+      extractedText = (result.value || '').trim();
+    } catch (mammothErr: any) {
+      console.warn('[Files] Error en mammoth extractRawText:', mammothErr?.message || mammothErr);
+    }
+
+    if (!extractedText || extractedText.trim().length < 40) {
+      try {
+        const JSZip = (await import('jszip')).default || (await import('jszip'));
+        const zip = await JSZip.loadAsync(file.buffer);
+        const imagePaths = Object.keys(zip.files).filter((k) =>
+          /^word\/media\/.+\.(png|jpe?g|webp|gif)$/i.test(k)
+        );
+        if (imagePaths.length > 0) {
+          const ocrParts: string[] = [];
+          for (const imgPath of imagePaths.slice(0, 6)) {
+            const imgBuffer = await zip.files[imgPath].async('nodebuffer');
+            const ext = imgPath.split('.').pop()?.toLowerCase() || 'png';
+            const imgMime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
+            const ocrPart = await extractMultimodalContent(
+              imgBuffer,
+              imgMime,
+              'Transcribe íntegro todo el texto visible, resoluciones y considerandos de esta página o documento legal escaneado.'
+            );
+            if (ocrPart && ocrPart.trim().length > 15) {
+              ocrParts.push(ocrPart.trim());
+            }
+          }
+          if (ocrParts.length > 0) {
+            extractedText = (extractedText ? extractedText + '\n\n' : '') + ocrParts.join('\n\n--- SIGUIENTE PÁGINA ---\n\n');
+          }
+        }
+      } catch (docxImgErr: any) {
+        console.warn('[Files] Error inspeccionando imágenes en DOCX:', docxImgErr?.message || docxImgErr);
+      }
+    }
+
+    if (!extractedText || !extractedText.trim()) {
+      throw new Error('El archivo Word (.docx) no contiene texto ni imágenes legibles.');
+    }
+  } else if (
+    mime === 'application/msword' ||
+    safeOriginalName.toLowerCase().endsWith('.doc')
+  ) {
+    throw new Error('El formato de archivo Word antiguo (.doc) no es compatible. Por favor guárdalo como .docx o PDF.');
+  } else if (mime.startsWith('image/')) {
+    const imgPrompt =
+      'Analiza esta imagen con detalle. Si contiene texto, documentos, resoluciones, cédulas o expedientes legales, transcríbelos íntegros con total fidelidad en español.';
+    extractedText = await extractMultimodalContent(file.buffer, mime, imgPrompt);
+
+    if (!extractedText || !extractedText.trim()) {
+      throw new Error('No se pudo extraer texto de la imagen. Verifica que esté bien enfocada.');
+    }
+  } else {
+    throw new Error('Formato no soportado. Usa: PDF, DOCX, PNG, JPG, JPEG o WEBP.');
+  }
+
+  return {
+    extractedText,
+    pageCount,
+    mime,
+    safeOriginalName,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ENDPOINT 1: /files/extract (Subida y extracción técnica de archivos y expedientes)
 // ─────────────────────────────────────────────────────────────────────────────
 filesRouter.post(
@@ -208,173 +379,7 @@ filesRouter.post(
       const file = req.file;
       if (!file) return res.status(400).json({ error: 'Archivo requerido' });
 
-      const safeOriginalName = (typeof file.originalname === 'string' && file.originalname.trim())
-        ? file.originalname.replace(/[\\/]/g, '_').trim().slice(0, 255)
-        : 'archivo_subido';
-
-      const mime = resolveMime(file.mimetype, safeOriginalName);
-      let extractedText = '';
-      let pageCount: number | null = null;
-
-      if (mime === 'application/pdf' || safeOriginalName.toLowerCase().endsWith('.pdf')) {
-        // 1. Extracción digital rápida con pdf-parse
-        try {
-          const pdfParseModule = await import('pdf-parse');
-          const pdfParse = (pdfParseModule as any).default ?? pdfParseModule;
-
-          let totalChars = 0;
-          const MAX_EXPEDIENTE_PAGES = 500;
-          const MAX_CHARS_LIMIT = 500000;
-
-          const customPagerender = async (pageData: any): Promise<string> => {
-            if (totalChars >= MAX_CHARS_LIMIT) {
-              if (typeof pageData.cleanup === 'function') pageData.cleanup();
-              return '';
-            }
-            try {
-              const textContent = await pageData.getTextContent({
-                normalizeWhitespace: true,
-                disableCombineTextItems: false,
-              });
-              let lastY: any;
-              let pageText = '';
-              for (const item of textContent.items) {
-                if (item && typeof item.str === 'string') {
-                  const str = item.str;
-                  if (!str) continue;
-                  if (lastY === item.transform[5] || !lastY) {
-                    if (pageText.length > 0 && !pageText.endsWith(' ') && !pageText.endsWith('\n') && !str.startsWith(' ')) {
-                      pageText += ' ';
-                    }
-                    pageText += str;
-                  } else {
-                    pageText += '\n' + str;
-                  }
-                  lastY = item.transform[5];
-                }
-              }
-              const pageNum = (pageData.pageIndex ?? 0) + 1;
-              const formattedPage = `\n--- [FOLIO / PÁGINA ${pageNum}] ---\n` + pageText.trim() + '\n';
-              totalChars += formattedPage.length;
-              if (typeof pageData.cleanup === 'function') {
-                pageData.cleanup();
-              }
-              return formattedPage;
-            } catch {
-              return '';
-            }
-          };
-
-          const data = await pdfParse(file.buffer, {
-            max: MAX_EXPEDIENTE_PAGES,
-            pagerender: customPagerender,
-          });
-
-          const text = (data.text || '').trim();
-          pageCount = data.numpages || null;
-          if (text.length > 30) {
-            extractedText = text;
-            if (pageCount && pageCount > MAX_EXPEDIENTE_PAGES) {
-              extractedText += `\n\n[Nota del Expediente: Se procesaron las primeras ${MAX_EXPEDIENTE_PAGES} páginas de un total de ${pageCount} para garantizar la máxima profundidad de análisis].`;
-            }
-            console.log(`[Files] Extracción digital de expediente con pdf-parse (${extractedText.length} caracteres, ${pageCount} págs)`);
-          }
-        } catch (pdfErr) {
-          console.warn('[Files] Error en pdf-parse digital:', pdfErr);
-        }
-
-        // 2. Si pdf-parse extrajo poco o ningún texto (PDF escaneado / fotocopia), OCR con Vision
-        if (!extractedText || extractedText.trim().length < 40) {
-          console.log('[Files] PDF escaneado sin texto seleccionable. Iniciando OCR multimodal...');
-          const ocrPrompt = 'Transcribe con total fidelidad todo el texto visible, números de expediente o carpeta fiscal, fechas, sellos, firmas, sumillas, juzgado, demandante, demandado, petitorio y considerandos de este documento legal o expediente escaneado. Responde con la transcripción íntegra en español.';
-          const ocrResult = await extractMultimodalContent(file.buffer, 'application/pdf', ocrPrompt);
-          if (ocrResult && ocrResult.trim().length > 20) {
-            extractedText = ocrResult.trim();
-            console.log(`[Files] Éxito OCR en PDF escaneado (${extractedText.length} caracteres)`);
-          }
-        }
-
-        if (!extractedText || !extractedText.trim()) {
-          return res.status(422).json({
-            error: 'No se pudo extraer texto del PDF (el archivo parece estar protegido, vacío o es un escaneo sin resolución suficiente). Por favor intenta subirlo como imagen nítida (.png, .jpg), en formato Word (.docx) o copia el texto directamente.',
-          });
-        }
-
-        if (extractedText.length > 500000) {
-          extractedText = extractedText.slice(0, 500000) + `\n\n[Documento extenso — se muestran los primeros 500,000 caracteres de ${extractedText.length.toLocaleString()} totales]`;
-        }
-      } else if (
-        mime === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-        safeOriginalName.toLowerCase().endsWith('.docx')
-      ) {
-        try {
-          const mammoth = await import('mammoth');
-          const result = await mammoth.extractRawText({ buffer: file.buffer });
-          extractedText = (result.value || '').trim();
-        } catch (mammothErr: any) {
-          console.warn('[Files] Error en mammoth extractRawText:', mammothErr?.message || mammothErr);
-        }
-
-        // Si el archivo DOCX contiene poco texto (ej. imágenes escaneadas dentro de Word)
-        if (!extractedText || extractedText.trim().length < 40) {
-          try {
-            const JSZip = (await import('jszip')).default || (await import('jszip'));
-            const zip = await JSZip.loadAsync(file.buffer);
-            const imagePaths = Object.keys(zip.files).filter((k) =>
-              /^word\/media\/.+\.(png|jpe?g|webp|gif)$/i.test(k)
-            );
-            if (imagePaths.length > 0) {
-              console.log(`[Files] DOCX contiene ${imagePaths.length} imágenes. Ejecutando OCR...`);
-              const ocrParts: string[] = [];
-              for (const imgPath of imagePaths.slice(0, 6)) {
-                const imgBuffer = await zip.files[imgPath].async('nodebuffer');
-                const ext = imgPath.split('.').pop()?.toLowerCase() || 'png';
-                const imgMime = ext === 'jpg' || ext === 'jpeg' ? 'image/jpeg' : `image/${ext}`;
-                const ocrPart = await extractMultimodalContent(
-                  imgBuffer,
-                  imgMime,
-                  'Transcribe íntegro todo el texto visible, resoluciones y considerandos de esta página o documento legal escaneado.'
-                );
-                if (ocrPart && ocrPart.trim().length > 15) {
-                  ocrParts.push(ocrPart.trim());
-                }
-              }
-              if (ocrParts.length > 0) {
-                extractedText = (extractedText ? extractedText + '\n\n' : '') + ocrParts.join('\n\n--- SIGUIENTE PÁGINA ---\n\n');
-              }
-            }
-          } catch (docxImgErr: any) {
-            console.warn('[Files] Error inspeccionando imágenes en DOCX:', docxImgErr?.message || docxImgErr);
-          }
-        }
-
-        if (!extractedText || !extractedText.trim()) {
-          return res.status(422).json({
-            error: 'El archivo Word (.docx) no contiene texto ni imágenes legibles. Por favor verifica que contenga contenido o copia y pega el texto directamente.',
-          });
-        }
-      } else if (
-        mime === 'application/msword' ||
-        safeOriginalName.toLowerCase().endsWith('.doc')
-      ) {
-        return res.status(400).json({
-          error: 'El formato de archivo Word antiguo (.doc) no es compatible. Por favor guárdalo como .docx o PDF.',
-        });
-      } else if (mime.startsWith('image/')) {
-        const imgPrompt = 'Analiza esta imagen con detalle. Si contiene texto, documentos, resoluciones, cédulas o expedientes legales, transcríbelos íntegros con total fidelidad en español.';
-        extractedText = await extractMultimodalContent(file.buffer, mime, imgPrompt);
-
-        if (!extractedText || !extractedText.trim()) {
-          return res.status(422).json({
-            error: 'No se pudo extraer texto de la imagen. Verifica que la imagen esté bien iluminada y enfocada o intenta en PDF.',
-          });
-        }
-      } else {
-        return res.status(400).json({
-          error: 'Formato no soportado. Usa: PDF, DOCX, PNG, JPG, JPEG o WEBP.',
-        });
-      }
-
+      const { extractedText, pageCount, mime, safeOriginalName } = await extractFileRaw(file);
       const sanitization = sanitizeDocumentPromptInjection(extractedText);
       const safeText = sanitization.sanitizedText;
       const meta = extractLegalMetadata(safeText);
@@ -606,6 +611,129 @@ Genera una respuesta en formato JSON estrictamente válido con los siguientes ca
       console.error('[Scanner AI] Error general:', err?.message || err);
       res.status(500).json({
         error: 'Ocurrió un error al procesar el escaneo del expediente. Intenta nuevamente.',
+      });
+    }
+  }
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENDPOINT 3: /files/extract-batch (Extracción Consolidada de Múltiples Archivos y Expedientes)
+// ─────────────────────────────────────────────────────────────────────────────
+filesRouter.post(
+  '/extract-batch',
+  requireAuth,
+  requireSubscription,
+  (req: any, res: Response, next: NextFunction) => {
+    upload.array('files', 15)(req, res, (err: any) => {
+      if (err instanceof MulterError && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: `Uno de los archivos excede el límite de ${MAX_SIZE_MB}MB.` });
+      }
+      if (err) return res.status(400).json({ error: 'Error al subir los archivos: ' + err.message });
+      next();
+    });
+  },
+  async (req: any, res: Response) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || !Array.isArray(files) || files.length === 0) {
+        return res.status(400).json({ error: 'Debes proporcionar al menos un archivo en el campo "files".' });
+      }
+
+      const processedFiles: any[] = [];
+      const consolidatedSections: string[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        try {
+          const { extractedText, pageCount, mime, safeOriginalName } = await extractFileRaw(file);
+          const sanitization = sanitizeDocumentPromptInjection(extractedText);
+          const safeText = sanitization.sanitizedText;
+          const meta = extractLegalMetadata(safeText);
+          const dates = extractDatesFromText(safeText);
+
+          processedFiles.push({
+            index: i + 1,
+            fileName: safeOriginalName,
+            fileType: mime,
+            fileSize: file.size,
+            pageCount,
+            detectedExpediente: meta.detectedExpediente,
+            detectedAuthority: meta.detectedAuthority,
+            materia: meta.materia,
+            suggestedAgentId: meta.recommendedAgentId,
+            injectionNeutralized: sanitization.injectionNeutralized,
+            dates,
+          });
+
+          consolidatedSections.push(
+            `\n\n════════════════════════════════════════════════════════════════════════════════\n` +
+            `=== [DOCUMENTO ${i + 1}/${files.length}: ${safeOriginalName} | ${meta.materia || 'Materia Legal'} | ${meta.detectedAuthority || 'Autoridad'} | EXP. ${meta.detectedExpediente || 'S/N'}] ===\n` +
+            `════════════════════════════════════════════════════════════════════════════════\n\n` +
+            safeText
+          );
+        } catch (itemErr: any) {
+          console.warn(`[Batch] Error procesando archivo ${i + 1}:`, itemErr.message);
+          processedFiles.push({
+            index: i + 1,
+            fileName: file.originalname || `archivo_${i + 1}`,
+            error: itemErr.message || 'Error de extracción',
+          });
+        } finally {
+          file.buffer = Buffer.alloc(0);
+        }
+      }
+
+      const successfulFiles = processedFiles.filter((f) => !f.error);
+      if (successfulFiles.length === 0) {
+        return res.status(422).json({
+          error: 'No se pudo extraer texto de ninguno de los archivos subidos.',
+          files: processedFiles,
+        });
+      }
+
+      const contradictions = detectContradictionsAcrossFiles(
+        successfulFiles.map((f) => ({
+          fileName: f.fileName,
+          meta: {
+            detectedExpediente: f.detectedExpediente,
+            detectedAuthority: f.detectedAuthority,
+            materia: f.materia,
+          },
+          dates: f.dates || [],
+        }))
+      );
+
+      const primaryExpediente = successfulFiles.find((f) => f.detectedExpediente)?.detectedExpediente || null;
+      const primaryAuthority = successfulFiles.find((f) => f.detectedAuthority)?.detectedAuthority || null;
+      const primaryAgent = successfulFiles.find((f) => f.suggestedAgentId)?.suggestedAgentId || 'marco';
+
+      const dossierHeader =
+        `════════════════════════════════════════════════════════════════════════════════\n` +
+        `📂 DOSSIER CONSOLIDADO DE EXPEDIENTE JUDICIAL / CARPETA FISCAL (LOTE DE ${successfulFiles.length} DOCUMENTOS)\n` +
+        `• Expediente Principal: ${primaryExpediente || 'No especificado en carátula'}\n` +
+        `• Autoridad Competente: ${primaryAuthority || 'No especificada'}\n` +
+        `• Especialista Recomendado: ${primaryAgent}\n` +
+        (contradictions.length > 0
+          ? `\n⚠️ ALERTAS DE CONTRADICCIÓN DETECTADAS:\n` + contradictions.map((c: string) => `  - ${c}`).join('\n') + '\n'
+          : '') +
+        `════════════════════════════════════════════════════════════════════════════════\n`;
+
+      const fullConsolidatedText = dossierHeader + consolidatedSections.join('\n');
+
+      res.json({
+        totalFilesUploaded: files.length,
+        successfulFiles: successfulFiles.length,
+        files: processedFiles,
+        primaryExpediente,
+        primaryAuthority,
+        suggestedAgentId: primaryAgent,
+        contradictions,
+        consolidatedText: fullConsolidatedText,
+      });
+    } catch (err: any) {
+      console.error('[Files Batch] Error general:', err?.message || err);
+      res.status(500).json({
+        error: 'Ocurrió un error al procesar el lote de expedientes. Intente nuevamente.',
       });
     }
   }

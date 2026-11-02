@@ -289,7 +289,7 @@ export class StreamingCitationFilter {
 
     if (this.unverifiedCitations.length > 0) {
       const disclaimer = `\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
-        this.unverifiedCitations.map(c => `> • **${c}:** Esta referencia no cuenta con verificación documental en el registro oficial de precedentes vinculantes de la Corte Suprema. Al no existir fuente comprobable del expediente citado, se ha desclasificado y retirado el número judicial para evitar temeridad procesal, debiendo sustentarse la pretensión directamente en las normas legales aplicables.\n`).join('');
+        this.unverifiedCitations.map(c => `> • **${c}:** No he podido verificar esta referencia en las fuentes jurídicas disponibles. No puedo presentarla como una cita auténtica ni utilizarla como fundamento confirmado. Al no existir fuente comprobable del expediente citado, se ha desclasificado y retirado el número judicial para evitar temeridad procesal, debiendo sustentarse la pretensión directamente en las normas legales aplicables.\n`).join('');
       this.emit(disclaimer);
     }
   }

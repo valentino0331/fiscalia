@@ -164,6 +164,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
     let executionResult: ModelExecutionResult | null = null;
     let fallbackOccurred = false;
     let fallbackReason: string | undefined;
+    let streamHadDisclaimer = false;
 
     for (let i = 0; i < candidates.length; i++) {
       const candidate = candidates[i];
@@ -184,6 +185,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
         );
 
         if (streamFilter) {
+          streamHadDisclaimer = streamFilter.getUnverifiedCitations().length > 0;
           streamFilter.flush();
         }
 
@@ -235,8 +237,15 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
 
     // Si se agregaron rectificaciones o notas de advertencia que no se emitieron en el stream, enviarlas ahora
     if (isStream && sendStreamChunk && qualityReport.processedText !== executionResult.text) {
-      const extraContent = qualityReport.processedText.slice(executionResult.text.length);
-      if (extraContent) {
+      let extraContent = qualityReport.processedText.slice(executionResult.text.length);
+      // Si el stream filter ya emitió la nota de advertencia por casaciones no verificadas, evitar duplicarla
+      if (streamHadDisclaimer && extraContent.includes('NOTA DE RIGOR Y AUDITORÍA PROCESAL')) {
+        const disclaimerIdx = extraContent.indexOf('\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL');
+        if (disclaimerIdx !== -1) {
+          extraContent = extraContent.slice(0, disclaimerIdx);
+        }
+      }
+      if (extraContent && extraContent.trim()) {
         sendStreamChunk(extraContent);
       }
     }

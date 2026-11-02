@@ -218,3 +218,36 @@ export function extractLegalMetadata(text: string) {
     recommendedAgentName,
   };
 }
+
+export function extractDatesFromText(text: string): string[] {
+  if (!text) return [];
+  const dateRegex = /\b(\d{1,2}[\/\.-]\d{1,2}[\/\.-]\d{2,4}|\d{1,2}\s+de\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|setiembre|septiembre|octubre|noviembre|diciembre)\s+de\s+\d{4})\b/gi;
+  const matches = text.match(dateRegex) || [];
+  return Array.from(new Set(matches.map((m) => m.trim())));
+}
+
+export function detectContradictionsAcrossFiles(
+  filesMeta: Array<{ fileName: string; meta: any; dates: string[] }>
+): string[] {
+  const contradictions: string[] = [];
+  const distinctExpedientes = Array.from(
+    new Set(filesMeta.map((f) => f.meta?.detectedExpediente).filter(Boolean))
+  );
+  if (distinctExpedientes.length > 1) {
+    contradictions.push(
+      `DISCREPANCIA DE EXPEDIENTE: Se detectaron múltiples expedientes distintos en el lote de archivos (${distinctExpedientes.join(', ')}). Verifica si corresponden a cuadernos separados (cautelar, apelación, principal) o expedientes no relacionados.`
+    );
+  }
+
+  const distinctAuthorities = Array.from(
+    new Set(filesMeta.map((f) => f.meta?.detectedAuthority).filter(Boolean))
+  );
+  if (distinctAuthorities.length > 1) {
+    contradictions.push(
+      `MÚLTIPLES SEDES JUDICIALES/FISCALES: Se detectaron diferentes órganos emisores (${distinctAuthorities.join(' vs. ')}). Verifica si hubo declinatoria de competencia, elevación a Sala o acumulación de procesos.`
+    );
+  }
+
+  return contradictions;
+}
+

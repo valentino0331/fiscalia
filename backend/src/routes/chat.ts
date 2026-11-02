@@ -1,7 +1,6 @@
 import { AiOrchestrator } from '../ai/aiOrchestrator';
 import { Router } from 'express';
 import multer, { MulterError } from 'multer';
-import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { db } from '../db';
 import { conversations, userMemory } from '../db/schema';
@@ -302,131 +301,6 @@ function sanitizeAiErrorMessage(err: any): string {
     return 'El servicio de IA se encuentra en mantenimiento temporal. Por favor, reintenta en unos instantes.';
   }
   return 'Ocurrió una interrupción temporal al procesar tu consulta legal. Por favor, reintenta en unos instantes.';
-}
-
-// Memory cache to avoid querying userMemory from DB on every message (bounded to prevent leaks)
-const MAX_MEMORY_CACHE = 500;
-const userMemoryCache = new Map<string, { memoryBlock: string; expiresAt: number }>();
-
-function pruneUserMemoryCache() {
-  const now = Date.now();
-  for (const [k, v] of userMemoryCache.entries()) {
-    if (v.expiresAt <= now) userMemoryCache.delete(k);
-  }
-  if (userMemoryCache.size > MAX_MEMORY_CACHE) {
-    const keys = Array.from(userMemoryCache.keys()).slice(0, userMemoryCache.size - MAX_MEMORY_CACHE);
-    for (const k of keys) userMemoryCache.delete(k);
-  }
-}
-
-// Helper to stream chunks from any OpenAI-compatible API (Groq, OpenAI, DeepSeek, OpenRouter)
-async function streamOpenAICompatible(
-  response: any,
-  onChunk: (chunk: string) => void,
-  signal?: AbortSignal
-): Promise<string> {
-  let fullText = '';
-  const reader = response.body?.getReader();
-  if (!reader) return fullText;
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  try {
-    while (true) {
-      if (signal?.aborted) break;
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data:')) continue;
-        const dataStr = trimmed.replace(/^data:\s*/, '');
-        if (dataStr === '[DONE]') return fullText;
-        try {
-          const json = JSON.parse(dataStr);
-          const delta = json.choices?.[0]?.delta?.content || '';
-          if (delta) {
-            fullText += delta;
-            onChunk(delta);
-          }
-        } catch {
-          // ignore incomplete json chunk
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock?.();
-  }
-  return fullText;
-}
-
-// Helper to stream chunks from native Google Gemini SSE stream
-async function streamGeminiNative(
-  response: any,
-  onChunk: (chunk: string) => void,
-  signal?: AbortSignal
-): Promise<string> {
-  let fullText = '';
-  const reader = response.body?.getReader();
-  if (!reader) return fullText;
-
-  const decoder = new TextDecoder();
-  let buffer = '';
-
-  try {
-    while (true) {
-      if (signal?.aborted) break;
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
-
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed || !trimmed.startsWith('data:')) continue;
-        const dataStr = trimmed.replace(/^data:\s*/, '');
-        try {
-          const json = JSON.parse(dataStr);
-          const parts = json.candidates?.[0]?.content?.parts;
-          if (Array.isArray(parts)) {
-            for (const part of parts) {
-              if (part?.text) {
-                fullText += part.text;
-                onChunk(part.text);
-              }
-            }
-          }
-        } catch {
-          // ignore incomplete json chunk
-        }
-      }
-    }
-    if (buffer.trim() && buffer.trim().startsWith('data:')) {
-      const dataStr = buffer.trim().replace(/^data:\s*/, '');
-      try {
-        const json = JSON.parse(dataStr);
-        const parts = json.candidates?.[0]?.content?.parts;
-        if (Array.isArray(parts)) {
-          for (const part of parts) {
-            if (part?.text) {
-              fullText += part.text;
-              onChunk(part.text);
-            }
-          }
-        }
-      } catch {
-        // ignore incomplete json chunk
-      }
-    }
-  } finally {
-    reader.releaseLock?.();
-  }
-  return fullText;
 }
 
 chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (req: any, res) => {
