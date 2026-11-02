@@ -146,16 +146,44 @@ export class ProviderAdapter {
             },
           };
 
-          const res = await fetch(url, {
+          let activeModel = model;
+          let res = await fetch(url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
             signal: controller.signal,
           });
 
+          // Si el modelo específico retorna 404 (ej. gemini-2.0-flash deprecado por Google), conmutar dinámicamente
+          if (!res.ok && res.status === 404) {
+            console.warn(`[ProviderAdapter:gemini] Modelo ${activeModel} devolvió 404. Intentando conmutación dinámica...`);
+            const fallbackModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'].filter(
+              (m) => m !== activeModel
+            );
+            for (const fbModel of fallbackModels) {
+              const fbUrl = `https://generativelanguage.googleapis.com/v1beta/models/${fbModel}:${endpoint}key=${key}`;
+              try {
+                const fbRes = await fetch(fbUrl, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(body),
+                  signal: controller.signal,
+                });
+                if (fbRes.ok) {
+                  res = fbRes;
+                  activeModel = fbModel;
+                  console.log(`[ProviderAdapter:gemini] Conmutación exitosa a modelo activo: ${fbModel}`);
+                  break;
+                }
+              } catch {
+                // Continuar intentando con el siguiente modelo activo
+              }
+            }
+          }
+
           if (!res.ok) {
             const errData = await res.text().catch(() => '');
-            throw new ProviderExecutionError(provider, model, `HTTP ${res.status}: ${errData.slice(0, 200)}`, res.status);
+            throw new ProviderExecutionError(provider, activeModel, `HTTP ${res.status}: ${errData.slice(0, 200)}`, res.status);
           }
 
           if (isStream && res.body) {

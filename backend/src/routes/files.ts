@@ -49,7 +49,7 @@ async function extractMultimodalContent(
     try {
       console.log(`[Files OCR] Intentando OCR nativo con Gemini (${mimeType})...`);
       const genAI = new GoogleGenerativeAI(gKey);
-      const geminiModels = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+      const geminiModels = ['gemini-3.8-flash', 'gemini-2.5-flash', 'gemini-1.5-flash'];
 
       for (const mName of geminiModels) {
         try {
@@ -82,7 +82,7 @@ async function extractMultimodalContent(
   if (openrouterKey && mimeType.startsWith('image/')) {
     const orModels = [
       process.env.OPENROUTER_VISION_MODEL,
-      'google/gemini-2.0-flash-001',
+      'google/gemini-2.5-flash',
       'openai/gpt-4o-mini',
       'google/gemini-flash-1.5',
     ].filter(Boolean) as string[];
@@ -516,7 +516,7 @@ Genera una respuesta en formato JSON estrictamente válido con los siguientes ca
         try {
           const genAI = new GoogleGenerativeAI(geminiKeys[0]);
           const model = genAI.getGenerativeModel({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-3.8-flash',
             generationConfig: { responseMimeType: 'application/json' },
           });
           const result = await model.generateContent(aiPrompt);
@@ -551,7 +551,7 @@ Genera una respuesta en formato JSON estrictamente válido con los siguientes ca
               'X-Title': 'Hardman Legal AI',
             },
             body: JSON.stringify({
-              model: 'google/gemini-2.0-flash-001',
+              model: 'google/gemini-2.5-flash',
               messages: [{ role: 'user', content: aiPrompt }],
               response_format: { type: 'json_object' },
             }),

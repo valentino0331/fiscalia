@@ -123,7 +123,7 @@ adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
       trialUsers: Number(limitsRaw.trial_users ?? 0),
       paidUsers: Number(limitsRaw.paid_users ?? 0),
       freeLimit: parseInt(process.env.FREE_QUESTION_LIMIT || '3', 10),
-      geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
+      geminiModel: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
       anthropicModel: process.env.ANTHROPIC_MODEL || 'claude-3-5-haiku-20241022',
       hasDeepseekKey: Boolean(process.env.DEEPSEEK_API_KEY),
       hasGeminiKey: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
@@ -590,7 +590,7 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
       }
 
       // Test a quick 1-sentence prompt with the specified or recommended model
-      const candidateToTest = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+      const candidateToTest = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
       const testGen = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${candidateToTest}:generateContent?key=${firstKey}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -620,7 +620,7 @@ adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, r
   add(`geminiKey present: ${Boolean(firstKey)}`);
 
   try {
-    const model = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+    const model = (req.query.model as string) || process.env.GEMINI_MODEL || 'gemini-3.8-flash';
     const disableThinking = req.query.thinking === 'false' || req.query.thinking === '0';
     add(`Calling Google Generative Language REST ${model} (disableThinking: ${disableThinking})...`);
     

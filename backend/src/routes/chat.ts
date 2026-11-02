@@ -196,7 +196,7 @@ chatRouter.post('/stt', audioRateLimiter, requireAuth, requireSubscription, (req
           const genAI = new GoogleGenerativeAI(geminiKey);
           const modelsToTry = [
             process.env.GEMINI_MODEL,
-            'gemini-2.0-flash',
+            'gemini-3.8-flash',
             'gemini-1.5-flash',
           ].filter(Boolean) as string[];
 
