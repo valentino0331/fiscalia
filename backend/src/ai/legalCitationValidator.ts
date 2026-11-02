@@ -404,6 +404,57 @@ export const MISATTRIBUTIONS_CATALOG: {
   },
 ];
 
+// Catálogo de jurisprudencia y normas de jurisdicciones extranjeras prohibidas en el fuero peruano
+export const FOREIGN_JURISDICTION_CATALOG: {
+  pattern: RegExp;
+  jurisdiction: string;
+  foreignSource: string;
+  peruvianEquivalent: string;
+}[] = [
+  {
+    pattern: /\b(?:C[óo]digo\s+Civil\s+Federal|CCF(?:\s+de\s+M[ée]xico)?)\b/i,
+    jurisdiction: 'México',
+    foreignSource: 'Código Civil Federal de México',
+    peruvianEquivalent: 'En el Perú rige exclusivamente el Código Civil Peruano (Decreto Legislativo N° 295).',
+  },
+  {
+    pattern: /\b(?:C[óo]digo\s+Nacional\s+de\s+Procedimientos\s+Penales|CNPP(?:\s+de\s+M[ée]xico)?)\b/i,
+    jurisdiction: 'México',
+    foreignSource: 'Código Nacional de Procedimientos Penales de México',
+    peruvianEquivalent: 'En el Perú rige el Código Procesal Penal (Decreto Legislativo N° 957 - NCPP).',
+  },
+  {
+    pattern: /\b(?:Ley\s+de\s+Enjuiciamiento\s+Civil|LEC\s+1\/2000)\b/i,
+    jurisdiction: 'España',
+    foreignSource: 'Ley de Enjuiciamiento Civil española',
+    peruvianEquivalent: 'En el Perú rige el Código Procesal Civil (C.P.C. - D. Leg. 768 / D.S. 003-98-JUS).',
+  },
+  {
+    pattern: /\b(?:Ley\s+de\s+Enjuiciamiento\s+Criminal|LECrim)\b/i,
+    jurisdiction: 'España',
+    foreignSource: 'Ley de Enjuiciamiento Criminal de España',
+    peruvianEquivalent: 'En el Perú rige el Código Procesal Penal (D. Leg. 957).',
+  },
+  {
+    pattern: /\b(?:C[óo]digo\s+General\s+del\s+Proceso|CGP\s+colombiano)\b/i,
+    jurisdiction: 'Colombia',
+    foreignSource: 'Código General del Proceso de Colombia (Ley 1564)',
+    peruvianEquivalent: 'En el Perú rige el Código Procesal Civil (Resolución Ministerial N° 010-93-JUS / TUO).',
+  },
+  {
+    pattern: /\b(?:Suprema\s+Corte\s+de\s+Justicia\s+de\s+la\s+Naci[óo]n|SCJN(?:\s+de\s+M[ée]xico)?)\b/i,
+    jurisdiction: 'México',
+    foreignSource: 'Suprema Corte de Justicia de la Nación (SCJN - México)',
+    peruvianEquivalent: 'El máximo tribunal ordinario en el Perú es la Corte Suprema de Justicia de la República y en materia constitucional el Tribunal Constitucional del Perú.',
+  },
+  {
+    pattern: /\b(?:Tribunal\s+Supremo\s+espa[ñn]ol|STS\s+[0-9]+\/[0-9]+)\b/i,
+    jurisdiction: 'España',
+    foreignSource: 'Tribunal Supremo de España',
+    peruvianEquivalent: 'En el fuero judicial peruano la jurisprudencia vinculante emana de la Corte Suprema de Justicia del Perú (Plenos Casatorios y Acuerdos Plenarios).',
+  },
+];
+
 export interface ValidationReport {
   summary: VerificationSummary;
   processedText: string;
@@ -470,6 +521,23 @@ export function validateLegalCitations(text: string): ValidationReport {
       // Inyectar rectificación dogmática
       const fixBanner = `\n\n> 🔍 **RECTIFICACIÓN DOGMÁTICA DE PRECISIÓN:** ${mis.errorDescription} Por mandato legal estricto: ${mis.correctAttribution}\n\n`;
       processedText = processedText + fixBanner;
+    }
+  }
+
+  // 2.1. Detectar Invocación de Legislación o Jurisprudencia Extranjera Prohibida
+  for (const f of FOREIGN_JURISDICTION_CATALOG) {
+    if (f.pattern.test(processedText)) {
+      citations.push({
+        raw: f.foreignSource,
+        type: 'ley',
+        normalized: f.foreignSource,
+        status: 'CONTRADICTED',
+        detail: `Norma de jurisdicción extranjera (${f.jurisdiction}) no aplicable en el Perú. ${f.peruvianEquivalent}`,
+      });
+      warnings.push(`❌ Norma extranjera detectada: ${f.foreignSource} (${f.jurisdiction}). ${f.peruvianEquivalent}`);
+      
+      const foreignBanner = `\n\n> 🚫 **ALERTA DE JURISDICCIÓN EXTRANJERA (LEGAL TRUTH ENGINE):** Se advierte que la referencia a "${f.foreignSource}" pertenece al ordenamiento de ${f.jurisdiction}. Por mandato constitucional y soberanía judicial, en los estrados y procesos peruanos rige exclusivamente la legislación nacional: ${f.peruvianEquivalent}\n\n`;
+      processedText = foreignBanner + processedText;
     }
   }
 

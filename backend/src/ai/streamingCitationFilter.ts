@@ -21,7 +21,7 @@ export class StreamingCitationFilter {
   private buffer: string = '';
   private outCallback: (chunk: string) => void;
   private unverifiedCitations: string[] = [];
-  private static readonly TRIGGER_REGEX = /(?:casaci[óo]n|cas\.|acuerdo\s+plenario|ap\s*\d|pleno\s+casatorio)/i;
+  private static readonly TRIGGER_REGEX = /(?:casaci[óo]n|cas\.|acuerdo\s+plenario|ap\s*\d|pleno\s+casatorio|ley\s*(?:n[°º.]?\s*)?30225|d\.?\s*s\.?\s*004[-–]2019|ley\s*(?:n[°º.]?\s*)?28677|c[óo]digo\s+civil\s+federal|ley\s+de\s+enjuiciamiento|c[óo]digo\s+general\s+del\s+proceso|c[óo]digo\s+nacional\s+de\s+procedimientos\s+penales|suprema\s+corte\s+de\s+justicia\s+de\s+la\s+naci[óo]n)/i;
   private static readonly SAFE_LOOKAHEAD = 25; // Longitud máxima para no cortar una palabra trigger
 
   constructor(outCallback: (chunk: string) => void) {
@@ -128,6 +128,46 @@ export class StreamingCitationFilter {
       if (plenoMatch) {
         this.outCallback(plenoMatch[0]);
         this.buffer = this.buffer.slice(plenoMatch[0].length);
+        continue;
+      }
+
+      // Patrón de Ley 30225 derogada
+      const ley30225Regex = /^(?:Ley\s*(?:N[°º.]?\s*)?30225|Ley\s+de\s+Contrataciones\s+del\s+Estado\s+30225)([,\.;\s\n]|$)/i;
+      const ley30225Match = this.buffer.match(ley30225Regex);
+      if (ley30225Match) {
+        const trailing = ley30225Match[1] || '';
+        this.outCallback(`[norma derogada Ley 30225 reemplazada por Ley 32069 (OECE/TCP)]${trailing}`);
+        this.buffer = this.buffer.slice(ley30225Match[0].length);
+        continue;
+      }
+
+      // Patrón de D.S. 004-2019-JUS derogado
+      const ds004Regex = /^(?:D\.?\s*S\.?\s*(?:N[°º.]?\s*)?004[-–]2019[-–]JUS|Decreto\s+Supremo\s+004[-–]2019[-–]JUS)([,\.;\s\n]|$)/i;
+      const ds004Match = this.buffer.match(ds004Regex);
+      if (ds004Match) {
+        const trailing = ds004Match[1] || '';
+        this.outCallback(`[norma derogada D.S. 004-2019-JUS reemplazada por D.S. 006-2026-JUS]${trailing}`);
+        this.buffer = this.buffer.slice(ds004Match[0].length);
+        continue;
+      }
+
+      // Patrón de Ley 28677 derogada
+      const ley28677Regex = /^(?:Ley\s*(?:N[°º.]?\s*)?28677|Ley\s+de\s+Garant[ií]as\s+Mobiliarias\s+28677)([,\.;\s\n]|$)/i;
+      const ley28677Match = this.buffer.match(ley28677Regex);
+      if (ley28677Match) {
+        const trailing = ley28677Match[1] || '';
+        this.outCallback(`[norma derogada Ley 28677 reemplazada por D.L. 1400 (SIGM)]${trailing}`);
+        this.buffer = this.buffer.slice(ley28677Match[0].length);
+        continue;
+      }
+
+      // Patrón de Normas Extranjeras no aplicables en el Perú
+      const foreignRegex = /^(?:C[óo]digo\s+Civil\s+Federal|Ley\s+de\s+Enjuiciamiento\s+Civil|C[óo]digo\s+General\s+del\s+Proceso|C[óo]digo\s+Nacional\s+de\s+Procedimientos\s+Penales|Suprema\s+Corte\s+de\s+Justicia\s+de\s+la\s+Naci[óo]n)([,\.;\s\n]|$)/i;
+      const foreignMatch = this.buffer.match(foreignRegex);
+      if (foreignMatch) {
+        const trailing = foreignMatch[1] || '';
+        this.outCallback(`[norma/tribunal foráneo no aplicable en el Perú — rige legislación peruana]${trailing}`);
+        this.buffer = this.buffer.slice(foreignMatch[0].length);
         continue;
       }
 

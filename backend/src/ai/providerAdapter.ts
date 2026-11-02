@@ -33,13 +33,22 @@ export class ProviderAdapter {
     candidate: ModelCandidate,
     messages: { role: string; content: string }[],
     isStream: boolean,
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
+    externalSignal?: AbortSignal
   ): Promise<ModelExecutionResult> {
     const startTime = Date.now();
     const { provider, model, maxTokens, temperature, timeoutMs } = candidate;
 
     const controller = new AbortController();
     const timeoutTimer = setTimeout(() => controller.abort(), timeoutMs);
+
+    if (externalSignal) {
+      if (externalSignal.aborted) {
+        controller.abort();
+      } else {
+        externalSignal.addEventListener('abort', () => controller.abort(), { once: true });
+      }
+    }
 
     try {
       let outputText = '';

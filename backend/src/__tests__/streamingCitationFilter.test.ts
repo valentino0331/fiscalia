@@ -76,4 +76,34 @@ describe('Streaming Citation Filter — Validación en Tiempo Real (SSE)', () =>
     expect(disclaimerText).toContain('NOTA DE RIGOR Y AUDITORÍA PROCESAL');
     expect(filter.getUnverifiedCitations().length).toBe(1);
   });
+
+  it('intercepta normas derogadas (Ley 30225 y D.S. 004-2019-JUS) en streaming en tiempo real', () => {
+    let output = '';
+    const filter = new StreamingCitationFilter((chunk) => {
+      output += chunk;
+    });
+
+    filter.processChunk('En contrataciones rige la Ley 30225 y en la vía administrativa ');
+    filter.processChunk('se interpone recurso bajo el D.S. 004-2019-JUS ante la entidad.');
+    filter.flush();
+
+    expect(output).not.toContain('rige la Ley 30225 ');
+    expect(output).toContain('[norma derogada Ley 30225 reemplazada por Ley 32069 (OECE/TCP)]');
+    expect(output).toContain('[norma derogada D.S. 004-2019-JUS reemplazada por D.S. 006-2026-JUS]');
+  });
+
+  it('intercepta figuras y códigos foráneos (Código Civil Federal y Ley de Enjuiciamiento Civil) en streaming', () => {
+    let output = '';
+    const filter = new StreamingCitationFilter((chunk) => {
+      output += chunk;
+    });
+
+    filter.processChunk('Conforme al Código Civil Federal y los principios de la ');
+    filter.processChunk('Ley de Enjuiciamiento Civil, procedemos a demandar.');
+    filter.flush();
+
+    expect(output).not.toContain('Código Civil Federal');
+    expect(output).not.toContain('Ley de Enjuiciamiento Civil');
+    expect(output).toContain('[norma/tribunal foráneo no aplicable en el Perú — rige legislación peruana]');
+  });
 });

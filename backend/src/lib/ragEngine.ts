@@ -284,7 +284,7 @@ const STOPWORDS = new Set([
   'quiero', 'informacion', 'explica', 'explicar', 'detalle', 'necesito'
 ]);
 
-function extractSearchKeywords(query: string): string[] {
+export function extractSearchKeywords(query: string): string[] {
   // 1. Extraer menciones específicas de artículos y números de casación
   const exactNumbers: string[] = [];
   const articleMatches = query.match(/(?:art[íi]culo|art\.?)\s*([0-9A-Za-z\-]+)/gi);
@@ -310,8 +310,49 @@ function extractSearchKeywords(query: string): string[] {
   return [...new Set([...exactNumbers, ...words])];
 }
 
+export function extractLegalSearchParameters(query: string): {
+  exactArticles: string[];
+  exactDockets: string[];
+  detectedCode: string | null;
+  keywords: string[];
+} {
+  const exactArticles: string[] = [];
+  const articleMatches = query.match(/(?:art[íi]culo|art\.?)\s*([0-9]{1,4}(?:-[A-Za-z])?)/gi);
+  if (articleMatches) {
+    articleMatches.forEach((m) => {
+      const num = m.replace(/(?:art[íi]culo|art\.?)\s*/gi, '').trim();
+      if (num) exactArticles.push(num);
+    });
+  }
+
+  const exactDockets: string[] = [];
+  const docketMatches = query.match(/\b([0-9]{1,5}[-–/][0-9]{4})\b/g);
+  if (docketMatches) {
+    docketMatches.forEach((d) => exactDockets.push(d.trim()));
+  }
+
+  let detectedCode: string | null = null;
+  if (/c[óo]digo\s+civil\b|\bcc\b/i.test(query)) detectedCode = 'CC';
+  else if (/c[óo]digo\s+procesal\s+civil\b|\bcpc\b/i.test(query)) detectedCode = 'CPC';
+  else if (/ncpp\b|procesal\s+penal/i.test(query)) detectedCode = 'NCPP';
+  else if (/c[óo]digo\s+penal\b|\bcp\b/i.test(query)) detectedCode = 'CP';
+  else if (/lpag\b|ley\s+27444/i.test(query)) detectedCode = 'LPAG';
+  else if (/32069|oece/i.test(query)) detectedCode = 'LGCP';
+  else if (/lpcl\b|003[-–]97[-–]tr/i.test(query)) detectedCode = 'LPCL';
+  else if (/nlpt\b|29497/i.test(query)) detectedCode = 'NLPT';
+
+  const keywords = extractSearchKeywords(query);
+
+  return {
+    exactArticles: [...new Set(exactArticles)],
+    exactDockets: [...new Set(exactDockets)],
+    detectedCode,
+    keywords,
+  };
+}
+
 /**
- * Búsqueda textual directa en Neon PostgreSQL.
+ * Búsqueda textual directa en Neon PostgreSQL con discriminador exacto de artículos.
  * No requiere Gemini ni APIs externas. Funciona 100% con OpenRouter.
  */
 export async function searchChunksByText(
@@ -321,13 +362,17 @@ export async function searchChunksByText(
 ): Promise<LegalChunk[]> {
   if (!process.env.DATABASE_URL) return [];
 
-  const keywords = extractSearchKeywords(queryText);
-  if (keywords.length === 0) return [];
+  const params = extractLegalSearchParameters(queryText);
+  if (params.keywords.length === 0) return [];
 
   const sql = neon(process.env.DATABASE_URL);
-  const mainTerm = keywords[0];
-  const secondTerm = keywords[1] || mainTerm;
-  const thirdTerm = keywords[2] || secondTerm;
+  const primaryArticle = params.exactArticles[0] || null;
+  const primaryDocket = params.exactDockets[0] || null;
+  const primaryCode = params.detectedCode || null;
+
+  const mainTerm = params.keywords[0];
+  const secondTerm = params.keywords[1] || mainTerm;
+  const thirdTerm = params.keywords[2] || secondTerm;
 
   const filterSpecialist = specialistId && specialistId !== 'all' ? specialistId : null;
 
@@ -347,13 +392,17 @@ export async function searchChunksByText(
         OR specialist_id = 'all'
       )
       AND (
-        content ILIKE ${'%' + mainTerm + '%'}
+        (${primaryArticle}::text IS NOT NULL AND articles ILIKE ${'%' + (primaryArticle || '') + '%'})
+        OR (${primaryDocket}::text IS NOT NULL AND content ILIKE ${'%' + (primaryDocket || '') + '%'})
+        OR content ILIKE ${'%' + mainTerm + '%'}
         OR content ILIKE ${'%' + secondTerm + '%'}
         OR content ILIKE ${'%' + thirdTerm + '%'}
         OR articles ILIKE ${'%' + mainTerm + '%'}
       )
       ORDER BY (
-        (CASE WHEN specialist_id = ${specialistId || ''} THEN 20 ELSE 0 END) +
+        (CASE WHEN ${primaryArticle}::text IS NOT NULL AND articles ILIKE ${'%' + (primaryArticle || '') + '%'} THEN 150 ELSE 0 END) +
+        (CASE WHEN ${primaryCode}::text IS NOT NULL AND source_code ILIKE ${'%' + (primaryCode || '') + '%'} THEN 80 ELSE 0 END) +
+        (CASE WHEN specialist_id = ${specialistId || ''} THEN 30 ELSE 0 END) +
         (CASE WHEN articles ILIKE ${'%' + mainTerm + '%'} THEN 40 ELSE 0 END) +
         (CASE WHEN articles ILIKE ${'%' + secondTerm + '%'} THEN 25 ELSE 0 END) +
         (CASE WHEN content ILIKE ${'%' + mainTerm + '%'} THEN 10 ELSE 0 END) +
@@ -370,7 +419,7 @@ export async function searchChunksByText(
       section: r.section,
       articles: r.articles,
       content: r.content,
-      similarity: 0.9,
+      similarity: primaryArticle && r.articles?.includes(primaryArticle) ? 1.0 : 0.9,
     }));
   } catch (err: any) {
     return [];

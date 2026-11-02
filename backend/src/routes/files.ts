@@ -27,7 +27,8 @@ function resolveMime(fileMime: string, fileName: string): string {
 }
 
 import { extractLegalMetadata } from '../lib/legalMetadata';
-export { extractLegalMetadata };
+import { sanitizeDocumentPromptInjection } from '../lib/fileSanitizer';
+export { extractLegalMetadata, sanitizeDocumentPromptInjection };
 
 
 // Extractor multimodal con Gemini, OpenRouter y OpenAI
@@ -374,10 +375,12 @@ filesRouter.post(
         });
       }
 
-      const meta = extractLegalMetadata(extractedText);
+      const sanitization = sanitizeDocumentPromptInjection(extractedText);
+      const safeText = sanitization.sanitizedText;
+      const meta = extractLegalMetadata(safeText);
 
       res.json({
-        text: extractedText,
+        text: safeText,
         fileName: safeOriginalName,
         fileType: mime,
         fileSize: file.size,
@@ -386,6 +389,7 @@ filesRouter.post(
         detectedAuthority: meta.detectedAuthority,
         materia: meta.materia,
         suggestedAgentId: meta.recommendedAgentId,
+        injectionNeutralized: sanitization.injectionNeutralized,
       });
     } catch (error: any) {
       console.error('File extraction error:', error?.message || error);

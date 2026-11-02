@@ -41,6 +41,7 @@ export interface OrchestrationRequest {
   sendStreamChunk?: (chunk: string) => void;
   ephemeral?: boolean;
   confidential?: boolean;
+  abortSignal?: AbortSignal;
 }
 
 export class AiOrchestrator {
@@ -176,7 +177,8 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
           candidate,
           formattedMessages,
           isStream || false,
-          streamFilter ? (chunk) => streamFilter.processChunk(chunk) : sendStreamChunk
+          streamFilter ? (chunk) => streamFilter.processChunk(chunk) : sendStreamChunk,
+          req.abortSignal
         );
 
         if (streamFilter) {

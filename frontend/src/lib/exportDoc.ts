@@ -1815,7 +1815,7 @@ export async function downloadWordDoc(
     children: [
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { before: 0, after: 0, line: 360 },
+        spacing: { before: 0, after: 40, line: 360 },
         children: [
           new TextRun({
             text: letterhead?.firmName ? `${letterhead.firmName}   |   Página ` : 'Estudio Jurídico   |   Página ',
@@ -1840,6 +1840,19 @@ export async function downloadWordDoc(
             font: 'Times New Roman',
             size: 20,
             color: '555555',
+          }),
+        ],
+      }),
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 40, after: 0 },
+        children: [
+          new TextRun({
+            text: '⚖️ Verificado con Legal Truth Engine — Normativa SPIJ & Precedentes Vinculantes de la Corte Suprema del Perú',
+            font: 'Times New Roman',
+            size: 16, // 8pt
+            italics: true,
+            color: '888888',
           }),
         ],
       }),
@@ -1959,6 +1972,11 @@ export async function downloadPdfDoc(
     const pageStr = `Página ${pageNum} de ${totalPages}`
     const pageStrWidth = pdf.getTextWidth(pageStr)
     pdf.text(pageStr, pageWidth - marginRight - pageStrWidth, footerY + 1)
+
+    pdf.setFont('times', 'italic')
+    pdf.setFontSize(6.5)
+    pdf.setTextColor(140, 140, 140)
+    pdf.text('Verificado con Legal Truth Engine · SPIJ & Precedentes Vinculantes Corte Suprema', marginLeft, footerY + 4.5)
   }
 
   if (letterhead?.firmName) {

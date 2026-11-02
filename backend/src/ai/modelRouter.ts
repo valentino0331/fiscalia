@@ -38,20 +38,20 @@ export function getCandidatesForTask(
 
   switch (taskType) {
     case 'EXPEDIENTE_ANALYSIS': {
-      // Prioridad: Modelos con ventana de contexto de 1M tokens (Gemini 2.5 Flash / 2.0 Flash)
+      // Prioridad: Modelos con ventana de contexto de 1M tokens (Gemini 2.5 Flash / 2.0 Flash) con temperatura determinista
       if (hasOpenRouter) {
         candidates.push({
           provider: 'openrouter',
           model: 'google/gemini-2.5-flash',
           maxTokens: 16384,
-          temperature: 0.1,
+          temperature: 0.0,
           timeoutMs: 90000,
         });
         candidates.push({
           provider: 'openrouter',
           model: 'google/gemini-2.0-flash-001',
           maxTokens: 16384,
-          temperature: 0.1,
+          temperature: 0.0,
           timeoutMs: 75000,
         });
       }
@@ -60,7 +60,7 @@ export function getCandidatesForTask(
           provider: 'gemini',
           model: 'gemini-2.0-flash',
           maxTokens: 16384,
-          temperature: 0.1,
+          temperature: 0.0,
           timeoutMs: 60000,
         });
       }
@@ -69,7 +69,7 @@ export function getCandidatesForTask(
           provider: 'openrouter',
           model: 'deepseek/deepseek-chat',
           maxTokens: 8192,
-          temperature: 0.1,
+          temperature: 0.0,
           timeoutMs: 60000,
         });
       }
@@ -78,7 +78,7 @@ export function getCandidatesForTask(
           provider: 'groq',
           model: 'llama-3.3-70b-versatile',
           maxTokens: 8000,
-          temperature: 0.1,
+          temperature: 0.0,
           timeoutMs: 45000,
         });
       }
@@ -86,20 +86,20 @@ export function getCandidatesForTask(
     }
 
     case 'DOCUMENT_DRAFTING': {
-      // Prioridad: Modelos con alta pulcritud sintáctica y redacción procesal formal
+      // Prioridad: Modelos con alta pulcritud sintáctica y redacción procesal formal determinista
       if (hasOpenRouter) {
         candidates.push({
           provider: 'openrouter',
           model: 'google/gemini-2.5-flash',
           maxTokens: 16384,
-          temperature: 0.15,
+          temperature: 0.0,
           timeoutMs: 90000,
         });
         candidates.push({
           provider: 'openrouter',
           model: 'deepseek/deepseek-chat',
           maxTokens: 8192,
-          temperature: 0.15,
+          temperature: 0.0,
           timeoutMs: 75000,
         });
       }
@@ -108,7 +108,7 @@ export function getCandidatesForTask(
           provider: 'groq',
           model: 'llama-3.3-70b-versatile',
           maxTokens: 8000,
-          temperature: 0.15,
+          temperature: 0.0,
           timeoutMs: 35000,
         });
       }
@@ -117,7 +117,7 @@ export function getCandidatesForTask(
           provider: 'gemini',
           model: 'gemini-2.0-flash',
           maxTokens: 12000,
-          temperature: 0.1,
+          temperature: 0.0,
           timeoutMs: 45000,
         });
       }
@@ -126,7 +126,7 @@ export function getCandidatesForTask(
           provider: 'anthropic',
           model: 'claude-3-5-haiku-20241022',
           maxTokens: 8192,
-          temperature: 0.15,
+          temperature: 0.0,
           timeoutMs: 35000,
         });
       }
@@ -140,7 +140,7 @@ export function getCandidatesForTask(
           provider: 'groq',
           model: 'llama-3.3-70b-versatile',
           maxTokens: 4096,
-          temperature: 0.2,
+          temperature: 0.05,
           timeoutMs: 15000,
         });
       }
@@ -149,7 +149,7 @@ export function getCandidatesForTask(
           provider: 'openrouter',
           model: 'deepseek/deepseek-chat',
           maxTokens: 4096,
-          temperature: 0.2,
+          temperature: 0.05,
           timeoutMs: 25000,
         });
       }
@@ -158,7 +158,7 @@ export function getCandidatesForTask(
           provider: 'gemini',
           model: 'gemini-2.0-flash',
           maxTokens: 4096,
-          temperature: 0.2,
+          temperature: 0.05,
           timeoutMs: 25000,
         });
       }
@@ -167,20 +167,20 @@ export function getCandidatesForTask(
 
     case 'LEGAL_CONSULTATION':
     default: {
-      // Prioridad estándar: DeepSeek V3 / Gemini 2.5 Flash / Llama 3.3
+      // Prioridad estándar: Determinismo legal absoluto (temperatura 0.0)
       if (hasOpenRouter) {
         candidates.push({
           provider: 'openrouter',
           model: 'deepseek/deepseek-chat',
           maxTokens: 8192,
-          temperature: 0.2,
+          temperature: 0.0,
           timeoutMs: 45000,
         });
         candidates.push({
           provider: 'openrouter',
           model: 'google/gemini-2.5-flash',
           maxTokens: 8192,
-          temperature: 0.2,
+          temperature: 0.0,
           timeoutMs: 45000,
         });
       }
@@ -189,7 +189,7 @@ export function getCandidatesForTask(
           provider: 'groq',
           model: 'llama-3.3-70b-versatile',
           maxTokens: 8000,
-          temperature: 0.2,
+          temperature: 0.0,
           timeoutMs: 30000,
         });
       }
@@ -198,7 +198,7 @@ export function getCandidatesForTask(
           provider: 'gemini',
           model: 'gemini-2.0-flash',
           maxTokens: 8192,
-          temperature: 0.2,
+          temperature: 0.0,
           timeoutMs: 35000,
         });
       }
@@ -207,7 +207,7 @@ export function getCandidatesForTask(
           provider: 'openai',
           model: 'gpt-4o-mini',
           maxTokens: 8192,
-          temperature: 0.2,
+          temperature: 0.0,
           timeoutMs: 20000,
         });
       }
@@ -216,7 +216,7 @@ export function getCandidatesForTask(
           provider: 'deepseek',
           model: 'deepseek-chat',
           maxTokens: 8192,
-          temperature: 0.2,
+          temperature: 0.0,
           timeoutMs: 25000,
         });
       }

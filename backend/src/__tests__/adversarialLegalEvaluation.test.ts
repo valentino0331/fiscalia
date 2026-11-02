@@ -83,7 +83,41 @@ describe('FASE 2.3 — Evaluación Adversarial de Integridad Jurídica', () => {
     });
   });
 
-  describe('4. Calidad Estructural y Detección de Información Insuficiente', () => {
+  describe('4. Detección y Bloqueo de Legislación Extranjera (Anti-Hallucination Soberana)', () => {
+    it('bloquea cita del Código Civil Federal de México y advierte exclusividad del D.L. 295 en Perú', () => {
+      const foreignResponse = 'El arrendamiento de inmuebles se encuentra normado en el Código Civil Federal aplicable.';
+      const report = validateLegalCitations(foreignResponse);
+
+      expect(report.hasBlockingErrors).toBe(true);
+      const foreignCitation = report.summary.citations.find(c => c.raw.includes('Código Civil Federal'));
+      expect(foreignCitation).toBeDefined();
+      expect(foreignCitation?.status).toBe('CONTRADICTED');
+      expect(report.processedText).toContain('ALERTA DE JURISDICCIÓN EXTRANJERA');
+      expect(report.processedText).toContain('México');
+      expect(report.processedText).toContain('Decreto Legislativo N° 295');
+    });
+
+    it('bloquea cita de la Ley de Enjuiciamiento Civil de España y exige el Código Procesal Civil peruano', () => {
+      const foreignResponse = 'El trámite de la medida cautelar se formula según la Ley de Enjuiciamiento Civil.';
+      const report = validateLegalCitations(foreignResponse);
+
+      expect(report.hasBlockingErrors).toBe(true);
+      expect(report.processedText).toContain('ALERTA DE JURISDICCIÓN EXTRANJERA');
+      expect(report.processedText).toContain('España');
+      expect(report.processedText).toContain('Código Procesal Civil');
+    });
+
+    it('bloquea cita del Código General del Proceso de Colombia', () => {
+      const foreignResponse = 'La demanda de fijación de cuota alimentaria se fundamenta en el Código General del Proceso.';
+      const report = validateLegalCitations(foreignResponse);
+
+      expect(report.hasBlockingErrors).toBe(true);
+      expect(report.processedText).toContain('ALERTA DE JURISDICCIÓN EXTRANJERA');
+      expect(report.processedText).toContain('Colombia');
+    });
+  });
+
+  describe('5. Calidad Estructural y Detección de Información Insuficiente', () => {
     it('ResponseQualityController detecta si un borrador de demanda carece de petitorio estructurado', () => {
       const malformedDraft = 'Te presento la demanda contra Juan Perez por incumplimiento de contrato.';
       const quality = ResponseQualityController.evaluateResponse(
