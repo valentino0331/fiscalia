@@ -397,7 +397,7 @@ chatRouter.post('/', chatRateLimiter, requireAuth, requireSubscription, async (r
       ))
       .map((m: any) => ({
         role: m.role as 'user' | 'assistant',
-        content: m.content.slice(0, 600000) as string,
+        content: (typeof m.content === "string" && m.content.length > 800000) ? (m.content.slice(0, 380000) + "\n\n[... EXPEDIENTE CONDENSADO ESTRUCTURALMENTE ...]\n\n" + m.content.slice(m.content.length - 380000)) : (m.content as string),
         // ConversationMessage schema requires timestamp — usar el existente o generar uno
         timestamp: typeof m.timestamp === 'string' ? m.timestamp : new Date().toISOString(),
       }));

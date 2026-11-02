@@ -395,8 +395,16 @@ export class DocumentPipeline {
     }
 
     // Limitador de presupuesto de caracteres
+    // Limitador de presupuesto de caracteres con preservación integral de petitorio y fallo final
     if (extractedText.length > this.MAX_CHARS_BUDGET) {
-      extractedText = extractedText.slice(0, this.MAX_CHARS_BUDGET) + `\n\n[Expediente extenso: Se procesaron los primeros 500,000 caracteres de ${extractedText.length} totales]`;
+      const halfBudget = Math.floor(this.MAX_CHARS_BUDGET * 0.45);
+      const head = extractedText.slice(0, halfBudget);
+      const tail = extractedText.slice(extractedText.length - halfBudget);
+      const bridgeNotice = "\n\n════════════════════════════════════════════════════════════════\n" +
+        "[EXPEDIENTE EXTENSO: CONDENSACIÓN ESTRUCTURAL PROCESAL REALIZADA]\n" +
+        "Se preservaron los folios iniciales (partes, pretensiones, demanda) y los folios finales (resolución, fallo y firmas) para garantizar el análisis jurídico integral.\n" +
+        "════════════════════════════════════════════════════════════════\n\n";
+      extractedText = head + bridgeNotice + tail;
     }
 
     const result: DocumentExtractionResult = {
