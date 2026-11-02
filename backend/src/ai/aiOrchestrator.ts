@@ -171,7 +171,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
 
     for (let i = 0; i < candidates.length; i++) {
       const candidate = candidates[i];
-      if (CircuitBreaker.isCircuitOpen(candidate.provider)) {
+      if (CircuitBreaker.isCircuitOpen(candidate.provider, candidate.model)) {
         console.warn(`[Orchestrator:${correlationId}] Omitiendo candidato ${candidate.provider}:${candidate.model} por circuito ABIERTO.`);
         continue;
       }
@@ -193,7 +193,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
           correlationId
         );
 
-        CircuitBreaker.recordSuccess(candidate.provider, result.durationMs);
+        CircuitBreaker.recordSuccess(candidate.provider, result.durationMs, candidate.model);
 
         if (streamFilter) {
           streamHadDisclaimer = streamFilter.getUnverifiedCitations().length > 0;

@@ -104,6 +104,37 @@ describe('CircuitBreaker & Error Classification', () => {
       CircuitBreaker.recordFailure('groq', err);
       expect(CircuitBreaker.isCircuitOpen('groq')).toBe(false);
     });
+
+    it('isolates failures at the model level so that a DeepSeek outage does not block GPT-5 Mini', () => {
+      const err = CircuitBreaker.classifyError({ statusCode: 503, message: 'DeepSeek server overloaded' });
+
+      // 3 fallos consecutivos en DeepSeek
+      CircuitBreaker.recordFailure('openrouter', err, 'deepseek/deepseek-chat');
+      CircuitBreaker.recordFailure('openrouter', err, 'deepseek/deepseek-chat');
+      CircuitBreaker.recordFailure('openrouter', err, 'deepseek/deepseek-chat');
+
+      // El circuito de DeepSeek debe estar ABIERTO
+      expect(CircuitBreaker.isCircuitOpen('openrouter', 'deepseek/deepseek-chat')).toBe(true);
+
+      // El circuito del modelo de respaldo (GPT-5 Mini o GPT-4o Mini) debe permanecer CERRADO y operativo
+      expect(CircuitBreaker.isCircuitOpen('openrouter', 'openai/gpt-5-mini')).toBe(false);
+      expect(CircuitBreaker.isCircuitOpen('openrouter', 'openai/gpt-4o-mini')).toBe(false);
+    });
+
+    it('HTTP 400 (Bad Request / Context Overflow) never increments failures nor trips the circuit breaker', () => {
+      const badReqErr = CircuitBreaker.classifyError({ statusCode: 400, message: 'This endpoint maximum context length is 128000 tokens' });
+      expect(badReqErr.category).toBe('BAD_REQUEST_400');
+
+      // Simular múltiples llamadas con payload inválido o contexto excedido
+      CircuitBreaker.recordFailure('openrouter', badReqErr, 'openai/gpt-4o-mini');
+      CircuitBreaker.recordFailure('openrouter', badReqErr, 'openai/gpt-4o-mini');
+      CircuitBreaker.recordFailure('openrouter', badReqErr, 'openai/gpt-4o-mini');
+      CircuitBreaker.recordFailure('openrouter', badReqErr, 'openai/gpt-4o-mini');
+
+      // El circuito NO debe haberse abierto
+      expect(CircuitBreaker.isCircuitOpen('openrouter', 'openai/gpt-4o-mini')).toBe(false);
+      expect(CircuitBreaker.isCircuitOpen('openrouter')).toBe(false);
+    });
   });
 
   describe('In-Flight Request Deduplication', () => {

@@ -5,13 +5,15 @@
  * 
  * Restricciones no negociables:
  * 1. Proveedor exclusivo: OpenRouter (https://openrouter.ai/api/v1/chat/completions).
- * 2. Modelo exclusivo: anthropic/claude-sonnet-5.5.
+ * 2. Modelos canónicos autorizados: DeepSeek V3 (primario) y GPT-5 Mini / GPT-4o Mini (respaldo de gran contexto).
  * 3. Prohibido ejecutar llamadas directas a Anthropic SDK, Gemini Direct, Groq, DeepSeek u OpenAI.
  * 4. Control centralizado de timeouts, cancelación por AbortSignal, SSE streaming, detección de respuestas vacías y correlation IDs.
+ * 5. Presupuesto dinámico de contexto (ContextManager) para garantizar que jamás ocurra HTTP 400 por desbordamiento de tokens.
  */
 
 import { ModelCandidate, ModelExecutionResult, AiProviderName } from './types';
 import { ModelCatalog } from './modelCatalog';
+import { ContextManager } from './contextManager';
 
 export class ProviderExecutionError extends Error {
   public provider: AiProviderName;
@@ -34,7 +36,8 @@ export class ProviderAdapter {
   private static readonly CANONICAL_MODEL = 'deepseek/deepseek-chat';
 
   /**
-   * Ejecuta la llamada generativa unificada a través de OpenRouter (DeepSeek V3 / GPT-4o Mini)
+   * Ejecuta la llamada generativa unificada a través de OpenRouter (DeepSeek V3 / GPT-5 Mini / GPT-4o Mini)
+   * con presupuesto dinámico de contexto que previene desbordamiento HTTP 400.
    */
   public static async executeCandidate(
     candidate: ModelCandidate,
@@ -56,9 +59,15 @@ export class ProviderAdapter {
       );
     }
 
-    const effectiveModel = model || this.CANONICAL_MODEL;
+    const effectiveModel = model || (process.env.OPENROUTER_PRIMARY_MODEL || this.CANONICAL_MODEL);
 
-    // 2. Control de Timeout y Señal de Aborto
+    // 2. Cálculo determinista de presupuesto de tokens (ContextManager)
+    const budget = ContextManager.calculateTokenBudget(effectiveModel, messages, maxTokens);
+    if (budget.wasCompacted) {
+      console.log(`[ProviderAdapter:${effectiveModel}] Contexto compactado por ContextManager: ~${budget.estimatedInputTokens} tokens de entrada, ${budget.maxTokens} tokens de salida máxima.`);
+    }
+
+    // 3. Control de Timeout y Señal de Aborto
     const controller = new AbortController();
     const timeoutDuration = Math.max(15000, timeoutMs || 90000);
     const timeoutTimer = setTimeout(() => controller.abort(), timeoutDuration);
@@ -94,9 +103,9 @@ export class ProviderAdapter {
 
       const payload = {
         model: effectiveModel,
-        messages,
-        temperature: 0.0, // Determinismo estricto para análisis y redacción jurídica
-        max_tokens: Math.min(16384, maxTokens || 16384),
+        messages: budget.sanitizedMessages,
+        temperature: typeof temperature === 'number' ? temperature : 0.0, // Determinismo estricto para análisis y redacción jurídica
+        max_tokens: budget.maxTokens,
         stream: isStream,
       };
 
@@ -131,12 +140,41 @@ export class ProviderAdapter {
         outputText = data.choices?.[0]?.message?.content || '';
       }
 
-      // 3. Detección estricta de respuestas vacías
+      // 4. Detección y manejo resiliente de respuestas vacías
       if (!outputText || !outputText.trim()) {
+        // Si no fue abortado, intentar 1 reintento inmediato en modo no-streaming
+        if (!controller.signal.aborted && !externalSignal?.aborted) {
+          console.warn(`[ProviderAdapter:${effectiveModel}] Respuesta vacía recibida en intento 1. Ejecutando reintento inmediato no-streaming...`);
+          const retryRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ ...payload, stream: false }),
+            signal: controller.signal,
+          });
+
+          if (retryRes.ok) {
+            const retryData: any = await retryRes.json();
+            const retryText = retryData.choices?.[0]?.message?.content || '';
+            if (retryText && retryText.trim()) {
+              console.log(`[ProviderAdapter:${effectiveModel}] Reintento inmediato exitoso (${retryText.length} caracteres).`);
+              if (isStream && onChunk) {
+                onChunk(retryText);
+              }
+              return {
+                text: retryText,
+                provider: 'openrouter',
+                model: effectiveModel,
+                durationMs: Date.now() - startTime,
+                fallbackOccurred: false,
+              };
+            }
+          }
+        }
+
         throw new ProviderExecutionError(
           'openrouter',
           effectiveModel,
-          'Respuesta vacía recibida del proveedor OpenRouter',
+          'Respuesta vacía recibida del proveedor OpenRouter tras reintento',
           204
         );
       }

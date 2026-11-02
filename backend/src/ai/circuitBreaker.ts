@@ -55,7 +55,8 @@ export class CircuitBreaker {
   private static readonly DEFAULT_COOLDOWN_MS = 60000; // 1 minuto de enfriamiento tras 3 fallos consecutivos
   private static readonly SUCCESS_THRESHOLD_TO_CLOSE = 2;
 
-  private static stats: Map<AiProviderName, {
+  // Estadísticas independientes por clave (permite desacoplar modelos dentro del mismo proveedor: "openrouter:deepseek/deepseek-chat" vs "openrouter:openai/gpt-5-mini")
+  private static stats: Map<string, {
     state: CircuitState;
     consecutiveFailures: number;
     consecutiveSuccesses: number;
@@ -71,8 +72,8 @@ export class CircuitBreaker {
   // Deduplicador de solicitudes idénticas en vuelo (evita dobles clics o llamadas duplicadas concurrentes)
   private static inFlightRequests: Map<string, { promise: Promise<any>; timestamp: number }> = new Map();
 
-  private static getOrCreateStats(provider: AiProviderName) {
-    let p = this.stats.get(provider);
+  private static getOrCreateStats(key: string) {
+    let p = this.stats.get(key);
     if (!p) {
       p = {
         state: 'CLOSED',
@@ -83,7 +84,7 @@ export class CircuitBreaker {
         failedCalls: 0,
         totalLatencyMs: 0,
       };
-      this.stats.set(provider, p);
+      this.stats.set(key, p);
     }
     return p;
   }
@@ -201,30 +202,64 @@ export class CircuitBreaker {
   }
 
   /**
-   * Comprueba si el circuito está abierto (bloqueado para evitar llamadas fallidas recurrentes)
+   * Comprueba si el circuito está abierto (bloqueado para evitar llamadas fallidas recurrentes).
+   * Soporta granularidad a nivel de modelo para que un fallo en DeepSeek NO bloquee a GPT Mini.
    */
-  public static isCircuitOpen(provider: AiProviderName): boolean {
-    const p = this.getOrCreateStats(provider);
+  public static isCircuitOpen(provider: AiProviderName, modelId?: string): boolean {
     const now = Date.now();
 
-    if (p.state === 'OPEN') {
-      if (p.cooldownUntil && now >= p.cooldownUntil) {
-        // Fin del período de enfriamiento: pasar a HALF_OPEN para probar una llamada de verificación
-        p.state = 'HALF_OPEN';
-        p.consecutiveSuccesses = 0;
+    // 1. Si se especifica modelId, evaluar primero el circuito específico del modelo
+    if (modelId) {
+      const modelKey = `${provider}:${modelId}`;
+      const modelStats = this.stats.get(modelKey);
+      if (modelStats && modelStats.state === 'OPEN') {
+        if (modelStats.cooldownUntil && now >= modelStats.cooldownUntil) {
+          modelStats.state = 'HALF_OPEN';
+          modelStats.consecutiveSuccesses = 0;
+          console.log(`[CircuitBreaker:${modelKey}] Enfriamiento cumplido. Circuito entra en estado HALF_OPEN.`);
+          return false;
+        }
+        return true; // Circuito específico de este modelo abierto
+      }
+    }
+
+    // 2. Evaluar el circuito general del proveedor (ej. bloqueo global por 401/403 en API key)
+    const provStats = this.stats.get(provider);
+    if (provStats && provStats.state === 'OPEN') {
+      if (provStats.cooldownUntil && now >= provStats.cooldownUntil) {
+        provStats.state = 'HALF_OPEN';
+        provStats.consecutiveSuccesses = 0;
         console.log(`[CircuitBreaker:${provider}] Enfriamiento cumplido. Circuito entra en estado HALF_OPEN.`);
         return false;
       }
-      return true; // Sigue abierto: bloquear llamada de inmediato
+      return true; // Circuito global del proveedor abierto
     }
 
     return false;
   }
 
   /**
-   * Registra una ejecución exitosa de un proveedor
+   * Registra una ejecución exitosa de un proveedor y/o modelo específico
    */
-  public static recordSuccess(provider: AiProviderName, latencyMs: number): void {
+  public static recordSuccess(provider: AiProviderName, latencyMs: number, modelId?: string): void {
+    if (modelId) {
+      const modelKey = `${provider}:${modelId}`;
+      const m = this.getOrCreateStats(modelKey);
+      m.totalCalls++;
+      m.successfulCalls++;
+      m.totalLatencyMs += latencyMs;
+      m.consecutiveFailures = 0;
+
+      if (m.state === 'HALF_OPEN') {
+        m.consecutiveSuccesses++;
+        if (m.consecutiveSuccesses >= this.SUCCESS_THRESHOLD_TO_CLOSE) {
+          m.state = 'CLOSED';
+          m.cooldownUntil = undefined;
+          console.log(`[CircuitBreaker:${modelKey}] Recuperación confirmada. Circuito CERRADO (operacional).`);
+        }
+      }
+    }
+
     const p = this.getOrCreateStats(provider);
     p.totalCalls++;
     p.successfulCalls++;
@@ -242,28 +277,55 @@ export class CircuitBreaker {
   }
 
   /**
-   * Registra una falla de ejecución y actualiza el circuito si corresponde
+   * Registra una falla de ejecución y actualiza el circuito si corresponde.
+   * Reglas de resiliencia:
+   * 1. BAD_REQUEST_400 NUNCA incrementa fallos consecutivos ni abre el circuito (es error de payload).
+   * 2. AUTH_ERROR_401_403 abre el circuito global del proveedor.
+   * 3. Fallos 5xx/408/red/empty_response abren el circuito del MODELO específico, manteniendo intactos los fallbacks.
    */
   public static recordFailure(
     provider: AiProviderName,
     classified: ClassifiedError,
     modelId?: string
   ): void {
-    const p = this.getOrCreateStats(provider);
-    p.totalCalls++;
-    p.failedCalls++;
-    p.consecutiveFailures++;
-    p.lastError = `[${classified.category}] ${classified.message.slice(0, 160)}`;
-    p.lastErrorTimestamp = new Date().toISOString();
+    // REGLA CRÍTICA: BAD_REQUEST_400 es error de tamaño de contexto o parámetro inválido;
+    // NUNCA representa indisponibilidad del proveedor ni debe bloquear a otros usuarios.
+    if (classified.category === 'BAD_REQUEST_400') {
+      console.warn(`[CircuitBreaker:${modelId ? `${provider}:${modelId}` : provider}] HTTP 400 registrado sin alterar estado de circuito.`);
+      return;
+    }
 
     const now = Date.now();
     const cooldownMs = (classified.retryAfterSeconds ? classified.retryAfterSeconds * 1000 : this.DEFAULT_COOLDOWN_MS);
 
-    if (classified.action === 'TRIP_CIRCUIT' || p.consecutiveFailures >= this.FAILURE_THRESHOLD) {
+    // Errores de autenticación invalidan las credenciales para TODO el proveedor
+    if (classified.category === 'AUTH_ERROR_401_403') {
+      const p = this.getOrCreateStats(provider);
+      p.totalCalls++;
+      p.failedCalls++;
+      p.consecutiveFailures++;
+      p.lastError = `[${classified.category}] ${classified.message.slice(0, 160)}`;
+      p.lastErrorTimestamp = new Date().toISOString();
       p.state = 'OPEN';
       p.cooldownUntil = now + cooldownMs;
+      console.warn(`[CircuitBreaker:${provider}] ⚠️ Circuito GLOBAL ABIERTO por error de autenticación.`);
+      return;
+    }
+
+    // Para caídas de modelo (5xx, timeouts, empty response, red): aislar la falla en el modelo específico
+    const targetKey = modelId ? `${provider}:${modelId}` : provider;
+    const target = this.getOrCreateStats(targetKey);
+    target.totalCalls++;
+    target.failedCalls++;
+    target.consecutiveFailures++;
+    target.lastError = `[${classified.category}] ${classified.message.slice(0, 160)}`;
+    target.lastErrorTimestamp = new Date().toISOString();
+
+    if (classified.action === 'TRIP_CIRCUIT' || target.consecutiveFailures >= this.FAILURE_THRESHOLD) {
+      target.state = 'OPEN';
+      target.cooldownUntil = now + cooldownMs;
       console.warn(
-        `[CircuitBreaker:${provider}] ⚠️ Circuito ABIERTO por ${Math.round(cooldownMs / 1000)}s tras ${p.consecutiveFailures} fallos consecutivos. Motivo: ${p.lastError}`
+        `[CircuitBreaker:${targetKey}] ⚠️ Circuito ABIERTO por ${Math.round(cooldownMs / 1000)}s tras ${target.consecutiveFailures} fallos consecutivos. Motivo: ${target.lastError}`
       );
     }
   }
@@ -345,9 +407,14 @@ export class CircuitBreaker {
   /**
    * Resetea el circuito (para pruebas unitarias)
    */
-  public static resetCircuit(provider?: AiProviderName): void {
-    if (provider) {
-      this.stats.delete(provider);
+  public static resetCircuit(providerOrKey?: string): void {
+    if (providerOrKey) {
+      this.stats.delete(providerOrKey);
+      for (const key of Array.from(this.stats.keys())) {
+        if (key.startsWith(`${providerOrKey}:`)) {
+          this.stats.delete(key);
+        }
+      }
     } else {
       this.stats.clear();
       this.inFlightRequests.clear();

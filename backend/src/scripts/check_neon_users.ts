@@ -26,3 +26,4 @@ async function inspectDb() {
 }
 
 inspectDb().catch(console.error);
+

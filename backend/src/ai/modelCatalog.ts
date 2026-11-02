@@ -175,11 +175,65 @@ export const MODEL_REGISTRY: Record<string, ModelDefinition> = {
     maxRetries: 1,
   },
 
+  'deepseek/deepseek-v3.2': {
+    id: 'deepseek/deepseek-v3.2',
+    provider: 'openrouter',
+    apiType: 'openai-compatible',
+    displayName: 'DeepSeek V3.2 (OpenRouter - Primario Avanzado)',
+    supportedTasks: [
+      'EXPEDIENTE_ANALYSIS',
+      'DOCUMENT_DRAFTING',
+      'LEGAL_CONSULTATION',
+      'QUICK_ANSWER',
+    ],
+    capabilities: {
+      text: true,
+      image: false,
+      pdfDocument: false,
+      audio: false,
+      streaming: true,
+    },
+    contextWindow: 163840,
+    maxOutputTokens: 8192,
+    status: 'OPERATIONAL',
+    priority: 1,
+    defaultTemperature: 0.0,
+    timeoutMs: 60000,
+    maxRetries: 1,
+  },
+
+  'openai/gpt-5-mini': {
+    id: 'openai/gpt-5-mini',
+    provider: 'openrouter',
+    apiType: 'openai-compatible',
+    displayName: 'OpenAI GPT-5 Mini (OpenRouter - Respaldo Alta Capacidad 400k)',
+    supportedTasks: [
+      'EXPEDIENTE_ANALYSIS',
+      'DOCUMENT_DRAFTING',
+      'LEGAL_CONSULTATION',
+      'QUICK_ANSWER',
+    ],
+    capabilities: {
+      text: true,
+      image: true,
+      pdfDocument: false,
+      audio: false,
+      streaming: true,
+    },
+    contextWindow: 400000,
+    maxOutputTokens: 16384,
+    status: 'OPERATIONAL',
+    priority: 2,
+    defaultTemperature: 0.0,
+    timeoutMs: 45000,
+    maxRetries: 2,
+  },
+
   'openai/gpt-4o-mini': {
     id: 'openai/gpt-4o-mini',
     provider: 'openrouter',
     apiType: 'openai-compatible',
-    displayName: 'GPT-4o Mini (OpenRouter - Respaldo Resiliente)',
+    displayName: 'GPT-4o Mini (OpenRouter - Respaldo Resiliente 128k)',
     supportedTasks: [
       'EXPEDIENTE_ANALYSIS',
       'DOCUMENT_DRAFTING',
@@ -294,7 +348,9 @@ export class ModelCatalog {
 
   /**
    * Obtiene los candidatos operacionales y clasificados por prioridad para una tarea dada.
-   * Por directiva de arquitectura, retorna EXCLUSIVAMENTE anthropic/claude-sonnet-5.5 vía OpenRouter.
+   * Por directiva de arquitectura:
+   * 1. Candidato Primario: DeepSeek V3 (configurable vía OPENROUTER_PRIMARY_MODEL)
+   * 2. Candidato de Respaldo: OpenAI GPT-5 Mini (400k contexto) / GPT-4o Mini (configurable vía OPENROUTER_FALLBACK_MODEL)
    */
   public static getCandidatesForTask(
     taskType: ExtendedTaskType,
@@ -305,36 +361,42 @@ export class ModelCatalog {
     }
 
     const candidates: ModelCandidate[] = [];
+    const addedModelIds = new Set<string>();
 
-    // Candidato 1 (Opción 2 - Primario): DeepSeek V3 en OpenRouter (~$0.01/consulta)
-    const deepseekDef = MODEL_REGISTRY['deepseek/deepseek-chat'];
-    if (deepseekDef) {
-      const override = this.dynamicStatusOverrides.get(deepseekDef.id);
-      const effectiveStatus = override || deepseekDef.status;
+    const primaryModelId = (process.env.OPENROUTER_PRIMARY_MODEL || 'deepseek/deepseek-chat').trim();
+    const fallbackModelId = (process.env.OPENROUTER_FALLBACK_MODEL || 'openai/gpt-4o-mini').trim();
+
+    // 1. Añadir Candidato Primario
+    const primaryDef = this.getModel(primaryModelId) || MODEL_REGISTRY['deepseek/deepseek-chat'];
+    if (primaryDef) {
+      const override = this.dynamicStatusOverrides.get(primaryDef.id);
+      const effectiveStatus = override || primaryDef.status;
       if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
         candidates.push({
           provider: 'openrouter',
-          model: deepseekDef.id,
-          maxTokens: deepseekDef.maxOutputTokens,
+          model: primaryDef.id,
+          maxTokens: primaryDef.maxOutputTokens,
           temperature: 0.0,
-          timeoutMs: deepseekDef.timeoutMs,
+          timeoutMs: primaryDef.timeoutMs,
         });
+        addedModelIds.add(primaryDef.id);
       }
     }
 
-    // Candidato 2 (Opción 1 - Respaldo Inmediato): GPT-4o Mini en OpenRouter (~$0.007/consulta)
-    const gptDef = MODEL_REGISTRY['openai/gpt-4o-mini'];
-    if (gptDef) {
-      const override = this.dynamicStatusOverrides.get(gptDef.id);
-      const effectiveStatus = override || gptDef.status;
+    // 2. Añadir Candidato de Respaldo (Fallback Alta Disponibilidad / Gran Contexto)
+    const fallbackDef = this.getModel(fallbackModelId) || MODEL_REGISTRY['openai/gpt-4o-mini'];
+    if (fallbackDef && !addedModelIds.has(fallbackDef.id)) {
+      const override = this.dynamicStatusOverrides.get(fallbackDef.id);
+      const effectiveStatus = override || fallbackDef.status;
       if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
         candidates.push({
           provider: 'openrouter',
-          model: gptDef.id,
-          maxTokens: gptDef.maxOutputTokens,
+          model: fallbackDef.id,
+          maxTokens: fallbackDef.maxOutputTokens,
           temperature: 0.0,
-          timeoutMs: gptDef.timeoutMs,
+          timeoutMs: fallbackDef.timeoutMs,
         });
+        addedModelIds.add(fallbackDef.id);
       }
     }
 

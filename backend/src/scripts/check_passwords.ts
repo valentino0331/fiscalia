@@ -18,3 +18,4 @@ async function checkPasswords() {
 }
 
 checkPasswords().catch(console.error);
+

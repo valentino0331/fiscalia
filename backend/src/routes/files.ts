@@ -213,7 +213,7 @@ Genera una respuesta en formato JSON estrictamente válido con los siguientes ca
           const aiResult = await ProviderAdapter.executeCandidate(
             {
               provider: 'openrouter',
-              model: 'anthropic/claude-sonnet-5.5',
+              model: (process.env.OPENROUTER_PRIMARY_MODEL || 'deepseek/deepseek-chat').trim(),
               maxTokens: 4096,
               temperature: 0.0,
               timeoutMs: 60000,
@@ -244,7 +244,7 @@ Genera una respuesta en formato JSON estrictamente válido con los siguientes ca
           }
           if (parsed.alertLevel) meta.alertLevel = parsed.alertLevel;
         } catch (claudeErr: any) {
-          console.warn('[Scanner AI] Error analizando con Claude Sonnet 5.5:', claudeErr?.message || claudeErr);
+          console.warn('[Scanner AI] Error analizando documento con IA en OpenRouter:', claudeErr?.message || claudeErr);
         }
       }
 

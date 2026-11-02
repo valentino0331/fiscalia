@@ -574,10 +574,11 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
       result.openrouter.keyStatus = orAuthRes.status;
       result.openrouter.authData = await orAuthRes.json().catch(() => ({}));
 
+      const testModel = (process.env.OPENROUTER_PRIMARY_MODEL || 'deepseek/deepseek-chat').trim();
       const testSonnet = await ProviderAdapter.executeCandidate(
         {
           provider: 'openrouter',
-          model: 'anthropic/claude-sonnet-5.5',
+          model: testModel,
           maxTokens: 50,
           temperature: 0.0,
           timeoutMs: 30000,
@@ -585,7 +586,7 @@ adminRouter.get('/test-ai', requireAuth, requireAdmin, async (req: any, res) => 
         [{ role: 'user', content: 'Di "OK" en una sola palabra.' }],
         false
       );
-      result.openrouter.testModel = 'anthropic/claude-sonnet-5.5';
+      result.openrouter.testModel = testModel;
       result.openrouter.testResult = testSonnet.text;
       result.openrouter.testDurationMs = testSonnet.durationMs;
     } catch (e: any) {
@@ -601,7 +602,8 @@ adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, r
   const log: string[] = [];
   const add = (msg: string) => log.push(`[+${Date.now() - t0}ms] ${msg}`);
 
-  add('Start simulation with Claude Sonnet 5.5 via OpenRouter');
+  const simModel = (process.env.OPENROUTER_PRIMARY_MODEL || 'deepseek/deepseek-chat').trim();
+  add(`Start simulation with ${simModel} via OpenRouter`);
   const openrouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY;
   add(`openrouterKey present: ${Boolean(openrouterKey)}`);
 
@@ -609,7 +611,7 @@ adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, r
     const sonnetRes = await ProviderAdapter.executeCandidate(
       {
         provider: 'openrouter',
-        model: 'anthropic/claude-sonnet-5.5',
+        model: simModel,
         maxTokens: 2048,
         temperature: 0.0,
         timeoutMs: 45000,
@@ -617,7 +619,7 @@ adminRouter.post('/simulate-chat', requireAuth, requireAdmin, async (req: any, r
       [{ role: 'user', content: req.body?.prompt || 'hola' }],
       false
     );
-    add(`OpenRouter Claude Sonnet 5.5 reply in ${sonnetRes.durationMs}ms: ${sonnetRes.text.slice(0, 100)}`);
+    add(`OpenRouter ${simModel} reply in ${sonnetRes.durationMs}ms: ${sonnetRes.text.slice(0, 100)}`);
     return res.json({ log, reply: sonnetRes.text, durationMs: sonnetRes.durationMs });
   } catch (err: any) {
     add(`Error: ${err.message}`);
