@@ -321,11 +321,11 @@ export class CircuitBreaker {
     target.lastError = `[${classified.category}] ${classified.message.slice(0, 160)}`;
     target.lastErrorTimestamp = new Date().toISOString();
 
-    if (classified.action === 'TRIP_CIRCUIT' || target.consecutiveFailures >= this.FAILURE_THRESHOLD) {
+    if (classified.action === 'TRIP_CIRCUIT' || classified.category === 'RATE_LIMIT_429' || target.consecutiveFailures >= this.FAILURE_THRESHOLD) {
       target.state = 'OPEN';
       target.cooldownUntil = now + cooldownMs;
       console.warn(
-        `[CircuitBreaker:${targetKey}] ⚠️ Circuito ABIERTO por ${Math.round(cooldownMs / 1000)}s tras ${target.consecutiveFailures} fallos consecutivos. Motivo: ${target.lastError}`
+        `[CircuitBreaker:${targetKey}] ⚠️ Circuito ABIERTO por ${Math.round(cooldownMs / 1000)}s tras ${classified.category}. Conmutando directamente a modelo de respaldo sin demoras. Motivo: ${target.lastError}`
       );
     }
   }
