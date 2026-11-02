@@ -130,3 +130,37 @@ Artículos 80° al 85°.- La Defensa Técnica
 - Art. 85°: Reemplazo del abogado defensor inasistente.
 
 PROHIBICIÓN ESTRICTA: El Artículo 62° del NCPP regula la "Exclusión del Fiscal" (reemplazo del Fiscal por el Fiscal Superior), NUNCA el derecho a la defensa técnica.
+
+
+═══════════════════════════════════════════════════════════════
+GARANTÍAS Y CONTROL JUDICIAL EN EL NCPP (D.LEG. 957)
+═══════════════════════════════════════════════════════════════
+
+Artículo 71.- Derechos del Imputado y Audiencia de Tutela de Derechos
+1. El imputado puede hacer valer por sí mismo o a través de su Abogado Defensor los derechos que la Constitución y las Leyes le conceden, desde el inicio de las primeras diligencias de investigación hasta la culminación del proceso.
+2. Los jueces, fiscales y policías informarán de inmediato al imputado que tiene derecho a:
+a) Conocer los cargos formulados en su contra y las causas de su detención.
+b) Designar a la persona o institución a la que debe comunicarse su detención de manera inmediata.
+c) Ser asistido desde los primeros actos de investigación por un Abogado Defensor.
+d) Abstenerse de declarar o guardar silencio sin que ello sea utilizado en su perjuicio.
+e) Que no se emplee en su contra medios coactivos, intimidatorios o contrarios a su dignidad.
+f) Ser examinado por un médico legista o profesional de la salud.
+4. Vía de Tutela de Derechos: Cuando el imputado considere que durante las diligencias preliminares o en la investigación preparatoria no se ha dado cumplimiento a estas disposiciones, o que sus derechos no son respetados, o que es objeto de medidas limitativas indebidas o de requerimientos ilegales, puede acudir en vía de Tutela de Derechos al Juez de la Investigación Preparatoria para que subsane la omisión o dicte las medidas de corrección o de protección que correspondan (Acuerdos Plenarios 02-2012 y 04-2010).
+
+Artículo 150.- Nulidad Absoluta de Actos Procesales
+No será necesaria la solicitud de nulidad de algún sujeto procesal y podrán ser declarados aun de oficio, los defectos concernientes a:
+a) La intervención, asistencia y representación del imputado en los casos y formas que la ley establece (defensa técnica efectiva).
+b) El nombramiento, capacidad y jurisdicción de los Jueces, o de la intervención del Ministerio Público en los actos en que su presencia sea obligatoria.
+c) La inobservancia del contenido esencial de los derechos y garantías fundamentales previstos por la Constitución Política.
+d) La inobservancia de las normas sobre la iniciativa y el ejercicio de la acción penal y la correlación entre acusación y sentencia.
+
+Artículo 350.- Facultades de los Sujetos Procesales en Etapa Intermedia (Control de Acusación)
+1. Notificada la acusación fiscal, los demás sujetos procesales podrán en el plazo de diez (10) días hábiles:
+a) Observar la acusación del Fiscal por defectos formales, solicitando su corrección.
+b) Deducir excepciones y otros medios de defensa técnica (incompetencia, prescripción, cosa juzgada, etc.).
+c) Solicitar la imposición o revocación de una medida coercitiva o la actuación de prueba anticipada.
+d) Pedir el sobreseimiento de la causa si concurren los presupuestos del Artículo 344 del NCPP.
+e) Instar la aplicación de un criterio de oportunidad.
+f) Ofrecer medios probatorios para el juicio oral, precisando su pertinencia, conducencia y utilidad.
+g) Proponer los hechos que aceptan y que el Juez dará por acreditados (convenciones probatorias).
+h) Objetar la cuantía y pretensión de la reparación civil solicitada por el actor civil.

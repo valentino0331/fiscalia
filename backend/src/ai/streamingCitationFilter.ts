@@ -20,12 +20,19 @@ import { LegalSourceRegistry } from './legalSourceRegistry';
 export class StreamingCitationFilter {
   private buffer: string = '';
   private outCallback: (chunk: string) => void;
+  private recentEmittedText: string = '';
   private unverifiedCitations: string[] = [];
-  private static readonly TRIGGER_REGEX = /(?:casaci[óo]n|cas\.|acuerdo\s+plenario|ap\s*\d|pleno\s+casatorio|ley\s*(?:n[°º.]?\s*)?30225|d\.?\s*s\.?\s*004[-–]2019|ley\s*(?:n[°º.]?\s*)?28677|c[óo]digo\s+civil\s+federal|ley\s+de\s+enjuiciamiento|c[óo]digo\s+general\s+del\s+proceso|c[óo]digo\s+nacional\s+de\s+procedimientos\s+penales|suprema\s+corte\s+de\s+justicia\s+de\s+la\s+naci[óo]n)/i;
+  private static readonly TRIGGER_REGEX = /(?:casaci[óo]n|cas\.|acuerdo\s+plenario|ap\s*\d|pleno\s+casatorio|pleno\s+jurisdiccional|rtf\s*(?:n[°º.]?)?|directiva\s*(?:oece|osce)|resoluci[óo]n\s+(?:del\s+tribunal\s+fiscal|de\s+oefa|del\s+tfa|de\s+indecopi)|ley\s*(?:n[°º.]?\s*)?30225|d\.?\s*s\.?\s*004[-–]2019|ley\s*(?:n[°º.]?\s*)?28677|c[óo]digo\s+civil\s+federal|ley\s+de\s+enjuiciamiento|c[óo]digo\s+general\s+del\s+proceso|c[óo]digo\s+nacional\s+de\s+procedimientos\s+penales|suprema\s+corte\s+de\s+justicia\s+de\s+la\s+naci[óo]n|estatuto\s+de\s+los\s+trabajadores|ley\s+federal\s+del\s+trabajo|c[óo]digo\s+fiscal\s+de\s+la\s+federaci[óo]n|prodecon|ley\s+general\s+de\s+sociedades\s+mercantiles|ley\s+de\s+sociedades\s+de\s+capital|ley\s+de\s+minas|tacrc|tribunal\s+supremo\s+espa[ñn]ol)/i;
   private static readonly SAFE_LOOKAHEAD = 25; // Longitud máxima para no cortar una palabra trigger
 
   constructor(outCallback: (chunk: string) => void) {
     this.outCallback = outCallback;
+  }
+
+  private emit(chunk: string): void {
+    if (!chunk) return;
+    this.recentEmittedText = (this.recentEmittedText + chunk).slice(-300);
+    this.outCallback(chunk);
   }
 
   /**
@@ -48,11 +55,11 @@ export class StreamingCitationFilter {
       if (!triggerMatch || triggerMatch.index === undefined) {
         // No hay triggers de citas en el búfer
         if (isFinal) {
-          this.outCallback(this.buffer);
+          this.emit(this.buffer);
           this.buffer = '';
         } else if (this.buffer.length > StreamingCitationFilter.SAFE_LOOKAHEAD) {
           const safeToEmit = this.buffer.slice(0, this.buffer.length - StreamingCitationFilter.SAFE_LOOKAHEAD);
-          this.outCallback(safeToEmit);
+          this.emit(safeToEmit);
           this.buffer = this.buffer.slice(this.buffer.length - StreamingCitationFilter.SAFE_LOOKAHEAD);
         }
         break;
@@ -63,20 +70,21 @@ export class StreamingCitationFilter {
       // 2. Si hay texto seguro antes del trigger, emitirlo
       if (triggerIndex > 0) {
         const preText = this.buffer.slice(0, triggerIndex);
-        this.outCallback(preText);
+        this.emit(preText);
         this.buffer = this.buffer.slice(triggerIndex);
       }
 
       // 3. El búfer ahora inicia con el trigger. Intentar resolver la cita completa.
-      // Patrón de casación: ej. "Casación N° 4618-2007/Lima", "Cas. 99999-2025"
-      const casRegex = /^(?:Casaci[óo]n|Cas\.)\s*(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?([,\.;\s\n]|$)/i;
+      // Patrón de casación: ej. "Casación N° 4618-2007/Lima", "Casación Laboral N° 12475-2014", "Cas. 99999-2025"
+      const casRegex = /^(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?([,\.;\s\n]|$)/i;
       const casMatch = this.buffer.match(casRegex);
 
       if (casMatch) {
-        const docketNum = casMatch[1];
-        const year = casMatch[2];
-        const district = casMatch[3] ? casMatch[3].trim() : '';
-        const trailingDelimiter = casMatch[4] || '';
+        const specialty = casMatch[1] ? casMatch[1].trim() : '';
+        const docketNum = casMatch[2];
+        const year = casMatch[3];
+        const district = casMatch[4] ? casMatch[4].trim() : '';
+        const trailingDelimiter = casMatch[5] || '';
         const rawCitation = casMatch[0].slice(0, casMatch[0].length - trailingDelimiter.length).trim();
         const lookupKey = `${docketNum}-${year}`;
 
@@ -84,13 +92,13 @@ export class StreamingCitationFilter {
 
         if (isVerified) {
           // Cita verificada en el compendio oficial de la Corte Suprema: emitir tal cual
-          this.outCallback(rawCitation + trailingDelimiter);
+          this.emit(rawCitation + trailingDelimiter);
         } else {
           // Cita judicial no verificada / inventada:
           // REGLA SUPREMA: NUNCA emitir el docket inventado ni frase genérica engañosa.
           this.unverifiedCitations.push(rawCitation);
           const sanitizedCitation = `[criterio jurisprudencial pendiente de verificación documental]${trailingDelimiter}`;
-          this.outCallback(sanitizedCitation);
+          this.emit(sanitizedCitation);
         }
 
         this.buffer = this.buffer.slice(casMatch[0].length);
@@ -111,23 +119,82 @@ export class StreamingCitationFilter {
         const isVerified = Boolean(LegalSourceRegistry.getByShortKey(lookupKey) || VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey]);
 
         if (isVerified) {
-          this.outCallback(rawCitation + trailingDelimiter);
+          this.emit(rawCitation + trailingDelimiter);
         } else {
           this.unverifiedCitations.push(rawCitation);
           const sanitizedCitation = `[acuerdo plenario pendiente de verificación documental]${trailingDelimiter}`;
-          this.outCallback(sanitizedCitation);
+          this.emit(sanitizedCitation);
         }
 
         this.buffer = this.buffer.slice(apMatch[0].length);
         continue;
       }
 
-      // Patrón de Pleno Casatorio Civil: ej. "Tercer Pleno Casatorio Civil"
-      const plenoRegex = /^([I|V|X]+)\s+Pleno\s+Casatorio\s+(?:Civil)?([,\.;\s\n]|$)/i;
+      // Patrón de Pleno Casatorio Civil: I al X únicamente
+      const VALID_CIVIL_PLENOS = new Set([
+        'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+        '1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°', '10°',
+        'PRIMER', 'SEGUNDO', 'TERCER', 'TERCERO', 'CUARTO', 'QUINTO',
+        'SEXTO', 'SÉPTIMO', 'SEPTIMO', 'OCTAVO', 'NOVENO', 'DÉCIMO', 'DECIMO'
+      ]);
+
+      const plenoRegex = /^(?:([I|V|X]+|[0-9]{1,2}[°º]?|[a-záéíóúñ]+)\s+Pleno\s+Casatorio(?:\s+([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?|Pleno\s+Casatorio\s+(?:([A-Za-zÁÉÍÓÚáéíóúñÑ]+)\s*)?(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,2}|[I|V|X]+)?)([,\.;\s\n]|$)/i;
       const plenoMatch = this.buffer.match(plenoRegex);
       if (plenoMatch) {
-        this.outCallback(plenoMatch[0]);
+        const numPart = (plenoMatch[1] || plenoMatch[4] || '').toUpperCase();
+        const specialty = (plenoMatch[2] || plenoMatch[3] || '').trim().toLowerCase();
+        const trailing = plenoMatch[5] || '';
+        const rawText = plenoMatch[0].slice(0, plenoMatch[0].length - trailing.length);
+
+        if (specialty === 'mercantil' || specialty === 'comercial' || rawText.toLowerCase().includes('mercantil') || rawText.toLowerCase().includes('comercial')) {
+          this.unverifiedCitations.push(rawText);
+          this.emit(`[precedente inexistente: en el Perú no existen Plenos Casatorios Mercantiles/Comerciales]${trailing}`);
+        } else if (VALID_CIVIL_PLENOS.has(numPart)) {
+          this.emit(plenoMatch[0]);
+        } else {
+          this.unverifiedCitations.push(rawText);
+          this.emit(`[criterio jurisprudencial pendiente de verificación documental: la Corte Suprema solo cuenta con X Plenos Casatorios Civiles]${trailing}`);
+        }
         this.buffer = this.buffer.slice(plenoMatch[0].length);
+        continue;
+      }
+
+      // Patrón de Pleno Jurisdiccional (Distrital, Regional, Nacional)
+      const plenoJurisdiccionalRegex = /^(?:Pleno\s+Jurisdiccional\s+(?:Nacional|Distrital|Regional|Laboral|Civil|Penal|Comercial|de\s+Familia)?(?:\s+(?:de|del)?\s*([0-9]{4}))?)([,\.;\s\n]|$)/i;
+      const pjMatch = this.buffer.match(plenoJurisdiccionalRegex);
+      if (pjMatch) {
+        const trailing = pjMatch[2] || '';
+        const rawText = pjMatch[0].slice(0, pjMatch[0].length - trailing.length);
+        const yearPart = pjMatch[1] || '';
+        const isVerified = Boolean(LegalSourceRegistry.getByShortKey(`PJ-${yearPart}`));
+
+        if (isVerified) {
+          this.emit(pjMatch[0]);
+        } else {
+          this.unverifiedCitations.push(rawText);
+          this.emit(`[criterio jurisprudencial pendiente de verificación documental]${trailing}`);
+        }
+        this.buffer = this.buffer.slice(pjMatch[0].length);
+        continue;
+      }
+
+      // Patrón de RTF, Resoluciones Administrativas y Directivas no verificadas
+      const rtfRegex = /^(?:RTF\s*(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,6}(?:[-–][0-9]{1,2})?[-–][0-9]{4})|Resoluci[óo]n\s+(?:del\s+Tribunal\s+Fiscal|de\s+OEFA|del\s+TFA|de\s+INDECOPI)\s*N[°º.]?\s*([0-9A-Za-z\/\-]+)|Directiva\s*(?:OECE|OSCE)\s*N[°º.]?\s*([0-9]{1,4}[-–/][0-9]{4}(?:[-–][A-Za-z0-9]+)?))([,\.;\s\n]|$)/i;
+      const rtfMatch = this.buffer.match(rtfRegex);
+      if (rtfMatch) {
+        const rtfKey = rtfMatch[1] || rtfMatch[2] || rtfMatch[3] || '';
+        const trailing = rtfMatch[4] || '';
+        const rawText = rtfMatch[0].slice(0, rtfMatch[0].length - trailing.length);
+        const isVerified = Boolean(LegalSourceRegistry.getByShortKey(rtfKey));
+
+        if (isVerified) {
+          this.emit(rtfMatch[0]);
+        } else {
+          this.unverifiedCitations.push(rawText);
+          this.emit(`[resolución administrativa pendiente de verificación documental]${trailing}`);
+        }
+        this.buffer = this.buffer.slice(rtfMatch[0].length);
         continue;
       }
 
@@ -136,7 +203,7 @@ export class StreamingCitationFilter {
       const ley30225Match = this.buffer.match(ley30225Regex);
       if (ley30225Match) {
         const trailing = ley30225Match[1] || '';
-        this.outCallback(`[norma derogada Ley 30225 reemplazada por Ley 32069 (OECE/TCP)]${trailing}`);
+        this.emit(`[norma derogada Ley 30225 reemplazada por Ley 32069 (OECE/TCP)]${trailing}`);
         this.buffer = this.buffer.slice(ley30225Match[0].length);
         continue;
       }
@@ -146,7 +213,7 @@ export class StreamingCitationFilter {
       const ds004Match = this.buffer.match(ds004Regex);
       if (ds004Match) {
         const trailing = ds004Match[1] || '';
-        this.outCallback(`[norma derogada D.S. 004-2019-JUS reemplazada por D.S. 006-2026-JUS]${trailing}`);
+        this.emit(`[norma derogada D.S. 004-2019-JUS reemplazada por D.S. 006-2026-JUS]${trailing}`);
         this.buffer = this.buffer.slice(ds004Match[0].length);
         continue;
       }
@@ -156,17 +223,26 @@ export class StreamingCitationFilter {
       const ley28677Match = this.buffer.match(ley28677Regex);
       if (ley28677Match) {
         const trailing = ley28677Match[1] || '';
-        this.outCallback(`[norma derogada Ley 28677 reemplazada por D.L. 1400 (SIGM)]${trailing}`);
+        this.emit(`[norma derogada Ley 28677 reemplazada por D.L. 1400 (SIGM)]${trailing}`);
         this.buffer = this.buffer.slice(ley28677Match[0].length);
         continue;
       }
 
       // Patrón de Normas Extranjeras no aplicables en el Perú
-      const foreignRegex = /^(?:C[óo]digo\s+Civil\s+Federal|Ley\s+de\s+Enjuiciamiento\s+Civil|C[óo]digo\s+General\s+del\s+Proceso|C[óo]digo\s+Nacional\s+de\s+Procedimientos\s+Penales|Suprema\s+Corte\s+de\s+Justicia\s+de\s+la\s+Naci[óo]n)([,\.;\s\n]|$)/i;
+      const foreignRegex = /^(?:C[óo]digo\s+Civil\s+Federal|Ley\s+de\s+Enjuiciamiento\s+Civil|Ley\s+de\s+Enjuiciamiento\s+Criminal|C[óo]digo\s+General\s+del\s+Proceso|C[óo]digo\s+Nacional\s+de\s+Procedimientos\s+Penales|Suprema\s+Corte\s+de\s+Justicia\s+de\s+la\s+Naci[óo]n|Tribunal\s+Supremo\s+espa[ñn]ol|Estatuto\s+de\s+los\s+Trabajadores|Ley\s+Federal\s+del\s+Trabajo|C[óo]digo\s+Fiscal\s+de\s+la\s+Federaci[óo]n|PRODECON|Ley\s+General\s+de\s+Sociedades\s+Mercantiles|Ley\s+de\s+Sociedades\s+de\s+Capital|Ley\s+de\s+Minas|Tribunal\s+Administrativo\s+Central\s+de\s+Recursos\s+Contractuales|TACRC)([,\.;\s\n]|$)/i;
       const foreignMatch = this.buffer.match(foreignRegex);
       if (foreignMatch) {
         const trailing = foreignMatch[1] || '';
-        this.outCallback(`[norma/tribunal foráneo no aplicable en el Perú — rige legislación peruana]${trailing}`);
+        const cleanContextBefore = this.recentEmittedText.replace(/\[norma\/tribunal for[áa]neo[^\]]*\]/gi, '');
+        const contextAfter = this.buffer.slice(foreignMatch[0].length, foreignMatch[0].length + 100);
+        const fullContext = cleanContextBefore + ' ' + contextAfter;
+        const isComparative = /(?:a\s+diferencia\s+de|frente\s+a|en\s+el\s+derecho\s+comparado|comparad[oa]\s+con|en\s+contraste\s+con|mientras\s+que\s+en|a\s+nivel\s+comparado)/i.test(fullContext);
+
+        if (isComparative) {
+          this.emit(foreignMatch[0]);
+        } else {
+          this.emit(`[norma/tribunal foráneo no aplicable en el Perú — rige legislación peruana]${trailing}`);
+        }
         this.buffer = this.buffer.slice(foreignMatch[0].length);
         continue;
       }
@@ -179,7 +255,7 @@ export class StreamingCitationFilter {
 
       // Si llegó al final o superó 80 caracteres sin coincidir con una cita legal estructurada,
       // emitir el primer caracter y reevaluar para evitar bloqueos
-      this.outCallback(this.buffer.charAt(0));
+      this.emit(this.buffer.charAt(0));
       this.buffer = this.buffer.slice(1);
     }
   }
@@ -194,7 +270,7 @@ export class StreamingCitationFilter {
     if (this.unverifiedCitations.length > 0) {
       const disclaimer = `\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
         this.unverifiedCitations.map(c => `> • **${c}:** Esta referencia no cuenta con verificación documental en el registro oficial de precedentes vinculantes de la Corte Suprema. Al no existir fuente comprobable del expediente citado, se ha desclasificado y retirado el número judicial para evitar temeridad procesal, debiendo sustentarse la pretensión directamente en las normas legales aplicables.\n`).join('');
-      this.outCallback(disclaimer);
+      this.emit(disclaimer);
     }
   }
 

@@ -93,7 +93,7 @@ FECHA ACTUAL DE OPERACIÓN: OCTUBRE DE 2026.
 Todas tus respuestas, plazos, cálculos, vías procesales y redacciones de documentos se rigen rigurosamente por el ordenamiento legal peruano vigente a OCTUBRE DE 2026.
 Queda terminantemente prohibido usar normas derogadas o desactualizadas:
 1. TUO LPAG: D.S. N° 006-2026-JUS (derogó formalmente al D.S. 004-2019-JUS).
-2. Contrataciones del Estado: Ley N° 32069 y D.S. N° 001-2026-EF (extinción definitiva del OSCE y Ley 30225; rige OECE, TCP, PLADICOP y JPRD obligatoria).
+2. Contrataciones del Estado: Ley N° 32069 y D.S. N° 009-2025-EF (extinción definitiva del OSCE y Ley 30225; rige OECE, TCP, PLADICOP y JPRD obligatoria).
 3. Indicadores económicos 2026: UIT = S/ 5,500; URP = S/ 550; RMV = S/ 1,230.00 y Asignación Familiar = S/ 123.00 (D.S. N° 015-2026-TR).
 4. Competencia laboral: Ley N° 32155 (Paz Letrado Laboral hasta 70 URP = S/ 38,500 y daños hasta 60 URP = S/ 33,000; Especializados > 70 URP).
 5. Familia: Ley N° 31590 (Tenencia Compartida como regla general preferente sin favoritismo maternal automático) y Ley N° 31464 / Art. 562° CPC (Alimentos sin tasas ni firma obligatoria).
@@ -198,6 +198,10 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
         break;
       } catch (err: any) {
         console.warn(`[Orchestrator] Error en candidato ${candidate.provider}:${candidate.model}:`, err.message);
+        if (req.abortSignal?.aborted) {
+          console.log('[Orchestrator] Petición cancelada por el cliente. Deteniendo intentos de conmutación.');
+          break;
+        }
         if (i === 0) {
           fallbackReason = err.message;
         }
@@ -292,8 +296,10 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
-    // 10. Registro Inmutable de Consumo de Cuota
-    await recordQuestionUsage(userId);
+    // 10. Registro Inmutable de Consumo de Cuota (solo si la consulta concluyó con éxito y no fue abortada)
+    if (!req.abortSignal?.aborted && executionResult.provider !== 'emergency_mock') {
+      await recordQuestionUsage(userId);
+    }
 
     const meta: AiOrchestratorMeta = {
       provider: executionResult.provider,

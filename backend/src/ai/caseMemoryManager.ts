@@ -34,11 +34,40 @@ export class CaseMemoryManager {
       return { facts: [], norms: [], directives: [], formattedBlock: '' };
     }
 
-    const fullHistory = messages
+    const userMessages = messages.filter((m) => m && m.role === 'user' && typeof m.content === 'string');
+    let targetHistory = messages
       .filter((m) => m && typeof m.content === 'string')
       .map((m) => m.content);
 
-    const fullText = fullHistory.join('\n');
+    // Prevención de contaminación cruzada: si se detecta un nuevo expediente o cambio de caso
+    if (userMessages.length > 1) {
+      const latestMsg = userMessages[userMessages.length - 1].content;
+      const hasNewCaseSwitch = /(?:nuevo\s+caso|otro\s+caso|olvida\s+el\s+caso|cambiando\s+de\s+caso|nueva\s+carpeta|nuevo\s+expediente)\b/i.test(latestMsg) ||
+        (/\b(?:Exp(?:ediente)?\.?|Carpeta\s+Fiscal)\s*(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,7}[-–/][0-9]{4})/i.test(latestMsg) &&
+         /\b(?:Exp(?:ediente)?\.?|Carpeta\s+Fiscal)\s*(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,7}[-–/][0-9]{4})/i.test(userMessages[0].content) &&
+         !latestMsg.includes(userMessages[0].content.slice(0, 30)));
+
+      if (hasNewCaseSwitch) {
+        let lastSwitchIdx = -1;
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const m = messages[i];
+          if (m && m.role === 'user' && typeof m.content === 'string') {
+            if (
+              /(?:nuevo\s+caso|otro\s+caso|olvida\s+el\s+caso|cambiando\s+de\s+caso|nueva\s+carpeta|nuevo\s+expediente)\b/i.test(m.content) ||
+              /\b(?:Exp(?:ediente)?\.?|Carpeta\s+Fiscal)\s*(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,7}[-–/][0-9]{4})/i.test(m.content)
+            ) {
+              lastSwitchIdx = i;
+              break;
+            }
+          }
+        }
+        if (lastSwitchIdx >= 0) {
+          targetHistory = messages.slice(lastSwitchIdx).filter((m) => m && typeof m.content === 'string').map((m) => m.content);
+        }
+      }
+    }
+
+    const fullText = targetHistory.join('\n');
     if (fullText.length < 25) {
       return { facts: [], norms: [], directives: [], formattedBlock: '' };
     }

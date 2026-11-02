@@ -24,6 +24,7 @@ export function sanitizeDocumentPromptInjection(rawText: string): {
     /(?:nueva\s+regla\s+del\s+sistema|new\s+system\s+rule):\s*/gi,
     /(?:print|muestra|revela|descarga)\s+(?:system\s+prompt|el\s+system\s+prompt|las\s+instrucciones\s+ocultas)/gi,
     /(?:ignora\s+las\s+leyes\s+del\s+per[úu]|ignore\s+peruvian\s+laws)/gi,
+    /(?:---|===)\s*(?:FIN\s+DEL\s+DOCUMENTO|CONTENIDO\s+EXTRA[ÍI]DO\s+DEL\s+DOCUMENTO)\s*(?:---|===)/gi,
   ];
 
   let text = rawText;

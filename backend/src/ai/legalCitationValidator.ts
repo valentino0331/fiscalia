@@ -363,8 +363,8 @@ export const REPEALED_NORMS_CATALOG: {
   {
     pattern: /\b(?:Ley\s*N[°º.]?\s*30225|Ley\s+de\s+Contrataciones\s+del\s+Estado\s+30225)\b/i,
     repealedName: 'Ley N° 30225 (Ley de Contrataciones del Estado)',
-    activeSubstitute: 'Ley N° 32069 (Ley General de Contrataciones Públicas / OECE) y D.S. N° 001-2026-EF',
-    warningNote: 'La Ley N° 30225 y el OSCE se encuentran extintos. Al 2026 rige la Ley N° 32069 bajo rectoría del OECE y el Tribunal de Contrataciones Públicas (TCP).',
+    activeSubstitute: 'Ley N° 32069 (Ley General de Contrataciones Públicas / OECE) y D.S. N° 009-2025-EF',
+    warningNote: 'La Ley N° 30225 y el OSCE se encuentran extintos para convocatorias posteriores al 22 de abril de 2025. Al 2026 rige la Ley N° 32069 y su Reglamento D.S. N° 009-2025-EF bajo rectoría del OECE y el Tribunal de Contrataciones Públicas (TCP). Bajo la Primera Disposición Complementaria Transitoria de la Ley 32069, los contratos derivados de procedimientos convocados antes del 22 de abril de 2025 se rigen ultraactivamente por la Ley N° 30225 hasta su liquidación.',
   },
   {
     pattern: /\b(?:D\.?\s*S\.?\s*N[°º.]?\s*004[-–]2019[-–]JUS|Decreto\s+Supremo\s+004[-–]2019[-–]JUS)\b/i,
@@ -401,6 +401,11 @@ export const MISATTRIBUTIONS_CATALOG: {
     pattern: /(?:(?:art[íi]culo|art\.)\s*480[°º]?[\s\S]{0,100}(?:causales?\s+de\s+divorcio|separaci[óo]n\s+de\s+hecho)|(?:causales?\s+de\s+divorcio|separaci[óo]n\s+de\s+hecho)[\s\S]{0,100}(?:art[íi]culo|art\.)\s*480[°º]?)/i,
     errorDescription: 'El Artículo 480° del Código Procesal Civil regula la vía procedimental de conocimiento, NO las causales de divorcio sustantivo.',
     correctAttribution: 'Las causales sustantivas de divorcio se encuentran tipificadas exclusivamente en el Artículo 333° del Código Civil (la separación de hecho es el inciso 12).',
+  },
+  {
+    pattern: /(?:(?:art[íi]culo|art\.)\s*720[°º]?[\s\S]{0,100}(?:mandato\s+(?:de\s+)?ejecuci[óo]n|tres\s+d[íi]as\s+para\s+contradecir|plazo\s+de\s+contradicci[óo]n)|(?:mandato\s+(?:de\s+)?ejecuci[óo]n|tres\s+d[íi]as\s+para\s+contradecir|plazo\s+de\s+contradicci[óo]n)[\s\S]{0,100}(?:art[íi]culo|art\.)\s*720[°º]?)/i,
+    errorDescription: 'El Artículo 720° del CPC regula la procedencia de la ejecución de garantías, NO el mandato de ejecución ni el plazo de contradicción.',
+    correctAttribution: 'El mandato de ejecución y el plazo de 3 días hábiles para contradecir se tipifican en el Artículo 721° del Código Procesal Civil.',
   },
 ];
 
@@ -452,6 +457,48 @@ export const FOREIGN_JURISDICTION_CATALOG: {
     jurisdiction: 'España',
     foreignSource: 'Tribunal Supremo de España',
     peruvianEquivalent: 'En el fuero judicial peruano la jurisprudencia vinculante emana de la Corte Suprema de Justicia del Perú (Plenos Casatorios y Acuerdos Plenarios).',
+  },
+  {
+    pattern: /\b(?:Estatuto\s+de\s+los\s+Trabajadores|ET\s+espa[ñn]ol)\b/i,
+    jurisdiction: 'España',
+    foreignSource: 'Estatuto de los Trabajadores de España',
+    peruvianEquivalent: 'En el Perú las relaciones laborales se rigen por el D.S. 003-97-TR (LPCL), la Ley 29497 (NLPT) y la Ley 32155.',
+  },
+  {
+    pattern: /\b(?:Ley\s+Federal\s+del\s+Trabajo|LFT(?:\s+de\s+M[ée]xico)?)\b/i,
+    jurisdiction: 'México',
+    foreignSource: 'Ley Federal del Trabajo de México',
+    peruvianEquivalent: 'En el Perú rige el Texto Único Ordenado del D.Leg. 728 (D.S. 003-97-TR) y la NLPT.',
+  },
+  {
+    pattern: /\b(?:C[óo]digo\s+Fiscal\s+de\s+la\s+Federaci[óo]n|CFF(?:\s+mexicano)?|PRODECON)\b/i,
+    jurisdiction: 'México',
+    foreignSource: 'Código Fiscal de la Federación de México / PRODECON',
+    peruvianEquivalent: 'En el Perú rige el Código Tributario (D.S. 133-2013-EF) bajo administración de la SUNAT y el Tribunal Fiscal.',
+  },
+  {
+    pattern: /\b(?:Ley\s+General\s+de\s+Sociedades\s+Mercantiles|LGSM(?:\s+de\s+M[ée]xico)?)\b/i,
+    jurisdiction: 'México',
+    foreignSource: 'Ley General de Sociedades Mercantiles de México',
+    peruvianEquivalent: 'En el Perú rige la Ley General de Sociedades (Ley N° 26887) y el régimen SACS (D.Leg. 1409).',
+  },
+  {
+    pattern: /\b(?:Ley\s+de\s+Sociedades\s+de\s+Capital|LSC\s+espa[ñn]ola)\b/i,
+    jurisdiction: 'España',
+    foreignSource: 'Ley de Sociedades de Capital de España',
+    peruvianEquivalent: 'En el Perú rige la Ley General de Sociedades (Ley N° 26887).',
+  },
+  {
+    pattern: /\b(?:Ley\s+de\s+Minas(?:\s+de\s+Espa[ñn]a|\s+mexicana)?)\b/i,
+    jurisdiction: 'Extranjera',
+    foreignSource: 'Ley de Minas extranjera',
+    peruvianEquivalent: 'En el Perú la actividad minera se rige por el TUO de la Ley General de Minería (D.S. 014-92-EM) y la Ley 26505.',
+  },
+  {
+    pattern: /\b(?:Tribunal\s+Administrativo\s+Central\s+de\s+Recursos\s+Contractuales|TACRC)\b/i,
+    jurisdiction: 'España',
+    foreignSource: 'Tribunal Administrativo Central de Recursos Contractuales de España',
+    peruvianEquivalent: 'En el Perú la resolución de controversias en contratación pública compete al Tribunal de Contrataciones Públicas (TCP - OECE).',
   },
 ];
 
@@ -527,6 +574,24 @@ export function validateLegalCitations(text: string): ValidationReport {
   // 2.1. Detectar Invocación de Legislación o Jurisprudencia Extranjera Prohibida
   for (const f of FOREIGN_JURISDICTION_CATALOG) {
     if (f.pattern.test(processedText)) {
+      // Excepción legítima: Si se trata de un análisis explícito de derecho comparado o contraste doctrinario
+      const matchPos = processedText.search(f.pattern);
+      const surroundingStart = Math.max(0, matchPos - 120);
+      const surroundingEnd = Math.min(processedText.length, matchPos + 180);
+      const surrounding = processedText.slice(surroundingStart, surroundingEnd);
+      const isComparative = /(?:a\s+diferencia\s+de|frente\s+a|en\s+el\s+derecho\s+comparado|comparad[oa]\s+con|en\s+contraste\s+con|mientras\s+que\s+en|a\s+nivel\s+comparado)/i.test(surrounding);
+
+      if (isComparative) {
+        citations.push({
+          raw: f.foreignSource,
+          type: 'ley',
+          normalized: `${f.foreignSource} (Derecho Comparado)`,
+          status: 'VERIFIED',
+          detail: `Referencia académica de derecho comparado (${f.jurisdiction}). Para el caso peruano: ${f.peruvianEquivalent}`,
+        });
+        continue;
+      }
+
       citations.push({
         raw: f.foreignSource,
         type: 'ley',
@@ -542,13 +607,14 @@ export function validateLegalCitations(text: string): ValidationReport {
   }
 
   // 3. Detectar Casaciones Judiciales y cotejar contra registro verificado
-  const casacionRegex = /\b(?:Casaci[óo]n|Cas\.)\s*(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?\b/gi;
+  const casacionRegex = /\b(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?\b/gi;
   let match: RegExpExecArray | null;
 
   while ((match = casacionRegex.exec(text)) !== null) {
-    const docketNum = match[1];
-    const year = match[2];
-    const district = match[3] ? match[3].trim() : '';
+    const specialty = match[1] ? match[1].trim() : '';
+    const docketNum = match[2];
+    const year = match[3];
+    const district = match[4] ? match[4].trim() : '';
     const lookupKey = `${docketNum}-${year}`;
     const rawMatch = match[0];
 
@@ -593,7 +659,7 @@ export function validateLegalCitations(text: string): ValidationReport {
       citations.push({
         raw: rawMatch,
         type: 'casacion',
-        normalized: `Casación N° ${docketNum}-${year}${district ? '/' + district : ''}`,
+        normalized: `Casación ${specialty ? specialty + ' ' : ''}N° ${docketNum}-${year}${district ? '/' + district : ''}`,
         status: 'VERIFIED',
         officialSource: knownVerified.court,
         detail: `${knownVerified.title}: ${knownVerified.subject} (${knownVerified.bindingFJ})`,
@@ -603,7 +669,7 @@ export function validateLegalCitations(text: string): ValidationReport {
       citations.push({
         raw: rawMatch,
         type: 'casacion',
-        normalized: `Casación N° ${docketNum}-${year}${district ? '/' + district : ''}`,
+        normalized: `Casación ${specialty ? specialty + ' ' : ''}N° ${docketNum}-${year}${district ? '/' + district : ''}`,
         status: 'UNVERIFIED_CLAIM',
         detail: 'Referencia jurisprudencial no contrastada en el compendio oficial de la Corte Suprema.',
       });
@@ -611,7 +677,6 @@ export function validateLegalCitations(text: string): ValidationReport {
 
       // Sanitización preventiva en el cuerpo procesal:
       // Retira el número judicial no contrastado para evitar temeridad procesal y alucinaciones en estrados.
-      // Queda prohibido convertirlo en "doctrina jurisprudencial uniforme" o frases análogas sin respaldo factual.
       processedText = processedText.replace(
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
@@ -686,18 +751,123 @@ export function validateLegalCitations(text: string): ValidationReport {
     }
   }
 
-  // 5. Detectar Plenos Casatorios Civiles (I al X)
-  const plenoRegex = /\b([I|V|X]+)\s+Pleno\s+Casatorio\s+(?:Civil)?\b/gi;
+  // 5. Detectar Plenos Casatorios Civiles (Únicamente I al X) y detectar plenos inexistentes
+  const VALID_CIVIL_PLENOS = new Set([
+    'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X',
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '10',
+    '1°', '2°', '3°', '4°', '5°', '6°', '7°', '8°', '9°', '10°',
+    'PRIMER', 'SEGUNDO', 'TERCER', 'TERCERO', 'CUARTO', 'QUINTO',
+    'SEXTO', 'SÉPTIMO', 'SEPTIMO', 'OCTAVO', 'NOVENO', 'DÉCIMO', 'DECIMO'
+  ]);
+
+  const plenoRegex = /\b(?:([I|V|X]+|[0-9]{1,2}[°º]?|primer|segundo|tercer|tercero|cuarto|quinto|sexto|s[ée]ptimo|septimo|octavo|noveno|d[ée]cimo|decimo|und[ée]cimo|duod[ée]cimo)\s+Pleno\s+Casatorio(?:\s+(Civil|Penal|Laboral|Mercantil|Comercial))?|Pleno\s+Casatorio\s+(?:(Civil|Penal|Laboral|Mercantil|Comercial)\s*)?(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,2}|[I|V|X]+)?)\b/gi;
   while ((match = plenoRegex.exec(text)) !== null) {
-    const plenoNum = match[1].toUpperCase();
-    citations.push({
-      raw: match[0],
-      type: 'pleno',
-      normalized: `${plenoNum} Pleno Casatorio Civil`,
-      status: 'VERIFIED',
-      officialSource: 'Corte Suprema de Justicia de la República',
-      detail: `Precedente Vinculante de la Corte Suprema de Justicia del Perú`,
-    });
+    const rawMatch = match[0];
+    const numPart = (match[1] || match[3] || '').toUpperCase();
+    const specialty = (match[2] || '').trim().toLowerCase();
+
+    if (specialty === 'mercantil' || specialty === 'comercial' || rawMatch.toLowerCase().includes('mercantil') || rawMatch.toLowerCase().includes('comercial')) {
+      citations.push({
+        raw: rawMatch,
+        type: 'pleno',
+        normalized: rawMatch,
+        status: 'UNVERIFIED_CLAIM',
+        detail: 'Inexistente en el ordenamiento peruano. No existen Plenos Casatorios Mercantiles o Comerciales; los conflictos patrimoniales y mercantiles se rigen por los Plenos Casatorios Civiles (I al X).',
+      });
+      warnings.push(`❌ Precedente inexistente: ${rawMatch}. En el Perú no existen Plenos Casatorios Mercantiles.`);
+      processedText = processedText.replace(
+        rawMatch,
+        '[criterio jurisprudencial pendiente de verificación documental: en el Perú no existen Plenos Casatorios Mercantiles/Comerciales]'
+      );
+    } else if (VALID_CIVIL_PLENOS.has(numPart)) {
+      citations.push({
+        raw: rawMatch,
+        type: 'pleno',
+        normalized: `${numPart} Pleno Casatorio Civil`,
+        status: 'VERIFIED',
+        officialSource: 'Corte Suprema de Justicia de la República',
+        detail: 'Precedente Vinculante de la Corte Suprema de Justicia del Perú (I al X Pleno Casatorio Civil)',
+      });
+    } else {
+      // Pleno inexistente (XI, XII, o número fuera del rango oficial I-X)
+      citations.push({
+        raw: rawMatch,
+        type: 'pleno',
+        normalized: rawMatch,
+        status: 'UNVERIFIED_CLAIM',
+        detail: 'Precedente inexistente. La Corte Suprema de Justicia del Perú únicamente ha emitido diez (X) Plenos Casatorios Civiles vinculantes.',
+      });
+      warnings.push(`⚠️ Precedente no verificado: ${rawMatch}. La Corte Suprema solo ha emitido X Plenos Casatorios Civiles.`);
+      processedText = processedText.replace(
+        rawMatch,
+        '[criterio jurisprudencial pendiente de verificación documental: la Corte Suprema solo cuenta con X Plenos Casatorios Civiles]'
+      );
+    }
+  }
+
+  // 5.1. Detectar Plenos Jurisdiccionales (Distritales, Regionales, Nacionales)
+  const plenoJurisdiccionalRegex = /\b(?:Pleno\s+Jurisdiccional\s+(?:Nacional|Distrital|Regional|Laboral|Civil|Penal|Comercial|de\s+Familia)?(?:\s+(?:de|del)?\s*([0-9]{4}))?)\b/gi;
+  while ((match = plenoJurisdiccionalRegex.exec(text)) !== null) {
+    const rawMatch = match[0];
+    const yearPart = match[1] || '';
+    const lookupKey = `PJ-${yearPart}`;
+    const knownDoc = LegalSourceRegistry.getByShortKey(lookupKey);
+
+    if (knownDoc) {
+      citations.push({
+        raw: rawMatch,
+        type: 'pleno',
+        normalized: rawMatch,
+        status: 'VERIFIED',
+        officialSource: 'Poder Judicial del Perú',
+        detail: knownDoc.subject,
+      });
+    } else {
+      citations.push({
+        raw: rawMatch,
+        type: 'pleno',
+        normalized: rawMatch,
+        status: 'UNVERIFIED_CLAIM',
+        detail: 'Pleno Jurisdiccional no contrastado en el registro oficial del Poder Judicial.',
+      });
+      warnings.push(`⚠️ Pleno Jurisdiccional ${rawMatch} no verificado oficialmente.`);
+      processedText = processedText.replace(
+        rawMatch,
+        '[criterio jurisprudencial pendiente de verificación documental]'
+      );
+    }
+  }
+
+  // 5.2. Detectar Resoluciones Administrativas, Directivas y del Tribunal Fiscal (RTF, OEFA, Directivas OECE/OSCE)
+  const adminRegex = /\b(?:RTF\s*(?:N[°º.]?|Nro\.?)?\s*([0-9]{1,6}(?:[-–][0-9]{1,2})?[-–][0-9]{4})|Resoluci[óo]n\s+(?:del\s+Tribunal\s+Fiscal|de\s+OEFA|del\s+TFA|de\s+INDECOPI)\s*N[°º.]?\s*([0-9A-Za-z\/\-]+)|Directiva\s*(?:OECE|OSCE)\s*N[°º.]?\s*([0-9]{1,4}[-–/][0-9]{4}(?:[-–][A-Za-z0-9]+)?))\b/gi;
+  while ((match = adminRegex.exec(text)) !== null) {
+    const rawMatch = match[0];
+    const key = match[1] || match[2] || match[3] || '';
+    const knownDoc = LegalSourceRegistry.getByShortKey(key);
+
+    if (knownDoc) {
+      citations.push({
+        raw: rawMatch,
+        type: 'resolucion_administrativa',
+        normalized: knownDoc.officialNumber,
+        status: 'VERIFIED',
+        officialSource: knownDoc.issuingEntity,
+        detail: knownDoc.subject,
+      });
+    } else {
+      citations.push({
+        raw: rawMatch,
+        type: 'resolucion_administrativa',
+        normalized: rawMatch,
+        status: 'UNVERIFIED_CLAIM',
+        detail: 'Resolución o directiva administrativa no contrastada en el registro oficial.',
+      });
+      warnings.push(`⚠️ Acto administrativo ${rawMatch} no contrastado documentalmente.`);
+      processedText = processedText.replace(
+        rawMatch,
+        '[criterio jurisprudencial pendiente de verificación documental]'
+      );
+    }
   }
 
   // 6. Si hay citas de casación catalogadas como UNVERIFIED_CLAIM, anexar la nota de advertencia al final si no existe

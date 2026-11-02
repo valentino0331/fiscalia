@@ -549,9 +549,9 @@ export class LegalSourceRegistry {
         };
       }
       return {
-        governingNorm: 'Ley N° 32069 (Ley General de Contrataciones Públicas / OECE) y D.S. N° 001-2026-EF',
+        governingNorm: 'Ley N° 32069 (Ley General de Contrataciones Públicas / OECE) y D.S. N° 009-2025-EF',
         isCurrentActive: true,
-        note: 'Norma plenamente vigente al 2026 tras la extinción definitiva del OSCE.',
+        note: 'Norma plenamente vigente al 2026 tras la extinción definitiva del OSCE y publicación del Reglamento D.S. 009-2025-EF.',
       };
     }
 

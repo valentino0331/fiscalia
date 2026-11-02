@@ -98,3 +98,114 @@ El ejecutado puede contradecir en el mismo plazo fundándose únicamente en:
 1. Inexigibilidad o iliquidez de la obligación.
 2. Nulidad formal o falsedad del título ejecutivo.
 3. Extinción de la obligación exigida.
+
+
+═══════════════════════════════════════════════════════════════
+SECCIÓN PRIMERA — JURISDICCIÓN, ACCIÓN Y COMPETENCIA
+TÍTULO II — DEBERES Y FACULTADES DE LOS JUECES
+═══════════════════════════════════════════════════════════════
+
+Artículo 50.- Deberes de los Jueces en el Proceso
+Son deberes de los Jueces en el proceso:
+1. Dirigir el proceso, velar por su rápida solución, adoptar las medidas convenientes para impedir su paralización y procurar la economía procesal.
+2. Hacer efectiva la igualdad de las partes en el proceso, empleando las facultades que este Código les otorga.
+3. Dictar las resoluciones judiciales dentro de los plazos fijados por la ley, bajo responsabilidad.
+4. Motivar de forma expresa, clara y completa las resoluciones judiciales que contengan decisiones de mérito o interlocutorias, con mención sucesiva de los fundamentos de hecho y de derecho que las sustentan (Principio de Motivación Escrita — Art. 139 inc. 5 de la Constitución).
+5. Ejercer el control difuso de constitucionalidad cuando adviertan incompatibilidad entre una norma legal o reglamentaria y la Constitución Política del Perú (Art. 138 de la Constitución y Art. 14 de la LOPJ).
+
+═══════════════════════════════════════════════════════════════
+SECCIÓN TERCERA — ACTIVIDAD PROCESAL
+TÍTULO VI — NULIDAD DE LOS ACTOS PROCESALES
+═══════════════════════════════════════════════════════════════
+
+Artículo 171.- Principio de Legalidad y Trascendencia de la Nulidad
+La nulidad se sanciona sólo por causa establecida en la ley. Sin embargo, puede declararse cuando el acto procesal careciera de los requisitos indispensables para la obtención de su finalidad.
+No hay nulidad sin agravio o perjuicio acreditado (Principio de Trascendencia: Pas de nullité sans grief). Quien solicita la nulidad debe precisar el agravio que le produce el acto cuestionado y señalar el interés propio que procura proteger.
+
+Artículo 172.- Principios de Convalidación, Subsanación e Integración
+El acto procesal viciado queda convalidado si el litigante perjudicado no formula su nulidad en la primera oportunidad procesal que tuviera para hacerlo.
+Hay también convalidación tácita cuando el facultado para plantear la nulidad ejecuta un acto procesal posterior que demuestra de manera indubitable haber tomado conocimiento del vicio sin formular reclamo.
+No procede declarar la nulidad de un acto procesal si éste ha cumplido plenamente su finalidad y no ha lesionado el derecho de defensa de las partes.
+
+Artículo 173.- Efectos de la Declaración de Nulidad
+La declaración de nulidad de un acto procesal no alcanza a los anteriores ni a los sucesivos que sean independientes de aquél. La invalidación de una parte de un acto procesal no afecta a las otras partes que resulten independientes ni impide la producción de efectos propios de las partes válidas.
+
+Artículo 176.- Oportunidad y Trámite para Solicitar la Nulidad
+El pedido de nulidad se formula en la primera oportunidad que el perjudicado tuviera para hacerlo, antes de la expedición de la sentencia que ponga fin a la instancia.
+Las nulidades por vicios incurridos en segunda instancia o en la sentencia de vista serán formuladas en el recurso de casación, debiendo sustentarse en la infracción normativa del debido proceso y tutela jurisdiccional efectiva.
+
+═══════════════════════════════════════════════════════════════
+SECCIÓN CUARTA — POSTULACIÓN DEL PROCESO
+TÍTULO III — EXCEPCIONES Y DEFENSAS PREVIAS
+═══════════════════════════════════════════════════════════════
+
+Artículo 446.- Excepciones Procesales Nominadas
+El demandado sólo puede proponer las siguientes excepciones procesales:
+1. Incompetencia del órgano jurisdiccional.
+2. Incapacidad procesal del demandante o de su representante.
+3. Representación defectuosa o insuficiente del demandante o del demandado.
+4. Oscuridad o ambigüedad en el modo de proponer la demanda.
+5. Falta de agotamiento de la vía administrativa.
+6. Falta de legitimidad para obrar del demandante o del demandado.
+7. Litispendencia (identidad de partes, petitorio y título en proceso en trámite).
+8. Cosa Juzgada (existencia de sentencia firme sobre la misma controversia jurídica).
+9. Desistimiento de la pretensión.
+10. Conclusión del proceso por conciliación o transacción judicial previa.
+11. Caducidad del derecho alegado.
+12. Prescripción extintiva de la acción.
+13. Convenio arbitral (renuncia expresa a la jurisdicción ordinaria bajo el D.Leg. 1071).
+
+Artículo 447.- Plazo y Vía Procedimental para Interponer Excepciones
+Las excepciones se proponen conjunta y simultáneamente en un solo escrito dentro de los plazos perentorios de cada vía procedimental:
+- Proceso de Conocimiento: Diez (10) días hábiles contados desde la notificación de la demanda.
+- Proceso Abreviado: Cinco (5) días hábiles contados desde la notificación de la demanda.
+- Proceso Sumarísimo: Se interponen conjuntamente al contestar la demanda (cinco días hábiles) y se resuelven en la Audiencia Única.
+
+Artículo 451.- Efectos del Auto que Ampara las Excepciones
+Una vez consentido o ejecutoriado el auto que declara fundada una excepción procesal:
+1. Si ampara excepciones subsanables (incapacidad, representación defectuosa, oscuridad de demanda), el juez suspende el proceso y concede plazo legal de diez días (o cinco días) para la subsanación correspondiente bajo apercibimiento de declarar la nulidad de lo actuado y el archivo definitivo.
+2. Si ampara excepciones insubsanables (incompetencia, falta de agotamiento de vía administrativa, litispendencia, cosa juzgada, caducidad, prescripción extintiva o convenio arbitral), el juez anula todo lo actuado y da por concluido definitivamente el proceso, disponiendo el archivo del expediente judicial.
+
+═══════════════════════════════════════════════════════════════
+SECCIÓN QUINTA — MEDIOS IMPUGNATORIOS
+TÍTULO II — APELACIÓN
+═══════════════════════════════════════════════════════════════
+
+Artículo 364.- Objeto del Recurso de Apelación
+El recurso de apelación tiene por objeto que el órgano jurisdiccional superior jerárquico examine, a solicitud de parte legitimada o de tercero legitimado, la resolución judicial que le produzca agravio, con el propósito de que sea anulada o revocada, total o parcialmente.
+
+Artículo 365.- Resoluciones Apelables
+Procede el recurso de apelación contra:
+1. Las sentencias dictadas en primera instancia, con excepción de las dictadas en procesos sumarísimos de cuantía menor excluidos expresamente por ley.
+2. Los autos dictados en primera instancia, excepto los de mero trámite y los que la ley señale expresamente como inimpugnables.
+
+Artículo 367.- Requisitos de Admisibilidad y Procedencia de la Apelación
+La apelación se interpone ante el mismo juez que dictó la resolución impugnada, dentro del plazo legal fijado para cada vía:
+- Sentencia de conocimiento: Diez (10) días hábiles.
+- Sentencia abreviada: Cinco (5) días hábiles.
+- Sentencia sumarísima o auto con efecto suspensivo: Tres (3) días hábiles.
+Debe adjuntarse el arancel judicial respectivo y precisarse el error de hecho o de derecho incurrido en la resolución, el agravio producido y la pretensión impugnatoria (anulatoria o revocatoria).
+
+Artículo 368.- Efectos de la Concesión de la Apelación
+El recurso de apelación se concede:
+1. Con efecto suspensivo: La eficacia de la resolución impugnada queda suspendida hasta la notificación de la resolución superior que pone fin al grado. Procede imperativamente en sentencias estimatorias definitivas de derechos constitutivos o de condena dineraria patrimonial.
+2. Sin efecto suspensivo: La eficacia de la resolución recurrida se mantiene, ejecutándose provisionalmente las medidas correspondientes.
+
+═══════════════════════════════════════════════════════════════
+TÍTULO III — RECURSO DE CASACIÓN (TEXTO REFORMADO POR LEY 31591)
+═══════════════════════════════════════════════════════════════
+
+Artículo 386.- Fines y Causales Taxativas del Recurso de Casación
+El recurso de casación es un medio impugnatorio extraordinario cuyo objeto es la adecuada aplicación del derecho objetivo al caso concreto y la uniformidad de la jurisprudencia nacional por la Corte Suprema de Justicia de la República.
+Son causales exclusivas y taxativas para interponer casación:
+1. Si la sentencia o auto impugnado ha sido expedido con inobservancia de alguna de las garantías constitucionales de carácter procesal o material, o con una indebida o errónea aplicación de dichas garantías.
+2. Si la sentencia o auto incurre o deriva de una inobservancia de las normas legales de carácter procesal sancionadas con la nulidad.
+3. Si la sentencia o auto importa una indebida aplicación, una errónea interpretación o una falta de aplicación de la ley o de otras normas jurídicas necesarias para su aplicación.
+4. Si la sentencia o auto ha sido dictado con falta de motivación o manifiesta ilogicidad en la motivación, cuando el vicio resulte de su propio tenor.
+5. Si la sentencia o auto se aparta de las decisiones judiciales vinculantes emitidas por la Corte Suprema de Justicia de la República (Plenos Casatorios Civiles o doctrina jurisprudencial vinculante del Art. 400 CPC) o de precedentes del Tribunal Constitucional.
+
+Artículo 387.- Procedencia Objetiva de la Casación Civil (Ley 31591)
+El recurso de casación procede contra las sentencias y autos expedidos por las salas superiores que, como órganos de segundo grado, ponen fin al proceso:
+1. En los procesos cuya cuantía sea superior a quinientas (500) Unidades de Referencia Procesal (URP) o cuando la pretensión sea inestimable en dinero.
+2. No procede casación cuando la resolución de segunda instancia confirma de manera íntegra y unánime la resolución de primera instancia (doble y uniforme pronunciamiento o doble conforme), salvo que se invoque apartamiento inmotivado de precedente vinculante de la Corte Suprema.
+3. El plazo perentorio para interponer recurso de casación es de diez (10) días hábiles contados a partir del día siguiente de la notificación de la resolución recurrida ante la Sala Superior correspondiente.
