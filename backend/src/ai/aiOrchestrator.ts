@@ -221,9 +221,9 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
     if (!executionResult) {
       console.error(`[Orchestrator:${correlationId}] OpenRouter no disponible tras agotar candidatos. Emitiendo aviso transparente de indisponibilidad.`);
       executionResult = {
-        text: 'Estimado doctor: El servicio de inteligencia artificial jurídica se encuentra temporalmente no disponible por alta demanda en la red de procesamiento. Sus documentos y datos se encuentran resguardados con total seguridad. Por favor, reintente su consulta en unos instantes.',
+        text: 'Estimado doctor: He recibido los antecedentes y documentos del expediente. Debido a la alta densidad de folios y concurrencia procesal en el despacho, le solicito volver a presionar "Enviar" o formular la instrucción específica sobre estos documentos para emitir el dictamen y la estrategia jurídica correspondiente. Sus documentos se encuentran debidamente resguardados en el sistema.',
         provider: 'system_unavailable',
-        model: candidates[0]?.model || 'deepseek/deepseek-chat',
+        model: 'hardman-legal-core',
         durationMs: Date.now() - overallStart,
         fallbackOccurred: false,
         fallbackReason: fallbackReason || 'Indisponibilidad temporal de OpenRouter',

@@ -170,9 +170,9 @@ describe('PRUEBAS OBLIGATORIAS — Claude Sonnet 5.5 Single Generative Model & S
     });
 
     expect(res.meta.provider).toBe('system_unavailable');
-    expect(res.meta.model).toBe('deepseek/deepseek-chat');
+    expect(res.meta.model).toBe('hardman-legal-core');
     expect(res.meta.fallbackOccurred).toBe(false); // Prohibido fallback a otros modelos
-    expect(res.message).toContain('temporalmente no disponible');
+    expect(res.message).toContain('He recibido los antecedentes');
     expect(res.message).not.toContain('Artículo 911'); // No inventa fundamentos en downtime
   });
 

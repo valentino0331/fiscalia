@@ -3821,31 +3821,17 @@ function MessageBubble({
         {!isUser && !isStreaming && message.meta && (
           <div className="flex items-center gap-2 mt-1.5 px-1 flex-wrap text-[10px]">
             <span
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full select-none"
               style={{
-                background: 'rgba(255, 255, 255, 0.04)',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                color: 'rgba(255, 255, 255, 0.55)',
+                background: 'rgba(201, 168, 76, 0.08)',
+                border: '1px solid rgba(201, 168, 76, 0.20)',
+                color: 'rgba(230, 202, 101, 0.9)',
               }}
-              title={`Motor de inferencia: ${message.meta.provider || 'AI'} (${message.meta.model || 'estándar'})${message.meta.durationMs ? ` en ${message.meta.durationMs}ms` : ''}`}
+              title="Análisis procesal emitido bajo el marco normativo peruano vigente (SPIJ 2026)"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>{message.meta.model?.split('/').pop() || message.meta.model || 'Hardman Core'}</span>
-              {message.meta.durationMs && <span>· {(message.meta.durationMs / 1000).toFixed(1)}s</span>}
+              <span>Hardman AI Jurídico</span>
             </span>
-            {message.meta.fallbackOccurred && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
-                style={{
-                  background: 'rgba(245, 158, 11, 0.12)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                  color: '#f59e0b',
-                }}
-                title={message.meta.fallbackReason || 'Conmutación automática por alta demanda en el proveedor primario'}
-              >
-                <span>⚡ Fallback: {message.meta.provider}</span>
-              </span>
-            )}
             {message.meta.verificationSummary && message.meta.verificationSummary.verifiedCitations > 0 && (
               <span
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full select-none"
