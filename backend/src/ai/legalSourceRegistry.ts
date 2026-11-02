@@ -204,7 +204,8 @@ export const STATUTORY_CODE_BOUNDARIES: StatutoryCodeBoundary[] = [
 
 export function validateStatutoryArticle(
   articleNum: number,
-  codeMention: string
+  codeMention: string,
+  articleSuffix?: string
 ): { isValid: boolean; codeBoundary?: StatutoryCodeBoundary; reason?: string } {
   const normMention = normalizeLegalText(codeMention).replace(/\s+/g, ' ').trim();
   const rawClean = normMention.replace(/[^a-z0-9]/g, '');
@@ -238,6 +239,34 @@ export function validateStatutoryArticle(
       codeBoundary: matchedBoundary,
       reason: `El ${matchedBoundary.name} (${matchedBoundary.officialEnactment}) cuenta únicamente con ${matchedBoundary.maxArticle} artículos. El artículo ${articleNum} es jurídicamente inexistente en el ordenamiento nacional.`,
     };
+  }
+
+  if (articleSuffix) {
+    const cleanSuffix = articleSuffix.toUpperCase().trim();
+    // Validar artículos con sufijos literales inexistentes en el NCPP / CPP
+    if (matchedBoundary.id === 'NCPP') {
+      const allowedNcppSuffixes = new Set(['476-A', '481-A']);
+      const combined = `${articleNum}-${cleanSuffix}`;
+      if (!allowedNcppSuffixes.has(combined)) {
+        return {
+          isValid: false,
+          codeBoundary: matchedBoundary,
+          reason: `El ${matchedBoundary.name} (${matchedBoundary.officialEnactment}) no contempla el Artículo ${articleNum}-${cleanSuffix}. Los Artículos 326 al 328 regulan la denuncia penal sin subdivisiones literales. Dicha disposición es jurídicamente inexistente en el ordenamiento procesal penal peruano.`,
+        };
+      }
+    }
+    // Validar en el Código Civil
+    if (matchedBoundary.id === 'CC') {
+      const allowedCcSuffixes = new Set(['345-A', '667-A', '921-A', '2014-A']);
+      const combined = `${articleNum}-${cleanSuffix}`;
+      if (!allowedCcSuffixes.has(combined) && articleNum < 1000) {
+        return {
+          isValid: false,
+          codeBoundary: matchedBoundary,
+          reason: `El Código Civil (D. Leg. 295) no contempla el Artículo ${articleNum}-${cleanSuffix}. Dicha disposición es jurídicamente inexistente en el ordenamiento civil peruano.`,
+        };
+      }
+    }
   }
 
   return { isValid: true, codeBoundary: matchedBoundary };
@@ -458,6 +487,36 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     bindingCharacter: 'precedente_vinculante',
     validityStatus: 'in_force',
     validityPeriod: { start: '2005-11-18' },
+    verificationLevel: 'VERIFIED',
+    lastVerifiedAt: '2026-11-01',
+  },
+
+  '02-2008': {
+    id: 'CS-CAS-PEN-02-2008',
+    docType: 'casacion',
+    officialNumber: 'Casación Vinculante N° 02-2008/La Libertad',
+    shortKey: '02-2008',
+    issuingEntity: 'Corte Suprema de Justicia de la República',
+    issuingChamber: 'Sala Penal Permanente de la Corte Suprema',
+    emissionDate: '2008-06-03',
+    publicationDate: '2008-08-25',
+    judicialDistrict: 'La Libertad',
+    officialUrl: 'https://jurisprudencia.pj.gob.pe/jurisprudenciaweb/faces/busqueda/consultaJurisprudencia.xhtml',
+    sha256Hash: computeLegalDigest('Casacion Vinculante 02-2008 La Libertad Control de plazos de diligencias preliminares y tutela de derechos Articulo 334 inciso 2 NCPP'),
+    specialistIds: ['sebastian', 'pnp'],
+    subject: 'Control de plazos en diligencias preliminares y tutela de derechos (el plazo preliminar fijado por el fiscal no puede superar el plazo de la investigación preparatoria simple o compleja)',
+    keywords: ['diligencias preliminares', 'control de plazos', 'plazo', 'la libertad', 'tutela de derechos', 'investigación preparatoria', '120 días', 'art 334', 'art 334.2', 'vencimiento de plazo', 'casacion 02-2008'],
+    relevantFJ: [
+      {
+        fjNumber: 'Fundamentos Jurídicos 4 al 8',
+        topic: 'Límite temporal y control judicial de plazos preliminares',
+        textExcerpt: 'Las diligencias preliminares forman parte de la investigación preparatoria. Su plazo inicial fijado por el Fiscal no puede exceder el plazo máximo fijado para la investigación preparatoria (120 días hábiles en procesos simples prorrogables según la complejidad), facultando a la defensa a instar la audiencia de control de plazos ante el Juez de la Investigación Preparatoria si el Fiscal no se pronuncia.',
+        isBindingRule: true,
+      },
+    ],
+    bindingCharacter: 'precedente_vinculante',
+    validityStatus: 'in_force',
+    validityPeriod: { start: '2008-08-25' },
     verificationLevel: 'VERIFIED',
     lastVerifiedAt: '2026-11-01',
   },

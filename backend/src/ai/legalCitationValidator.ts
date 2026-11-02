@@ -441,6 +441,11 @@ export const MISATTRIBUTIONS_CATALOG: {
   correctAttribution: string;
 }[] = [
   {
+    pattern: /(?:(?:art[íi]culo|art\.)\s*326(?:[-–][A-Za-z0-9]+)?[\s\S]{0,100}(?:prisi[óo]n\s+preventiva|divorcio|desalojo|alimentos)|(?:prisi[óo]n\s+preventiva|divorcio|desalojo|alimentos)[\s\S]{0,100}(?:art[íi]culo|art\.)\s*326(?:[-–][A-Za-z0-9]+)?)/i,
+    errorDescription: 'El Artículo 326° del NCPP regula exclusivamente la facultad y deber de denunciar penalmente hechos de persecución pública, NO materias civiles ni medidas cautelares.',
+    correctAttribution: 'La denuncia penal por delitos de acción pública se rige por los Arts. 326° al 328° del NCPP. La querella por delitos contra el honor se tramita ante el Juez Penal Unipersonal bajo el Art. 459° del NCPP.',
+  },
+  {
     pattern: /(?:(?:art[íi]culo|art\.)\s*62[°º]?[\s\S]{0,100}(?:(?:derecho\s+(?:a\s+(?:la\s+)?)?)?defensa(?:\s+t[ée]cnica)?|asistencia\s+letrada)|(?:(?:derecho\s+(?:a\s+(?:la\s+)?)?)?defensa(?:\s+t[ée]cnica)?|asistencia\s+letrada)[\s\S]{0,100}(?:art[íi]culo|art\.)\s*62[°º]?)/i,
     errorDescription: 'El Artículo 62° del NCPP regula la Exclusión del Fiscal en el proceso penal, NO el derecho de defensa técnica.',
     correctAttribution: 'El Derecho a la Defensa Técnica cautiva se consagra en los Artículos IX del Título Preliminar, 71.2 literal c y 80° al 85° del NCPP.',
@@ -687,29 +692,31 @@ export function validateLegalCitations(text: string): ValidationReport {
   let artMatch: RegExpExecArray | null;
   while ((artMatch = articleBoundaryRegex.exec(text)) !== null) {
     const artNum = parseInt(artMatch[1], 10);
+    const suffix = artMatch[2];
     const codeMention = artMatch[3];
-    const validation = validateStatutoryArticle(artNum, codeMention);
+    const validation = validateStatutoryArticle(artNum, codeMention, suffix);
 
     if (!validation.isValid && validation.codeBoundary) {
+      const artName = `Artículo ${artNum}${suffix ? '-' + suffix.toUpperCase() : ''} del ${validation.codeBoundary.name}`;
       citations.push({
         raw: artMatch[0],
         type: 'articulo',
-        normalized: `Artículo ${artNum} del ${validation.codeBoundary.name}`,
+        normalized: artName,
         status: 'CONTRADICTED',
         officialSource: validation.codeBoundary.officialEnactment,
         detail: validation.reason,
       });
       warnings.push(`❌ ARTÍCULO INEXISTENTE: ${artMatch[0]}. ${validation.reason}`);
-      processedText = processedText.replace(
-        artMatch[0],
-        `[artículo inexistente: ${artMatch[0]} — el ordenamiento peruano solo cuenta con ${validation.codeBoundary.maxArticle} artículos en esta norma]`
-      );
+      const replacementNote = suffix
+        ? `[artículo inexistente: ${artMatch[0]} — ${validation.reason}]`
+        : `[artículo inexistente: ${artMatch[0]} — el ordenamiento peruano solo cuenta con ${validation.codeBoundary.maxArticle} artículos en esta norma]`;
+      processedText = processedText.replace(artMatch[0], replacementNote);
       processedText += `\n\n> 🔍 **RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE):** ${validation.reason}\n\n`;
     }
   }
 
   // 3. Detectar Casaciones Judiciales y cotejar contra registro verificado
-  const casacionRegex = /\b(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?\b/gi;
+  const casacionRegex = /\b(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:Vinculante\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?\b/gi;
   let match: RegExpExecArray | null;
 
   while ((match = casacionRegex.exec(text)) !== null) {

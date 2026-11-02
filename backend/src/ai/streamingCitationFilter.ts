@@ -76,7 +76,7 @@ export class StreamingCitationFilter {
 
       // 3. El búfer ahora inicia con el trigger. Intentar resolver la cita completa.
       // Patrón de casación: ej. "Casación N° 4618-2007/Lima", "Casación Laboral N° 12475-2014", "Cas. 99999-2025"
-      const casRegex = /^(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?([,\.;\s\n]|$)/i;
+      const casRegex = /^(?:Casaci[óo]n|Cas\.)\s*(?:(Laboral|Penal|Civil|Constitucional|Social|Comercial)\s+)?(?:Vinculante\s+)?(?:N[°º.]?|Nro\.?|Número)?\s*([0-9]{1,5})[-–/]([0-9]{4})(?:\s*[\/\-]\s*([A-Za-zÁÉÍÓÚáéíóúñÑ]+))?([,\.;\s\n]|$)/i;
       const casMatch = this.buffer.match(casRegex);
 
       if (casMatch) {
@@ -252,14 +252,18 @@ export class StreamingCitationFilter {
       const artMatch = this.buffer.match(artRegex);
       if (artMatch) {
         const artNum = parseInt(artMatch[1], 10);
+        const suffix = artMatch[2];
         const codeMention = artMatch[3];
         const trailing = artMatch[4] || '';
         const rawText = artMatch[0].slice(0, artMatch[0].length - trailing.length);
-        const validation = validateStatutoryArticle(artNum, codeMention);
+        const validation = validateStatutoryArticle(artNum, codeMention, suffix);
 
         if (!validation.isValid && validation.codeBoundary) {
           this.unverifiedCitations.push(rawText);
-          this.emit(`[artículo inexistente: ${validation.codeBoundary.name} solo cuenta con ${validation.codeBoundary.maxArticle} artículos]${trailing}`);
+          const replacementText = suffix
+            ? `[artículo inexistente: ${validation.reason || rawText}]${trailing}`
+            : `[artículo inexistente: ${validation.codeBoundary.name} solo cuenta con ${validation.codeBoundary.maxArticle} artículos]${trailing}`;
+          this.emit(replacementText);
         } else {
           this.emit(artMatch[0]);
         }

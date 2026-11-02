@@ -874,6 +874,24 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       '⚠️ ADVERTENCIA ANTI-ERROR: El Art. 62° del NCPP trata sobre la EXCLUSIÓN DEL FISCAL (reemplazo por el Fiscal Superior). JAMÁS citar el Art. 62° como derecho de defensa ni como asistencia técnica de abogado.',
   },
   {
+    lawCode: 'Decreto Legislativo N° 957 (NCPP) — Arts. 326°, 327° y 328°',
+    specialistId: 'sebastian',
+    date: 'Vigente 2026',
+    affectedCode: 'Nuevo Código Procesal Penal — La Denuncia Penal y Trámite Fiscal',
+    articles: ['Art. 326 NCPP', 'Art. 327 NCPP', 'Art. 328 NCPP', 'Art. 459 NCPP'],
+    keywords: [
+      'denuncia penal', 'denuncia', 'art 326', 'art 327', 'art 328', 'tramite de denuncia',
+      'facultad de denunciar', 'obligacion de denunciar', 'contenido de la denuncia',
+      'archivo de plano', 'querella', 'accion privada', 'art 459 ncpp'
+    ],
+    summary: 'Régimen de la Denuncia Penal y distinción frente a la Querella Privada:',
+    practicalImpact:
+      '1. Art. 326° NCPP (Facultad y Deber de Denunciar): Toda persona puede denunciar delitos de persecución pública. Es deber de educadores, médicos y funcionarios en ejercicio. Excepciones: cónyuge y parientes hasta 4to de consanguinidad o secreto profesional.\n' +
+      '2. Art. 327° NCPP (Contenido y Forma): Denuncia escrita o verbal con acta, identidad del denunciante, narración circunstanciada y detallada de hechos y presuntos autores.\n' +
+      '3. Art. 328° NCPP (Trámite Fiscal): La PNP remite de inmediato a Fiscalía. El Fiscal dispone diligencias preliminares o archivo de plano (si el hecho no constituye delito o no es justiciable). Contra el archivo cabe queja de derecho en 5 días.\n' +
+      '4. Distinción frente a la Querella (Art. 459° NCPP): La denuncia procede para delitos públicos con intervención del Fiscal; la querella es directa y exclusiva ante el Juez Penal Unipersonal para delitos privados contra el honor (injuria, calumnia, difamación Arts. 130-132 CP) sin intervención del Ministerio Público.',
+  },
+  {
     lawCode: 'Ley N° 32130',
     specialistId: 'sebastian',
     date: 'Octubre 2024 (Vigente 2026)',

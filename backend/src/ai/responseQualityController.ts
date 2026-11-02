@@ -34,8 +34,8 @@ export class ResponseQualityController {
       (queryLower.includes('contesto') || queryLower.includes('contestaci') || queryLower.includes('demanda'));
 
     if (requiresDualDrafting) {
-      const hasContestacion = textLower.includes('contesto') || textLower.includes('contestación') || textLower.includes('absoluci');
-      const hasReconvencion = textLower.includes('reconvención') || textLower.includes('reconvengo') || textLower.includes('pretensión reconvencional');
+      const hasContestacion = textLower.includes('contest') || textLower.includes('absolv');
+      const hasReconvencion = textLower.includes('reconvenc') || textLower.includes('reconveng') || textLower.includes('pretensión reconvencional');
 
       if (hasContestacion && !hasReconvencion) {
         warnings.push('⚠️ DEFICIENCIA ESTRUCTURAL DETECTADA: Se solicitó Contestación Y Reconvención, pero el documento omitió la formulación de la Reconvención.');
