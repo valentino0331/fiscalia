@@ -19,6 +19,9 @@ import { recordQuestionUsage } from '../middleware/subscription';
 import { getRagContext } from '../lib/ragEngine';
 import { getSpijLegalGrounding } from '../lib/spijLegalEngine';
 import { SYSTEM_PROMPTS } from '../prompts/agents';
+import { PromptLoader } from '../prompts/promptLoader';
+import { buildTemporalAnchorBlock, getLimaDateFormatted } from '../lib/parametricValues';
+import { AiTelemetry } from './aiTelemetry';
 import { CaseMemoryManager } from './caseMemoryManager';
 import { detectTaskType, getCandidatesForTask } from './modelRouter';
 import { ProviderAdapter, ProviderExecutionError } from './providerAdapter';
@@ -87,26 +90,12 @@ DIRECTIVA DE APLICACIÓN TEMPORAL DE LA LEY (TEMPUS REGIT ACTUM - LEGAL TRUTH EN
 Se advierte que la consulta hace referencia a hechos o actos ocurridos en el año ${factYear}.
 1. DERECHO SUSTANTIVO APLICABLE: Conforme al Artículo 103° de la Constitución Política del Perú, los derechos y obligaciones sustantivas se rigen por la norma vigente al momento de acaecer los hechos (${factYear}).
 2. PROHIBICIÓN DE RETROACTIVIDAD PERJUDICIAL: Está terminantemente prohibido aplicar retroactivamente normas posteriores que restrinjan derechos o impongan cargas inexistentes en ${factYear}, salvo el principio de retroactividad benigna en materia penal.
-3. DERECHO PROCESAL VIGENTE (2026): Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a OCTUBRE DE 2026.
+3. DERECHO PROCESAL VIGENTE: Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a ${getLimaDateFormatted()}.
 ════════════════════════════════════════════════════════════════\n\n`;
     }
 
-    const TEMPORAL_OCTOBER_2026_ANCHOR = `════════════════════════════════════════════════════════════════
-ANCLAJE TEMPORAL Y DOGMÁTICO OFICIAL — OCTUBRE DE 2026 (PERÚ)
-════════════════════════════════════════════════════════════════
-FECHA ACTUAL DE OPERACIÓN: OCTUBRE DE 2026.
-Todas tus respuestas, plazos, cálculos, vías procesales y redacciones de documentos se rigen rigurosamente por el ordenamiento legal peruano vigente a OCTUBRE DE 2026.
-Queda terminantemente prohibido usar normas derogadas o desactualizadas:
-1. TUO LPAG: D.S. N° 006-2026-JUS (derogó formalmente al D.S. 004-2019-JUS).
-2. Contrataciones del Estado: Ley N° 32069 y D.S. N° 009-2025-EF (extinción definitiva del OSCE y Ley 30225; rige OECE, TCP, PLADICOP y JPRD obligatoria).
-3. Indicadores económicos 2026: UIT = S/ 5,500; URP = S/ 550; RMV = S/ 1,230.00 y Asignación Familiar = S/ 123.00 (D.S. N° 015-2026-TR).
-4. Competencia laboral: Ley N° 32155 (Paz Letrado Laboral hasta 70 URP = S/ 38,500 y daños hasta 60 URP = S/ 33,000; Especializados > 70 URP).
-5. Familia: Ley N° 31590 (Tenencia Compartida como regla general preferente sin favoritismo maternal automático) y Ley N° 31464 / Art. 562° CPC (Alimentos sin tasas ni firma obligatoria).
-6. Sucesiones: Art. 667° CC (Causales de indignidad - Ley 31643) vs Art. 725° CC (Tercio de libre disposición).
-7. Ejecución de garantías: Art. 721° CPC (Mandato ejecutivo de 3 días bajo apercibimiento de remate, no Art. 720°).
-8. Garantías Mobiliarias: D.L. N° 1400 y SIGM (derogada la Ley 28677).
-9. Penal: D. Leg. 1585 (Prisión preventiva prognosis de pena > 5 años); Arts. IX T.P., 71.2.c y 80°-85° NCPP para defensa técnica (Art. 62° es exclusión del Fiscal); AP 06-2009/CJ-116 (control formal y sustancial acusación); AP Ext. 02-2012/CJ-116 (tutela e imputación suficiente).
-════════════════════════════════════════════════════════════════\n\n`;
+    const isV2 = PromptLoader.getPromptVersion() === 'v2';
+    const agentPrompt = PromptLoader.getAgentPrompt(agentId);
 
     const PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE = `════════════════════════════════════════════════════════════════
 POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACIONES
@@ -130,15 +119,15 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
-    const agentPrompt = SYSTEM_PROMPTS[agentId] || '';
-    const fullSystemPrompt = 
-      PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE +
-      temporalIrretroactivityDirective +
-      TEMPORAL_OCTOBER_2026_ANCHOR +
-      agentPrompt +
-      caseMemory.formattedBlock +
-      studioBlock +
-      (legalGrounding ? `\n\n${legalGrounding}` : '');
+    const fullSystemPrompt = isV2
+      ? (agentPrompt + (temporalIrretroactivityDirective ? `\n\n${temporalIrretroactivityDirective}` : '') + caseMemory.formattedBlock + studioBlock + (legalGrounding ? `\n\n${legalGrounding}` : ''))
+      : (PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE +
+         temporalIrretroactivityDirective +
+         buildTemporalAnchorBlock() +
+         agentPrompt +
+         caseMemory.formattedBlock +
+         studioBlock +
+         (legalGrounding ? `\n\n${legalGrounding}` : ''));
 
     const formattedMessages = [
       { role: 'system', content: fullSystemPrompt },
@@ -184,6 +173,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
           ? new StreamingCitationFilter(sendStreamChunk) 
           : null;
 
+        AiTelemetry.recordRequest(candidate.model);
         const result = await ProviderAdapter.executeCandidate(
           candidate,
           formattedMessages,
@@ -194,6 +184,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
         );
 
         CircuitBreaker.recordSuccess(candidate.provider, result.durationMs, candidate.model);
+        AiTelemetry.recordSuccess(candidate.model, result.durationMs);
 
         if (streamFilter) {
           streamHadDisclaimer = streamFilter.getUnverifiedCitations().length > 0;
@@ -208,6 +199,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       } catch (err: any) {
         const classified = CircuitBreaker.classifyError(err, candidate.model);
         CircuitBreaker.recordFailure(candidate.provider, classified, candidate.model);
+        AiTelemetry.recordFailure(candidate.model, classified.category, err.message, (err as any).statusCode);
         console.warn(`[Orchestrator:${correlationId}] Error en OpenRouter:${candidate.model} [${classified.category}]:`, err.message);
         if (req.abortSignal?.aborted) {
           console.log(`[Orchestrator:${correlationId}] Petición cancelada por el cliente. Deteniendo ejecución.`);

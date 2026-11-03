@@ -11,6 +11,7 @@
  */
 
 import { neon } from '@neondatabase/serverless';
+import { getLimaDate } from './parametricValues';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -495,7 +496,8 @@ export async function hybridSearchRRF(
   });
 
   // 3. Calcular RRF Score ponderado y filtrar por vigencia temporal
-  const isHistorical = typeof factsYear === 'number' && factsYear < 2026;
+  const currentYear = getLimaDate().getFullYear();
+  const isHistorical = typeof factsYear === 'number' && factsYear < currentYear;
   const scoredCandidates: { chunk: LegalChunk; score: number }[] = [];
 
   for (const entry of candidateMap.values()) {
@@ -647,10 +649,10 @@ export async function getRagContext(
     }
 
     contextBlock += `════════════════════════════════════════\n`;
-    contextBlock += `INSTRUCCIÓN RAG: Usa los artículos anteriores como fuente primaria verificada. `;
+    contextBlock += `INSTRUCCIÓN RAG DETERMINISTA: Usa los artículos anteriores como fuente primaria verificada [F#]. `;
     contextBlock += `Cita el número exacto de artículo y nombre del código. `;
     contextBlock += `Si la pregunta del usuario no está cubierta por los artículos anteriores, `;
-    contextBlock += `indica claramente la limitación antes de complementar con tu conocimiento general.\n`;
+    contextBlock += `aplica la regla de abstención honesta: señala «Referencia por verificar: <nombre>; no está en las fuentes consultadas» y razona con principios generales sin inventar artículos ni casaciones.\n`;
     contextBlock += `════════════════════════════════════════\n`;
 
     return contextBlock;

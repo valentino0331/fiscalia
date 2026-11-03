@@ -18,18 +18,18 @@ describe('Streaming Citation Filter — Validación en Tiempo Real (SSE)', () =>
     expect(filter.getUnverifiedCitations().length).toBe(0);
   });
 
-  it('permite el paso de una Casación Verificada (Casación 4618-2007) sin alteración', () => {
+  it('permite el paso de una Casación Verificada (Casación 4664-2010) sin alteración', () => {
     let output = '';
     const filter = new StreamingCitationFilter((chunk) => {
       output += chunk;
     });
 
     filter.processChunk('Conforme a la ');
-    filter.processChunk('Casación N° 4618-2007/Lima, ');
+    filter.processChunk('Casación N° 4664-2010/Puno, ');
     filter.processChunk('procede la indemnización al cónyuge más perjudicado.');
     filter.flush();
 
-    expect(output).toContain('Casación N° 4618-2007/Lima');
+    expect(output).toContain('Casación N° 4664-2010/Puno');
     expect(output).toContain('procede la indemnización');
     expect(filter.getUnverifiedCitations().length).toBe(0);
   });

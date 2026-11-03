@@ -614,6 +614,25 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
     legalApplication: 'Obligatorio en demandas de Prescripción Adquisitiva de Dominio, reconvenciones y oposiciones de usucapión frente a demandas de desalojo o reivindicación.'
   },
   {
+    code: 'VI Pleno Casatorio Civil (Casación N° 2402-2012 Lambayeque)',
+    specialistId: 'diego',
+    court: 'Salas Civiles de la Corte Suprema de Justicia',
+    title: 'Ejecución de garantías reales e hipotecarias, saldo deudor y estado de cuenta (Art. 720 y 721 CPC)',
+    category: 'Derecho Procesal Civil / Ejecución de Garantías',
+    keywords: [
+      'ejecucion de garantias', 'ejecucion hipotecaria', 'garantias reales', 'saldo deudor', 'estado de cuenta',
+      'sexto pleno casatorio', 'vi pleno casatorio', '2402-2012', 'lambayeque', 'art 720 cpc', 'art 721 cpc'
+    ],
+    keyPrinciples: [
+      'Para la procedencia de la demanda de ejecución de garantías (Art. 720 CPC), es exigencia ineludible adjuntar el documento constitutivo de la garantía real y el estado de cuenta del saldo deudor suscrito por persona autorizada.',
+      'El estado de cuenta de saldo deudor debe detallar cronológicamente los abonos de capital, intereses devengados, comisiones y gastos para permitir el ejercicio de contradicción efectiva del ejecutado.',
+      'El mandato de ejecución se expide bajo el Art. 721 CPC otorgando un plazo perentorio de 3 días para pagar bajo apercibimiento de remate judicial.'
+    ],
+    bindingGrounds: 'Doctrina Jurisprudencial Vinculante - Reglas 1 a 7 sobre requisitos de procedencia del saldo deudor y control de abusividad en ejecución de hipotecas.',
+    legalApplication: 'Indispensable en toda demanda o contradicción de Ejecución de Garantías Hipotecarias y Mobiliarias.'
+  },
+
+  {
     code: 'I Pleno Casatorio Civil (Casación N° 1465-2007 Cajamarca)',
     specialistId: 'diego',
     court: 'Salas Civiles de la Corte Suprema de Justicia',
@@ -1503,7 +1522,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('  * ⛔ PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO": Nunca inventes ni asumas que la omisión es del abogado cuando la resolución judicial observa a la parte.');
     sections.push('- DISTINCIÓN DOGMÁTICA INVIOLABLE (Art. 131° CPC vs Art. 132° CPC / Art. 290° LOPJ):');
     sections.push('  1. ARTÍCULO 131° DEL CÓDIGO PROCESAL CIVIL (Firma de la Parte o Recurrente):');
-    sections.push('     - Rige la firma de la persona interesada, demandante, quejosa o recurrente (ejemplo: Hermelinda Albino Beteta).');
+    sections.push('     - Rige la firma de la persona interesada, demandante, quejosa o recurrente (ejemplo: la persona recurrente o patrocinada).');
     sections.push('     - Si la resolución cita el Art. 131° CPC o señala que "la firma de dicha recurrente no figura", la omisión es EXCLUSIVAMENTE de la PARTE/RECURRENTE, NUNCA DEL ABOGADO.');
     sections.push('     - La subsanación consiste en que LA RECURRENTE estampe su firma gráfica o digital ratificando la queja o escrito. El escrito de subsanación debe expresar con claridad que la recurrente cumple con estampar su firma y ratificarse en el contenido del escrito primigenio.');
     sections.push('  2. ARTÍCULO 132° DEL CÓDIGO PROCESAL CIVIL Y ARTÍCULO 290° DE LA LOPJ (Firma y Colegiatura de Abogado):');

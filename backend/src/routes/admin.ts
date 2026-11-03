@@ -1,4 +1,7 @@
 import { ProviderAdapter } from '../ai/providerAdapter';
+import { ModelCatalog } from '../ai/modelCatalog';
+import { CircuitBreaker } from '../ai/circuitBreaker';
+import { AiTelemetry } from '../ai/aiTelemetry';
 import { Router } from 'express';
 import { sql, eq, and, desc } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
@@ -11,6 +14,39 @@ import { metrics } from '../lib/metrics';
 import { getSecurityTelemetry, recordSecurityIncident } from '../middleware/securityShield';
 
 export const adminRouter = Router();
+
+// 0. AI Health Observability & Diagnostic Endpoint (EMPTY_RESPONSE, Rate Limits, Circuit Breakers)
+adminRouter.get('/ai-health', requireAuth, requireAdmin, async (_, res) => {
+  try {
+    const models = ModelCatalog.getAllModels();
+    const telemetry = AiTelemetry.getSnapshot();
+    const providers = {
+      openrouter: Boolean(process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_KEY),
+      gemini: false,
+      groq: false,
+      anthropic: false,
+      openai: false,
+      deepseek: false,
+    };
+    const circuitSummary = CircuitBreaker.getProviderHealthSummary(providers as any);
+
+    res.json({
+      status: telemetry.overall.emptyResponses > 5 || telemetry.overall.rateLimits > 10 ? 'degraded' : 'healthy',
+      timestamp: new Date().toISOString(),
+      models,
+      circuitSummary,
+      telemetry,
+      activeConfiguration: {
+        primaryModel: process.env.OPENROUTER_PRIMARY_MODEL || 'deepseek/deepseek-chat',
+        fallbackModel: process.env.OPENROUTER_FALLBACK_MODEL || 'openai/gpt-4o-mini',
+        tertiaryModel: process.env.OPENROUTER_TERTIARY_MODEL || 'z-ai/glm-5.3-flash',
+        promptVersion: process.env.PROMPT_VERSION || 'v1',
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ error: error?.message || 'Error obteniendo telemetría de IA' });
+  }
+});
 
 adminRouter.get('/stats', requireAuth, requireAdmin, async (_, res) => {
   try {

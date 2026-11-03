@@ -105,12 +105,12 @@ SE RESUELVE: Declarar INADMISIBLE la contestación de demanda, otorgándose el p
     });
 
     it('detecta artículo procesal civil y número de expediente', () => {
-      const query = 'En el Exp. 4618-2007 se debatió el art. 345-A del código civil y el art. 131 del CPC.';
+      const query = 'En el Exp. 4664-2010 se debatió el art. 345-A del código civil y el art. 131 del CPC.';
       const params = extractLegalSearchParameters(query);
 
       expect(params.exactArticles).toContain('345-A');
       expect(params.exactArticles).toContain('131');
-      expect(params.exactDockets).toContain('4618-2007');
+      expect(params.exactDockets).toContain('4664-2010');
     });
   });
 

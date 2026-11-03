@@ -33,11 +33,11 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Prescripción adquisitiva de dominio y coposesión en bienes inmuebles',
     bindingFJ: 'Precedentes Vinculantes 1 al 3',
   },
-  '4618-2007': {
-    title: 'Tercer Pleno Casatorio Civil (Casación N° 4618-2007/Lima)',
+  '4664-2010': {
+    title: 'Tercer Pleno Casatorio Civil (Casación N° 4664-2010/Puno)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Divorcio por separación de hecho, cónyuge más perjudicado e indemnización obligatoria o adjudicación preferente',
-    bindingFJ: 'Precedentes Vinculantes 1 al 6 (Fojas 12-18)',
+    bindingFJ: 'Precedentes Vinculantes 1 al 6',
   },
   '2195-2011': {
     title: 'IV Pleno Casatorio Civil (Casación N° 2195-2011/Ucayali)',
@@ -51,44 +51,38 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Impugnación de acuerdos asociativos, legitimidad para obrar y nulidad de acto jurídico',
     bindingFJ: 'Precedente Vinculante Pleno 1',
   },
-  '4004-2012': {
-    title: 'VI Pleno Casatorio Civil (Casación N° 4004-2012/Junín)',
+  '2402-2012': {
+    title: 'VI Pleno Casatorio Civil (Casación N° 2402-2012/Lambayeque)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Ejecución de garantías reales e hipotecarias, saldo deudor y estado de cuenta de saldo deudor',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 7',
   },
-  '367-2014': {
-    title: 'VII Pleno Casatorio Civil (Casación N° 367-2014/Lima Norte)',
+  '3671-2014': {
+    title: 'VII Pleno Casatorio Civil (Casación N° 3671-2014/Lima)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Tercería de propiedad sobre bienes inmuebles no inscritos con fecha cierta frente a embargo judicial inscrito',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 y 2',
   },
-  '4442-2015': {
-    title: 'VIII Pleno Casatorio Civil (Casación N° 4442-2015/Moquegua)',
+  '3006-2015': {
+    title: 'VIII Pleno Casatorio Civil (Casación N° 3006-2015/Junín)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Disposición de bienes de la sociedad conyugal por un solo cónyuge y nulidad del acto jurídico',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 5',
   },
-  '3290-2015': {
-    title: 'IX Pleno Casatorio Civil (Casación N° 3290-2015/Lima)',
+  '4442-2015': {
+    title: 'IX Pleno Casatorio Civil (Casación N° 4442-2015/Moquegua)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Proceso sumarísimo de otorgamiento de escritura pública y control judicial de oficio de nulidad manifiesta',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 8',
   },
   '1242-2017': {
-    title: 'X Pleno Casatorio Civil (Casación N° 1242-2017/Tacna)',
+    title: 'X Pleno Casatorio Civil (Casación N° 1242-2017/Lima Este)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Prueba de oficio en el proceso civil y límites del contradictorio previo bajo el Art. 194° CPC',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 12',
   },
 
   // --- DERECHO DE FAMILIA Y NIÑEZ ---
-  '2402-2012': {
-    title: 'Casación N° 2402-2012/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema de Justicia',
-    subject: 'Daño moral in re ipsa derivado de denuncias calumniosas, zozobra procesal y separación de hecho',
-    bindingFJ: 'Fundamento Jurídico Quinto',
-  },
   '2184-2017': {
     title: 'Casación N° 2184-2017/Ica',
     court: 'Sala de Derecho Constitucional y Social Permanente',

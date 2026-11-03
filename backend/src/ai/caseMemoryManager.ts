@@ -80,8 +80,8 @@ export class CaseMemoryManager {
     if (/30364/.test(fullText)) {
       normsMap.set('ley_30364', 'Ley N° 30364 (Prevención y sanción de la violencia contra las mujeres y grupo familiar)');
     }
-    if (/tercer\s+pleno\s+casatorio|4618[-–/]?2007/i.test(fullText)) {
-      normsMap.set('iii_pleno', 'Tercer Pleno Casatorio Civil (Casación N° 4618-2007/Lima: cónyuge más perjudicado e indemnización obligatoria / adjudicación preferente)');
+    if (/tercer\s+pleno\s+casatorio|4664[-–/]?2010/i.test(fullText)) {
+      normsMap.set('iii_pleno', 'Tercer Pleno Casatorio Civil (Casación N° 4664-2010/Puno: cónyuge más perjudicado e indemnización obligatoria / adjudicación preferente)');
     }
     if (/cuarto\s+pleno\s+casatorio|2195[-–/]?2011/i.test(fullText)) {
       normsMap.set('iv_pleno', 'IV Pleno Casatorio Civil (Casación N° 2195-2011/Ucayali: desalojo por ocupación precaria y supuestos vinculantes)');
@@ -92,23 +92,20 @@ export class CaseMemoryManager {
     if (/primer\s+pleno\s+casatorio|1465[-–/]?2007/i.test(fullText)) {
       normsMap.set('i_pleno', 'I Pleno Casatorio Civil (Casación N° 1465-2007/Cajamarca: transacción extrajudicial y excepción de conclusión del proceso)');
     }
-    if (/sexto\s+pleno\s+casatorio|4004[-–/]?2012/i.test(fullText)) {
-      normsMap.set('vi_pleno', 'VI Pleno Casatorio Civil (Casación N° 4004-2012/Junín: ejecución de garantías reales y estado de cuenta de saldo deudor)');
+    if (/sexto\s+pleno\s+casatorio|2402[-–/]?2012/i.test(fullText)) {
+      normsMap.set('vi_pleno', 'VI Pleno Casatorio Civil (Casación N° 2402-2012/Lambayeque: ejecución de garantías reales y estado de cuenta de saldo deudor)');
     }
-    if (/s[eé]ptimo\s+pleno\s+casatorio|367[-–/]?2014/i.test(fullText)) {
-      normsMap.set('vii_pleno', 'VII Pleno Casatorio Civil (Casación N° 367-2014/Lima Norte: tercería de propiedad y embargo inscrito)');
+    if (/s[eé]ptimo\s+pleno\s+casatorio|3671[-–/]?2014/i.test(fullText)) {
+      normsMap.set('vii_pleno', 'VII Pleno Casatorio Civil (Casación N° 3671-2014/Lima: tercería de propiedad y embargo inscrito)');
     }
-    if (/octavo\s+pleno\s+casatorio|4442[-–/]?2015/i.test(fullText)) {
-      normsMap.set('viii_pleno', 'VIII Pleno Casatorio Civil (Casación N° 4442-2015/Moquegua: disposición de bienes de la sociedad de gananciales)');
+    if (/octavo\s+pleno\s+casatorio|3006[-–/]?2015/i.test(fullText)) {
+      normsMap.set('viii_pleno', 'VIII Pleno Casatorio Civil (Casación N° 3006-2015/Junín: disposición de bienes de la sociedad de gananciales)');
     }
-    if (/noveno\s+pleno\s+casatorio|3290[-–/]?2015/i.test(fullText)) {
-      normsMap.set('ix_pleno', 'IX Pleno Casatorio Civil (Casación N° 3290-2015/Lima: otorgamiento de escritura pública y nulidad manifiesta)');
+    if (/noveno\s+pleno\s+casatorio|4442[-–/]?2015/i.test(fullText)) {
+      normsMap.set('ix_pleno', 'IX Pleno Casatorio Civil (Casación N° 4442-2015/Moquegua: otorgamiento de escritura pública y nulidad manifiesta)');
     }
     if (/d[eé]cimo\s+pleno\s+casatorio|1242[-–/]?2017/i.test(fullText)) {
-      normsMap.set('x_pleno', 'X Pleno Casatorio Civil (Casación N° 1242-2017/Tacna: prueba de oficio en el proceso civil)');
-    }
-    if (/2402[-–/]?2012/.test(fullText)) {
-      normsMap.set('cas_2402', 'Casación N° 2402-2012/Lima (Daño moral in re ipsa derivado de denuncias calumniosas)');
+      normsMap.set('x_pleno', 'X Pleno Casatorio Civil (Casación N° 1242-2017/Lima Este: prueba de oficio en el proceso civil)');
     }
     if (/626[-–/]?2013/.test(fullText)) {
       normsMap.set('cas_626', 'Casación N° 626-2013/Moquegua (Doctrina vinculante sobre los 5 presupuestos de prisión preventiva)');

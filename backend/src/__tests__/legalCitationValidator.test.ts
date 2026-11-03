@@ -2,12 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { validateLegalCitations } from '../ai/legalCitationValidator';
 
 describe('Legal Citation Validator — Auditoría de Integridad', () => {
-  it('identifica y valida exitosamente el Tercer Pleno Casatorio Civil (Casación 4618-2007)', () => {
-    const text = 'Conforme al Tercer Pleno Casatorio Civil y la Casación N° 4618-2007/Lima, el cónyuge perjudicado tiene derecho a una indemnización.';
+  it('identifica y valida exitosamente el Tercer Pleno Casatorio Civil (Casación 4664-2010)', () => {
+    const text = 'Conforme al Tercer Pleno Casatorio Civil y la Casación N° 4664-2010/Puno, el cónyuge perjudicado tiene derecho a una indemnización.';
     const report = validateLegalCitations(text);
 
     expect(report.summary.verifiedCitations).toBeGreaterThanOrEqual(1);
-    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(verifiedCas).toBeDefined();
     expect(verifiedCas?.status).toBe('VERIFIED');
     expect(verifiedCas?.detail).toContain('Tercer Pleno Casatorio');
@@ -69,10 +69,10 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
   });
 
   it('valida cita textual auténtica verificada contra el fundamento vinculante de la resolución (Round-Trip Grounding)', () => {
-    const text = 'Conforme a la Casación N° 4618-2007/Lima en su doctrina vinculante: "En los procesos de divorcio por la causal de separación de hecho, el Juez tiene el deber de fijar de oficio una indemnización o adjudicar preferentemente bienes al cónyuge más perjudicado."';
+    const text = 'Conforme a la Casación N° 4664-2010/Puno en su doctrina vinculante: "En los procesos de divorcio por la causal de separación de hecho, el Juez tiene el deber de fijar de oficio una indemnización o adjudicar preferentemente bienes al cónyuge más perjudicado."';
     const report = validateLegalCitations(text);
 
-    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(verifiedCas).toBeDefined();
     expect(verifiedCas?.status).toBe('VERIFIED');
     expect(verifiedCas?.citationType).toBe('VERBATIM_QUOTE');
@@ -80,11 +80,11 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
   });
 
   it('detecta cita textual apócrifa atribuida a una resolución real y la desclasifica como CONTRADICTED', () => {
-    const text = 'Según la Casación N° 4618-2007/Lima: "El cónyuge que no trabaje perderá todo derecho a alimentos y será sancionado con prisión efectiva inmediata por abandono familiar."';
+    const text = 'Según la Casación N° 4664-2010/Puno: "El cónyuge que no trabaje perderá todo derecho a alimentos y será sancionado con prisión efectiva inmediata por abandono familiar."';
     const report = validateLegalCitations(text);
 
     expect(report.hasBlockingErrors).toBe(true);
-    const apocryphal = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const apocryphal = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(apocryphal).toBeDefined();
     expect(apocryphal?.status).toBe('CONTRADICTED');
     expect(apocryphal?.citationType).toBe('VERBATIM_QUOTE');
@@ -94,10 +94,10 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
   });
 
   it('valida paráfrasis legítima de ratio decidendi sin exigir coincidencia literal', () => {
-    const text = 'La Casación N° 4618-2007/Lima tutela al cónyuge perjudicado exigiendo que el juzgador evalúe la indemnización económica o adjudicación preferente de bienes.';
+    const text = 'La Casación N° 4664-2010/Puno tutela al cónyuge perjudicado exigiendo que el juzgador evalúe la indemnización económica o adjudicación preferente de bienes.';
     const report = validateLegalCitations(text);
 
-    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(verifiedCas).toBeDefined();
     expect(verifiedCas?.status).toBe('VERIFIED');
     expect(verifiedCas?.citationType).toBe('RATIO_PARAPHRASE');

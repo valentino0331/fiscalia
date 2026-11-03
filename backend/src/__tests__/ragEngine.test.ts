@@ -23,8 +23,8 @@ describe('RAG Engine & SPIJ Grounding Module', () => {
     });
 
     it('extrae dockets de casación y códigos procesales', () => {
-      const params = extractLegalSearchParameters('Conforme a la Casación 4618-2007 bajo el CPC');
-      expect(params.exactDockets).toContain('4618-2007');
+      const params = extractLegalSearchParameters('Conforme a la Casación 4664-2010 bajo el CPC');
+      expect(params.exactDockets).toContain('4664-2010');
       expect(params.detectedCode).toBe('CPC');
     });
   });

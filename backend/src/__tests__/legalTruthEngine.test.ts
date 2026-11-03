@@ -5,7 +5,7 @@
  * 1. Detección y bloqueo de casaciones inventadas
  * 2. Bloqueo de leyes inexistentes o dockets ficticios
  * 3. Identificación y alerta de normas derogadas (Ley 30225, D.S. 004-2019-JUS)
- * 4. Atribución falsa de fundamento a sentencia auténtica (Casación 4618-2007 para prescripción)
+ * 4. Atribución falsa de fundamento a sentencia auténtica (Casación 4664-2010 para prescripción)
  * 5. Correspondencia causal de ratio decidendi en Acuerdos Plenarios
  * 6. Versionado temporal (Principio Tempus Regit Actum: hechos 2021 vs vigencia 2026)
  * 7. Integridad de hashes SHA-256 en LegalSourceRegistry
@@ -36,34 +36,34 @@ describe('LEGAL TRUTH ENGINE — Verificación y Rigor Documental', () => {
       }
     });
 
-    it('recupera correctamente el Tercer Pleno Casatorio Civil (4618-2007) con sus fundamentos vinculantes', () => {
-      const doc = LegalSourceRegistry.getByShortKey('4618-2007');
+    it('recupera correctamente el Tercer Pleno Casatorio Civil (4664-2010) con sus fundamentos vinculantes', () => {
+      const doc = LegalSourceRegistry.getByShortKey('4664-2010');
       expect(doc).toBeDefined();
-      expect(doc?.officialNumber).toContain('Casación N° 4618-2007/Lima');
+      expect(doc?.officialNumber).toContain('Casación N° 4664-2010/Puno');
       expect(doc?.subject).toContain('cónyuge más perjudicado');
       expect(doc?.relevantFJ.some(f => f.isBindingRule)).toBe(true);
     });
   });
 
   describe('2. Control de Atribución Falsa a Sentencias Reales (Anti-Misattribution)', () => {
-    it('detecta y rechaza la cita de la Casación 4618-2007 cuando se le atribuye prescripción adquisitiva', () => {
+    it('detecta y rechaza la cita de la Casación 4664-2010 cuando se le atribuye prescripción adquisitiva', () => {
       // Intento adversarial: Usar una casación real de divorcio para sustentar usucapión
-      const adversarialText = 'Para sustentar la prescripción adquisitiva de dominio de este inmueble invocamos la Casación N° 4618-2007/Lima sobre posesión continua.';
+      const adversarialText = 'Para sustentar la prescripción adquisitiva de dominio de este inmueble invocamos la Casación N° 4664-2010/Puno sobre posesión continua.';
       const report = validateLegalCitations(adversarialText);
 
       expect(report.hasBlockingErrors).toBe(true);
       const contradicted = report.summary.citations.find(c => c.status === 'CONTRADICTED');
       expect(contradicted).toBeDefined();
-      expect(contradicted?.raw).toContain('4618-2007');
+      expect(contradicted?.raw).toContain('4664-2010');
       expect(report.processedText).toContain('atribución temática errónea');
       expect(report.processedText.toLowerCase()).toContain('divorcio por separación de hecho');
     });
 
-    it('aprueba la Casación 4618-2007 cuando su contexto versa sobre divorcio y cónyuge perjudicado', () => {
-      const validText = 'En este proceso de divorcio por separación de hecho, invocamos la Casación N° 4618-2007/Lima para fijar la indemnización al cónyuge más perjudicado.';
+    it('aprueba la Casación 4664-2010 cuando su contexto versa sobre divorcio y cónyuge perjudicado', () => {
+      const validText = 'En este proceso de divorcio por separación de hecho, invocamos la Casación N° 4664-2010/Puno para fijar la indemnización al cónyuge más perjudicado.';
       const report = validateLegalCitations(validText);
 
-      const verified = report.summary.citations.find(c => c.raw.includes('4618-2007'));
+      const verified = report.summary.citations.find(c => c.raw.includes('4664-2010'));
       expect(verified).toBeDefined();
       expect(verified?.status).toBe('VERIFIED');
       expect(report.hasBlockingErrors).toBe(false);
@@ -166,7 +166,7 @@ describe('LEGAL TRUTH ENGINE — Verificación y Rigor Documental', () => {
       const sebastianSources = LegalSourceRegistry.getSpecialistSources('sebastian');
       expect(sebastianSources.some(s => s.shortKey === '01-2019')).toBe(true); // Prisión preventiva
       expect(sebastianSources.some(s => s.shortKey === '02-2005')).toBe(true); // Declaración de víctima
-      expect(sebastianSources.some(s => s.shortKey === '4618-2007')).toBe(false); // CERO divorcio civil
+      expect(sebastianSources.some(s => s.shortKey === '4664-2010')).toBe(false); // CERO divorcio civil
     });
   });
 });
