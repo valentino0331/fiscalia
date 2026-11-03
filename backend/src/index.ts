@@ -13,6 +13,7 @@ import { sharedRouter } from './routes/shared';
 import { savedRouter } from './routes/saved';
 import { memoryRouter } from './routes/memory';
 import { initNewTables } from './db/init';
+import { StatutoryIndex } from './lib/statutoryIndex';
 import { startKeepAlive, getKeepAliveStatus } from './lib/keepAlive';
 import { securityShieldMiddleware } from './middleware/securityShield';
 import { db } from './db';
@@ -216,8 +217,12 @@ app.get('/health', async (_, res) => {
 });
 
 initNewTables()
-  .then(() => console.log('DB tables verified'))
-  .catch((err) => console.error('DB init error:', err));
+  .then(() => {
+    console.log('DB tables verified');
+    return StatutoryIndex.initialize();
+  })
+  .then(() => console.log('[StatutoryIndex] Índice normativo oficial sincronizado'))
+  .catch((err) => console.error('DB init / StatutoryIndex error:', err));
 
 const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);

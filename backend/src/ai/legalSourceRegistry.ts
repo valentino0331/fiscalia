@@ -16,6 +16,7 @@
  */
 
 import crypto from 'crypto';
+import { StatutoryIndex } from '../lib/statutoryIndex';
 
 export type DocType = 
   | 'casacion' 
@@ -207,70 +208,14 @@ export function validateStatutoryArticle(
   codeMention: string,
   articleSuffix?: string
 ): { isValid: boolean; codeBoundary?: StatutoryCodeBoundary; reason?: string } {
-  const normMention = normalizeLegalText(codeMention).replace(/\s+/g, ' ').trim();
-  const rawClean = normMention.replace(/[^a-z0-9]/g, '');
-
-  // 1. Coincidencia exacta por alias o acrónimo
-  let matchedBoundary = STATUTORY_CODE_BOUNDARIES.find(b =>
-    b.aliases.some(alias => {
-      const normAlias = normalizeLegalText(alias);
-      const aliasClean = normAlias.replace(/[^a-z0-9]/g, '');
-      return normMention === normAlias || rawClean === aliasClean;
-    })
-  );
-
-  // 2. Coincidencia por inclusión para nombres largos (> 4 letras)
-  if (!matchedBoundary) {
-    matchedBoundary = STATUTORY_CODE_BOUNDARIES.find(b =>
-      b.aliases.some(alias => {
-        const normAlias = normalizeLegalText(alias);
-        return normAlias.length > 4 && (normMention.includes(normAlias) || normAlias.includes(normMention));
-      })
-    );
-  }
-
-  if (!matchedBoundary) {
-    return { isValid: true };
-  }
-
-  if (articleNum > matchedBoundary.maxArticle) {
-    return {
-      isValid: false,
-      codeBoundary: matchedBoundary,
-      reason: `El ${matchedBoundary.name} (${matchedBoundary.officialEnactment}) cuenta únicamente con ${matchedBoundary.maxArticle} artículos. El artículo ${articleNum} es jurídicamente inexistente en el ordenamiento nacional.`,
-    };
-  }
-
-  if (articleSuffix) {
-    const cleanSuffix = articleSuffix.toUpperCase().trim();
-    // Validar artículos con sufijos literales inexistentes en el NCPP / CPP
-    if (matchedBoundary.id === 'NCPP') {
-      const allowedNcppSuffixes = new Set(['476-A', '481-A']);
-      const combined = `${articleNum}-${cleanSuffix}`;
-      if (!allowedNcppSuffixes.has(combined)) {
-        return {
-          isValid: false,
-          codeBoundary: matchedBoundary,
-          reason: `El ${matchedBoundary.name} (${matchedBoundary.officialEnactment}) no contempla el Artículo ${articleNum}-${cleanSuffix}. Los Artículos 326 al 328 regulan la denuncia penal sin subdivisiones literales. Dicha disposición es jurídicamente inexistente en el ordenamiento procesal penal peruano.`,
-        };
-      }
-    }
-    // Validar en el Código Civil
-    if (matchedBoundary.id === 'CC') {
-      const allowedCcSuffixes = new Set(['345-A', '667-A', '921-A', '2014-A']);
-      const combined = `${articleNum}-${cleanSuffix}`;
-      if (!allowedCcSuffixes.has(combined) && articleNum < 1000) {
-        return {
-          isValid: false,
-          codeBoundary: matchedBoundary,
-          reason: `El Código Civil (D. Leg. 295) no contempla el Artículo ${articleNum}-${cleanSuffix}. Dicha disposición es jurídicamente inexistente en el ordenamiento civil peruano.`,
-        };
-      }
-    }
-  }
-
-  return { isValid: true, codeBoundary: matchedBoundary };
+  const dynamicResult = StatutoryIndex.validateArticle(articleNum, codeMention, articleSuffix);
+  return {
+    isValid: dynamicResult.isValid,
+    codeBoundary: dynamicResult.codeBoundary,
+    reason: dynamicResult.reason,
+  };
 }
+
 
 // Función helper para calcular hash SHA-256 canónico del contenido oficial
 export function computeLegalDigest(text: string): string {

@@ -29,3 +29,4 @@
 - **Implementación:** Localizado en `backend/src/scripts/security/reencrypt_conversations.ts`.
 - **Salvaguarda activa:** Por defecto opera en modo `--dry-run`.
 - **Estado en producción:** **NO EJECUTADO EN PRODUCCIÓN**. Requiere aprobación explícita de Valentino antes de la fase de despliegue.
+

@@ -1,0 +1,181 @@
+# Reporte de Auditoría de Ingesta Oficial — Nueva Ley Procesal del Trabajo (NLPT)
+
+- **Fecha de auditoría:** 2026-11-03T02:05:42.794Z
+- **Total artículos parseados:** 13
+- **Control de integridad:** Numeración monótona 1..13 | 0 vacíos | Hash SHA-256 verificado
+- **Muestra aleatoria/estratificada:** 10 artículos inspeccionados
+
+## Muestra de Artículos Literales Ingestados
+
+### Art. 22 — Protección contra el Despido Arbitrario
+- **Sort Key:** 1
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `a6ceca79c228d0c89737f55b0a8fc73957067ed927c25952f7103b96c5438af7`
+
+```text
+Artículo 22.- Protección contra el Despido Arbitrario
+Para el despido de un trabajador sujeto al régimen de la actividad privada, que labore cuatro o más horas diarias para un mismo empleador, es indispensable la existencia de causa justa contemplada en la ley y debidamente comprobada.
+La causa justa puede estar relacionada con la capacidad del trabajador o con su conducta.
+```
+
+---
+
+### Art. 30 — Actos de Hostilidad Equiparables al Despido (Actos de Hostilidad Laboral)
+- **Sort Key:** 2
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `5b45dcdd5fb262de8e44e62bbd132a4c08dd848d9b31f80783bff3be2b03fe00`
+
+```text
+Artículo 30.- Actos de Hostilidad Equiparables al Despido (Actos de Hostilidad Laboral)
+Son actos de hostilidad equiparables al despido, los siguientes:
+a) La falta de pago de la remuneración en la oportunidad correspondiente, salvo razones de fuerza mayor o caso fortuito debidamente comprobados por el empleador.
+b) La reducción inmotivada de la remuneración o de la categoría.
+c) El traslado del trabajador a lugar distinto de aquel en el que preste habitualmente servicios, con el propósito de ocasionarle perjuicio.
+d) La inobservancia de medidas de higiene y seguridad que pueda afectar o poner en riesgo la vida y la salud del trabajador.
+e) El acto de violencia o el faltamiento grave de palabra en agravio del trabajador o de su familia.
+f) Los actos de discriminación por razón de sexo, raza, religión, opinión, idioma, discapacidad o de cualquier otra índole.
+g) Los actos contra la moral y todos aquellos que afecten la dignidad del trabajador.
+h) El hostigamiento sexual determinado por acto o conducta de la naturaleza sexual no deseada por el trabajador, que puede crear un ambiente de trabajo intimidatorio, hostil o humillante; o que puede afectar su situación laboral.
+```
+
+---
+
+### Art. 38 — Indemnización por Despido Arbitrario
+- **Sort Key:** 4
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `16f9cc4365001f15068a755c86ece6a0773f36d142f8df714d2131c0ce4ad7c5`
+
+```text
+Artículo 38.- Indemnización por Despido Arbitrario
+La indemnización por despido arbitrario es equivalente a una remuneración y media ordinaria mensual por cada año completo de servicios con un máximo de doce (12) remuneraciones. Las fracciones de año se abonan por dozavos y treintavos, según corresponda.
+Su abono procede superado el período de prueba.
+
+DECRETO LEGISLATIVO N° 650 — COMPENSACIÓN POR TIEMPO DE SERVICIOS (CTS)
+```
+
+---
+
+### Art. 1 — Objeto de la CTS
+- **Sort Key:** 5
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `6d1d4e18c9b10084c7fa6002614bffe1e19a95506b32877d842b89483b91ed74`
+
+```text
+Artículo 1.- Objeto de la CTS
+La compensación por tiempo de servicios (CTS) tiene la calidad de beneficio social de previsión de las contingencias que origina el cese en el trabajo y de promoción del trabajador y su familia.
+```
+
+---
+
+### Art. 2 — Trabajadores con Derecho a CTS
+- **Sort Key:** 6
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `6f0bd8da02ad2e7986b2605a55c42bcffcc59ca023685f46b85c44650babdc19`
+
+```text
+Artículo 2.- Trabajadores con Derecho a CTS
+Tienen derecho al beneficio de la CTS los trabajadores sujetos al régimen laboral común de la actividad privada que cumplan, cuando menos en promedio, una jornada mínima diaria de cuatro horas.
+```
+
+---
+
+### Art. 10 — Requisitos para el Descanso Vacacional
+- **Sort Key:** 8
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `7c25b143b0df0f271ed06fb32beeaf8c4e4bd4a0183674ea378aed65737383e8`
+
+```text
+Artículo 10.- Requisitos para el Descanso Vacacional
+El trabajador tiene derecho a treinta (30) días calendario de descanso vacacional por cada año completo de servicios.
+Son requisitos para el goce del descanso vacacional:
+a) Haber cumplido un año de servicios.
+b) Haber cumplido con el récord vacacional (mínimo de días efectivamente laborados exigidos por la ley en el año de servicios correspondiente).
+```
+
+---
+
+### Art. 24 — Triple Remuneración Vacacional
+- **Sort Key:** 9
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `cefa7d907560f79ddfa384574fd045d4da5f0aef14151e42818015c896c24444`
+
+```text
+Artículo 24.- Triple Remuneración Vacacional
+Cuando el trabajador no haya disfrutado del descanso vacacional dentro del año siguiente a aquél en el que adquirió el derecho, percibirá lo siguiente:
+a) Una remuneración por el trabajo realizado.
+b) Una remuneración por el descanso vacacional adquirido y no gozado.
+c) Una remuneración como indemnización por no haber disfrutado del descanso.
+Esta triple remuneración es irrenunciable.
+EXCEPCIÓN IMPORTANTE: El artículo 25 establece que los trabajadores de dirección o de confianza, que no están sujetos a fiscalización inmediata de su jornada de trabajo, quedan excluidos de este beneficio en las condiciones que determine el reglamento.
+
+LEY N° 29497 — NUEVA LEY PROCESAL DEL TRABAJO (NLPT)
+(Modificada por Ley N° 32155 — Vigente 2026)
+```
+
+---
+
+### Art. 1 — Ámbito de Aplicación
+- **Sort Key:** 10
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `6e857a7a2faa055c40b32cb5809b9be5660bdd1284bea62dcf539ae54e031f72`
+
+```text
+Artículo 1.- Ámbito de Aplicación
+La presente ley regula las pretensiones derivadas de las relaciones de trabajo, la vulneración del derecho a la no discriminación laboral, la vulneración de la libertad sindical, y las pretensiones de seguridad social vinculadas al trabajo.
+
+Competencia por Cuantía (Ley 32155 — Vigente 2026):
+- Juzgados de Paz Letrado Laboral: Conocen pretensiones hasta 70 URP (= S/ 38,500 al 2026). En materia de daños y perjuicios derivados del contrato de trabajo, conocen pretensiones hasta 60 URP (= S/ 33,000).
+- Juzgados Especializados de Trabajo: Conocen pretensiones que superen los 70 URP en materia principal, y más de 60 URP en materia de daños y perjuicios.
+
+INDICADORES ECONÓMICOS Y LABORALES VIGENTES AL 2026
+
+- Remuneración Mínima Vital (RMV): S/ 1,230.00 (Decreto Supremo N° 015-2026-TR).
+- Asignación Familiar: S/ 123.00 (10% de la RMV vigente, Ley N° 25129).
+- Unidad de Referencia Procesal (URP): S/ 550.00 (10% de la UIT 2026 de S/ 5,500 bajo D.S. N° 301-2025-EF).
+- Caducidad judicial por despido: 30 días hábiles (Art. 36° del D.S. N° 003-97-TR). La denuncia inspectiva ante SUNAFIL NO interrumpe ni suspende este plazo fatal.
+
+
+DESNATURALIZACIÓN MODAL Y DISTRIBUCIÓN PROBATORIA
+```
+
+---
+
+### Art. 36 — Plazo de Caducidad de la Acción Judicial
+- **Sort Key:** 12
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `d4c76d76eb1ba3d45f95acd6b9a65f564a6475e9e36a0f0493f134a8586233a2`
+
+```text
+Artículo 36.- Plazo de Caducidad de la Acción Judicial
+El plazo para accionar judicialmente en los casos de nulidad de despido, despido arbitrario y hostilidad caduca a los treinta (30) días hábiles de producido el hecho o la notificación del cese.
+Este plazo de caducidad es fatal y perentorio; no admite interrupción ni prórroga. Las actuaciones o denuncias formuladas ante la Autoridad Administrativa de Trabajo (SUNAFIL) no interrumpen ni suspenden el cómputo de la caducidad procesal judicial.
+```
+
+---
+
+### Art. 77 — Desnaturalización de los Contratos de Trabajo Sujetos a Modalidad
+- **Sort Key:** 13
+- **Jerarquía (Breadcrumb):** General
+- **SHA-256 del texto:** `71638bcff8a9b7932dbf271ca1cb6d1d2473bb91840beeec9c2fdd00e7e553b3`
+
+```text
+Artículo 77.- Desnaturalización de los Contratos de Trabajo Sujetos a Modalidad
+Los contratos de trabajo sujetos a modalidad se consideran de duración indeterminada:
+a) Si el trabajador continúa laborando después de la fecha de vencimiento del plazo estipulado, o del máximo legal permitido de cinco años.
+b) Cuando se trata de un contrato para obra determinada o de servicio específico, si el trabajador continúa prestando servicios efectivos, luego de concluida la obra materia de contrato.
+c) Si el titular del puesto sustituido, no se reincorpora vencido el término legal o convencional y el trabajador contratado continuase laborando.
+d) Cuando el trabajador demuestre la existencia de simulación o fraude a las normas establecidas en la presente ley (inexistencia de causa objetiva determinante).
+
+Artículo 23 de la Ley 29497 (NLPT).- Carga de la Prueba en el Proceso Laboral
+1. La carga de la prueba corresponde a quien afirma hechos que configuran su pretensión, o a quien los contradice alegando nuevos hechos.
+2. Acreditada la prestación personal de servicios, se presume la existencia de un contrato de trabajo a plazo indeterminado, salvo prueba en contrario (Principio de Primacía de la Realidad y Presunción de Laboralidad).
+3. Corresponde al demandado (empleador) probar:
+a) El cumplimiento de las obligaciones contenidas en las normas legales, los convenios colectivos, los contratos de trabajo y el pago efectivo de beneficios sociales y remuneraciones.
+b) La existencia de un motivo o causa justa para el despido.
+c) El cumplimiento de las normas de seguridad y salud en el trabajo.
+d) El estado de la relación laboral y la causa objetiva en contratos modales.
+4. Al trabajador le corresponde probar: la existencia del daño alegado en demandas indemnizatorias, el despido incausado o fraudulento, y los indicios razonables en casos de discriminación o despido nulo.
+```
+
+---
+

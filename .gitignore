@@ -40,3 +40,6 @@ video/
 
 
 landigpage/info/
+
+.cache/
+backend/.cache/

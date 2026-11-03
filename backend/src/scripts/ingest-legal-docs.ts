@@ -63,20 +63,6 @@ interface ParsedChunk {
 }
 
 /**
- * Genera un vector determinista L2-normalizado de 768 dimensiones cuando no hay clave Gemini
- */
-function generateDeterministicVector(text: string): number[] {
-  const vec = new Array(EMBEDDING_DIMENSIONS).fill(0);
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i);
-    const idx = (code * 31 + i * 17) % EMBEDDING_DIMENSIONS;
-    vec[idx] += 1.0;
-  }
-  const norm = Math.sqrt(vec.reduce((acc, v) => acc + v * v, 0)) || 1.0;
-  return vec.map((v) => v / norm);
-}
-
-/**
  * Chunking Jurídico Estructural por Artículos y Delimitadores Normativos
  */
 function chunkLegalDocument(text: string, sourceCode: string, specialistId: string): ParsedChunk[] {
@@ -210,20 +196,13 @@ async function main() {
 
   let insertedCount = 0;
   const hasGemini = Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
+  if (!hasGemini) {
+    throw new Error('[IngestError] GEMINI_API_KEY o GOOGLE_API_KEY es obligatoria para generar embeddings oficiales de 768d. Se prohíben vectores ficticios.');
+  }
 
   for (let i = 0; i < allChunks.length; i++) {
     const chunk = allChunks[i];
-    let vector: number[];
-
-    if (hasGemini) {
-      try {
-        vector = await generateDocumentEmbedding(chunk.content);
-      } catch {
-        vector = generateDeterministicVector(chunk.content);
-      }
-    } else {
-      vector = generateDeterministicVector(chunk.content);
-    }
+    const vector = await generateDocumentEmbedding(chunk.content);
 
     const vectorStr = `[${vector.join(',')}]`;
     await sql`
