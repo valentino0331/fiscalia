@@ -36,3 +36,4 @@ A pesar del fallo en el endpoint `obtenerDocumento` de El Peruano, se lograron o
 9. **Ley 30364 (Violencia contra la mujer):** Obtenida de Edición Oficial SPIJ MINJUSDH (`https://spijweb.minjus.gob.pe/wp-content/uploads/2021/04/Primera_Edicion_Oficial_Mujeres.pdf`). 406 páginas verificadas.
 10. **TUO Ley 27584 (Contencioso Administrativo - D.S. 011-2019-JUS):** Obtenido de Edición Oficial SPIJ MINJUSDH (`https://spijweb.minjus.gob.pe/wp-content/uploads/2020/08/DECRETO_SUPREMO_011-2019-JUS.pdf`). 26 páginas verificadas.
 11. **Código Tributario (D.S. 133-2013-EF):** Obtenido del portal oficial de SUNAT (`https://www.sunat.gob.pe/legislacion/tributaria/codigo/`).
+

@@ -114,5 +114,33 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
     expect(report.processedText).toContain('el ordenamiento peruano solo cuenta con 840 artículos en esta norma');
     expect(report.processedText).toContain('RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE)');
   });
+
+  it('preserva intactos los escritos judiciales dentro del bloque ```document sin desfigurarlos con etiquetas destructivas de auditoría', () => {
+    const textWithDoc = 'Estimado Colega, le presento el escrito solicitado:\n\n' +
+      '```document\n' +
+      'TITULO: ESCRITO DE CESACION DE PRISION PREVENTIVA\n' +
+      'SUMILLA: SOLICITA CESACION DE PRISION PREVENTIVA Y PROCESO DE SEGURIDAD\n' +
+      'SEÑOR JUEZ DEL PRIMER JUZGADO DE INVESTIGACION PREPARATORIA DE HUANUCO:\n' +
+      'De conformidad con la Casacion N° 626-2013/Moquegua sobre proporcionalidad y arraigos, y el Acuerdo Plenario N° 01-2019/CIJ-116 sobre sospecha grave, solicitamos la inmediata libertad procesal.\n' +
+      '```\n\n' +
+      'Quedo a su disposicion para cualquier ajuste.';
+
+    const report = validateLegalCitations(textWithDoc);
+
+    // El bloque del documento debe permanecer intacto y sin censura destructiva
+    expect(report.processedText).toContain('Casacion N° 626-2013/Moquegua');
+    expect(report.processedText).toContain('Acuerdo Plenario N° 01-2019/CIJ-116');
+    expect(report.processedText).not.toContain('[cita textual apócrifa del expediente Casacion N° 626-2013/Moquegua');
+    expect(report.processedText).not.toContain('[criterio jurisprudencial pendiente de verificación documental: Casacion N° 626-2013/Moquegua');
+    
+    // Extracción limpia idéntica al exportador docx de frontend
+    const docMatch = report.processedText.match(/```(?:document|doc|escrito)[\s\S]*?\n([\s\S]*?)```/i);
+    expect(docMatch).toBeDefined();
+    const docBody = docMatch![1];
+    expect(docBody).not.toContain('RECTIFICACIÓN');
+    expect(docBody).not.toContain('[cita textual apócrifa');
+    expect(docBody).toContain('De conformidad con la Casacion N° 626-2013/Moquegua');
+  });
 });
+
 

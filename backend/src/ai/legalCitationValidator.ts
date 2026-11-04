@@ -574,6 +574,60 @@ export interface ValidationReport {
 /**
  * Validador principal de texto jurídico
  */
+/**
+ * Reemplaza texto o patrones preservando intacto el contenido de bloques formales `document ... `
+ * Esto asegura que los escritos judiciales y contratos no sean desfigurados ni contengan etiquetas
+ * de auditoria interna al descargarse en Word o PDF, mientras que las notas y rectificaciones
+ * se muestran debidamente al abogado en el texto conversacional exterior.
+ */
+export function replaceOutsideDocument(
+  source: string,
+  target: string | RegExp,
+  replacement: string
+): string {
+  const docBlockRegex = /(`(?:document|doc|escrito|contrato|demanda|denuncia)[^\n]*\r?\n[\s\S]*?`)/gi;
+  if (!docBlockRegex.test(source)) {
+    return source.replace(target, replacement);
+  }
+
+  docBlockRegex.lastIndex = 0;
+  let lastIndex = 0;
+  let result = '';
+  let match: RegExpExecArray | null;
+  let replaced = false;
+
+  while ((match = docBlockRegex.exec(source)) !== null) {
+    const preamble = source.slice(lastIndex, match.index);
+    if (typeof target === 'string') {
+      if (!replaced && preamble.includes(target)) {
+        result += preamble.replace(target, replacement);
+        replaced = true;
+      } else {
+        result += preamble;
+      }
+    } else {
+      result += preamble.replace(target, replacement);
+    }
+    // Preservar el bloque del documento intacto sin mutacion destructiva
+    result += match[0];
+    lastIndex = docBlockRegex.lastIndex;
+  }
+
+  const postamble = source.slice(lastIndex);
+  if (typeof target === 'string') {
+    if (!replaced && postamble.includes(target)) {
+      result += postamble.replace(target, replacement);
+      replaced = true;
+    } else {
+      result += postamble;
+    }
+  } else {
+    result += postamble.replace(target, replacement);
+  }
+
+  return result;
+}
+
 export function validateLegalCitations(text: string): ValidationReport {
   if (!text || typeof text !== 'string') {
     return {
@@ -608,7 +662,7 @@ export function validateLegalCitations(text: string): ValidationReport {
       warnings.push(`⚠️ Norma Derogada detectada: ${item.repealedName}. Reemplazada por ${item.activeSubstitute}.`);
       
       // Sanitizar la mención de la norma derogada en el texto procesal
-      processedText = processedText.replace(item.pattern, `[norma derogada — sustituida por ${item.activeSubstitute}]`);
+      processedText = replaceOutsideDocument(processedText, item.pattern, `[norma derogada — sustituida por ${item.activeSubstitute}]`);
 
       // Inyectar el cintillo oficial
       const warningBanner = `\n\n> ⚠️ **ALERTA DE VIGENCIA NORMATIVA (SPIJ 2026):** Se advierte que ${item.warningNote}\n\n`;
@@ -631,7 +685,7 @@ export function validateLegalCitations(text: string): ValidationReport {
       warnings.push(`❌ Atribución jurídica incorrecta: ${mis.errorDescription}`);
       
       // Sanitizar la frase errónea en el texto procesal
-      processedText = processedText.replace(mis.pattern, `[atribución jurídica errónea: ${mis.errorDescription} — por mandato legal rige: ${mis.correctAttribution}]`);
+      processedText = replaceOutsideDocument(processedText, mis.pattern, `[atribución jurídica errónea: ${mis.errorDescription} — por mandato legal rige: ${mis.correctAttribution}]`);
 
       // Inyectar rectificación dogmática
       const fixBanner = `\n\n> 🔍 **RECTIFICACIÓN DOGMÁTICA DE PRECISIÓN:** ${mis.errorDescription} Por mandato legal estricto: ${mis.correctAttribution}\n\n`;
@@ -672,7 +726,7 @@ export function validateLegalCitations(text: string): ValidationReport {
       warnings.push(`❌ Norma extranjera detectada: ${f.foreignSource} (${f.jurisdiction}). ${f.peruvianEquivalent}`);
       
       // Primero sanitizar en el texto procesal
-      processedText = processedText.replace(f.pattern, `[norma/tribunal foráneo no aplicable en el Perú — rige legislación nacional: ${f.peruvianEquivalent}]`);
+      processedText = replaceOutsideDocument(processedText, f.pattern, `[norma/tribunal foráneo no aplicable en el Perú — rige legislación nacional: ${f.peruvianEquivalent}]`);
 
       const foreignBanner = `\n\n> 🚫 **ALERTA DE JURISDICCIÓN EXTRANJERA (LEGAL TRUTH ENGINE):** Se advierte que la referencia a "${f.foreignSource}" pertenece al ordenamiento de ${f.jurisdiction}. Por mandato constitucional y soberanía judicial, en los estrados y procesos peruanos rige exclusivamente la legislación nacional: ${f.peruvianEquivalent}\n\n`;
       if (!processedText.includes(foreignBanner.trim())) {
@@ -704,7 +758,7 @@ export function validateLegalCitations(text: string): ValidationReport {
       const replacementNote = suffix
         ? `[artículo inexistente: ${artMatch[0]} — ${validation.reason}]`
         : `[artículo inexistente: ${artMatch[0]} — el ordenamiento peruano solo cuenta con ${validation.codeBoundary.maxArticle} artículos en esta norma]`;
-      processedText = processedText.replace(artMatch[0], replacementNote);
+      processedText = replaceOutsideDocument(processedText, artMatch[0], replacementNote);
       processedText += `\n\n> 🔍 **RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE):** ${validation.reason}\n\n`;
     }
   }
@@ -760,12 +814,12 @@ export function validateLegalCitations(text: string): ValidationReport {
           });
           warnings.push(`❌ CITA TEXTUAL APÓCRIFA: ${rawMatch}. ${attribution.actualReason}`);
           if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
-            processedText = processedText.replace(
+            processedText = replaceOutsideDocument(processedText, 
               attribution.extractedQuote,
               `[cita textual apócrifa del expediente ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
             );
           } else {
-            processedText = processedText.replace(
+            processedText = replaceOutsideDocument(processedText, 
               rawMatch,
               `[cita textual apócrifa del expediente ${knownDoc.officialNumber}]`
             );
@@ -784,7 +838,7 @@ export function validateLegalCitations(text: string): ValidationReport {
             verbatimVerified: false,
           });
           warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
-          processedText = processedText.replace(
+          processedText = replaceOutsideDocument(processedText, 
             rawMatch,
             `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
           );
@@ -815,7 +869,7 @@ export function validateLegalCitations(text: string): ValidationReport {
 
       // Sanitización preventiva en el cuerpo procesal:
       // Retira el número judicial no contrastado para evitar temeridad procesal y alucinaciones en estrados.
-      processedText = processedText.replace(
+      processedText = replaceOutsideDocument(processedText, 
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
       );
@@ -878,12 +932,12 @@ export function validateLegalCitations(text: string): ValidationReport {
           });
           warnings.push(`❌ CITA TEXTUAL APÓCRIFA DEL TRIBUNAL CONSTITUCIONAL: ${rawMatch}. ${attribution.actualReason}`);
           if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
-            processedText = processedText.replace(
+            processedText = replaceOutsideDocument(processedText, 
               attribution.extractedQuote,
               `[cita textual apócrifa del expediente ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
             );
           } else {
-            processedText = processedText.replace(
+            processedText = replaceOutsideDocument(processedText, 
               rawMatch,
               `[cita textual apócrifa del expediente ${knownDoc.officialNumber}]`
             );
@@ -901,7 +955,7 @@ export function validateLegalCitations(text: string): ValidationReport {
             verbatimVerified: false,
           });
           warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
-          processedText = processedText.replace(
+          processedText = replaceOutsideDocument(processedText, 
             rawMatch,
             `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
           );
@@ -966,12 +1020,12 @@ export function validateLegalCitations(text: string): ValidationReport {
           });
           warnings.push(`❌ CITA TEXTUAL APÓCRIFA DE ACUERDO PLENARIO: ${rawMatch}. ${attribution.actualReason}`);
           if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
-            processedText = processedText.replace(
+            processedText = replaceOutsideDocument(processedText, 
               attribution.extractedQuote,
               `[cita textual apócrifa del ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
             );
           } else {
-            processedText = processedText.replace(
+            processedText = replaceOutsideDocument(processedText, 
               rawMatch,
               `[cita textual apócrifa del ${knownDoc.officialNumber}]`
             );
@@ -989,7 +1043,7 @@ export function validateLegalCitations(text: string): ValidationReport {
             verbatimVerified: false,
           });
           warnings.push(`❌ ATRIBUCIÓN DE ACUERDO PLENARIO CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
-          processedText = processedText.replace(
+          processedText = replaceOutsideDocument(processedText, 
             rawMatch,
             `[acuerdo plenario con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
           );
@@ -1016,7 +1070,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         detail: 'Acuerdo Plenario no contrastado en el registro supremo.',
       });
       warnings.push(`⚠️ Acuerdo Plenario ${rawMatch} no figura en el registro oficial. Desclasificado.`);
-      processedText = processedText.replace(
+      processedText = replaceOutsideDocument(processedText, 
         rawMatch,
         '[acuerdo plenario pendiente de verificación documental]'
       );
@@ -1047,7 +1101,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         detail: 'Inexistente en el ordenamiento peruano. No existen Plenos Casatorios Mercantiles o Comerciales; los conflictos patrimoniales y mercantiles se rigen por los Plenos Casatorios Civiles (I al X).',
       });
       warnings.push(`❌ Precedente inexistente: ${rawMatch}. En el Perú no existen Plenos Casatorios Mercantiles.`);
-      processedText = processedText.replace(
+      processedText = replaceOutsideDocument(processedText, 
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental: en el Perú no existen Plenos Casatorios Mercantiles/Comerciales]'
       );
@@ -1070,7 +1124,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         detail: 'Precedente inexistente. La Corte Suprema de Justicia del Perú únicamente ha emitido diez (X) Plenos Casatorios Civiles vinculantes.',
       });
       warnings.push(`⚠️ Precedente no verificado: ${rawMatch}. La Corte Suprema solo ha emitido X Plenos Casatorios Civiles.`);
-      processedText = processedText.replace(
+      processedText = replaceOutsideDocument(processedText, 
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental: la Corte Suprema solo cuenta con X Plenos Casatorios Civiles]'
       );
@@ -1103,7 +1157,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         detail: 'Pleno Jurisdiccional no contrastado en el registro oficial del Poder Judicial.',
       });
       warnings.push(`⚠️ Pleno Jurisdiccional ${rawMatch} no verificado oficialmente.`);
-      processedText = processedText.replace(
+      processedText = replaceOutsideDocument(processedText, 
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
       );
@@ -1135,7 +1189,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         detail: 'Resolución o directiva administrativa no contrastada en el registro oficial.',
       });
       warnings.push(`⚠️ Acto administrativo ${rawMatch} no contrastado documentalmente.`);
-      processedText = processedText.replace(
+      processedText = replaceOutsideDocument(processedText, 
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
       );

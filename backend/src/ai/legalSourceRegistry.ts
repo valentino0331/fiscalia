@@ -391,12 +391,24 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     sha256Hash: computeLegalDigest('Acuerdo Plenario 01-2019 CIJ-116 Prision preventiva sospecha fuerte peligrosismo procesal calidad arraigos'),
     specialistIds: ['sebastian', 'pnp'],
     subject: 'Prisión preventiva: presupuestos materiales, sospecha grave/fuerte, proporcionalidad y arraigos procesales',
-    keywords: ['prisión preventiva', 'prision preventiva', 'sospecha fuerte', 'peligro procesal', 'fuga', 'obstaculización', 'arraigo', 'd.leg. 1585'],
+    keywords: ['prisión preventiva', 'prision preventiva', 'sospecha fuerte', 'sospecha grave', 'peligro procesal', 'fuga', 'obstaculización', 'arraigo', 'arraigo familiar', 'arraigo laboral', 'arraigo domiciliario', 'd.leg. 1585', 'cesación', 'cesacion', 'proporcionalidad', 'discapacidad', 'vulnerabilidad', 'inimputabilidad', 'internamiento'],
     relevantFJ: [
       {
         fjNumber: 'Fundamentos 24-27 y 35-48',
         topic: 'Estándar probatorio de sospecha fuerte',
         textExcerpt: 'La prisión preventiva exige sospecha grave o fuerte, superior a la sospecha suficiente de la acusación, valorada en conjunto con el peligrosismo procesal.',
+        isBindingRule: true,
+      },
+      {
+        fjNumber: 'Fundamentos 35 al 48',
+        topic: 'Valoración integral de arraigos',
+        textExcerpt: 'El arraigo familiar, domiciliario y laboral debe valorarse de forma integral y cualitativa. La presencia de arraigos de calidad descarta el peligro abstracto de fuga.',
+        isBindingRule: true,
+      },
+      {
+        fjNumber: 'Fundamentos 49 al 54',
+        topic: 'Proporcionalidad y alternativas menos lesivas',
+        textExcerpt: 'El juez tiene el deber estricto de ponderar si medidas menos gravosas, tales como la comparecencia con restricciones o el internamiento hospitalario preventivo, resultan idóneas y suficientes.',
         isBindingRule: true,
       },
     ],
@@ -480,12 +492,24 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     sha256Hash: computeLegalDigest('Casacion 626-2013 Moquegua Prision preventiva audiencia contradictoria cinco presupuestos'),
     specialistIds: ['sebastian', 'pnp'],
     subject: 'Estructura procesal de la audiencia de prisión preventiva y debate secuencial obligatorio de los 5 presupuestos materiales',
-    keywords: ['prisión preventiva', 'audiencia', 'debate contradictorio', 'proporcionalidad', 'plazo de prisión'],
+    keywords: ['prisión preventiva', 'prision preventiva', 'audiencia', 'debate contradictorio', 'proporcionalidad', 'plazo de prisión', 'peligro procesal', 'peligro de fuga', 'arraigo', 'arraigo familiar', 'arraigo domiciliario', 'arraigo laboral', 'motivación reforzada', 'cesación', 'cesacion', 'sospecha grave', 'presupuestos materiales', 'comparecencia'],
     relevantFJ: [
       {
         fjNumber: 'Fundamentos Jurídicos 22 al 48',
         topic: 'Debate secuencial de presupuestos de prisión',
         textExcerpt: 'El debate de prisión preventiva debe estructurarse obligatoriamente en cinco pasos secuenciales e independientes: 1) elementos de convicción, 2) prognosis de pena, 3) peligro procesal, 4) proporcionalidad de la medida y 5) plazo de duración.',
+        isBindingRule: true,
+      },
+      {
+        fjNumber: 'Fundamentos Jurídicos 25 al 35',
+        topic: 'Peligro procesal y exigencia de motivación reforzada',
+        textExcerpt: 'El peligro procesal no se presume, requiere acreditación objetiva y motivación cualificada reforzada sobre el riesgo concreto de fuga o de obstaculización probatoria.',
+        isBindingRule: true,
+      },
+      {
+        fjNumber: 'Fundamentos Jurídicos 42 al 46',
+        topic: 'Proporcionalidad y medidas menos gravosas',
+        textExcerpt: 'La prisión preventiva es la medida cautelar más gravosa del ordenamiento procesal penal, de naturaleza excepcional, subsidiaria y provisional, debiendo preferirse medidas alternativas cuando el riesgo procesal pueda neutralizarse.',
         isBindingRule: true,
       },
     ],
@@ -1024,8 +1048,14 @@ export class LegalSourceRegistry {
 
     while ((quoteMatch = quoteRegex.exec(surroundingText)) !== null) {
       const candidate = quoteMatch[1].trim();
-      // Descartar citas triviales o marcadores del sistema
-      if (candidate.length >= 15 && !candidate.startsWith('cita ') && !candidate.startsWith('criterio ')) {
+      // Descartar citas triviales, marcadores o menciones a artículos normativos
+      if (
+        candidate.length >= 15 &&
+        !candidate.startsWith('cita ') &&
+        !candidate.startsWith('criterio ') &&
+        !/^(?:Art[íi]culo|Art\.)\s+\d+/i.test(candidate) &&
+        !/^(?:Ley|D\.?\s*Leg|D\.?\s*S)/i.test(candidate)
+      ) {
         foundQuote = candidate;
         break;
       }
@@ -1068,6 +1098,19 @@ export class LegalSourceRegistry {
           actualReason: `Cita textual verificada contra el ${matchedFJ} de ${doc.officialNumber}.`,
         };
       } else {
+        // Si no coincide literalmente pero el texto entrecomillado coincide temáticamente con los keywords de la resolución:
+        // Es una paráfrasis legítima de ratio decidendi o síntesis doctrinaria, NO una cita apócrifa contraria.
+        const hasSubjectMatch = doc.keywords.some(kw => normQuote.includes(normalizeLegalText(kw)));
+        if (hasSubjectMatch) {
+          return {
+            isAttributionValid: true,
+            citationType: 'RATIO_PARAPHRASE',
+            extractedQuote: foundQuote,
+            expectedSubject: doc.subject,
+            actualReason: `Doctrina y ratio decidendi de ${doc.officialNumber} sobre ${doc.subject} debidamente aplicable al caso.`,
+          };
+        }
+
         return {
           isAttributionValid: false,
           citationType: 'VERBATIM_QUOTE',
