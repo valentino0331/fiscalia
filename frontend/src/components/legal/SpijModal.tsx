@@ -661,7 +661,7 @@ export const PLENARIES: Plenary[] = [
 
   // ── MARCO: ADMINISTRATIVO ADICIONALES ──
   {
-    code: 'Casación Vinculante N° 8453-2014 Lima',
+    code: 'Régimen de caducidad y prescripción del PAS (TUO LPAG)',
     specialistId: 'marco',
     plenum: 'Doctrina Jurisprudencial Sala Constitucional y Social',
     officialCourt: 'Corte Suprema de Justicia de la República',
@@ -673,9 +673,9 @@ export const PLENARIES: Plenary[] = [
       'Operada la caducidad, el procedimiento fenece de pleno derecho y cualquier sanción posterior adolece de nulidad insubsanable.',
       'La prescripción de la potestad sancionadora opera indefectiblemente a los 4 años de cometida la infracción.',
     ],
-    bindingGrounds: 'Fundamentos Jurídicos 11 al 18 (plazo razonable del ius puniendi conforme al TUO LPAG D.S. 006-2026-JUS).',
+    bindingGrounds: 'Régimen legal del TUO LPAG D.S. 006-2026-JUS (verifique numeración de artículos en SPIJ).',
     practicalUse: 'Solicitudes de caducidad y prescripción de procedimientos sancionadores iniciados por ministerios, municipalidades u organismos reguladores.',
-    promptTemplate: 'Redacta un escrito solicitando la declaración de caducidad del Procedimiento Administrativo Sancionador (PAS) y archivo definitivo conforme al Art. 257° del TUO de la LPAG (D.S. 006-2026-JUS) y la Casación N° 8453-2014 Lima.',
+    promptTemplate: 'Redacta un escrito solicitando la declaración de caducidad del Procedimiento Administrativo Sancionador (PAS) y archivo definitivo conforme al régimen de caducidad y prescripción del TUO de la LPAG (D.S. 006-2026-JUS); no cites casaciones salvo que consten en el contexto verificado.',
   },
 
   // ── FERNANDA: TRIBUTARIO ADICIONALES ──

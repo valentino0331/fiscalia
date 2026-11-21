@@ -33,8 +33,8 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Prescripción adquisitiva de dominio y coposesión en bienes inmuebles',
     bindingFJ: 'Precedentes Vinculantes 1 al 3',
   },
-  '4618-2007': {
-    title: 'Tercer Pleno Casatorio Civil (Casación N° 4618-2007/Lima)',
+  '4664-2010': {
+    title: 'III Pleno Casatorio Civil (Casación N° 4664-2010/Puno)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Divorcio por separación de hecho, cónyuge más perjudicado e indemnización obligatoria o adjudicación preferente',
     bindingFJ: 'Precedentes Vinculantes 1 al 6 (Fojas 12-18)',
@@ -51,91 +51,43 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Impugnación de acuerdos asociativos, legitimidad para obrar y nulidad de acto jurídico',
     bindingFJ: 'Precedente Vinculante Pleno 1',
   },
-  '4004-2012': {
-    title: 'VI Pleno Casatorio Civil (Casación N° 4004-2012/Junín)',
+  '2402-2012': {
+    title: 'VI Pleno Casatorio Civil (Casación N° 2402-2012/Lambayeque)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Ejecución de garantías reales e hipotecarias, saldo deudor y estado de cuenta de saldo deudor',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 7',
   },
-  '367-2014': {
-    title: 'VII Pleno Casatorio Civil (Casación N° 367-2014/Lima Norte)',
+  '3671-2014': {
+    title: 'VII Pleno Casatorio Civil (Casación N° 3671-2014/Lima)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Tercería de propiedad sobre bienes inmuebles no inscritos con fecha cierta frente a embargo judicial inscrito',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 y 2',
   },
-  '4442-2015': {
-    title: 'VIII Pleno Casatorio Civil (Casación N° 4442-2015/Moquegua)',
+  '3006-2015': {
+    title: 'VIII Pleno Casatorio Civil (Casación N° 3006-2015/Junín)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Disposición de bienes de la sociedad conyugal por un solo cónyuge y nulidad del acto jurídico',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 5',
   },
-  '3290-2015': {
-    title: 'IX Pleno Casatorio Civil (Casación N° 3290-2015/Lima)',
+  '4442-2015': {
+    title: 'IX Pleno Casatorio Civil (Casación N° 4442-2015/Moquegua)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Proceso sumarísimo de otorgamiento de escritura pública y control judicial de oficio de nulidad manifiesta',
-    bindingFJ: 'Precedentes Vinculantes Reglas 1 a 8',
+    bindingFJ: 'Precedentes Vinculantes',
   },
   '1242-2017': {
-    title: 'X Pleno Casatorio Civil (Casación N° 1242-2017/Tacna)',
+    title: 'X Pleno Casatorio Civil (Casación N° 1242-2017/Lima Este)',
     court: 'Salas Civiles Reunidas de la Corte Suprema de Justicia',
     subject: 'Prueba de oficio en el proceso civil y límites del contradictorio previo bajo el Art. 194° CPC',
     bindingFJ: 'Precedentes Vinculantes Reglas 1 a 12',
   },
 
   // --- DERECHO DE FAMILIA Y NIÑEZ ---
-  '2402-2012': {
-    title: 'Casación N° 2402-2012/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema de Justicia',
-    subject: 'Daño moral in re ipsa derivado de denuncias calumniosas, zozobra procesal y separación de hecho',
-    bindingFJ: 'Fundamento Jurídico Quinto',
-  },
-  '2184-2017': {
-    title: 'Casación N° 2184-2017/Ica',
-    court: 'Sala de Derecho Constitucional y Social Permanente',
-    subject: 'Interés superior del niño y tenencia compartida preferente',
-    bindingFJ: 'Fundamentos Jurídicos 8 al 12',
-  },
-  '3784-2014': {
-    title: 'Casación N° 3784-2014/Tacna',
-    court: 'Sala Civil Permanente de la Corte Suprema',
-    subject: 'Pensión de alimentos para hijos mayores de edad que cursan estudios exitosos con notas aprobatorias',
-    bindingFJ: 'Fundamentos Jurídicos Cuarto al Séptimo',
-  },
-  '1663-2017': {
-    title: 'Casación N° 1663-2017/Cusco',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Criterios de proporcionalidad y capacidad económica real del obligado en fijación de alimentos',
-    bindingFJ: 'Fundamento Jurídico Quinto',
-  },
-  '3447-2017': {
-    title: 'Casación N° 3447-2017/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Régimen de visitas y su cumplimiento progresivo sin obstaculizaciones parentales',
-    bindingFJ: 'Fundamento Jurídico Sexto',
-  },
   '4310-2014': {
     title: 'Casación N° 4310-2014/Lima',
     court: 'Sala Civil Permanente de la Corte Suprema',
-    subject: 'Separación de patrimonios y liquidación equitativa de sociedad de gananciales',
-    bindingFJ: 'Fundamentos Jurídicos 5 y 6',
-  },
-  '2877-2015': {
-    title: 'Casación N° 2877-2015/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Suspensión y pérdida de la patria potestad por reiterado incumplimiento del deber asistencial',
-    bindingFJ: 'Fundamento Jurídico Cuarto',
-  },
-  '1822-2016': {
-    title: 'Casación N° 1822-2016/Lima',
-    court: 'Sala Civil Permanente de la Corte Suprema',
-    subject: 'Indemnización por daño al proyecto de vida y ruptura del deber conyugal de fidelidad',
-    bindingFJ: 'Fundamento Jurídico Séptimo',
-  },
-  '879-2014': {
-    title: 'Casación N° 879-2014/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Exoneración de alimentos por desaparición del estado de necesidad o subsistencia propia',
-    bindingFJ: 'Fundamento Jurídico Quinto',
+    subject: 'Divorcio por separación de hecho que procede pese a la existencia de un proceso de alimentos',
+    bindingFJ: 'Ver sentencia',
   },
 
   // --- DERECHO PENAL Y PROCESAL PENAL ---
@@ -154,7 +106,7 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
   '02-2008': {
     title: 'Casación Vinculante N° 02-2008/La Libertad',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Control de plazos en diligencias preliminares y tutela de derechos',
+    subject: 'Plazo de las diligencias preliminares y su relación con el plazo de la investigación preparatoria',
     bindingFJ: 'Fundamentos Jurídicos 4 al 8',
   },
   '661-2016': {
@@ -163,47 +115,23 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Colusión agravada: delito de resultado que exige peritaje contable del perjuicio patrimonial al Estado',
     bindingFJ: 'Fundamento Jurídico Sexto',
   },
-  '1307-2019': {
-    title: 'Casación N° 1307-2019/Nacional',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Estándar probatorio de sospecha fuerte en prisión preventiva y evaluación de arraigos de calidad',
-    bindingFJ: 'Fundamentos Jurídicos 18 al 29',
-  },
   '760-2016': {
     title: 'Casación N° 760-2016/La Libertad',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Prueba de oficio en juicio oral penal y principio acusatorio',
+    subject: 'Control formal de la acusación fiscal: motivación y completitud (art. 349 CPP)',
     bindingFJ: 'Fundamentos Jurídicos Quinto al Noveno',
   },
   '158-2016': {
     title: 'Casación N° 158-2016/Huaura',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Control formal y sustancial de la acusación fiscal en etapa intermedia',
-    bindingFJ: 'Fundamentos Jurídicos 7 al 12',
-  },
-  '342-2017': {
-    title: 'Casación N° 342-2017/San Martín',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Autonomía del delito de lavado de activos y tipicidad subjetiva',
-    bindingFJ: 'Fundamentos Jurídicos 11 al 16',
+    subject: 'Diligencias practicadas sin la presencia injustificada del fiscal y su valor probatorio',
+    bindingFJ: 'Ver sentencia',
   },
   '92-2017': {
     title: 'Casación N° 92-2017/Arequipa',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Principio de oportunidad, acuerdos reparatorios y extinción de la acción penal',
-    bindingFJ: 'Fundamento Jurídico Cuarto',
-  },
-  '1673-2017': {
-    title: 'Casación N° 1673-2017/Nacional',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Incomunicación judicial de investigados y garantías procesales',
-    bindingFJ: 'Fundamentos Jurídicos 8 al 10',
-  },
-  '328-2018': {
-    title: 'Casación N° 328-2018/Nacional',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Elementos constitutivos del delito de organización criminal frente a banda criminal',
-    bindingFJ: 'Fundamentos Jurídicos 15 al 22',
+    subject: 'Lavado de activos: delito fuente como elemento del tipo y autonomía procesal (su carácter vinculante fue cuestionado posteriormente; verifique su vigencia)',
+    bindingFJ: 'Ver sentencia',
   },
 
   // --- ACUERDOS PLENARIOS PENALES ---
@@ -262,42 +190,24 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     bindingFJ: 'Fundamentos Jurídicos 25 al 34',
   },
   '02-2016': {
-    title: 'Acuerdo Plenario Extraordinario N° 02-2016/CIJ-116',
+    title: 'Acuerdo Plenario N° 02-2016/CIJ-116',
     court: 'Pleno Jurisdiccional Penal de la Corte Suprema',
-    subject: 'Proceso inmediato reformado y supuestos de flagrancia delictiva y confesión',
-    bindingFJ: 'Fundamentos Jurídicos 9 al 16',
+    subject: 'Proceso inmediato reformado: legitimidad y alcances',
+    bindingFJ: 'Ver acuerdo plenario',
   },
   '01-2017': {
     title: 'Acuerdo Plenario N° 01-2017/CIJ-116',
     court: 'Pleno Jurisdiccional Penal de la Corte Suprema',
-    subject: 'Colaboración eficaz y eficacia probatoria de los actos de corroboración',
-    bindingFJ: 'Fundamentos Jurídicos 14 al 23',
+    subject: 'Prolongación de la prisión preventiva (art. 274 CPP, D.Leg. 1307)',
+    bindingFJ: 'Ver acuerdo plenario',
   },
 
   // --- DERECHO LABORAL ---
   '12475-2014': {
-    title: 'Casación Laboral N° 12475-2014/Lima',
+    title: 'Casación Laboral N° 12475-2014/Moquegua',
     court: 'Segunda Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Desnaturalización de contratos modales por incremento de actividad e inexistencia de causa objetiva',
+    subject: 'Reposición laboral: supuestos en los que no se aplica el precedente Huatuco (STC 05057-2013-PA/TC)',
     bindingFJ: 'Fundamento Jurídico Quinto',
-  },
-  '9957-2017': {
-    title: 'Casación Laboral N° 9957-2017/Lima',
-    court: 'Segunda Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Hostigamiento laboral, actos de hostilidad y daño moral derivado del cese encubierto',
-    bindingFJ: 'Fundamentos Jurídicos 6 al 8',
-  },
-  '1696-2012': {
-    title: 'Casación Laboral N° 1696-2012/Lima',
-    court: 'Sala de Derecho Constitucional y Social Permanente',
-    subject: 'Principio de primacía de la realidad ante locación de servicios con subordinación encubierta',
-    bindingFJ: 'Fundamento Jurídico Séptimo',
-  },
-  '18450-2015': {
-    title: 'Casación Laboral N° 18450-2015/Lima',
-    court: 'Primera Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Horas extras, presunción de sobretiempo y fiscalización inmediata del empleador',
-    bindingFJ: 'Fundamento Jurídico Sexto',
   },
   '367-2022': {
     title: 'Casación N° 367-2022/Lima',
@@ -305,20 +215,8 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Prueba indiciaria y actos de hostilidad laboral por reducción de categoría',
     bindingFJ: 'Fundamentos Jurídicos Sexto al Octavo',
   },
-  '11169-2014': {
-    title: 'Casación Laboral N° 11169-2014/La Libertad',
-    court: 'Segunda Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Indemnización por despido fraudulento, daño emergente y lucro cesante laboral',
-    bindingFJ: 'Fundamentos Jurídicos 5 al 9',
-  },
 
   // --- DERECHO ADMINISTRATIVO Y CONTENCIOSO ---
-  '8453-2014': {
-    title: 'Casación N° 8453-2014/Lima',
-    court: 'Sala de Derecho Constitucional y Social Permanente',
-    subject: 'Caducidad del procedimiento administrativo sancionador (9 meses) y prescripción de 4 años bajo el TUO LPAG',
-    bindingFJ: 'Fundamentos Jurídicos Quinto al Noveno',
-  },
   '1803-2017': {
     title: 'Casación N° 1803-2017/Lima',
     court: 'Tercera Sala de Derecho Constitucional y Social Transitoria',
@@ -598,6 +496,7 @@ export function validateLegalCitations(text: string): ValidationReport {
 
   const citations: DetectedCitation[] = [];
   const warnings: string[] = [];
+  const unverifiedQuotes: string[] = [];
   let processedText = text;
 
   // 1. Detectar Normas Derogadas
@@ -611,13 +510,13 @@ export function validateLegalCitations(text: string): ValidationReport {
         officialSource: item.activeSubstitute,
         detail: item.warningNote,
       });
-      warnings.push(`⚠️ Norma Derogada detectada: ${item.repealedName}. Reemplazada por ${item.activeSubstitute}.`);
+      warnings.push(` Norma Derogada detectada: ${item.repealedName}. Reemplazada por ${item.activeSubstitute}.`);
       
       // Sanitizar la mención de la norma derogada en el texto procesal
       processedText = processedText.replace(item.pattern, `[norma derogada — sustituida por ${item.activeSubstitute}]`);
 
       // Inyectar el cintillo oficial
-      const warningBanner = `\n\n> ⚠️ **ALERTA DE VIGENCIA NORMATIVA (SPIJ 2026):** Se advierte que ${item.warningNote}\n\n`;
+      const warningBanner = `\n\n> **ALERTA DE VIGENCIA NORMATIVA (SPIJ 2026):** Se advierte que ${item.warningNote}\n\n`;
       if (!processedText.includes(warningBanner.trim())) {
         processedText = warningBanner + processedText;
       }
@@ -634,13 +533,13 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'CONTRADICTED',
         detail: mis.correctAttribution,
       });
-      warnings.push(`❌ Atribución jurídica incorrecta: ${mis.errorDescription}`);
+      warnings.push(` Atribución jurídica incorrecta: ${mis.errorDescription}`);
       
       // Sanitizar la frase errónea en el texto procesal
       processedText = processedText.replace(mis.pattern, `[atribución jurídica errónea: ${mis.errorDescription} — por mandato legal rige: ${mis.correctAttribution}]`);
 
       // Inyectar rectificación dogmática
-      const fixBanner = `\n\n> 🔍 **RECTIFICACIÓN DOGMÁTICA DE PRECISIÓN:** ${mis.errorDescription} Por mandato legal estricto: ${mis.correctAttribution}\n\n`;
+      const fixBanner = `\n\n> **RECTIFICACIÓN DOGMÁTICA DE PRECISIÓN:** ${mis.errorDescription} Por mandato legal estricto: ${mis.correctAttribution}\n\n`;
       if (!processedText.includes(fixBanner.trim())) {
         processedText = processedText + fixBanner;
       }
@@ -675,12 +574,12 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'CONTRADICTED',
         detail: `Norma de jurisdicción extranjera (${f.jurisdiction}) no aplicable en el Perú. ${f.peruvianEquivalent}`,
       });
-      warnings.push(`❌ Norma extranjera detectada: ${f.foreignSource} (${f.jurisdiction}). ${f.peruvianEquivalent}`);
+      warnings.push(` Norma extranjera detectada: ${f.foreignSource} (${f.jurisdiction}). ${f.peruvianEquivalent}`);
       
       // Primero sanitizar en el texto procesal
       processedText = processedText.replace(f.pattern, `[norma/tribunal foráneo no aplicable en el Perú — rige legislación nacional: ${f.peruvianEquivalent}]`);
 
-      const foreignBanner = `\n\n> 🚫 **ALERTA DE JURISDICCIÓN EXTRANJERA (LEGAL TRUTH ENGINE):** Se advierte que la referencia a "${f.foreignSource}" pertenece al ordenamiento de ${f.jurisdiction}. Por mandato constitucional y soberanía judicial, en los estrados y procesos peruanos rige exclusivamente la legislación nacional: ${f.peruvianEquivalent}\n\n`;
+      const foreignBanner = `\n\n> **ALERTA DE JURISDICCIÓN EXTRANJERA (LEGAL TRUTH ENGINE):** Se advierte que la referencia a "${f.foreignSource}" pertenece al ordenamiento de ${f.jurisdiction}. Por mandato constitucional y soberanía judicial, en los estrados y procesos peruanos rige exclusivamente la legislación nacional: ${f.peruvianEquivalent}\n\n`;
       if (!processedText.includes(foreignBanner.trim())) {
         processedText = foreignBanner + processedText;
       }
@@ -706,12 +605,12 @@ export function validateLegalCitations(text: string): ValidationReport {
         officialSource: validation.codeBoundary.officialEnactment,
         detail: validation.reason,
       });
-      warnings.push(`❌ ARTÍCULO INEXISTENTE: ${artMatch[0]}. ${validation.reason}`);
+      warnings.push(` ARTÍCULO INEXISTENTE: ${artMatch[0]}. ${validation.reason}`);
       const replacementNote = suffix
         ? `[artículo inexistente: ${artMatch[0]} — ${validation.reason}]`
         : `[artículo inexistente: ${artMatch[0]} — el ordenamiento peruano solo cuenta con ${validation.codeBoundary.maxArticle} artículos en esta norma]`;
       processedText = processedText.replace(artMatch[0], replacementNote);
-      processedText += `\n\n> 🔍 **RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE):** ${validation.reason}\n\n`;
+      processedText += `\n\n> **RECTIFICACIÓN NORMATIVA (LEGAL TRUTH ENGINE):** ${validation.reason}\n\n`;
     }
   }
 
@@ -732,11 +631,11 @@ export function validateLegalCitations(text: string): ValidationReport {
 
     if (knownDoc) {
       // Control de Correspondencia Temática (Ratio Decidendi) y Cita Textual (Round-Trip Grounding)
-      const surroundingStart = Math.max(0, match.index - 250);
-      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
+      const surroundingStart = Math.max(0, match.index - 600);
+      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 600);
       const surroundingContext = text.slice(surroundingStart, surroundingEnd);
       
-      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext);
+      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext, rawMatch);
 
       if (attribution.isAttributionValid) {
         citations.push({
@@ -752,31 +651,22 @@ export function validateLegalCitations(text: string): ValidationReport {
         });
       } else {
         if (attribution.citationType === 'VERBATIM_QUOTE') {
-          // Cita textual apócrifa atribuida a una resolución real
+          // El registro interno contiene resúmenes, no el tenor literal de los fundamentos: no es posible
+          // declarar "apócrifa" una cita textual (se destruiría una cita real). Se conserva el texto y se
+          // advierte que debe cotejarse literalmente contra la sentencia oficial.
           citations.push({
             raw: rawMatch,
             type: 'casacion',
             normalized: knownDoc.officialNumber,
-            status: 'CONTRADICTED',
+            status: 'EXISTENCE_VERIFIED_CONTENT_UNVERIFIED',
             officialSource: knownDoc.issuingEntity,
-            detail: attribution.actualReason,
+            detail: `Existe ${knownDoc.officialNumber}, pero el texto entrecomillado no pudo cotejarse literalmente. ${attribution.actualReason}`,
             citationType: 'VERBATIM_QUOTE',
             extractedQuote: attribution.extractedQuote,
             verbatimVerified: false,
           });
-          warnings.push(`❌ CITA TEXTUAL APÓCRIFA: ${rawMatch}. ${attribution.actualReason}`);
-          if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
-            processedText = processedText.replace(
-              attribution.extractedQuote,
-              `[cita textual apócrifa del expediente ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
-            );
-          } else {
-            processedText = processedText.replace(
-              rawMatch,
-              `[cita textual apócrifa del expediente ${knownDoc.officialNumber}]`
-            );
-          }
-          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+          unverifiedQuotes.push(`${rawMatch} (${knownDoc.officialNumber})`);
+          warnings.push(` CITA TEXTUAL NO VERIFICABLE: ${rawMatch}. Coteje el entrecomillado con el texto oficial.`);
         } else {
           // Atribución falsa de fundamento a sentencia real
           citations.push({
@@ -789,12 +679,12 @@ export function validateLegalCitations(text: string): ValidationReport {
             citationType: attribution.citationType,
             verbatimVerified: false,
           });
-          warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+          warnings.push(` ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
           processedText = processedText.replace(
             rawMatch,
             `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
           );
-          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+          processedText += `\n\n> **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
         }
       }
     } else if (knownVerified) {
@@ -817,7 +707,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Referencia jurisprudencial no contrastada en el compendio oficial de la Corte Suprema.',
       });
-      warnings.push(`⚠️ Casación ${rawMatch} no figura en el registro oficial de precedentes vinculantes. Desclasificada a criterio de parte.`);
+      warnings.push(` Casación ${rawMatch} no figura en el registro oficial de precedentes vinculantes. Desclasificada a criterio de parte.`);
 
       // Sanitización preventiva en el cuerpo procesal:
       // Retira el número judicial no contrastado para evitar temeridad procesal y alucinaciones en estrados.
@@ -851,11 +741,11 @@ export function validateLegalCitations(text: string): ValidationReport {
     const knownVerified = VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey];
 
     if (knownDoc) {
-      const surroundingStart = Math.max(0, match.index - 250);
-      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
+      const surroundingStart = Math.max(0, match.index - 600);
+      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 600);
       const surroundingContext = text.slice(surroundingStart, surroundingEnd);
       
-      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext);
+      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext, rawMatch);
 
       if (attribution.isAttributionValid) {
         citations.push({
@@ -871,30 +761,22 @@ export function validateLegalCitations(text: string): ValidationReport {
         });
       } else {
         if (attribution.citationType === 'VERBATIM_QUOTE') {
+          // El registro interno contiene resúmenes, no el tenor literal de los fundamentos: no es posible
+          // declarar "apócrifa" una cita textual (se destruiría una cita real). Se conserva el texto y se
+          // advierte que debe cotejarse literalmente contra la sentencia oficial.
           citations.push({
             raw: rawMatch,
             type: 'sentencia_tc',
             normalized: knownDoc.officialNumber,
-            status: 'CONTRADICTED',
+            status: 'EXISTENCE_VERIFIED_CONTENT_UNVERIFIED',
             officialSource: knownDoc.issuingEntity,
-            detail: attribution.actualReason,
+            detail: `Existe ${knownDoc.officialNumber}, pero el texto entrecomillado no pudo cotejarse literalmente. ${attribution.actualReason}`,
             citationType: 'VERBATIM_QUOTE',
             extractedQuote: attribution.extractedQuote,
             verbatimVerified: false,
           });
-          warnings.push(`❌ CITA TEXTUAL APÓCRIFA DEL TRIBUNAL CONSTITUCIONAL: ${rawMatch}. ${attribution.actualReason}`);
-          if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
-            processedText = processedText.replace(
-              attribution.extractedQuote,
-              `[cita textual apócrifa del expediente ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
-            );
-          } else {
-            processedText = processedText.replace(
-              rawMatch,
-              `[cita textual apócrifa del expediente ${knownDoc.officialNumber}]`
-            );
-          }
-          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+          unverifiedQuotes.push(`${rawMatch} (${knownDoc.officialNumber})`);
+          warnings.push(` CITA TEXTUAL NO VERIFICABLE: ${rawMatch}. Coteje el entrecomillado con el texto oficial.`);
         } else {
           citations.push({
             raw: rawMatch,
@@ -906,12 +788,12 @@ export function validateLegalCitations(text: string): ValidationReport {
             citationType: attribution.citationType,
             verbatimVerified: false,
           });
-          warnings.push(`❌ ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+          warnings.push(` ATRIBUCIÓN JURISPRUDENCIAL CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
           processedText = processedText.replace(
             rawMatch,
             `[cita jurisprudencial con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
           );
-          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+          processedText += `\n\n> **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
         }
       }
     } else if (knownVerified) {
@@ -940,11 +822,11 @@ export function validateLegalCitations(text: string): ValidationReport {
     const knownVerified = VERIFIED_JURISPRUDENCE_REGISTRY[lookupKey];
 
     if (knownDoc) {
-      const surroundingStart = Math.max(0, match.index - 250);
-      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 250);
+      const surroundingStart = Math.max(0, match.index - 600);
+      const surroundingEnd = Math.min(text.length, match.index + rawMatch.length + 600);
       const surroundingContext = text.slice(surroundingStart, surroundingEnd);
 
-      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext);
+      const attribution = LegalSourceRegistry.validateAttribution(lookupKey, surroundingContext, rawMatch);
       if (attribution.isAttributionValid) {
         citations.push({
           raw: rawMatch,
@@ -959,30 +841,22 @@ export function validateLegalCitations(text: string): ValidationReport {
         });
       } else {
         if (attribution.citationType === 'VERBATIM_QUOTE') {
+          // El registro interno contiene resúmenes, no el tenor literal de los fundamentos: no es posible
+          // declarar "apócrifa" una cita textual (se destruiría una cita real). Se conserva el texto y se
+          // advierte que debe cotejarse literalmente contra la sentencia oficial.
           citations.push({
             raw: rawMatch,
             type: 'acuerdo_plenario',
             normalized: knownDoc.officialNumber,
-            status: 'CONTRADICTED',
+            status: 'EXISTENCE_VERIFIED_CONTENT_UNVERIFIED',
             officialSource: knownDoc.issuingEntity,
-            detail: attribution.actualReason,
+            detail: `Existe ${knownDoc.officialNumber}, pero el texto entrecomillado no pudo cotejarse literalmente. ${attribution.actualReason}`,
             citationType: 'VERBATIM_QUOTE',
             extractedQuote: attribution.extractedQuote,
             verbatimVerified: false,
           });
-          warnings.push(`❌ CITA TEXTUAL APÓCRIFA DE ACUERDO PLENARIO: ${rawMatch}. ${attribution.actualReason}`);
-          if (attribution.extractedQuote && processedText.includes(attribution.extractedQuote)) {
-            processedText = processedText.replace(
-              attribution.extractedQuote,
-              `[cita textual apócrifa del ${knownDoc.officialNumber} — desclasificada por falta de correspondencia literal]`
-            );
-          } else {
-            processedText = processedText.replace(
-              rawMatch,
-              `[cita textual apócrifa del ${knownDoc.officialNumber}]`
-            );
-          }
-          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+          unverifiedQuotes.push(`${rawMatch} (${knownDoc.officialNumber})`);
+          warnings.push(` CITA TEXTUAL NO VERIFICABLE: ${rawMatch}. Coteje el entrecomillado con el texto oficial.`);
         } else {
           citations.push({
             raw: rawMatch,
@@ -994,12 +868,12 @@ export function validateLegalCitations(text: string): ValidationReport {
             citationType: attribution.citationType,
             verbatimVerified: false,
           });
-          warnings.push(`❌ ATRIBUCIÓN DE ACUERDO PLENARIO CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
+          warnings.push(` ATRIBUCIÓN DE ACUERDO PLENARIO CONTRADICTORIA: ${rawMatch}. ${attribution.actualReason}`);
           processedText = processedText.replace(
             rawMatch,
             `[acuerdo plenario con atribución temática errónea: ${knownDoc.officialNumber} trata sobre ${knownDoc.subject}]`
           );
-          processedText += `\n\n> 🔍 **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
+          processedText += `\n\n> **RECTIFICACIÓN JURISPRUDENCIAL (LEGAL TRUTH ENGINE):** ${attribution.actualReason}\n\n`;
         }
       }
     } else if (knownVerified) {
@@ -1021,7 +895,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Acuerdo Plenario no contrastado en el registro supremo.',
       });
-      warnings.push(`⚠️ Acuerdo Plenario ${rawMatch} no figura en el registro oficial. Desclasificado.`);
+      warnings.push(` Acuerdo Plenario ${rawMatch} no figura en el registro oficial. Desclasificado.`);
       processedText = processedText.replace(
         rawMatch,
         '[acuerdo plenario pendiente de verificación documental]'
@@ -1052,7 +926,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Inexistente en el ordenamiento peruano. No existen Plenos Casatorios Mercantiles o Comerciales; los conflictos patrimoniales y mercantiles se rigen por los Plenos Casatorios Civiles (I al X).',
       });
-      warnings.push(`❌ Precedente inexistente: ${rawMatch}. En el Perú no existen Plenos Casatorios Mercantiles.`);
+      warnings.push(` Precedente inexistente: ${rawMatch}. En el Perú no existen Plenos Casatorios Mercantiles.`);
       processedText = processedText.replace(
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental: en el Perú no existen Plenos Casatorios Mercantiles/Comerciales]'
@@ -1075,7 +949,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Precedente inexistente. La Corte Suprema de Justicia del Perú únicamente ha emitido diez (X) Plenos Casatorios Civiles vinculantes.',
       });
-      warnings.push(`⚠️ Precedente no verificado: ${rawMatch}. La Corte Suprema solo ha emitido X Plenos Casatorios Civiles.`);
+      warnings.push(` Precedente no verificado: ${rawMatch}. La Corte Suprema solo ha emitido X Plenos Casatorios Civiles.`);
       processedText = processedText.replace(
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental: la Corte Suprema solo cuenta con X Plenos Casatorios Civiles]'
@@ -1108,7 +982,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Pleno Jurisdiccional no contrastado en el registro oficial del Poder Judicial.',
       });
-      warnings.push(`⚠️ Pleno Jurisdiccional ${rawMatch} no verificado oficialmente.`);
+      warnings.push(` Pleno Jurisdiccional ${rawMatch} no verificado oficialmente.`);
       processedText = processedText.replace(
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
@@ -1140,7 +1014,7 @@ export function validateLegalCitations(text: string): ValidationReport {
         status: 'UNVERIFIED_CLAIM',
         detail: 'Resolución o directiva administrativa no contrastada en el registro oficial.',
       });
-      warnings.push(`⚠️ Acto administrativo ${rawMatch} no contrastado documentalmente.`);
+      warnings.push(` Acto administrativo ${rawMatch} no contrastado documentalmente.`);
       processedText = processedText.replace(
         rawMatch,
         '[criterio jurisprudencial pendiente de verificación documental]'
@@ -1151,9 +1025,15 @@ export function validateLegalCitations(text: string): ValidationReport {
   // 6. Si hay citas de casación catalogadas como UNVERIFIED_CLAIM, anexar la nota de advertencia al final si no existe
   const unverifiedCitations = citations.filter((c) => c.status === 'UNVERIFIED_CLAIM');
   if (unverifiedCitations.length > 0 && !processedText.includes('NOTA DE RIGOR Y AUDITORÍA PROCESAL')) {
-    const disclaimer = `\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
+    const disclaimer = `\n\n> **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
       unverifiedCitations.map(u => `> • **${u.raw}:** No he podido verificar esta referencia en las fuentes jurídicas disponibles. No puedo presentarla como una cita auténtica ni utilizarla como fundamento confirmado. Al no existir fuente comprobable del expediente citado, se ha desclasificado y retirado el número judicial para evitar temeridad procesal, debiendo sustentarse la pretensión directamente en las normas legales aplicables.\n`).join('');
     processedText = processedText + disclaimer;
+  }
+
+  // 6.1. Citas textuales entre comillas que no pudieron cotejarse literalmente (se conservan, con aviso)
+  if (unverifiedQuotes.length > 0 && !processedText.includes('CITAS TEXTUALES SIN COTEJO LITERAL')) {
+    processedText += `\n\n> **CITAS TEXTUALES SIN COTEJO LITERAL (ESTÁNDAR HARDMAN):**\n` +
+      unverifiedQuotes.map((q) => `> • ${q}: el texto entrecomillado no pudo verificarse literalmente. Cotéjelo con la sentencia oficial antes de presentarlo.\n`).join('');
   }
 
   const verifiedCount = citations.filter((c) => c.status === 'VERIFIED').length;

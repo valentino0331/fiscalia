@@ -16,6 +16,7 @@
 
 import { VERIFIED_JURISPRUDENCE_REGISTRY } from './legalCitationValidator';
 import { LegalSourceRegistry, validateStatutoryArticle } from './legalSourceRegistry';
+import { stripEmojis } from './textStyle';
 
 export class StreamingCitationFilter {
   private buffer: string = '';
@@ -39,6 +40,8 @@ export class StreamingCitationFilter {
    * Procesa un fragmento de texto entrante del LLM
    */
   public processChunk(chunk: string): void {
+    if (!chunk) return;
+    chunk = stripEmojis(chunk);
     if (!chunk) return;
     this.buffer += chunk;
     this.drainBuffer(false);
@@ -292,7 +295,7 @@ export class StreamingCitationFilter {
     this.drainBuffer(true);
 
     if (this.unverifiedCitations.length > 0) {
-      const disclaimer = `\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
+      const disclaimer = `\n\n> **NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN):**\n` +
         this.unverifiedCitations.map(c => `> • **${c}:** No he podido verificar esta referencia en las fuentes jurídicas disponibles. No puedo presentarla como una cita auténtica ni utilizarla como fundamento confirmado. Al no existir fuente comprobable del expediente citado, se ha desclasificado y retirado el número judicial para evitar temeridad procesal, debiendo sustentarse la pretensión directamente en las normas legales aplicables.\n`).join('');
       this.emit(disclaimer);
     }

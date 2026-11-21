@@ -584,7 +584,7 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
       'sucesion intestada', 'heredero forzoso', 'sucesiones'
     ],
     keyPrinciples: [
-      'Las causales de exclusión de la sucesión por indignidad están taxativamente tipificadas en el ARTÍCULO 667° DEL CÓDIGO CIVIL (modificado por Ley 31643), no admitiendo analogía ni extensión.',
+      'Las causales de exclusión de la sucesión por indignidad están taxativamente tipificadas en el ARTÍCULO 667° DEL CÓDIGO CIVIL (confirme incisos y reformas vigentes en SPIJ), no admitiendo analogía ni extensión.',
       'La indignidad no opera de pleno derecho: exige declaración judicial mediante sentencia firme en proceso de conocimiento (Art. 668° CC) y caduca al año de haber entrado el indigno en posesión de los bienes.',
       'DISTINCIÓN DOGMÁTICA VITAL: El ARTÍCULO 725° DEL CÓDIGO CIVIL regula exclusivamente el TERCIO DE LIBRE DISPOSICIÓN de quien tiene hijos u otros descendientes o cónyuge. NUNCA debe confundirse el Art. 725° con la indignidad (Art. 667°).',
       'La desheredación (Arts. 742° y ss. CC) es facultad privativa testamentaria del causante respecto de herederos forzosos, mientras que la acción de indignidad es promovida tras el fallecimiento del causante por los llamados a la sucesión.'
@@ -729,7 +729,7 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
 
   // ── MARCO: ADMINISTRATIVO ADICIONALES SPIJ ──
   {
-    code: 'Casación Vinculante N° 8453-2014 Lima',
+    code: 'Régimen de caducidad y prescripción del PAS (TUO LPAG)',
     specialistId: 'marco',
     court: 'Sala de Derecho Constitucional y Social Permanente - Corte Suprema',
     title: 'Caducidad del procedimiento administrativo sancionador y prescripción de la potestad sancionadora',
@@ -739,7 +739,7 @@ export const JURISPRUDENCE_COMPENDIUM: PlenaryAgreement[] = [
       'excepcion de prescripcion administrativa', 'archivo del pas'
     ],
     keyPrinciples: [
-      'El plazo de caducidad del Procedimiento Administrativo Sancionador (PAS) es de 9 meses contados desde la notificación de la imputación de cargos, ampliable excepcionalmente por 3 meses (Art. 257 TUO LPAG D.S. 006-2026-JUS).',
+      'El plazo de caducidad del Procedimiento Administrativo Sancionador (PAS) es de 9 meses contados desde la notificación de la imputación de cargos, ampliable excepcionalmente por 3 meses (TUO LPAG D.S. 006-2026-JUS; verifique la numeración vigente del artículo en SPIJ).',
       'Operada la caducidad, el procedimiento fenece de pleno derecho y la resolución sancionadora extemporánea adolece de nulidad de pleno derecho.',
       'La prescripción de la acción sancionadora opera indefectiblemente a los 4 años de cometida la infracción.',
     ],
@@ -871,7 +871,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       '1. Art. IX Título Preliminar y Art. 80° NCPP: La defensa técnica es un derecho fundamental irrenunciable e inviolable desde el inicio de la investigación.\n' +
       '2. Art. 71° num. 2 lit. c NCPP: Derecho a ser asistido por abogado defensor desde los primeros actos y en toda declaración.\n' +
       '3. Art. 84° NCPP: Derechos del Abogado Defensor (acceso a la carpeta, interrogar, aportar pruebas, entrevistarse reservadamente).\n' +
-      '⚠️ ADVERTENCIA ANTI-ERROR: El Art. 62° del NCPP trata sobre la EXCLUSIÓN DEL FISCAL (reemplazo por el Fiscal Superior). JAMÁS citar el Art. 62° como derecho de defensa ni como asistencia técnica de abogado.',
+      ' ADVERTENCIA ANTI-ERROR: El Art. 62° del NCPP trata sobre la EXCLUSIÓN DEL FISCAL (reemplazo por el Fiscal Superior). JAMÁS citar el Art. 62° como derecho de defensa ni como asistencia técnica de abogado.',
   },
   {
     lawCode: 'Decreto Legislativo N° 957 (NCPP) — Arts. 326°, 327° y 328°',
@@ -963,7 +963,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
     summary: 'Nueva distribución de competencias en la justicia laboral peruana:',
     practicalImpact:
       '1. Juzgados de Paz Letrados Laborales (JPLL): Conocen pretensiones hasta 70 URP (S/ 38,500 en 2026).\n' +
-      '2. Indemnizaciones por daños y perjuicios: Hasta 60 URP (S/ 33,000 en 2026) ante el JPLL.\n' +
+      '2. Indemnizaciones por daños y perjuicios: Responsabilidad civil por accidentes de trabajo y enfermedades profesionales: hasta 70 URP (S/ 38,500) ante el JPLL (R.A. 000424-2024-CE-PJ).\n' +
       '3. Juzgados Especializados de Trabajo: Pretensiones que superen las 70 URP.',
   },
   {
@@ -1158,19 +1158,19 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       'Las liquidaciones de cuotas impagas emitidas por la Junta de Propietarios constituyen título ejecutivo judicial. En contratos patrimoniales, la cláusula resolutoria expresa (Art. 1430 CC) permite dar por resuelto el contrato de pleno derecho mediante simple comunicación fehaciente sin esperar plazo de 15 días.',
   },
   {
-    lawCode: 'Ley N° 31643 y Artículos 667°, 668°, 669° Código Civil',
+    lawCode: 'Artículos 667°, 668°, 669° Código Civil',
     specialistId: 'diego',
     date: 'Vigente 2026',
     affectedCode: 'Código Civil (Libro IV: Sucesiones - Indignidad, Desheredación y Legítima)',
-    articles: ['Art. 667 CC', 'Art. 668 CC', 'Art. 669 CC', 'Art. 724 CC', 'Art. 725 CC', 'Art. 726 CC', 'Art. 742 CC', 'Art. 744 CC', 'Art. 747 CC', 'Ley 31643'],
+    articles: ['Art. 667 CC', 'Art. 668 CC', 'Art. 669 CC', 'Art. 724 CC', 'Art. 725 CC', 'Art. 726 CC', 'Art. 742 CC', 'Art. 744 CC', 'Art. 747 CC'],
     keywords: [
       'indignidad', 'causales de indignidad', 'exclusion por indignidad', 'indigno',
       'desheredacion', 'desheredar', 'herencia', 'testamento', 'legitima', 'tercio de libre disposicion',
       'libre disposicion', 'art 667', 'art 725', 'art 668', 'art 726', 'violencia familiar herencia', 'alimentos herencia'
     ],
-    summary: 'Régimen taxativo de causales de indignidad (Art. 667 CC) reformado por Ley 31643 y deslinde con legítima (Art. 725 CC):',
+    summary: 'Régimen taxativo de causales de indignidad (Art. 667 CC) (confirme incisos vigentes en SPIJ) y deslinde con legítima (Art. 725 CC):',
     practicalImpact:
-      'Las causales de exclusión por indignidad corresponden OBLIGATORIA Y EXCLUSIVAMENTE AL ARTÍCULO 667° DEL CÓDIGO CIVIL (7 incisos: 1. Homicidio doloso/tentativa; 2. Delito doloso; 3. Denuncia calumniosa con pena de cárcel; 4. Coacción o violencia en testamento; 5. Falsificación o destrucción de testamento; 6. Sentencia firme por violencia familiar Ley 31643; 7. Reiterado incumplimiento de alimentos debidos Ley 31643). Requiere proceso de conocimiento y sentencia judicial firme (Art. 668 CC). NUNCA CONFUNDIR CON EL ARTÍCULO 725° CC, el cual norma únicamente el Tercio de Libre Disposición para causantes con hijos o cónyuge.',
+      'Las causales de exclusión por indignidad corresponden OBLIGATORIA Y EXCLUSIVAMENTE AL ARTÍCULO 667° DEL CÓDIGO CIVIL (causales taxativas: homicidio doloso o tentativa, delitos dolosos, denuncia calumniosa, coacción testamentaria, falsificación o destrucción de testamento y las demás del texto vigente; no afirmes número de incisos ni la ley que los incorporó sin verificar en SPIJ). Requiere proceso de conocimiento y sentencia judicial firme (Art. 668 CC). NUNCA CONFUNDIR CON EL ARTÍCULO 725° CC, el cual norma únicamente el Tercio de Libre Disposición para causantes con hijos o cónyuge.',
   },
 
   {
@@ -1500,7 +1500,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('► DIRECTIVA CANÓNICA DE LITERALIDAD Y SUBSANACIÓN DE RESOLUCIONES JUDICIALES (CERO CONFUSIÓN):');
     sections.push('- LITERALIDAD TEXTUAL OBLIGATORIA DEL AUTO JUDICIAL:');
     sections.push('  * Cita textualmente entre comillas el considerando donde el Juez formula la observación procesal.');
-    sections.push('  * ⛔ PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO": Nunca inventes ni asumas que la omisión es del abogado cuando la resolución judicial observa a la parte.');
+    sections.push('  *  PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO": Nunca inventes ni asumas que la omisión es del abogado cuando la resolución judicial observa a la parte.');
     sections.push('- DISTINCIÓN DOGMÁTICA INVIOLABLE (Art. 131° CPC vs Art. 132° CPC / Art. 290° LOPJ):');
     sections.push('  1. ARTÍCULO 131° DEL CÓDIGO PROCESAL CIVIL (Firma de la Parte o Recurrente):');
     sections.push('     - Rige la firma de la persona interesada, demandante, quejosa o recurrente (ejemplo: Hermelinda Albino Beteta).');
@@ -1546,7 +1546,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('  5. Declaración jurada de no tener bienes el adoptado o relación de los que tenga.');
     sections.push('  6. Certificado médico de salud mental y física del adoptante y del adoptado.');
     sections.push('- VÍA NOTARIAL ALTERNATIVA (Art. 785° CPC): Conforme a la Ley N° 26662 (Arts. 21° al 23°), la adopción de personas mayores de edad capaces también puede tramitarse ante Notario Público si existe pleno acuerdo.');
-    sections.push('- ⛔ REGLAS TERMINANTES ANTI-ALUCINACIÓN (CERO ERRORES):');
+    sections.push('-  REGLAS TERMINANTES ANTI-ALUCINACIÓN (CERO ERRORES):');
     sections.push('  1. PROHIBICIÓN RADICAL DEL CNA: Queda terminantemente PROHIBIDO citar el Código de los Niños y Adolescentes (Ley 27337) o el D. Leg. 1297 para la adopción de personas mayores de edad. No interviene la Dirección General de Adopciones (DGA/MIMP).');
     sections.push('  2. PROHIBICIÓN DE NORMAS CONTENCIOSAS: Queda terminantemente PROHIBIDO citar artículos de procesos de conocimiento (Art. 480 CPC), abreviados (Art. 486 CPC) o sumarísimos (Art. 546 CPC) como vía procedimental, o inventar artículos inexistentes del CPC.');
     sections.push('  3. Si el usuario solicita redactar el documento, redacta de inmediato la SOLICITUD completa dentro del bloque ```document cumpliendo con todos los requisitos del Art. 782° CPC.');
@@ -1579,7 +1579,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('     - PASO 2 (EN AUDIENCIA 8:30 AM): Al instalarse la audiencia y ANTES de que el Fiscal exponga su requerimiento, formular INCIDENCIA PREVIA DE INEFICACIA PROCESAL (Art. 150.d NCPP) solicitando suspensión y plazo prudencial de 24 a 48 horas.');
     sections.push('     - PASO 3 (TÁCTICA SUBSIDIARIA EN ESTRADOS): Si el Juez rechaza la suspensión, interponer de inmediato en el acto RECURSO DE REPOSICIÓN ORAL EN AUDIENCIA bajo el ARTÍCULO 415° DEL NCPP (OBLIGATORIO: citar siempre el Art. 415° NCPP para reposición in situ; NUNCA citar Art. 421° que corresponde a la apelación), consignando reserva expresa de Apelación y demanda de Hábeas Corpus.');
     sections.push('  IV. ADVERTENCIA BLINDAJE ANTITRAMPAS:');
-    sections.push('     * Señala expresamente: ⚠️ ADVERTENCIA: NO procede Tutela de Derechos (Acuerdo Plenario N° 04-2010/CJ-116) porque el defecto proviene del Juzgado, no de la Fiscalía. El remedio es NULIDAD ABSOLUTA (Art. 150.d).');
+    sections.push('     * Señala expresamente:  ADVERTENCIA: NO procede Tutela de Derechos (Acuerdo Plenario N° 04-2010/CJ-116) porque el defecto proviene del Juzgado, no de la Fiscalía. El remedio es NULIDAD ABSOLUTA (Art. 150.d).');
     sections.push('  V. OBLIGACIÓN PROCESAL DE REDACCIÓN INMEDIATA DEL ESCRITO JUDICIAL (BLOQUE DOCUMENT):');
     sections.push('     - Tras concluir el análisis de los 4 bloques anteriores, redacta DE INMEDIATO el escrito judicial formal completo dentro del bloque ```document listo para ingresar al SINOE:');
     sections.push('       * TÍTULO: NULIDAD_ABSOLUTA_DE_NOTIFICACION_PRISION_PREVENTIVA');
@@ -1596,7 +1596,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('         - POR TANTO: Fórmula procesal formal de admisibilidad y fundabilidad.');
     sections.push('         - PRIMER OTROSÍ DIGO: Señalamiento de Casilla Electrónica SINOE, Casilla física, correo electrónico procesal y celular.');
     sections.push('         - SEGUNDO OTROSÍ DIGO: Delegación de facultades procesales.');
-    sections.push('       * ⛔ PROHIBICIÓN ABSOLUTA: NUNCA hagas un esquema o borrador resumido de una línea por acápite. NUNCA escribas "[CUERPO DEL DOCUMENTO EN TEXTO PLANO — CERO MARKDOWN]". Redacta todo el escrito judicial formal completo y exhaustivo.');
+    sections.push('       *  PROHIBICIÓN ABSOLUTA: NUNCA hagas un esquema o borrador resumido de una línea por acápite. NUNCA escribas "[CUERPO DEL DOCUMENTO EN TEXTO PLANO — CERO MARKDOWN]". Redacta todo el escrito judicial formal completo y exhaustivo.');
   }
 
   if (isHearing) {

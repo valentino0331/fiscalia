@@ -25,7 +25,7 @@ describe('FASE 2.3 — Evaluación Adversarial de Integridad Jurídica', () => {
       const citation = report.summary.citations.find(c => c.raw.includes('7892-2024'));
       expect(citation?.status).toBe('UNVERIFIED_CLAIM');
       
-      const [body, disclaimer] = report.processedText.split('> ⚖️');
+      const [body, disclaimer] = report.processedText.split(/> \*\*(?=NOTA DE RIGOR)/);
       expect(body).not.toContain('7892-2024');
       expect(body).toContain('[criterio jurisprudencial pendiente de verificación documental]');
       expect(disclaimer).toContain('NOTA DE RIGOR Y AUDITORÍA PROCESAL');
@@ -143,7 +143,7 @@ describe('FASE 2.3 — Evaluación Adversarial de Integridad Jurídica', () => {
       filter.processChunk('solicitamos la nulidad del auto.');
       filter.flush();
 
-      const [body] = clientReceived.split('> ⚖️');
+      const [body] = clientReceived.split(/> \*\*(?=NOTA DE RIGOR)/);
       expect(body).not.toContain('1122-2025');
       expect(body).toContain('[criterio jurisprudencial pendiente de verificación documental]');
       expect(clientReceived).toContain('NOTA DE RIGOR Y AUDITORÍA PROCESAL');

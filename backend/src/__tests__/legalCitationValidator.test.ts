@@ -2,15 +2,15 @@ import { describe, it, expect } from 'vitest';
 import { validateLegalCitations } from '../ai/legalCitationValidator';
 
 describe('Legal Citation Validator — Auditoría de Integridad', () => {
-  it('identifica y valida exitosamente el Tercer Pleno Casatorio Civil (Casación 4618-2007)', () => {
-    const text = 'Conforme al Tercer Pleno Casatorio Civil y la Casación N° 4618-2007/Lima, el cónyuge perjudicado tiene derecho a una indemnización.';
+  it('identifica y valida exitosamente el Tercer Pleno Casatorio Civil (Casación 4664-2010)', () => {
+    const text = 'Conforme al Tercer Pleno Casatorio Civil y la Casación N° 4664-2010/Puno, el cónyuge perjudicado tiene derecho a una indemnización.';
     const report = validateLegalCitations(text);
 
     expect(report.summary.verifiedCitations).toBeGreaterThanOrEqual(1);
-    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(verifiedCas).toBeDefined();
     expect(verifiedCas?.status).toBe('VERIFIED');
-    expect(verifiedCas?.detail).toContain('Tercer Pleno Casatorio');
+    expect(verifiedCas?.detail).toContain('III Pleno Casatorio');
   });
 
   it('detecta una casación inexistente y la desclasifica como UNVERIFIED_CLAIM con nota de advertencia', () => {
@@ -69,35 +69,50 @@ describe('Legal Citation Validator — Auditoría de Integridad', () => {
   });
 
   it('valida cita textual auténtica verificada contra el fundamento vinculante de la resolución (Round-Trip Grounding)', () => {
-    const text = 'Conforme a la Casación N° 4618-2007/Lima en su doctrina vinculante: "En los procesos de divorcio por la causal de separación de hecho, el Juez tiene el deber de fijar de oficio una indemnización o adjudicar preferentemente bienes al cónyuge más perjudicado."';
+    const text = 'Conforme a la Casación N° 4664-2010/Puno en su doctrina vinculante: "En los procesos de divorcio por la causal de separación de hecho, el Juez tiene el deber de fijar de oficio una indemnización o adjudicar preferentemente bienes al cónyuge más perjudicado."';
     const report = validateLegalCitations(text);
 
-    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(verifiedCas).toBeDefined();
     expect(verifiedCas?.status).toBe('VERIFIED');
     expect(verifiedCas?.citationType).toBe('VERBATIM_QUOTE');
     expect(verifiedCas?.verbatimVerified).toBe(true);
   });
 
-  it('detecta cita textual apócrifa atribuida a una resolución real y la desclasifica como CONTRADICTED', () => {
-    const text = 'Según la Casación N° 4618-2007/Lima: "El cónyuge que no trabaje perderá todo derecho a alimentos y será sancionado con prisión efectiva inmediata por abandono familiar."';
+  it('una cita textual que no coincide con el registro NO se borra: se conserva y se advierte que no pudo cotejarse', () => {
+    const quote = 'El cónyuge que no trabaje perderá todo derecho a alimentos y será sancionado con prisión efectiva inmediata por abandono familiar.';
+    const text = `Según la Casación N° 4664-2010/Puno: "${quote}"`;
     const report = validateLegalCitations(text);
 
-    expect(report.hasBlockingErrors).toBe(true);
-    const apocryphal = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
-    expect(apocryphal).toBeDefined();
-    expect(apocryphal?.status).toBe('CONTRADICTED');
-    expect(apocryphal?.citationType).toBe('VERBATIM_QUOTE');
-    expect(apocryphal?.verbatimVerified).toBe(false);
-    expect(report.processedText).toContain('cita textual apócrifa');
-    expect(report.processedText).toContain('RECTIFICACIÓN JURISPRUDENCIAL');
+    const flagged = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
+    expect(flagged).toBeDefined();
+    expect(flagged?.status).toBe('EXISTENCE_VERIFIED_CONTENT_UNVERIFIED');
+    expect(flagged?.citationType).toBe('VERBATIM_QUOTE');
+    expect(flagged?.verbatimVerified).toBe(false);
+    // El texto original se conserva (el registro interno son resúmenes, no el tenor literal)
+    expect(report.processedText).toContain(quote);
+    expect(report.processedText).toContain('CITAS TEXTUALES SIN COTEJO LITERAL');
+  });
+
+  it('la numeración falsa 4618-2007 ya no figura como verificada y el III Pleno es la Casación 4664-2010/Puno', () => {
+    const fake = validateLegalCitations('Conforme a la Casación N° 4618-2007/Lima.');
+    expect(fake.summary.unverifiedCitations).toBe(1);
+    const real = validateLegalCitations('Conforme a la Casación N° 4664-2010/Puno (III Pleno Casatorio).');
+    expect(real.summary.verifiedCitations).toBeGreaterThanOrEqual(1);
+  });
+
+  it('las casaciones no confirmadas en fuentes oficiales (2184-2017, 3784-2014, 8453-2014, 2402-2012/Lima daño moral) no figuran como verificadas', () => {
+    for (const k of ['2184-2017/Ica', '3784-2014/Tacna', '8453-2014/Lima']) {
+      const r = validateLegalCitations(`Véase la Casación N° ${k}.`);
+      expect(r.summary.unverifiedCitations).toBe(1);
+    }
   });
 
   it('valida paráfrasis legítima de ratio decidendi sin exigir coincidencia literal', () => {
-    const text = 'La Casación N° 4618-2007/Lima tutela al cónyuge perjudicado exigiendo que el juzgador evalúe la indemnización económica o adjudicación preferente de bienes.';
+    const text = 'La Casación N° 4664-2010/Puno tutela al cónyuge perjudicado exigiendo que el juzgador evalúe la indemnización económica o adjudicación preferente de bienes.';
     const report = validateLegalCitations(text);
 
-    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4618-2007'));
+    const verifiedCas = report.summary.citations.find((c) => c.raw.includes('4664-2010'));
     expect(verifiedCas).toBeDefined();
     expect(verifiedCas?.status).toBe('VERIFIED');
     expect(verifiedCas?.citationType).toBe('RATIO_PARAPHRASE');

@@ -115,7 +115,7 @@ describe('FASE 6 — 12 Pruebas Adversariales Forenses (Legal Truth Engine)', ()
     expect(fakeCas?.status).toBe('UNVERIFIED_CLAIM');
 
     // El número judicial inventado DEBE ser retirado del cuerpo
-    const [body, disclaimer] = report.processedText.split('> ⚖️');
+    const [body, disclaimer] = report.processedText.split(/> \*\*(?=NOTA DE RIGOR)/);
     expect(body).not.toContain('99999-2026');
     expect(body).toContain('[criterio jurisprudencial pendiente de verificación documental]');
 
@@ -187,7 +187,7 @@ describe('FASE 7 — Criterios de Aceptación Cuantitativos (Acceptance Metrics)
       { text: 'Conforme al Artículo 326-B del Código Procesal Penal', expectedStatus: 'CONTRADICTED' },
       { text: 'Conforme a la Casación N° 99999-2026/Lima', expectedStatus: 'UNVERIFIED_CLAIM' },
       { text: 'Conforme a la Ley N° 30225 de Contrataciones', expectedStatus: 'REPEALED_NORM' },
-      { text: 'Conforme a la Casación N° 4618-2007/Lima en indemnización por divorcio', expectedStatus: 'VERIFIED' },
+      { text: 'Conforme a la Casación N° 4664-2010/Puno en indemnización por divorcio', expectedStatus: 'VERIFIED' },
       { text: 'Conforme a la Casación Vinculante N° 02-2008/La Libertad sobre diligencias preliminares', expectedStatus: 'VERIFIED' },
     ];
 

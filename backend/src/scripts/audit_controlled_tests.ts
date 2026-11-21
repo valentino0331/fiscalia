@@ -10,9 +10,9 @@ async function runControlledAuditTests() {
 
   const sql = neon(process.env.DATABASE_URL!);
 
-  // Test 1: Casación real y documentada (Casación 4618-2007 Lima - III Pleno Casatorio)
+  // Test 1: Casación real y documentada (Casación 4664-2010 Puno - III Pleno Casatorio)
   console.log('--- TEST 1: Casación real y documentada ---');
-  const q1 = 'Necesito fundamentar el Tercer Pleno Casatorio Civil Casación 4618-2007 Lima cónyuge perjudicado';
+  const q1 = 'Necesito fundamentar el Tercer Pleno Casatorio Civil Casación 4664-2010 Puno cónyuge perjudicado';
   const rag1 = await getRagContext('camila', q1);
   const spij1 = getSpijLegalGrounding('camila', q1);
   console.log('Query:', q1);

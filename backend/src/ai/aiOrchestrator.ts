@@ -18,6 +18,7 @@ import { encryptConversationMessages, encryptTitle } from '../lib/encryption';
 import { recordQuestionUsage } from '../middleware/subscription';
 import { getRagContext } from '../lib/ragEngine';
 import { getSpijLegalGrounding } from '../lib/spijLegalEngine';
+import { getLocalCorpusContext } from '../lib/localCorpusRetriever';
 import { SYSTEM_PROMPTS } from '../prompts/agents';
 import { CaseMemoryManager } from './caseMemoryManager';
 import { detectTaskType, getCandidatesForTask } from './modelRouter';
@@ -25,6 +26,7 @@ import { ProviderAdapter, ProviderExecutionError } from './providerAdapter';
 import { ResponseQualityController } from './responseQualityController';
 import { StreamingCitationFilter } from './streamingCitationFilter';
 import { CircuitBreaker } from './circuitBreaker';
+import { stripEmojis } from './textStyle';
 import {
   AiOrchestratorResponse,
   AiOrchestratorMeta,
@@ -77,6 +79,13 @@ export class AiOrchestrator {
     if (!legalGrounding) {
       legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
     }
+    // Artículos verificados del corpus local (no depende de embeddings): complementan o sustituyen al RAG
+    try {
+      const localCorpus = getLocalCorpusContext(latestUserMessage, { skipText: legalGrounding || '' });
+      if (localCorpus) legalGrounding = (legalGrounding || '') + localCorpus;
+    } catch (corpusErr) {
+      console.warn('[Orchestrator] Recuperador local de corpus no disponible:', corpusErr);
+    }
 
     // 4. Construcción del Prompt Central
     let temporalIrretroactivityDirective = '';
@@ -87,25 +96,30 @@ DIRECTIVA DE APLICACIÓN TEMPORAL DE LA LEY (TEMPUS REGIT ACTUM - LEGAL TRUTH EN
 Se advierte que la consulta hace referencia a hechos o actos ocurridos en el año ${factYear}.
 1. DERECHO SUSTANTIVO APLICABLE: Conforme al Artículo 103° de la Constitución Política del Perú, los derechos y obligaciones sustantivas se rigen por la norma vigente al momento de acaecer los hechos (${factYear}).
 2. PROHIBICIÓN DE RETROACTIVIDAD PERJUDICIAL: Está terminantemente prohibido aplicar retroactivamente normas posteriores que restrinjan derechos o impongan cargas inexistentes en ${factYear}, salvo el principio de retroactividad benigna en materia penal.
-3. DERECHO PROCESAL VIGENTE (2026): Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a OCTUBRE DE 2026.
+3. DERECHO PROCESAL VIGENTE (2026): Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a la fecha actual de operación.
 ════════════════════════════════════════════════════════════════\n\n`;
     }
 
+    const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    const hoy = new Date();
+    const FECHA_OPERACION = `${MESES[hoy.getMonth()]} DE ${hoy.getFullYear()}`;
+    // Datos contrastados con El Peruano / fuentes oficiales (ver docs/HARDMAN_FUENTES_VERIFICADAS.md).
+    // Todo lo que NO figure aquí ni en el contexto recuperado debe tratarse como no verificado.
     const TEMPORAL_OCTOBER_2026_ANCHOR = `════════════════════════════════════════════════════════════════
-ANCLAJE TEMPORAL Y DOGMÁTICO OFICIAL — OCTUBRE DE 2026 (PERÚ)
+ANCLAJE TEMPORAL Y NORMATIVO — ${FECHA_OPERACION} (PERÚ)
 ════════════════════════════════════════════════════════════════
-FECHA ACTUAL DE OPERACIÓN: OCTUBRE DE 2026.
-Todas tus respuestas, plazos, cálculos, vías procesales y redacciones de documentos se rigen rigurosamente por el ordenamiento legal peruano vigente a OCTUBRE DE 2026.
-Queda terminantemente prohibido usar normas derogadas o desactualizadas:
-1. TUO LPAG: D.S. N° 006-2026-JUS (derogó formalmente al D.S. 004-2019-JUS).
-2. Contrataciones del Estado: Ley N° 32069 y D.S. N° 009-2025-EF (extinción definitiva del OSCE y Ley 30225; rige OECE, TCP, PLADICOP y JPRD obligatoria).
-3. Indicadores económicos 2026: UIT = S/ 5,500; URP = S/ 550; RMV = S/ 1,230.00 y Asignación Familiar = S/ 123.00 (D.S. N° 015-2026-TR).
-4. Competencia laboral: Ley N° 32155 (Paz Letrado Laboral hasta 70 URP = S/ 38,500 y daños hasta 60 URP = S/ 33,000; Especializados > 70 URP).
-5. Familia: Ley N° 31590 (Tenencia Compartida como regla general preferente sin favoritismo maternal automático) y Ley N° 31464 / Art. 562° CPC (Alimentos sin tasas ni firma obligatoria).
-6. Sucesiones: Art. 667° CC (Causales de indignidad - Ley 31643) vs Art. 725° CC (Tercio de libre disposición).
-7. Ejecución de garantías: Art. 721° CPC (Mandato ejecutivo de 3 días bajo apercibimiento de remate, no Art. 720°).
-8. Garantías Mobiliarias: D.L. N° 1400 y SIGM (derogada la Ley 28677).
-9. Penal: D. Leg. 1585 (Prisión preventiva prognosis de pena > 5 años); Arts. IX T.P., 71.2.c y 80°-85° NCPP para defensa técnica (Art. 62° es exclusión del Fiscal); AP 06-2009/CJ-116 (control formal y sustancial acusación); AP Ext. 02-2012/CJ-116 (tutela e imputación suficiente).
+FECHA ACTUAL DE OPERACIÓN: ${FECHA_OPERACION}.
+Aplica el ordenamiento peruano vigente a esta fecha. Los siguientes datos están contrastados con fuentes oficiales; para cualquier otro dato normativo aplica el protocolo de cita verificable:
+1. TUO LPAG: D.S. N° 006-2026-JUS (publicado el 30-04-2026; derogó el D.S. 004-2019-JUS). La numeración de artículos del nuevo TUO debe confirmarse en SPIJ; no la afirmes de memoria.
+2. Contrataciones del Estado: Ley N° 32069 (Ley General de Contrataciones Públicas) y su Reglamento D.S. N° 009-2025-EF, vigentes desde el 22-04-2025; reemplazan a la Ley 30225. El OECE asumió las funciones del antiguo OSCE.
+3. Indicadores 2026: UIT = S/ 5,500 (D.S. N° 301-2025-EF); URP = 10% de la UIT = S/ 550; RMV = S/ 1,230 desde el 01-10-2026 (D.S. N° 015-2026-TR) con un segundo tramo a S/ 1,300 en el primer semestre de 2027; Asignación Familiar = 10% de la RMV = S/ 123 (S/ 130 con el segundo tramo).
+4. Competencia laboral: Ley N° 32155 modificó la Ley 29497 (NLPT); los Juzgados de Paz Letrados Laborales conocen pretensiones cuantificables de hasta 70 URP (= S/ 38,500); los montos mayores corresponden a los Juzgados Especializados de Trabajo.
+5. Familia: Ley N° 31590 (publicada el 26-10-2022) modificó los arts. 81 a 84 del Código de los Niños y Adolescentes y estableció la tenencia compartida como regla. Ley N° 31464 modificó normas de los procesos de alimentos (arts. 555, 556, 558 y 564 CPC).
+6. Sucesiones: el Art. 667° CC regula la exclusión por indignidad y el Art. 725° CC el tercio de libre disposición (no los confundas). NO atribuyas reformas del Art. 667° a la Ley 31643 (regula el matrimonio ante notario). Confirma incisos vigentes en SPIJ.
+7. Ejecución de garantías: el mandato de ejecución con plazo de 3 días bajo apercibimiento de remate es el Art. 721° CPC (no el Art. 720°).
+8. Garantías Mobiliarias: D.Leg. N° 1400 (Régimen de Garantía Mobiliaria, SIGM), que derogó la Ley 28677.
+9. Penal: el D.Leg. N° 1585 modificó el Art. 268° NCPP elevando la prognosis de pena de la prisión preventiva a más de 5 años. Acuerdos Plenarios: AP 06-2009/CJ-116 (control formal y sustancial de la acusación) y AP Ext. 02-2012/CJ-116 (tutela de derechos e imputación suficiente).
+10. Plenos Casatorios Civiles (únicos diez, I al X): I Cas. 1465-2007/Cajamarca; II Cas. 2229-2008/Lambayeque; III Cas. 4664-2010/Puno; IV Cas. 2195-2011/Ucayali; V Cas. 3189-2012/Lima Norte; VI Cas. 2402-2012/Lambayeque; VII Cas. 3671-2014/Lima; VIII Cas. 3006-2015/Junín; IX Cas. 4442-2015/Moquegua; X Cas. 1242-2017/Lima Este.
 ════════════════════════════════════════════════════════════════\n\n`;
 
     const PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE = `════════════════════════════════════════════════════════════════
@@ -113,8 +127,17 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
 ════════════════════════════════════════════════════════════════
 1. ORDENAMIENTO JURÍDICO EXCLUSIVO: REPÚBLICA DEL PERÚ.
    - Todas tus respuestas, análisis procesales, vías de impugnación y redacciones de documentos se rigen RIGUROSAMENTE por el ordenamiento legal peruano vigente.
-   - ⛔ PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes o jurisprudencia de México, España, Colombia, Argentina o Chile.
-   - ⛔ PROHIBICIÓN DE INVENTAR CASACIONES O ARTÍCULOS: Nunca inventes números de expediente, salas ni años ficticios. Si no cuentas con la casación exacta en tu corpus, fundamenta en la ley sustantiva y declara la limitación.
+   -  PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes o jurisprudencia de México, España, Colombia, Argentina o Chile.
+   -  PROHIBICIÓN DE INVENTAR CASACIONES O ARTÍCULOS: Nunca inventes números de expediente, salas ni años ficticios. Si no cuentas con la casación exacta en tu corpus, fundamenta en la ley sustantiva y declara la limitación.
+2. REGISTRO PROFESIONAL (OBLIGATORIO): Redacta como un abogado senior dirigiéndose a un colega: tono formal, sobrio y técnico. Prohibido usar emojis, emoticones, pictogramas, signos de exclamación enfáticos o lenguaje coloquial. Usa títulos en texto, numeración y viñetas simples. Distingue la gravedad con palabras ("Riesgo alto", "Observación", "Punto a verificar"), nunca con símbolos.
+3. PROTOCOLO DE CITA VERIFICABLE (OBLIGATORIO EN CADA RESPUESTA):
+   - JERARQUÍA DE FUENTES: (a) el bloque "BASE NORMATIVA" / contexto recuperado que aparece más abajo es tu ÚNICA fuente textual autorizada; (b) tu memoria solo sirve para artículos y leyes de los que tengas certeza absoluta de número, contenido y vigencia.
+   - Si no tienes certeza de que una ley, decreto, artículo, inciso, pena (mínimo/máximo) o plazo exista tal como lo afirmas, NO lo afirmes: describe la regla en términos generales y escribe "[VERIFICAR EN SPIJ]" en lugar del número. Es preferible una respuesta incompleta a una cita falsa.
+   - NUNCA cites entre comillas texto de una norma o sentencia que no esté en el contexto recuperado. Parafrasea sin comillas.
+   - NUNCA combines un número de artículo con un contenido que no corresponda (p. ej. un tipo penal con el artículo de otro delito). Ante la duda sobre qué artículo regula una figura, nombra la figura y omite el número.
+   - NUNCA cites números de Ley, Decreto Legislativo, Decreto Supremo, Casación, Expediente, Acuerdo Plenario o STC "de ejemplo" ni aproximados.
+   - Penas, plazos procesales, cuantías y porcentajes: solo si constan en el contexto recuperado o tienes certeza total; de lo contrario indícalo como [VERIFICAR EN SPIJ].
+   - Si la pregunta exige una norma que no figura en tu contexto, dilo expresamente al inicio ("No dispongo del texto verificado de …") antes de dar cualquier orientación.
 ════════════════════════════════════════════════════════════════\n\n`;
 
     let studioBlock = '';
@@ -138,7 +161,13 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       agentPrompt +
       caseMemory.formattedBlock +
       studioBlock +
-      (legalGrounding ? `\n\n${legalGrounding}` : '');
+      (legalGrounding
+        ? `\n\n${legalGrounding}`
+        : `\n\n════════════════════════════════════════════════════════════════
+SIN TEXTO NORMATIVO RECUPERADO PARA ESTA CONSULTA
+════════════════════════════════════════════════════════════════
+No se recuperó texto verificado del corpus para esta consulta. Por tanto: no cites números de artículo, incisos, penas, plazos ni casaciones salvo que tengas certeza absoluta; en los demás casos describe la regla en términos generales y marca [VERIFICAR EN SPIJ]. Si la respuesta depende de una norma concreta que no puedes verificar, dilo al inicio.
+`);
 
     const formattedMessages = [
       { role: 'system', content: fullSystemPrompt },
@@ -233,6 +262,9 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
+    // Registro profesional: sin emojis ni pictogramas en lo que llega al abogado (coincide con el stream filtrado)
+    executionResult = { ...executionResult, text: stripEmojis(executionResult.text) };
+
     // 7. Validación Jurídica y Control de Calidad Estructural (Bypassed if service unavailable)
     const isServiceDown = executionResult.provider === 'system_unavailable' || executionResult.provider === 'emergency_mock';
     const qualityReport = isServiceDown
@@ -251,15 +283,21 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       : ResponseQualityController.evaluateResponse(
           executionResult.text,
           latestUserMessage,
-          isDraftingRequest
+          isDraftingRequest,
+          legalGrounding
         );
 
     // Si se agregaron rectificaciones o notas de advertencia que no se emitieron en el stream, enviarlas ahora
+    // Solo se puede enviar por append lo que el validador añadió AL FINAL del texto original.
+    // Si el validador reescribió el interior (sustituciones/banners al inicio), el desplazamiento
+    // por longitud ya no es válido y se omite para no emitir texto corrupto en el stream.
     if (isStream && sendStreamChunk && qualityReport.processedText !== executionResult.text) {
-      let extraContent = qualityReport.processedText.slice(executionResult.text.length);
+      let extraContent = qualityReport.processedText.startsWith(executionResult.text)
+        ? qualityReport.processedText.slice(executionResult.text.length)
+        : '';
       // Si el stream filter ya emitió la nota de advertencia por casaciones no verificadas, evitar duplicarla
       if (streamHadDisclaimer && extraContent.includes('NOTA DE RIGOR Y AUDITORÍA PROCESAL')) {
-        const disclaimerIdx = extraContent.indexOf('\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL');
+        const disclaimerIdx = extraContent.indexOf('\n\n> **NOTA DE RIGOR Y AUDITORÍA PROCESAL');
         if (disclaimerIdx !== -1) {
           extraContent = extraContent.slice(0, disclaimerIdx);
         }
@@ -269,7 +307,13 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
-    const finalMessage = qualityReport.processedText;
+    // Control de fuentes normativas: nota append-only (también se emite en streaming)
+    const auditNote = qualityReport.auditNote || '';
+    if (auditNote && isStream && sendStreamChunk) {
+      sendStreamChunk(auditNote);
+    }
+
+    const finalMessage = qualityReport.processedText + auditNote;
 
     // 8. Auto-detección de Transferencia de Especialista
     let transferTo: string | undefined;
