@@ -115,6 +115,14 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
    - Todas tus respuestas, análisis procesales, vías de impugnación y redacciones de documentos se rigen RIGUROSAMENTE por el ordenamiento legal peruano vigente.
    - ⛔ PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes o jurisprudencia de México, España, Colombia, Argentina o Chile.
    - ⛔ PROHIBICIÓN DE INVENTAR CASACIONES O ARTÍCULOS: Nunca inventes números de expediente, salas ni años ficticios. Si no cuentas con la casación exacta en tu corpus, fundamenta en la ley sustantiva y declara la limitación.
+2. PROTOCOLO DE CITA VERIFICABLE (OBLIGATORIO EN CADA RESPUESTA):
+   - JERARQUÍA DE FUENTES: (a) el bloque "BASE NORMATIVA" / contexto recuperado que aparece más abajo es tu ÚNICA fuente textual autorizada; (b) tu memoria solo sirve para artículos y leyes de los que tengas certeza absoluta de número, contenido y vigencia.
+   - Si no tienes certeza de que una ley, decreto, artículo, inciso, pena (mínimo/máximo) o plazo exista tal como lo afirmas, NO lo afirmes: describe la regla en términos generales y escribe "[VERIFICAR EN SPIJ]" en lugar del número. Es preferible una respuesta incompleta a una cita falsa.
+   - NUNCA cites entre comillas texto de una norma o sentencia que no esté en el contexto recuperado. Parafrasea sin comillas.
+   - NUNCA combines un número de artículo con un contenido que no corresponda (p. ej. un tipo penal con el artículo de otro delito). Ante la duda sobre qué artículo regula una figura, nombra la figura y omite el número.
+   - NUNCA cites números de Ley, Decreto Legislativo, Decreto Supremo, Casación, Expediente, Acuerdo Plenario o STC "de ejemplo" ni aproximados.
+   - Penas, plazos procesales, cuantías y porcentajes: solo si constan en el contexto recuperado o tienes certeza total; de lo contrario indícalo como [VERIFICAR EN SPIJ].
+   - Si la pregunta exige una norma que no figura en tu contexto, dilo expresamente al inicio ("No dispongo del texto verificado de …") antes de dar cualquier orientación.
 ════════════════════════════════════════════════════════════════\n\n`;
 
     let studioBlock = '';
@@ -251,12 +259,18 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       : ResponseQualityController.evaluateResponse(
           executionResult.text,
           latestUserMessage,
-          isDraftingRequest
+          isDraftingRequest,
+          legalGrounding
         );
 
     // Si se agregaron rectificaciones o notas de advertencia que no se emitieron en el stream, enviarlas ahora
+    // Solo se puede enviar por append lo que el validador añadió AL FINAL del texto original.
+    // Si el validador reescribió el interior (sustituciones/banners al inicio), el desplazamiento
+    // por longitud ya no es válido y se omite para no emitir texto corrupto en el stream.
     if (isStream && sendStreamChunk && qualityReport.processedText !== executionResult.text) {
-      let extraContent = qualityReport.processedText.slice(executionResult.text.length);
+      let extraContent = qualityReport.processedText.startsWith(executionResult.text)
+        ? qualityReport.processedText.slice(executionResult.text.length)
+        : '';
       // Si el stream filter ya emitió la nota de advertencia por casaciones no verificadas, evitar duplicarla
       if (streamHadDisclaimer && extraContent.includes('NOTA DE RIGOR Y AUDITORÍA PROCESAL')) {
         const disclaimerIdx = extraContent.indexOf('\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL');
@@ -269,7 +283,13 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
-    const finalMessage = qualityReport.processedText;
+    // Control de fuentes normativas: nota append-only (también se emite en streaming)
+    const auditNote = qualityReport.auditNote || '';
+    if (auditNote && isStream && sendStreamChunk) {
+      sendStreamChunk(auditNote);
+    }
+
+    const finalMessage = qualityReport.processedText + auditNote;
 
     // 8. Auto-detección de Transferencia de Especialista
     let transferTo: string | undefined;

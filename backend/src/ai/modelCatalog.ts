@@ -390,59 +390,57 @@ export class ModelCatalog {
     const candidates: ModelCandidate[] = [];
     const addedModelIds = new Set<string>();
 
-    const primaryModelId = (process.env.OPENROUTER_PRIMARY_MODEL || 'deepseek/deepseek-chat').trim();
-    const fallbackModelId = (process.env.OPENROUTER_FALLBACK_MODEL || 'openai/gpt-4o-mini').trim();
+    // Cadena de candidatos: primario → respaldo → terciario. Cada uno es configurable por entorno.
+    // Un modelo elegido EXPLÍCITAMENTE por entorno (p. ej. un modelo de mayor precisión jurídica como
+    // anthropic/claude-sonnet-5.5) se respeta aunque no esté en el registro o figure desactivado por
+    // coste; solo se descarta si un fallo en vivo (HTTP 404, etc.) lo marcó como no disponible.
+    const chain: { envValue: string | undefined; defaultId: string }[] = [
+      { envValue: process.env.OPENROUTER_PRIMARY_MODEL, defaultId: 'deepseek/deepseek-chat' },
+      { envValue: process.env.OPENROUTER_FALLBACK_MODEL, defaultId: 'openai/gpt-4o-mini' },
+      { envValue: process.env.OPENROUTER_TERTIARY_MODEL, defaultId: 'z-ai/glm-5.3-flash' },
+    ];
 
-    // 1. Añadir Candidato Primario
-    const primaryDef = this.getModel(primaryModelId) || MODEL_REGISTRY['deepseek/deepseek-chat'];
-    if (primaryDef) {
-      const override = this.dynamicStatusOverrides.get(primaryDef.id);
-      const effectiveStatus = override || primaryDef.status;
-      if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
-        candidates.push({
-          provider: 'openrouter',
-          model: primaryDef.id,
-          maxTokens: primaryDef.maxOutputTokens,
-          temperature: 0.0,
-          timeoutMs: primaryDef.timeoutMs,
-        });
-        addedModelIds.add(primaryDef.id);
-      }
-    }
+    for (const slot of chain) {
+      const explicitId = (slot.envValue || '').trim();
+      const modelId = explicitId || slot.defaultId;
+      if (addedModelIds.has(modelId)) continue;
 
-    // 2. Añadir Candidato de Respaldo (Fallback Alta Disponibilidad / Gran Contexto)
-    const fallbackDef = this.getModel(fallbackModelId) || MODEL_REGISTRY['openai/gpt-4o-mini'];
-    if (fallbackDef && !addedModelIds.has(fallbackDef.id)) {
-      const override = this.dynamicStatusOverrides.get(fallbackDef.id);
-      const effectiveStatus = override || fallbackDef.status;
-      if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
-        candidates.push({
-          provider: 'openrouter',
-          model: fallbackDef.id,
-          maxTokens: fallbackDef.maxOutputTokens,
-          temperature: 0.0,
-          timeoutMs: fallbackDef.timeoutMs,
-        });
-        addedModelIds.add(fallbackDef.id);
-      }
-    }
+      const registered = MODEL_REGISTRY[modelId];
+      const liveOverride = this.dynamicStatusOverrides.get(modelId);
+      const isUsable = (status: ModelOperationalStatus) => status === 'OPERATIONAL' || status === 'DEGRADED';
 
-    // 3. Añadir Candidato Terciario (GLM 5.3 Flash - 1 Millón de tokens de contexto y alta disponibilidad)
-    const tertiaryModelId = (process.env.OPENROUTER_TERTIARY_MODEL || 'z-ai/glm-5.3-flash').trim();
-    const tertiaryDef = this.getModel(tertiaryModelId) || MODEL_REGISTRY['z-ai/glm-5.3-flash'];
-    if (tertiaryDef && !addedModelIds.has(tertiaryDef.id)) {
-      const override = this.dynamicStatusOverrides.get(tertiaryDef.id);
-      const effectiveStatus = override || tertiaryDef.status;
-      if (effectiveStatus === 'OPERATIONAL' || effectiveStatus === 'DEGRADED') {
-        candidates.push({
+      let def: ModelDefinition | undefined;
+      if (explicitId) {
+        // Elección explícita del operador: solo el estado en vivo puede vetarla.
+        if (liveOverride && !isUsable(liveOverride)) continue;
+        def = registered || {
+          id: modelId,
           provider: 'openrouter',
-          model: tertiaryDef.id,
-          maxTokens: tertiaryDef.maxOutputTokens,
-          temperature: 0.0,
-          timeoutMs: tertiaryDef.timeoutMs,
-        });
-        addedModelIds.add(tertiaryDef.id);
+          apiType: 'openai-compatible',
+          displayName: `${modelId} (OpenRouter - configurado por entorno)`,
+          supportedTasks: ['EXPEDIENTE_ANALYSIS', 'DOCUMENT_DRAFTING', 'LEGAL_CONSULTATION', 'QUICK_ANSWER'],
+          capabilities: { text: true, image: false, pdfDocument: false, audio: false, streaming: true },
+          contextWindow: 128000,
+          maxOutputTokens: 8192,
+          status: 'OPERATIONAL',
+          priority: 1,
+          defaultTemperature: 0.0,
+          timeoutMs: 90000,
+          maxRetries: 1,
+        };
+      } else {
+        def = this.getModel(modelId);
+        if (!def || !isUsable(def.status)) continue;
       }
+
+      candidates.push({
+        provider: 'openrouter',
+        model: def.id,
+        maxTokens: def.maxOutputTokens,
+        temperature: 0.0,
+        timeoutMs: def.timeoutMs,
+      });
+      addedModelIds.add(def.id);
     }
 
     return candidates;

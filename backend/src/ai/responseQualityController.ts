@@ -11,12 +11,14 @@
 
 import { QualityCheckResult } from './types';
 import { validateLegalCitations } from './legalCitationValidator';
+import { auditStatutoryReferences } from './statutoryGroundingAudit';
 
 export class ResponseQualityController {
   public static evaluateResponse(
     text: string,
     userQuery: string,
-    isDraftingRequest: boolean
+    isDraftingRequest: boolean,
+    groundingText?: string | null
   ): QualityCheckResult {
     const warnings: string[] = [];
     const queryLower = (userQuery || '').toLowerCase();
@@ -65,10 +67,18 @@ export class ResponseQualityController {
       }
     }
 
+    // 5. Control de fuentes normativas (leyes/decretos/artículos inexistentes o no contrastados)
+    const statutoryAudit = auditStatutoryReferences(text, groundingText);
+    warnings.push(...statutoryAudit.impossible.map((r) => `❌ Referencia normativa inexistente: ${r.raw} (${r.reason}).`));
+    if (statutoryAudit.uncontrasted.length > 0) {
+      warnings.push(`⚠️ ${statutoryAudit.uncontrasted.length} referencia(s) normativa(s) no contrastada(s) con el corpus verificado.`);
+    }
+
     return {
-      isValid: !citationReport.hasBlockingErrors,
+      isValid: !citationReport.hasBlockingErrors && statutoryAudit.impossible.length === 0,
       warnings,
       processedText,
+      auditNote: statutoryAudit.note,
       verificationSummary: citationReport.summary,
     };
   }

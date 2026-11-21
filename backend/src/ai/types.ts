@@ -70,6 +70,8 @@ export interface QualityCheckResult {
   warnings: string[];
   blockedReason?: string;
   processedText: string;
+  /** Nota anexable (append-only) con el control de fuentes normativas; '' si no aplica. */
+  auditNote?: string;
   verificationSummary: VerificationSummary;
 }
 
