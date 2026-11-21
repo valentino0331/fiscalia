@@ -87,25 +87,30 @@ DIRECTIVA DE APLICACIÓN TEMPORAL DE LA LEY (TEMPUS REGIT ACTUM - LEGAL TRUTH EN
 Se advierte que la consulta hace referencia a hechos o actos ocurridos en el año ${factYear}.
 1. DERECHO SUSTANTIVO APLICABLE: Conforme al Artículo 103° de la Constitución Política del Perú, los derechos y obligaciones sustantivas se rigen por la norma vigente al momento de acaecer los hechos (${factYear}).
 2. PROHIBICIÓN DE RETROACTIVIDAD PERJUDICIAL: Está terminantemente prohibido aplicar retroactivamente normas posteriores que restrinjan derechos o impongan cargas inexistentes en ${factYear}, salvo el principio de retroactividad benigna en materia penal.
-3. DERECHO PROCESAL VIGENTE (2026): Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a OCTUBRE DE 2026.
+3. DERECHO PROCESAL VIGENTE (2026): Para la interposición de demandas, plazos de impugnación o actuaciones que deban formularse hoy, rigen las normas procesales vigentes a la fecha actual de operación.
 ════════════════════════════════════════════════════════════════\n\n`;
     }
 
+    const MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    const hoy = new Date();
+    const FECHA_OPERACION = `${MESES[hoy.getMonth()]} DE ${hoy.getFullYear()}`;
+    // Datos contrastados con El Peruano / fuentes oficiales (ver docs/HARDMAN_FUENTES_VERIFICADAS.md).
+    // Todo lo que NO figure aquí ni en el contexto recuperado debe tratarse como no verificado.
     const TEMPORAL_OCTOBER_2026_ANCHOR = `════════════════════════════════════════════════════════════════
-ANCLAJE TEMPORAL Y DOGMÁTICO OFICIAL — OCTUBRE DE 2026 (PERÚ)
+ANCLAJE TEMPORAL Y NORMATIVO — ${FECHA_OPERACION} (PERÚ)
 ════════════════════════════════════════════════════════════════
-FECHA ACTUAL DE OPERACIÓN: OCTUBRE DE 2026.
-Todas tus respuestas, plazos, cálculos, vías procesales y redacciones de documentos se rigen rigurosamente por el ordenamiento legal peruano vigente a OCTUBRE DE 2026.
-Queda terminantemente prohibido usar normas derogadas o desactualizadas:
-1. TUO LPAG: D.S. N° 006-2026-JUS (derogó formalmente al D.S. 004-2019-JUS).
-2. Contrataciones del Estado: Ley N° 32069 y D.S. N° 009-2025-EF (extinción definitiva del OSCE y Ley 30225; rige OECE, TCP, PLADICOP y JPRD obligatoria).
-3. Indicadores económicos 2026: UIT = S/ 5,500; URP = S/ 550; RMV = S/ 1,230.00 y Asignación Familiar = S/ 123.00 (D.S. N° 015-2026-TR).
-4. Competencia laboral: Ley N° 32155 (Paz Letrado Laboral hasta 70 URP = S/ 38,500 y daños hasta 60 URP = S/ 33,000; Especializados > 70 URP).
-5. Familia: Ley N° 31590 (Tenencia Compartida como regla general preferente sin favoritismo maternal automático) y Ley N° 31464 / Art. 562° CPC (Alimentos sin tasas ni firma obligatoria).
-6. Sucesiones: Art. 667° CC (Causales de indignidad - Ley 31643) vs Art. 725° CC (Tercio de libre disposición).
-7. Ejecución de garantías: Art. 721° CPC (Mandato ejecutivo de 3 días bajo apercibimiento de remate, no Art. 720°).
-8. Garantías Mobiliarias: D.L. N° 1400 y SIGM (derogada la Ley 28677).
-9. Penal: D. Leg. 1585 (Prisión preventiva prognosis de pena > 5 años); Arts. IX T.P., 71.2.c y 80°-85° NCPP para defensa técnica (Art. 62° es exclusión del Fiscal); AP 06-2009/CJ-116 (control formal y sustancial acusación); AP Ext. 02-2012/CJ-116 (tutela e imputación suficiente).
+FECHA ACTUAL DE OPERACIÓN: ${FECHA_OPERACION}.
+Aplica el ordenamiento peruano vigente a esta fecha. Los siguientes datos están contrastados con fuentes oficiales; para cualquier otro dato normativo aplica el protocolo de cita verificable:
+1. TUO LPAG: D.S. N° 006-2026-JUS (publicado el 30-04-2026; derogó el D.S. 004-2019-JUS). La numeración de artículos del nuevo TUO debe confirmarse en SPIJ; no la afirmes de memoria.
+2. Contrataciones del Estado: Ley N° 32069 (Ley General de Contrataciones Públicas) y su Reglamento D.S. N° 009-2025-EF, vigentes desde el 22-04-2025; reemplazan a la Ley 30225. El OECE asumió las funciones del antiguo OSCE.
+3. Indicadores 2026: UIT = S/ 5,500 (D.S. N° 301-2025-EF); URP = 10% de la UIT = S/ 550; RMV = S/ 1,230 desde el 01-10-2026 (D.S. N° 015-2026-TR) con un segundo tramo a S/ 1,300 en el primer semestre de 2027; Asignación Familiar = 10% de la RMV = S/ 123 (S/ 130 con el segundo tramo).
+4. Competencia laboral: Ley N° 32155 modificó la Ley 29497 (NLPT); los Juzgados de Paz Letrados Laborales conocen pretensiones cuantificables de hasta 70 URP (= S/ 38,500); los montos mayores corresponden a los Juzgados Especializados de Trabajo.
+5. Familia: Ley N° 31590 (publicada el 26-10-2022) modificó los arts. 81 a 84 del Código de los Niños y Adolescentes y estableció la tenencia compartida como regla. Ley N° 31464 modificó normas de los procesos de alimentos (arts. 555, 556, 558 y 564 CPC).
+6. Sucesiones: el Art. 667° CC regula la exclusión por indignidad y el Art. 725° CC el tercio de libre disposición (no los confundas). NO atribuyas reformas del Art. 667° a la Ley 31643 (regula el matrimonio ante notario). Confirma incisos vigentes en SPIJ.
+7. Ejecución de garantías: el mandato de ejecución con plazo de 3 días bajo apercibimiento de remate es el Art. 721° CPC (no el Art. 720°).
+8. Garantías Mobiliarias: D.Leg. N° 1400 (Régimen de Garantía Mobiliaria, SIGM), que derogó la Ley 28677.
+9. Penal: el D.Leg. N° 1585 modificó el Art. 268° NCPP elevando la prognosis de pena de la prisión preventiva a más de 5 años. Acuerdos Plenarios: AP 06-2009/CJ-116 (control formal y sustancial de la acusación) y AP Ext. 02-2012/CJ-116 (tutela de derechos e imputación suficiente).
+10. Plenos Casatorios Civiles (únicos diez, I al X): I Cas. 1465-2007/Cajamarca; II Cas. 2229-2008/Lambayeque; III Cas. 4664-2010/Puno; IV Cas. 2195-2011/Ucayali; V Cas. 3189-2012/Lima Norte; VI Cas. 2402-2012/Lambayeque; VII Cas. 3671-2014/Lima; VIII Cas. 3006-2015/Junín; IX Cas. 4442-2015/Moquegua; X Cas. 1242-2017/Lima Este.
 ════════════════════════════════════════════════════════════════\n\n`;
 
     const PERUVIAN_ANTI_HALLUCINATION_DIRECTIVE = `════════════════════════════════════════════════════════════════

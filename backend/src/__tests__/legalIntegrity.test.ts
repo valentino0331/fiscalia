@@ -93,8 +93,9 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
       expect(valentinaPrompt).toContain('Ley N° 32155');
       expect(valentinaPrompt).toContain('70 URP');
       expect(valentinaPrompt).toContain('S/ 38,500.00');
-      expect(valentinaPrompt).toContain('60 URP');
-      expect(valentinaPrompt).toContain('S/ 33,000.00');
+      // Daños por accidentes/enfermedades profesionales: 70 URP según R.A. 000424-2024-CE-PJ (no 60 URP)
+      expect(valentinaPrompt).not.toContain('60 URP');
+      expect(valentinaPrompt).toContain('R.A. 000424-2024-CE-PJ');
     });
 
     it('debe alertar que la vía inspectiva ante SUNAFIL no suspende la caducidad judicial de 30 días hábiles', () => {
@@ -130,7 +131,8 @@ describe('Audit 2026: Integridad Normativa y Anti-Alucinación de los 8 Abogados
 
     it('debe distinguir taxativamente la indignidad (Art. 667° CC) de la libre disposición (Art. 725° CC)', () => {
       expect(diegoPrompt).toContain('EXCLUSIÓN DE LA SUCESIÓN POR INDIGNIDAD');
-      expect(diegoPrompt).toContain('¡ES EL ARTÍCULO 667° DEL CÓDIGO CIVIL (modificado por Ley N° 31643)!');
+      expect(diegoPrompt).toContain('¡ES EL ARTÍCULO 667° DEL CÓDIGO CIVIL!');
+      expect(diegoPrompt).not.toMatch(/modificado por Ley N° 31643/);
       expect(diegoPrompt).toContain('¡ES EL ARTÍCULO 725° DEL CÓDIGO CIVIL!');
       expect(diegoPrompt).toContain('PROHIBICIÓN EXPRESA: NUNCA atribuyas las causales de indignidad al Artículo 725°');
     });
