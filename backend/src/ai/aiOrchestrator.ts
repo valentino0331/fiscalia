@@ -18,6 +18,7 @@ import { encryptConversationMessages, encryptTitle } from '../lib/encryption';
 import { recordQuestionUsage } from '../middleware/subscription';
 import { getRagContext } from '../lib/ragEngine';
 import { getSpijLegalGrounding } from '../lib/spijLegalEngine';
+import { getLocalCorpusContext } from '../lib/localCorpusRetriever';
 import { SYSTEM_PROMPTS } from '../prompts/agents';
 import { CaseMemoryManager } from './caseMemoryManager';
 import { detectTaskType, getCandidatesForTask } from './modelRouter';
@@ -25,6 +26,7 @@ import { ProviderAdapter, ProviderExecutionError } from './providerAdapter';
 import { ResponseQualityController } from './responseQualityController';
 import { StreamingCitationFilter } from './streamingCitationFilter';
 import { CircuitBreaker } from './circuitBreaker';
+import { stripEmojis } from './textStyle';
 import {
   AiOrchestratorResponse,
   AiOrchestratorMeta,
@@ -77,6 +79,13 @@ export class AiOrchestrator {
     if (!legalGrounding) {
       legalGrounding = getSpijLegalGrounding(agentId, latestUserMessage);
     }
+    // Artículos verificados del corpus local (no depende de embeddings): complementan o sustituyen al RAG
+    try {
+      const localCorpus = getLocalCorpusContext(latestUserMessage, { skipText: legalGrounding || '' });
+      if (localCorpus) legalGrounding = (legalGrounding || '') + localCorpus;
+    } catch (corpusErr) {
+      console.warn('[Orchestrator] Recuperador local de corpus no disponible:', corpusErr);
+    }
 
     // 4. Construcción del Prompt Central
     let temporalIrretroactivityDirective = '';
@@ -118,9 +127,10 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
 ════════════════════════════════════════════════════════════════
 1. ORDENAMIENTO JURÍDICO EXCLUSIVO: REPÚBLICA DEL PERÚ.
    - Todas tus respuestas, análisis procesales, vías de impugnación y redacciones de documentos se rigen RIGUROSAMENTE por el ordenamiento legal peruano vigente.
-   - ⛔ PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes o jurisprudencia de México, España, Colombia, Argentina o Chile.
-   - ⛔ PROHIBICIÓN DE INVENTAR CASACIONES O ARTÍCULOS: Nunca inventes números de expediente, salas ni años ficticios. Si no cuentas con la casación exacta en tu corpus, fundamenta en la ley sustantiva y declara la limitación.
-2. PROTOCOLO DE CITA VERIFICABLE (OBLIGATORIO EN CADA RESPUESTA):
+   -  PROHIBICIÓN RADICAL DE CITAR DERECHO EXTRANJERO: Queda terminantemente prohibido citar leyes o jurisprudencia de México, España, Colombia, Argentina o Chile.
+   -  PROHIBICIÓN DE INVENTAR CASACIONES O ARTÍCULOS: Nunca inventes números de expediente, salas ni años ficticios. Si no cuentas con la casación exacta en tu corpus, fundamenta en la ley sustantiva y declara la limitación.
+2. REGISTRO PROFESIONAL (OBLIGATORIO): Redacta como un abogado senior dirigiéndose a un colega: tono formal, sobrio y técnico. Prohibido usar emojis, emoticones, pictogramas, signos de exclamación enfáticos o lenguaje coloquial. Usa títulos en texto, numeración y viñetas simples. Distingue la gravedad con palabras ("Riesgo alto", "Observación", "Punto a verificar"), nunca con símbolos.
+3. PROTOCOLO DE CITA VERIFICABLE (OBLIGATORIO EN CADA RESPUESTA):
    - JERARQUÍA DE FUENTES: (a) el bloque "BASE NORMATIVA" / contexto recuperado que aparece más abajo es tu ÚNICA fuente textual autorizada; (b) tu memoria solo sirve para artículos y leyes de los que tengas certeza absoluta de número, contenido y vigencia.
    - Si no tienes certeza de que una ley, decreto, artículo, inciso, pena (mínimo/máximo) o plazo exista tal como lo afirmas, NO lo afirmes: describe la regla en términos generales y escribe "[VERIFICAR EN SPIJ]" en lugar del número. Es preferible una respuesta incompleta a una cita falsa.
    - NUNCA cites entre comillas texto de una norma o sentencia que no esté en el contexto recuperado. Parafrasea sin comillas.
@@ -246,6 +256,9 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       }
     }
 
+    // Registro profesional: sin emojis ni pictogramas en lo que llega al abogado (coincide con el stream filtrado)
+    executionResult = { ...executionResult, text: stripEmojis(executionResult.text) };
+
     // 7. Validación Jurídica y Control de Calidad Estructural (Bypassed if service unavailable)
     const isServiceDown = executionResult.provider === 'system_unavailable' || executionResult.provider === 'emergency_mock';
     const qualityReport = isServiceDown
@@ -278,7 +291,7 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
         : '';
       // Si el stream filter ya emitió la nota de advertencia por casaciones no verificadas, evitar duplicarla
       if (streamHadDisclaimer && extraContent.includes('NOTA DE RIGOR Y AUDITORÍA PROCESAL')) {
-        const disclaimerIdx = extraContent.indexOf('\n\n> ⚖️ **NOTA DE RIGOR Y AUDITORÍA PROCESAL');
+        const disclaimerIdx = extraContent.indexOf('\n\n> **NOTA DE RIGOR Y AUDITORÍA PROCESAL');
         if (disclaimerIdx !== -1) {
           extraContent = extraContent.slice(0, disclaimerIdx);
         }

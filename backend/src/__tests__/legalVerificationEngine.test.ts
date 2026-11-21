@@ -115,7 +115,7 @@ describe('FASE 6 — 12 Pruebas Adversariales Forenses (Legal Truth Engine)', ()
     expect(fakeCas?.status).toBe('UNVERIFIED_CLAIM');
 
     // El número judicial inventado DEBE ser retirado del cuerpo
-    const [body, disclaimer] = report.processedText.split('> ⚖️');
+    const [body, disclaimer] = report.processedText.split(/> \*\*(?=NOTA DE RIGOR)/);
     expect(body).not.toContain('99999-2026');
     expect(body).toContain('[criterio jurisprudencial pendiente de verificación documental]');
 

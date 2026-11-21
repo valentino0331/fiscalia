@@ -46,7 +46,7 @@ describe('Streaming Citation Filter — Validación en Tiempo Real (SSE)', () =>
     filter.flush();
 
     // Comprobar que en el cuerpo del escrito el número judicial inventado fue sustituido
-    const [bodyText, disclaimerText] = output.split('> ⚖️');
+    const [bodyText, disclaimerText] = output.split(/> \*\*(?=NOTA DE RIGOR)/);
     expect(bodyText).not.toContain('99999-2025');
     expect(bodyText).not.toContain('la doctrina jurisprudencial uniforme');
     expect(bodyText).toContain('[criterio jurisprudencial pendiente de verificación documental]');
@@ -70,7 +70,7 @@ describe('Streaming Citation Filter — Validación en Tiempo Real (SSE)', () =>
     filter.processChunk('la cual resuelve la apelación.');
     filter.flush();
 
-    const [bodyText, disclaimerText] = output.split('> ⚖️');
+    const [bodyText, disclaimerText] = output.split(/> \*\*(?=NOTA DE RIGOR)/);
     expect(bodyText).not.toContain('8888-2024');
     expect(bodyText).toContain('[criterio jurisprudencial pendiente de verificación documental]');
     expect(disclaimerText).toContain('NOTA DE RIGOR Y AUDITORÍA PROCESAL');
@@ -118,7 +118,7 @@ describe('Streaming Citation Filter — Validación en Tiempo Real (SSE)', () =>
     filter.processChunk('para sustentar la prescripción.');
     filter.flush();
 
-    const [bodyText, disclaimerText] = output.split('> ⚖️');
+    const [bodyText, disclaimerText] = output.split(/> \*\*(?=NOTA DE RIGOR)/);
     expect(bodyText).not.toContain('Artículo 2500 del Código Civil');
     expect(bodyText).toContain('[artículo inexistente: Código Civil solo cuenta con 2122 artículos]');
     expect(disclaimerText).toContain('Artículo 2500 del Código Civil');

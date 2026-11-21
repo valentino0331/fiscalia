@@ -87,7 +87,7 @@ describe('LEGAL TRUTH ENGINE — Verificación y Rigor Documental', () => {
       const report = validateLegalCitations(fakeText);
 
       expect(report.summary.unverifiedCitations).toBe(1);
-      const [body, disclaimer] = report.processedText.split('> ⚖️');
+      const [body, disclaimer] = report.processedText.split(/> \*\*(?=NOTA DE RIGOR)/);
       expect(body).not.toContain('98765-2024');
       expect(body).not.toContain('doctrina jurisprudencial uniforme');
       expect(body).toContain('[criterio jurisprudencial pendiente de verificación documental]');
@@ -132,7 +132,7 @@ describe('LEGAL TRUTH ENGINE — Verificación y Rigor Documental', () => {
       filter.processChunk('la nulidad es manifiesta.');
       filter.flush();
 
-      const [body, footer] = clientReceived.split('> ⚖️');
+      const [body, footer] = clientReceived.split(/> \*\*(?=NOTA DE RIGOR)/);
       expect(body).not.toContain('12999-2025');
       expect(body).toContain('[criterio jurisprudencial pendiente de verificación documental]');
       expect(footer).toContain('NOTA DE RIGOR Y AUDITORÍA PROCESAL (ESTÁNDAR HARDMAN)');

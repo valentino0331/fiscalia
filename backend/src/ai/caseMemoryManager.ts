@@ -221,7 +221,7 @@ export class CaseMemoryManager {
       directives.forEach((d) => lines.push(`   • ${d}`));
     }
 
-    lines.push('\n⛔ DIRECTIVA SUPREMA ANTI-AMNESIA:');
+    lines.push('\n DIRECTIVA SUPREMA ANTI-AMNESIA:');
     lines.push('Está TERMINANTEMENTE PROHIBIDO olvidar, descartar o contradecir cualquiera de estas normas, hechos o directivas.');
     lines.push('Cualquier corrección u observación del abogado debe ser asimilada de inmediato sin perder ni omitir los puntos ya acordados.');
     lines.push('════════════════════════════════════════════════════════════════\n\n');

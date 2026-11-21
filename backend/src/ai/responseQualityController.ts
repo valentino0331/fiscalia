@@ -40,8 +40,8 @@ export class ResponseQualityController {
       const hasReconvencion = textLower.includes('reconvenc') || textLower.includes('reconveng') || textLower.includes('pretensión reconvencional');
 
       if (hasContestacion && !hasReconvencion) {
-        warnings.push('⚠️ DEFICIENCIA ESTRUCTURAL DETECTADA: Se solicitó Contestación Y Reconvención, pero el documento omitió la formulación de la Reconvención.');
-        processedText += `\n\n> ⚠️ **OBSERVACIÓN DE RIGOR PROCESAL:** Se advierte que este escrito requiere completarse con la sección autónoma de RECONVENCIÓN formal (petitorio reconvencional, fundamentos de hecho y derecho, y medios probatorios) conforme al Art. 445° del Código Procesal Civil.`;
+        warnings.push(' DEFICIENCIA ESTRUCTURAL DETECTADA: Se solicitó Contestación Y Reconvención, pero el documento omitió la formulación de la Reconvención.');
+        processedText += `\n\n> **OBSERVACIÓN DE RIGOR PROCESAL:** Se advierte que este escrito requiere completarse con la sección autónoma de RECONVENCIÓN formal (petitorio reconvencional, fundamentos de hecho y derecho, y medios probatorios) conforme al Art. 445° del Código Procesal Civil.`;
       }
     }
 
@@ -54,8 +54,8 @@ export class ResponseQualityController {
         textLower.includes('subsanar la firma del abogado');
 
       if (wronglyBlamesLawyer) {
-        warnings.push('❌ ERROR DOGMÁTICO CRÍTICO: La resolución judicial observó la falta de firma de la RECURRENTE (Art. 131 CPC), pero la respuesta atribuyó erróneamente la omisión al abogado.');
-        processedText += `\n\n> 🔍 **RECTIFICACIÓN DE CUMPLIMIENTO JUDICIAL:** Conforme al Artículo 131° del Código Procesal Civil, la observación de inadmisibilidad corresponde EXCLUSIVAMENTE a la omisión de firma de la recurrente/interesada, no del letrado. El escrito debe ser suscrito y ratificado personalmente por la parte procesal.`;
+        warnings.push(' ERROR DOGMÁTICO CRÍTICO: La resolución judicial observó la falta de firma de la RECURRENTE (Art. 131 CPC), pero la respuesta atribuyó erróneamente la omisión al abogado.');
+        processedText += `\n\n> **RECTIFICACIÓN DE CUMPLIMIENTO JUDICIAL:** Conforme al Artículo 131° del Código Procesal Civil, la observación de inadmisibilidad corresponde EXCLUSIVAMENTE a la omisión de firma de la recurrente/interesada, no del letrado. El escrito debe ser suscrito y ratificado personalmente por la parte procesal.`;
       }
     }
 
@@ -63,15 +63,15 @@ export class ResponseQualityController {
     if (isDraftingRequest) {
       const hasDocumentBlock = text.includes('```document') || text.includes('SUMILLA:') || text.includes('SEÑOR JUEZ');
       if (!hasDocumentBlock) {
-        warnings.push('⚠️ La solicitud requería redacción de escrito judicial, pero no se generó el bloque formal ```document.');
+        warnings.push(' La solicitud requería redacción de escrito judicial, pero no se generó el bloque formal ```document.');
       }
     }
 
     // 5. Control de fuentes normativas (leyes/decretos/artículos inexistentes o no contrastados)
     const statutoryAudit = auditStatutoryReferences(text, groundingText);
-    warnings.push(...statutoryAudit.impossible.map((r) => `❌ Referencia normativa inexistente: ${r.raw} (${r.reason}).`));
+    warnings.push(...statutoryAudit.impossible.map((r) => ` Referencia normativa inexistente: ${r.raw} (${r.reason}).`));
     if (statutoryAudit.uncontrasted.length > 0) {
-      warnings.push(`⚠️ ${statutoryAudit.uncontrasted.length} referencia(s) normativa(s) no contrastada(s) con el corpus verificado.`);
+      warnings.push(` ${statutoryAudit.uncontrasted.length} referencia(s) normativa(s) no contrastada(s) con el corpus verificado.`);
     }
 
     return {

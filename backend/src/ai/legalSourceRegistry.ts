@@ -975,7 +975,8 @@ export class LegalSourceRegistry {
    */
   public static validateAttribution(
     key: string,
-    surroundingText: string
+    surroundingText: string,
+    citationRaw?: string
   ): AttributionValidationResult {
     const doc = this.getByShortKey(key);
     if (!doc) {
@@ -987,15 +988,28 @@ export class LegalSourceRegistry {
       };
     }
 
-    // 1. Extraer comillas (citas textuales) dentro del contexto
-    const quoteRegex = /(?:["“«])([^"”»\r\n]{15,400})(?:["”»])/g;
+    // 1. Extraer comillas (citas textuales) atribuidas a la resolución.
+    // Solo cuenta como cita de la sentencia el entrecomillado que SIGUE a la referencia (misma oración/párrafo)
+    // y es una frase extensa. Términos cortos entrecomillados ("prueba de cargo") o texto propio del escrito
+    // cercano a la referencia NO son citas de la sentencia.
+    const quoteRegex = /(?:["“«])([^"”»\r\n]{40,400})(?:["”»])/g;
+    let scope = surroundingText;
+    if (citationRaw) {
+      const at = surroundingText.indexOf(citationRaw);
+      if (at !== -1) {
+        scope = surroundingText.slice(at + citationRaw.length, at + citationRaw.length + 560).split(/\n\s*\n/)[0];
+      }
+    }
     let quoteMatch: RegExpExecArray | null;
     let foundQuote: string | null = null;
 
-    while ((quoteMatch = quoteRegex.exec(surroundingText)) !== null) {
+    while ((quoteMatch = quoteRegex.exec(scope)) !== null) {
       const candidate = quoteMatch[1].trim();
+      const words = candidate.split(/\s+/).length;
       // Descartar citas triviales o marcadores del sistema
-      if (candidate.length >= 15 && !candidate.startsWith('cita ') && !candidate.startsWith('criterio ')) {
+      // La cita debe abrirse a poca distancia de la referencia (lead-in corto), no en texto ajeno posterior
+      if (citationRaw && quoteMatch.index > 130) continue;
+      if (words >= 8 && !candidate.startsWith('cita ') && !candidate.startsWith('criterio ')) {
         foundQuote = candidate;
         break;
       }

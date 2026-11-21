@@ -276,13 +276,13 @@ export function auditStatutoryReferences(text: string, groundingText?: string | 
   }
 
   const MAX_LISTED = 15;
-  const lines: string[] = ['', '', '> 🔎 **CONTROL DE FUENTES NORMATIVAS (ESTÁNDAR HARDMAN):**'];
+  const lines: string[] = ['', '', '> **CONTROL DE FUENTES NORMATIVAS (ESTÁNDAR HARDMAN):**'];
   if (impossible.length > 0) {
-    lines.push('> ❌ **Referencias con numeración inexistente — NO las use:**');
+    lines.push('> **Referencias con numeración inexistente — NO las use:**');
     impossible.slice(0, MAX_LISTED).forEach((r) => lines.push(`> • ${r.raw} (${r.reason})`));
   }
   if (uncontrasted.length > 0) {
-    lines.push('> ⚠️ **No constan en el corpus verificado de Hardman (provienen del conocimiento general del modelo). Confirme número, vigencia y texto en SPIJ antes de presentarlas:**');
+    lines.push('> **No constan en el corpus verificado de Hardman (provienen del conocimiento general del modelo). Confirme número, vigencia y texto en SPIJ antes de presentarlas:**');
     uncontrasted.slice(0, MAX_LISTED).forEach((r) => lines.push(`> • ${r.raw}`));
     if (uncontrasted.length > MAX_LISTED) {
       lines.push(`> • … y ${uncontrasted.length - MAX_LISTED} referencia(s) más.`);

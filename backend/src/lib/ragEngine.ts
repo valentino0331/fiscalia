@@ -31,14 +31,14 @@ export interface LegalChunk {
 const EMBEDDING_DIMENSIONS = 768;
 
 // Number of most-similar chunks to retrieve per query
-const TOP_K = 5;
+const TOP_K = 8;
 
 // Minimum cosine similarity threshold (0 = no filter, 1 = exact match)
 // 0.55 captures relevant articles while filtering unrelated ones
 const MIN_SIMILARITY = 0.55;
 
 // Max characters of context to inject into the prompt (to stay within token budget)
-const MAX_CONTEXT_CHARS = 6000;
+const MAX_CONTEXT_CHARS = 12000;
 
 // ─── Embedding Cache (prevents duplicate API calls for same query in session) ─
 
@@ -628,15 +628,15 @@ export async function getRagContext(
 
     // 3. Format the chunks as a verified context block
     let contextBlock = `\n\n════════════════════════════════════════\n`;
-    contextBlock += `⚖️ ARTÍCULOS VERIFICADOS DEL SPIJ — TEXTO OFICIAL DE LA LEY\n`;
+    contextBlock += ` ARTÍCULOS VERIFICADOS DEL SPIJ — TEXTO OFICIAL DE LA LEY\n`;
     contextBlock += `(Fragmentos recuperados del corpus normativo peruano. Cítalos con exactitud.)\n`;
     contextBlock += `════════════════════════════════════════\n\n`;
 
     let totalChars = contextBlock.length;
 
     for (const chunk of chunks) {
-      const isHistoricalWarning = chunk.validityStatus === 'repealed' ? ' ⚠️ [NORMA DEROGADA / VIGENCIA HISTÓRICA]' : '';
-      const header = `📌 ${chunk.sourceCode}${chunk.articles ? ` — ${chunk.articles}` : ''}${chunk.section ? ` [${chunk.section}]` : ''}${isHistoricalWarning}\n`;
+      const isHistoricalWarning = chunk.validityStatus === 'repealed' ? '  [NORMA DEROGADA / VIGENCIA HISTÓRICA]' : '';
+      const header = ` ${chunk.sourceCode}${chunk.articles ? ` — ${chunk.articles}` : ''}${chunk.section ? ` [${chunk.section}]` : ''}${isHistoricalWarning}\n`;
       const body = chunk.content + '\n\n';
       const entry = header + body;
 

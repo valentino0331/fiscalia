@@ -871,7 +871,7 @@ export const NORMATIVE_REFORMS_COMPENDIUM: LegalNormMod[] = [
       '1. Art. IX Título Preliminar y Art. 80° NCPP: La defensa técnica es un derecho fundamental irrenunciable e inviolable desde el inicio de la investigación.\n' +
       '2. Art. 71° num. 2 lit. c NCPP: Derecho a ser asistido por abogado defensor desde los primeros actos y en toda declaración.\n' +
       '3. Art. 84° NCPP: Derechos del Abogado Defensor (acceso a la carpeta, interrogar, aportar pruebas, entrevistarse reservadamente).\n' +
-      '⚠️ ADVERTENCIA ANTI-ERROR: El Art. 62° del NCPP trata sobre la EXCLUSIÓN DEL FISCAL (reemplazo por el Fiscal Superior). JAMÁS citar el Art. 62° como derecho de defensa ni como asistencia técnica de abogado.',
+      ' ADVERTENCIA ANTI-ERROR: El Art. 62° del NCPP trata sobre la EXCLUSIÓN DEL FISCAL (reemplazo por el Fiscal Superior). JAMÁS citar el Art. 62° como derecho de defensa ni como asistencia técnica de abogado.',
   },
   {
     lawCode: 'Decreto Legislativo N° 957 (NCPP) — Arts. 326°, 327° y 328°',
@@ -1500,7 +1500,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('► DIRECTIVA CANÓNICA DE LITERALIDAD Y SUBSANACIÓN DE RESOLUCIONES JUDICIALES (CERO CONFUSIÓN):');
     sections.push('- LITERALIDAD TEXTUAL OBLIGATORIA DEL AUTO JUDICIAL:');
     sections.push('  * Cita textualmente entre comillas el considerando donde el Juez formula la observación procesal.');
-    sections.push('  * ⛔ PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO": Nunca inventes ni asumas que la omisión es del abogado cuando la resolución judicial observa a la parte.');
+    sections.push('  *  PROHIBICIÓN RADICAL DE ASUMIR POR DEFECTO QUE "FALTA FIRMA DE ABOGADO": Nunca inventes ni asumas que la omisión es del abogado cuando la resolución judicial observa a la parte.');
     sections.push('- DISTINCIÓN DOGMÁTICA INVIOLABLE (Art. 131° CPC vs Art. 132° CPC / Art. 290° LOPJ):');
     sections.push('  1. ARTÍCULO 131° DEL CÓDIGO PROCESAL CIVIL (Firma de la Parte o Recurrente):');
     sections.push('     - Rige la firma de la persona interesada, demandante, quejosa o recurrente (ejemplo: Hermelinda Albino Beteta).');
@@ -1546,7 +1546,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('  5. Declaración jurada de no tener bienes el adoptado o relación de los que tenga.');
     sections.push('  6. Certificado médico de salud mental y física del adoptante y del adoptado.');
     sections.push('- VÍA NOTARIAL ALTERNATIVA (Art. 785° CPC): Conforme a la Ley N° 26662 (Arts. 21° al 23°), la adopción de personas mayores de edad capaces también puede tramitarse ante Notario Público si existe pleno acuerdo.');
-    sections.push('- ⛔ REGLAS TERMINANTES ANTI-ALUCINACIÓN (CERO ERRORES):');
+    sections.push('-  REGLAS TERMINANTES ANTI-ALUCINACIÓN (CERO ERRORES):');
     sections.push('  1. PROHIBICIÓN RADICAL DEL CNA: Queda terminantemente PROHIBIDO citar el Código de los Niños y Adolescentes (Ley 27337) o el D. Leg. 1297 para la adopción de personas mayores de edad. No interviene la Dirección General de Adopciones (DGA/MIMP).');
     sections.push('  2. PROHIBICIÓN DE NORMAS CONTENCIOSAS: Queda terminantemente PROHIBIDO citar artículos de procesos de conocimiento (Art. 480 CPC), abreviados (Art. 486 CPC) o sumarísimos (Art. 546 CPC) como vía procedimental, o inventar artículos inexistentes del CPC.');
     sections.push('  3. Si el usuario solicita redactar el documento, redacta de inmediato la SOLICITUD completa dentro del bloque ```document cumpliendo con todos los requisitos del Art. 782° CPC.');
@@ -1579,7 +1579,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('     - PASO 2 (EN AUDIENCIA 8:30 AM): Al instalarse la audiencia y ANTES de que el Fiscal exponga su requerimiento, formular INCIDENCIA PREVIA DE INEFICACIA PROCESAL (Art. 150.d NCPP) solicitando suspensión y plazo prudencial de 24 a 48 horas.');
     sections.push('     - PASO 3 (TÁCTICA SUBSIDIARIA EN ESTRADOS): Si el Juez rechaza la suspensión, interponer de inmediato en el acto RECURSO DE REPOSICIÓN ORAL EN AUDIENCIA bajo el ARTÍCULO 415° DEL NCPP (OBLIGATORIO: citar siempre el Art. 415° NCPP para reposición in situ; NUNCA citar Art. 421° que corresponde a la apelación), consignando reserva expresa de Apelación y demanda de Hábeas Corpus.');
     sections.push('  IV. ADVERTENCIA BLINDAJE ANTITRAMPAS:');
-    sections.push('     * Señala expresamente: ⚠️ ADVERTENCIA: NO procede Tutela de Derechos (Acuerdo Plenario N° 04-2010/CJ-116) porque el defecto proviene del Juzgado, no de la Fiscalía. El remedio es NULIDAD ABSOLUTA (Art. 150.d).');
+    sections.push('     * Señala expresamente:  ADVERTENCIA: NO procede Tutela de Derechos (Acuerdo Plenario N° 04-2010/CJ-116) porque el defecto proviene del Juzgado, no de la Fiscalía. El remedio es NULIDAD ABSOLUTA (Art. 150.d).');
     sections.push('  V. OBLIGACIÓN PROCESAL DE REDACCIÓN INMEDIATA DEL ESCRITO JUDICIAL (BLOQUE DOCUMENT):');
     sections.push('     - Tras concluir el análisis de los 4 bloques anteriores, redacta DE INMEDIATO el escrito judicial formal completo dentro del bloque ```document listo para ingresar al SINOE:');
     sections.push('       * TÍTULO: NULIDAD_ABSOLUTA_DE_NOTIFICACION_PRISION_PREVENTIVA');
@@ -1596,7 +1596,7 @@ export function getSpijLegalGrounding(agentId: string, userQuery: string): strin
     sections.push('         - POR TANTO: Fórmula procesal formal de admisibilidad y fundabilidad.');
     sections.push('         - PRIMER OTROSÍ DIGO: Señalamiento de Casilla Electrónica SINOE, Casilla física, correo electrónico procesal y celular.');
     sections.push('         - SEGUNDO OTROSÍ DIGO: Delegación de facultades procesales.');
-    sections.push('       * ⛔ PROHIBICIÓN ABSOLUTA: NUNCA hagas un esquema o borrador resumido de una línea por acápite. NUNCA escribas "[CUERPO DEL DOCUMENTO EN TEXTO PLANO — CERO MARKDOWN]". Redacta todo el escrito judicial formal completo y exhaustivo.');
+    sections.push('       *  PROHIBICIÓN ABSOLUTA: NUNCA hagas un esquema o borrador resumido de una línea por acápite. NUNCA escribas "[CUERPO DEL DOCUMENTO EN TEXTO PLANO — CERO MARKDOWN]". Redacta todo el escrito judicial formal completo y exhaustivo.');
   }
 
   if (isHearing) {
