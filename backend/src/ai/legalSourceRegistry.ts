@@ -855,34 +855,6 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     lastVerifiedAt: '2026-11-01',
   },
 
-  '01-2017': {
-    id: 'CS-AP-01-2017',
-    docType: 'acuerdo_plenario',
-    officialNumber: 'Acuerdo Plenario N° 01-2017/SPN',
-    shortKey: '01-2017',
-    issuingEntity: 'Corte Suprema de Justicia de la República',
-    issuingChamber: 'Sala Penal Nacional y Colegiados de la Corte Suprema',
-    emissionDate: '2017-10-25',
-    publicationDate: '2017-11-15',
-    officialUrl: 'https://jurisprudencia.pj.gob.pe/jurisprudenciaweb/faces/busqueda/consultaJurisprudencia.xhtml',
-    sha256Hash: computeLegalDigest('Acuerdo Plenario 01-2017 SPN Lavado de activos autonomia del delito y actividad criminal previa'),
-    specialistIds: ['sebastian'],
-    subject: 'Delito de lavado de activos, autonomía procesal frente al delito fuente y estándar probatorio de la actividad criminal previa (D. Leg. 1106 / D. Leg. 1249)',
-    keywords: ['lavado de activos', 'autonomía del delito', 'autonomia', 'delito previo', 'actividad criminal previa', 'origen ilícito', 'origen ilicito', 'decreto legislativo 1106', 'decreto legislativo 1249'],
-    relevantFJ: [
-      {
-        fjNumber: 'Fundamentos Jurídicos 18 al 25',
-        topic: 'Autonomía típica del lavado de activos',
-        textExcerpt: 'El delito de lavado de activos es autónomo y no requiere condena previa por el delito precedente, bastando la acreditación indiciaria de que los fondos provienen de una actividad criminal idónea.',
-        isBindingRule: true,
-      },
-    ],
-    bindingCharacter: 'doctrina_jurisprudencial',
-    validityStatus: 'in_force',
-    validityPeriod: { start: '2017-11-15' },
-    verificationLevel: 'VERIFIED',
-    lastVerifiedAt: '2026-11-01',
-  },
 
   '03-2010': {
     id: 'CS-AP-03-2010',
@@ -913,34 +885,6 @@ export const CANONICAL_LEGAL_SOURCE_REGISTRY: Record<string, LegalSourceDocument
     lastVerifiedAt: '2026-11-01',
   },
 
-  '05-2008': {
-    id: 'CS-AP-05-2008',
-    docType: 'acuerdo_plenario',
-    officialNumber: 'Acuerdo Plenario N° 05-2008/CJ-116',
-    shortKey: '05-2008',
-    issuingEntity: 'Corte Suprema de Justicia de la República',
-    issuingChamber: 'Salas Penales de la Corte Suprema',
-    emissionDate: '2008-07-18',
-    publicationDate: '2008-09-08',
-    officialUrl: 'https://jurisprudencia.pj.gob.pe/jurisprudenciaweb/faces/busqueda/consultaJurisprudencia.xhtml',
-    sha256Hash: computeLegalDigest('Acuerdo Plenario 05-2008 CJ-116 Prueba indiciaria requisitos vinculantes para enervar presuncion de inocencia'),
-    specialistIds: ['sebastian'],
-    subject: 'Prueba por indicios: requisitos dogmáticos y constitucionales para enervar la presunción de inocencia en sede penal',
-    keywords: ['prueba indiciaria', 'indicios', 'presunción de inocencia', 'hecho indicador', 'reglas de la lógica', 'máximas de la experiencia', 'contraindicio'],
-    relevantFJ: [
-      {
-        fjNumber: 'Fundamento Jurídico 7',
-        topic: 'Requisitos de la prueba indiciaria',
-        textExcerpt: 'La prueba indiciaria exige que el indicio base esté plenamente acreditado, sea plural, concomitante e interrelacionado, guiado por máximas de la experiencia que conduzcan de forma unívoca a la conclusión incriminatoria.',
-        isBindingRule: true,
-      },
-    ],
-    bindingCharacter: 'doctrina_jurisprudencial',
-    validityStatus: 'in_force',
-    validityPeriod: { start: '2008-09-08' },
-    verificationLevel: 'VERIFIED',
-    lastVerifiedAt: '2026-11-01',
-  },
 };
 
 /**

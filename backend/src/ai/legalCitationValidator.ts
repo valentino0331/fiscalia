@@ -83,41 +83,11 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
   },
 
   // --- DERECHO DE FAMILIA Y NIÑEZ ---
-  '1663-2017': {
-    title: 'Casación N° 1663-2017/Cusco',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Criterios de proporcionalidad y capacidad económica real del obligado en fijación de alimentos',
-    bindingFJ: 'Fundamento Jurídico Quinto',
-  },
-  '3447-2017': {
-    title: 'Casación N° 3447-2017/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Régimen de visitas y su cumplimiento progresivo sin obstaculizaciones parentales',
-    bindingFJ: 'Fundamento Jurídico Sexto',
-  },
   '4310-2014': {
     title: 'Casación N° 4310-2014/Lima',
     court: 'Sala Civil Permanente de la Corte Suprema',
-    subject: 'Separación de patrimonios y liquidación equitativa de sociedad de gananciales',
-    bindingFJ: 'Fundamentos Jurídicos 5 y 6',
-  },
-  '2877-2015': {
-    title: 'Casación N° 2877-2015/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Suspensión y pérdida de la patria potestad por reiterado incumplimiento del deber asistencial',
-    bindingFJ: 'Fundamento Jurídico Cuarto',
-  },
-  '1822-2016': {
-    title: 'Casación N° 1822-2016/Lima',
-    court: 'Sala Civil Permanente de la Corte Suprema',
-    subject: 'Indemnización por daño al proyecto de vida y ruptura del deber conyugal de fidelidad',
-    bindingFJ: 'Fundamento Jurídico Séptimo',
-  },
-  '879-2014': {
-    title: 'Casación N° 879-2014/Lima',
-    court: 'Sala Civil Transitoria de la Corte Suprema',
-    subject: 'Exoneración de alimentos por desaparición del estado de necesidad o subsistencia propia',
-    bindingFJ: 'Fundamento Jurídico Quinto',
+    subject: 'Divorcio por separación de hecho que procede pese a la existencia de un proceso de alimentos',
+    bindingFJ: 'Ver sentencia',
   },
 
   // --- DERECHO PENAL Y PROCESAL PENAL ---
@@ -136,7 +106,7 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
   '02-2008': {
     title: 'Casación Vinculante N° 02-2008/La Libertad',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Control de plazos en diligencias preliminares y tutela de derechos',
+    subject: 'Plazo de las diligencias preliminares y su relación con el plazo de la investigación preparatoria',
     bindingFJ: 'Fundamentos Jurídicos 4 al 8',
   },
   '661-2016': {
@@ -145,47 +115,23 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Colusión agravada: delito de resultado que exige peritaje contable del perjuicio patrimonial al Estado',
     bindingFJ: 'Fundamento Jurídico Sexto',
   },
-  '1307-2019': {
-    title: 'Casación N° 1307-2019/Nacional',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Estándar probatorio de sospecha fuerte en prisión preventiva y evaluación de arraigos de calidad',
-    bindingFJ: 'Fundamentos Jurídicos 18 al 29',
-  },
   '760-2016': {
     title: 'Casación N° 760-2016/La Libertad',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Prueba de oficio en juicio oral penal y principio acusatorio',
+    subject: 'Control formal de la acusación fiscal: motivación y completitud (art. 349 CPP)',
     bindingFJ: 'Fundamentos Jurídicos Quinto al Noveno',
   },
   '158-2016': {
     title: 'Casación N° 158-2016/Huaura',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Control formal y sustancial de la acusación fiscal en etapa intermedia',
-    bindingFJ: 'Fundamentos Jurídicos 7 al 12',
-  },
-  '342-2017': {
-    title: 'Casación N° 342-2017/San Martín',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Autonomía del delito de lavado de activos y tipicidad subjetiva',
-    bindingFJ: 'Fundamentos Jurídicos 11 al 16',
+    subject: 'Diligencias practicadas sin la presencia injustificada del fiscal y su valor probatorio',
+    bindingFJ: 'Ver sentencia',
   },
   '92-2017': {
     title: 'Casación N° 92-2017/Arequipa',
     court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Principio de oportunidad, acuerdos reparatorios y extinción de la acción penal',
-    bindingFJ: 'Fundamento Jurídico Cuarto',
-  },
-  '1673-2017': {
-    title: 'Casación N° 1673-2017/Nacional',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Incomunicación judicial de investigados y garantías procesales',
-    bindingFJ: 'Fundamentos Jurídicos 8 al 10',
-  },
-  '328-2018': {
-    title: 'Casación N° 328-2018/Nacional',
-    court: 'Sala Penal Permanente de la Corte Suprema',
-    subject: 'Elementos constitutivos del delito de organización criminal frente a banda criminal',
-    bindingFJ: 'Fundamentos Jurídicos 15 al 22',
+    subject: 'Lavado de activos: delito fuente como elemento del tipo y autonomía procesal (su carácter vinculante fue cuestionado posteriormente; verifique su vigencia)',
+    bindingFJ: 'Ver sentencia',
   },
 
   // --- ACUERDOS PLENARIOS PENALES ---
@@ -244,16 +190,16 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     bindingFJ: 'Fundamentos Jurídicos 25 al 34',
   },
   '02-2016': {
-    title: 'Acuerdo Plenario Extraordinario N° 02-2016/CIJ-116',
+    title: 'Acuerdo Plenario N° 02-2016/CIJ-116',
     court: 'Pleno Jurisdiccional Penal de la Corte Suprema',
-    subject: 'Proceso inmediato reformado y supuestos de flagrancia delictiva y confesión',
-    bindingFJ: 'Fundamentos Jurídicos 9 al 16',
+    subject: 'Proceso inmediato reformado: legitimidad y alcances',
+    bindingFJ: 'Ver acuerdo plenario',
   },
   '01-2017': {
     title: 'Acuerdo Plenario N° 01-2017/CIJ-116',
     court: 'Pleno Jurisdiccional Penal de la Corte Suprema',
-    subject: 'Colaboración eficaz y eficacia probatoria de los actos de corroboración',
-    bindingFJ: 'Fundamentos Jurídicos 14 al 23',
+    subject: 'Prolongación de la prisión preventiva (art. 274 CPP, D.Leg. 1307)',
+    bindingFJ: 'Ver acuerdo plenario',
   },
 
   // --- DERECHO LABORAL ---
@@ -263,35 +209,11 @@ export const VERIFIED_JURISPRUDENCE_REGISTRY: Record<string, {
     subject: 'Reposición laboral: supuestos en los que no se aplica el precedente Huatuco (STC 05057-2013-PA/TC)',
     bindingFJ: 'Fundamento Jurídico Quinto',
   },
-  '9957-2017': {
-    title: 'Casación Laboral N° 9957-2017/Lima',
-    court: 'Segunda Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Hostigamiento laboral, actos de hostilidad y daño moral derivado del cese encubierto',
-    bindingFJ: 'Fundamentos Jurídicos 6 al 8',
-  },
-  '1696-2012': {
-    title: 'Casación Laboral N° 1696-2012/Lima',
-    court: 'Sala de Derecho Constitucional y Social Permanente',
-    subject: 'Principio de primacía de la realidad ante locación de servicios con subordinación encubierta',
-    bindingFJ: 'Fundamento Jurídico Séptimo',
-  },
-  '18450-2015': {
-    title: 'Casación Laboral N° 18450-2015/Lima',
-    court: 'Primera Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Horas extras, presunción de sobretiempo y fiscalización inmediata del empleador',
-    bindingFJ: 'Fundamento Jurídico Sexto',
-  },
   '367-2022': {
     title: 'Casación N° 367-2022/Lima',
     court: 'Cuarta Sala de Derecho Constitucional y Social Transitoria',
     subject: 'Prueba indiciaria y actos de hostilidad laboral por reducción de categoría',
     bindingFJ: 'Fundamentos Jurídicos Sexto al Octavo',
-  },
-  '11169-2014': {
-    title: 'Casación Laboral N° 11169-2014/La Libertad',
-    court: 'Segunda Sala de Derecho Constitucional y Social Transitoria',
-    subject: 'Indemnización por despido fraudulento, daño emergente y lucro cesante laboral',
-    bindingFJ: 'Fundamentos Jurídicos 5 al 9',
   },
 
   // --- DERECHO ADMINISTRATIVO Y CONTENCIOSO ---

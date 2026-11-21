@@ -106,3 +106,27 @@ describe('ModelCatalog: modelo configurado por entorno', () => {
     expect(c.map((x) => x.model)).toEqual(['deepseek/deepseek-chat', 'openai/gpt-4o-mini', 'z-ai/glm-5.3-flash']);
   });
 });
+
+describe('auditPenaltyClaims (contraste de penas con el corpus)', () => {
+  it('detecta una pena inventada para un artículo del corpus (peculado art. 387 CP)', async () => {
+    const { auditPenaltyClaims } = await import('../ai/statutoryGroundingAudit');
+    const bad = auditPenaltyClaims('El artículo 387 del Código Penal sanciona el peculado con pena no menor de dos ni mayor de cinco años.');
+    expect(bad).toHaveLength(1);
+    expect(bad[0].verified).toContain('4 a 8 años');
+  });
+  it('no marca la pena correcta (4 a 8 años)', async () => {
+    const { auditPenaltyClaims } = await import('../ai/statutoryGroundingAudit');
+    const ok = auditPenaltyClaims('Art. 387 del Código Penal: pena privativa de libertad no menor de cuatro ni mayor de ocho años.');
+    expect(ok).toHaveLength(0);
+  });
+  it('ignora el rango si pertenece a otro artículo citado después', async () => {
+    const { auditPenaltyClaims } = await import('../ai/statutoryGroundingAudit');
+    const r = auditPenaltyClaims('El artículo 387 del Código Penal regula el peculado y, a diferencia del Artículo 106 del Código Penal, que prevé no menor de seis ni mayor de veinte años, no se limita a ello.');
+    expect(r).toHaveLength(0);
+  });
+  it('se integra en la nota del auditor', () => {
+    const r = auditStatutoryReferences('El artículo 384 del Código Penal castiga la colusión simple con pena no menor de uno ni mayor de dos años.');
+    expect(r.penaltyMismatches).toHaveLength(1);
+    expect(r.note).toContain('Penas que no coinciden');
+  });
+});

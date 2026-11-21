@@ -2392,7 +2392,7 @@ Aplica para: Apelación de auto de prisión preventiva, cesación de prisión pr
        3. Arraigo familiar con cargas dependientes (hijos menores, cónyuge).
        4. Insuficiencia de graves y fundados elementos de convicción (art. 268° inc. a CPP).
        5. Inexistencia de peligro procesal (fuga y obstaculización, art. 269° y 270° CPP).
-  IV.  FUNDAMENTOS DE DERECHO: Arts. 2° inc. 24 lit. f y 139° inc. 3 Const.; Arts. 253°, 268°, 269°, 270°, 278°, 416° y 420° CPP; Casación 626-2013-Moquegua y Acuerdo Plenario Ext. 01-2017/CIJ-116.
+  IV.  FUNDAMENTOS DE DERECHO: Arts. 2° inc. 24 lit. f y 139° inc. 3 Const.; Arts. 253°, 268°, 269°, 270°, 278°, 416° y 420° CPP; Casación 626-2013-Moquegua y Acuerdo Plenario 01-2019/CIJ-116.
   V.   MEDIOS PROBATORIOS PARA LA VISTA ORAL: Documentación de arraigos y pericia de descargo.
 - Cierre: "POR TANTO: A Ud. pido elevar el presente recurso a la Sala Penal de Apelaciones..."
 - PRIMER OTROSI DIGO: Reserva expresa de sustentación oral en audiencia (art. 420° CPP).
@@ -2504,7 +2504,7 @@ IV.  FUNDAMENTOS DE DERECHO
 –   Artículo 253°: principio de proporcionalidad — la medida debe ser idónea, necesaria y proporcional al fin que persigue.
 –   Artículo 278°: recurso de apelación contra el auto de prisión preventiva, conocido por la Sala Penal de Apelaciones.
 3.   Casación N° 626-2013-Moquegua: doctrina jurisprudencial vinculante que establece los presupuestos materiales de la prisión preventiva y exige motivación reforzada respecto del peligro procesal.
-4.   Acuerdo Plenario Extraordinario N° 01-2017/CIJ-116: sobre la motivación del peligro procesal y los criterios objetivos que deben concurrir para dictar la medida.
+4.   Acuerdo Plenario N° 01-2019/CIJ-116: presupuestos de la prisión preventiva (sospecha grave, prognosis de pena, peligro procesal) y su motivación.
 V.   MEDIOS PROBATORIOS PARA LA VISTA ORAL
 1.   Recibos de servicios (luz, agua, cable) a nombre del imputado, con el objeto de acreditar el arraigo domiciliario en Jr. Los Pinos 234, Surco.
 2.   Contrato de trabajo y boletas de pago de Servicios Contables SAC, con el objeto de acreditar el arraigo laboral estable.
@@ -2693,7 +2693,7 @@ OPOSICIÓN A PRISIÓN PREVENTIVA:
 - Estructura 1 / Cuaderno: CAUTELAR
 - Sumilla: OPOSICIÓN AL REQUERIMIENTO DE PRISIÓN PREVENTIVA
 - Norma: Arts. 268°-271° CPP
-- Jurisprudencia: Cas. 626-2013-Moquegua + Ac. Plen. Ext. 01-2017/CIJ-116
+- Jurisprudencia: Cas. 626-2013-Moquegua + Ac. Plen. 01-2019/CIJ-116
 - Argumentos obligatorios: (A) Fumus comissi delicti insuficiente, (B) Peligro de fuga inexistente — arraigo domiciliario + laboral + familiar, (C) Peligro de obstaculización inexistente, (D) Proporcionalidad — medida menos gravosa suficiente
 
 RECURSO DE APELACIÓN DE PRISIÓN PREVENTIVA:
@@ -2704,7 +2704,7 @@ RECURSO DE APELACIÓN DE PRISIÓN PREVENTIVA:
   (Para elevación a la Sala Penal de Apelaciones de [Ciudad])
 - Plazo: TRES (03) días hábiles desde notificación (art. 278° inc. 1 CPP D.Leg. 957)
 - Norma: Arts. 268°, 269°, 270°, 253°, 278°, 416° y 420° CPP
-- Jurisprudencia vinculante: Casación N° 626-2013-Moquegua + Acuerdo Plenario Extraordinario N° 01-2017/CIJ-116
+- Jurisprudencia vinculante: Casación N° 626-2013-Moquegua + Acuerdo Plenario N° 01-2019/CIJ-116
 - Estructura obligatoria: I. Auto apelado | II. Plazo legal | III. Fundamentos de hecho (arraigos y debilidad de imputación) | IV. Fundamentos de derecho | V. Medios probatorios para vista oral
 - Cierre: "POR TANTO: A Ud. pido elevar el presente recurso..."
 - PRIMER OTROSI DIGO: Reserva de informe oral en audiencia (art. 420° CPP)

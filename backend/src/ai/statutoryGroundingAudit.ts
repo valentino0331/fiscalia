@@ -41,6 +41,7 @@ export interface AuditedReference {
 }
 
 export interface StatutoryAuditReport {
+  penaltyMismatches: PenaltyMismatch[];
   references: AuditedReference[];
   impossible: AuditedReference[];
   uncontrasted: AuditedReference[];
@@ -97,6 +98,8 @@ interface CorpusIndex {
   knownNorms: Set<string>;
   /** Artículos que constan en el corpus, por código. */
   articlesByFamily: Map<CodeFamily, Set<string>>;
+  /** Texto de cada artículo del corpus, por código (para contrastar penas y plazos). */
+  articleTextByFamily: Map<CodeFamily, Map<string, string>>;
 }
 
 let cachedIndex: CorpusIndex | null = null;
@@ -133,6 +136,7 @@ function resolveCorpusDir(): string | null {
 function buildIndex(): CorpusIndex {
   const knownNorms = new Set<string>();
   const articlesByFamily = new Map<CodeFamily, Set<string>>();
+  const articleTextByFamily = new Map<CodeFamily, Map<string, string>>();
 
   const dir = resolveCorpusDir();
   if (dir) {
@@ -150,10 +154,19 @@ function buildIndex(): CorpusIndex {
       for (const m of text.matchAll(/^\s*Art[íi]culo\s+(\d{1,4})(?:[-–]([A-Z]))?\s*[º°]?\s*[.\-–]/gim)) {
         arts.add(`${m[1]}${m[2] ? '-' + m[2].toUpperCase() : ''}`);
       }
+      // Texto por artículo (corte en cada encabezado "Artículo N.-")
+      const texts = new Map<string, string>();
+      for (const part of text.split(/\n(?=\s*Art[íi]culo\s+\d{1,4}(?:[-–][A-Z])?\s*[º°]?\s*[.\-–])/)) {
+        const h = part.match(/^\s*Art[íi]culo\s+(\d{1,4})(?:[-–]([A-Z]))?\s*[º°]?\s*[.\-–]/);
+        if (h) texts.set(`${h[1]}${h[2] ? '-' + h[2].toUpperCase() : ''}`, part.replace(/\n═{5,}[\s\S]*$/, ''));
+      }
       for (const fam of families) {
         const set = articlesByFamily.get(fam) || new Set<string>();
         arts.forEach((a) => set.add(a));
         articlesByFamily.set(fam, set);
+        const tm = articleTextByFamily.get(fam) || new Map<string, string>();
+        texts.forEach((v, k) => tm.set(k, v));
+        articleTextByFamily.set(fam, tm);
       }
     }
   }
@@ -172,7 +185,7 @@ function buildIndex(): CorpusIndex {
     /* ignore */
   }
 
-  return { knownNorms, articlesByFamily };
+  return { knownNorms, articlesByFamily, articleTextByFamily };
 }
 
 function getIndex(): CorpusIndex {
@@ -183,6 +196,86 @@ function getIndex(): CorpusIndex {
 /** Solo para pruebas. */
 export function resetStatutoryAuditCache(): void {
   cachedIndex = null;
+}
+
+
+// ─── Contraste de penas con el texto verificado ──────────────────────────────
+
+const NUM_WORDS: Record<string, number> = {
+  uno: 1, un: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10,
+  once: 11, doce: 12, trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17, dieciocho: 18,
+  diecinueve: 19, veinte: 20, veinticinco: 25, treinta: 30, treinta_y_cinco: 35, cuarenta: 40,
+};
+
+function toNumber(raw: string): number | null {
+  const w = raw.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, '_');
+  if (/^\d+$/.test(w)) return parseInt(w, 10);
+  return NUM_WORDS[w] ?? null;
+}
+
+const PENALTY_RE = /no\s+menor\s+de\s+([a-záéíóúñ]+(?:\s+y\s+[a-záéíóúñ]+)?|\d+)\s*(?:\(\s*\d+\s*\)\s*)?(?:a[ñn]os\s*)?ni\s+mayor\s+de\s+([a-záéíóúñ]+(?:\s+y\s+[a-záéíóúñ]+)?|\d+)\s*(?:\(\s*\d+\s*\)\s*)?a[ñn]os/gi;
+
+function extractPenaltyRanges(fragment: string): Array<[number, number]> {
+  const out: Array<[number, number]> = [];
+  for (const m of fragment.matchAll(PENALTY_RE)) {
+    const lo = toNumber(m[1]);
+    const hi = toNumber(m[2]);
+    if (lo !== null && hi !== null) out.push([lo, hi]);
+  }
+  return out;
+}
+
+export interface PenaltyMismatch {
+  article: string;
+  code: string;
+  stated: string;
+  verified: string;
+}
+
+/**
+ * Compara la pena que el texto atribuye a un artículo del Código Penal (o NCPP) con el texto verificado del corpus.
+ * Solo evalúa artículos presentes en el corpus y rangos escritos en la misma oración que la cita, sin otro
+ * artículo intercalado, para evitar falsos positivos.
+ */
+export function auditPenaltyClaims(text: string): PenaltyMismatch[] {
+  if (!text) return [];
+  const index = getIndex();
+  const penal = index.articleTextByFamily.get('penal');
+  if (!penal) return [];
+  const body = stripCodeBlocks(text);
+  const mismatches: PenaltyMismatch[] = [];
+  const seen = new Set<string>();
+
+  for (const m of body.matchAll(ART_CODE_RE)) {
+    if (codeFamily(m[3]) !== 'penal') continue;
+    const art = `${m[1]}${m[2] ? '-' + m[2].toUpperCase() : ''}`;
+    const corpusText = penal.get(art);
+    if (!corpusText) continue;
+    const start = (m.index ?? 0) + m[0].length;
+    let window = body.slice(start, start + 320);
+    // Cortar en el fin de la oración/párrafo o en la siguiente mención de otro artículo
+    window = window.split(/\n\s*\n/)[0];
+    const nextArt = window.search(/Art(?:[íi]culo|\.)\s*\d/i);
+    if (nextArt !== -1) window = window.slice(0, nextArt);
+    const stated = extractPenaltyRanges(window);
+    if (stated.length === 0) continue;
+    const verified = extractPenaltyRanges(corpusText);
+    if (verified.length === 0) continue;
+    for (const [lo, hi] of stated) {
+      if (!verified.some(([vl, vh]) => vl === lo && vh === hi)) {
+        const key = `${art}:${lo}-${hi}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        mismatches.push({
+          article: art,
+          code: 'Código Penal',
+          stated: `${lo} a ${hi} años`,
+          verified: verified.map(([a, b]) => `${a} a ${b} años`).join(' / '),
+        });
+      }
+    }
+  }
+  return mismatches;
 }
 
 // ─── Auditoría ────────────────────────────────────────────────────────────────
@@ -202,7 +295,7 @@ function stripCodeBlocks(text: string): string {
 }
 
 export function auditStatutoryReferences(text: string, groundingText?: string | null): StatutoryAuditReport {
-  const empty: StatutoryAuditReport = { references: [], impossible: [], uncontrasted: [], note: '' };
+  const empty: StatutoryAuditReport = { penaltyMismatches: [], references: [], impossible: [], uncontrasted: [], note: '' };
   if (!text || typeof text !== 'string') return empty;
 
   const index = getIndex();
@@ -271,12 +364,20 @@ export function auditStatutoryReferences(text: string, groundingText?: string | 
   const impossible = references.filter((r) => r.status === 'IMPOSSIBLE');
   const uncontrasted = references.filter((r) => r.status === 'UNCONTRASTED');
 
-  if (impossible.length === 0 && uncontrasted.length === 0) {
-    return { references, impossible, uncontrasted, note: '' };
+  const penaltyMismatches = auditPenaltyClaims(text);
+
+  if (impossible.length === 0 && uncontrasted.length === 0 && penaltyMismatches.length === 0) {
+    return { penaltyMismatches, references, impossible, uncontrasted, note: '' };
   }
 
   const MAX_LISTED = 15;
   const lines: string[] = ['', '', '> **CONTROL DE FUENTES NORMATIVAS (ESTÁNDAR HARDMAN):**'];
+  if (penaltyMismatches.length > 0) {
+    lines.push('> **Penas que no coinciden con el texto verificado del corpus — corrija antes de presentar:**');
+    penaltyMismatches.forEach((p) =>
+      lines.push(`> • Art. ${p.article} ${p.code}: se afirma ${p.stated}; el texto verificado establece ${p.verified}.`)
+    );
+  }
   if (impossible.length > 0) {
     lines.push('> **Referencias con numeración inexistente — NO las use:**');
     impossible.slice(0, MAX_LISTED).forEach((r) => lines.push(`> • ${r.raw} (${r.reason})`));
@@ -290,5 +391,5 @@ export function auditStatutoryReferences(text: string, groundingText?: string | 
   }
   lines.push('');
 
-  return { references, impossible, uncontrasted, note: lines.join('\n') };
+  return { penaltyMismatches, references, impossible, uncontrasted, note: lines.join('\n') };
 }

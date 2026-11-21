@@ -161,7 +161,13 @@ POLÍTICA SUPREMA DE ESTADO — FIDELIDAD A LAS LEYES DEL PERÚ Y CERO ALUCINACI
       agentPrompt +
       caseMemory.formattedBlock +
       studioBlock +
-      (legalGrounding ? `\n\n${legalGrounding}` : '');
+      (legalGrounding
+        ? `\n\n${legalGrounding}`
+        : `\n\n════════════════════════════════════════════════════════════════
+SIN TEXTO NORMATIVO RECUPERADO PARA ESTA CONSULTA
+════════════════════════════════════════════════════════════════
+No se recuperó texto verificado del corpus para esta consulta. Por tanto: no cites números de artículo, incisos, penas, plazos ni casaciones salvo que tengas certeza absoluta; en los demás casos describe la regla en términos generales y marca [VERIFICAR EN SPIJ]. Si la respuesta depende de una norma concreta que no puedes verificar, dilo al inicio.
+`);
 
     const formattedMessages = [
       { role: 'system', content: fullSystemPrompt },

@@ -33,7 +33,7 @@ export const AGENT_ROUTING_RULES: Record<string, AgentRoutingRule> = {
       'medidas de coercion', 'requerimiento fiscal', 'apelacion de auto',
       'apelacion de prision preventiva', 'apelacion contra auto de prision preventiva',
       'peligro de fuga', 'peligro de obstaculizacion', 'arraigo domiciliario', 'arraigo laboral',
-      'arraigo familiar', 'casacion 626-2013', 'acuerdo plenario 01-2017',
+      'arraigo familiar', 'casacion 626-2013', 'acuerdo plenario 01-2019',
       'descargo fiscal', 'escrito de descargo', 'semilibertad', 'beneficio penitenciario',
       'codigo de ejecucion penal', 'd leg 654', 'ley 31307', 'habeas corpus reparador',
       'diligencias preliminares solicitadas', 'pretension reparadora', 'inpe', 'redencion de pena',

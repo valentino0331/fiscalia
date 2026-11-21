@@ -29,9 +29,19 @@ Cada dato del "anclaje normativo" del orquestador se contrastó con fuentes ofic
 - Las citas textuales ya no se borran como "apócrifas": el registro interno contiene resúmenes, no el tenor literal; ahora se conservan y se avisa que deben cotejarse.
 
 ## Retirado por no poder confirmarse (el sistema ya no las marca como verificadas)
-Cas. 2184-2017/Ica, Cas. 3784-2014/Tacna, Cas. 8453-2014/Lima.
+Cas. 2184-2017/Ica, 3784-2014/Tacna, 8453-2014/Lima, 342-2017/San Martin, 328-2018, 1673-2017, 1663-2017, 3447-2017, 2877-2015, 1822-2016, 879-2014,
+Cas. Lab. 9957-2017, 1696-2012, 18450-2015, 11169-2014 (las cuatro existen o no se hallaron, pero el tema del registro no coincidia con las fuentes), 1307-2019 (existe, es de lavado de activos y no de prision preventiva).
 
-## Pendiente de verificación humana
-Cas. 1663-2017, 3447-2017, 4310-2014, 2877-2015, 1822-2016, 879-2014, 1307-2019, 760-2016, 158-2016, 342-2017, 92-2017, 1673-2017, 328-2018;
-AP 05-2010, 03-2010, 05-2008, 05-2009, 04-2005, 02-2005, 02-2016, 01-2017, 05-2023; Cas. Lab. 9957-2017, 1696-2012, 18450-2015, 11169-2014; Cas. 367-2022, 1803-2017, 2038-2016; STC 00002-2022-PCC/TC;
-"Art. 562 CPC: alimentos exonerados de tasa/firma de abogado"; incisos y reformas del Art. 667 CC; numeración de artículos del nuevo TUO LPAG; Art. 62 y 80–85 NCPP citados en el anclaje anterior.
+## Corregidos tras verificacion (tema real)
+- Cas. 760-2016/La Libertad: control formal de la acusacion (art. 349 CPP), no prueba de oficio.
+- Cas. 158-2016/Huaura: diligencias sin presencia injustificada del fiscal y su valor probatorio.
+- Cas. 92-2017/Arequipa: lavado de activos y delito fuente (su caracter vinculante fue cuestionado posteriormente).
+- Cas. 02-2008/La Libertad: plazo de las diligencias preliminares vs. investigacion preparatoria.
+- Cas. 4310-2014/Lima: divorcio por separacion de hecho pese a proceso de alimentos.
+- AP 5-2008/CJ-116 es "conclusion anticipada" (el registro decia prueba indiciaria; entrada retirada).
+- AP 1-2017/CIJ-116 trata la prolongacion de la prision preventiva (art. 274 CPP), no colaboracion eficaz ni peligro procesal; los prompts ahora remiten al AP 1-2019/CIJ-116 para los presupuestos de la prision preventiva.
+- AP 2-2016/CIJ-116: proceso inmediato reformado (no "extraordinario").
+
+## Pendiente de verificacion humana
+Cas. 367-2022, 1803-2017, 2038-2016; STC 00002-2022-PCC/TC; AP 04-2005/CJ-116, 02-2005/CJ-116 y 05-2009/CJ-116 (existencia probable, contenido no contrastado);
+"Art. 562 CPC: alimentos exonerados de tasa/firma de abogado"; incisos y reformas del Art. 667 CC; numeracion de articulos del nuevo TUO LPAG; Art. 62 y 80-85 NCPP.
