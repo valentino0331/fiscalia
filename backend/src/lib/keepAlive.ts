@@ -36,9 +36,9 @@ export function startKeepAlive() {
     process.env.SERVER_URL ||
     'https://fiscalia-1.onrender.com';
 
-  const healthUrl = `${targetUrl.replace(/\/$/, '')}/health`;
+  const pingUrl = `${targetUrl.replace(/\/$/, '')}/ping`;
 
-  console.log(`[KeepAlive] Iniciando servicio de autosostenimiento activo para: ${healthUrl}`);
+  console.log(`[KeepAlive] Iniciando servicio de autosostenimiento activo para: ${pingUrl}`);
 
   let isPinging = false;
 
@@ -47,7 +47,7 @@ export function startKeepAlive() {
     isPinging = true;
     try {
       pingCount++;
-      const res = await fetch(healthUrl, {
+      const res = await fetch(pingUrl, {
         headers: {
           'User-Agent': 'Fiscalia-KeepAlive-Agent/1.0',
           'X-Keep-Alive-Ping': 'true',
@@ -57,7 +57,7 @@ export function startKeepAlive() {
       if (res.ok) {
         lastPingTime = new Date().toISOString();
         lastPingStatus = 'success';
-        console.log(`[KeepAlive] Ping #${pingCount} exitoso a ${healthUrl} (${res.status} OK)`);
+        console.log(`[KeepAlive] Ping #${pingCount} exitoso a ${pingUrl} (${res.status} OK)`);
       } else {
         lastPingTime = new Date().toISOString();
         lastPingStatus = 'failed';

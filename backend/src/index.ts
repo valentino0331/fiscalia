@@ -134,6 +134,14 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 });
 
 
+app.get('/ping', (_, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptimeSeconds: Math.floor(process.uptime()),
+  });
+});
+
 app.get('/health', async (_, res) => {
   const mem = process.memoryUsage();
   const configuredProviders: Record<AiProviderName, boolean> = {
